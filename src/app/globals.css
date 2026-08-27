@@ -1,0 +1,120 @@
+@import "tailwindcss";
+
+/* ============================================================
+   Token tema — tema tunggal TERANG. Tidak ada dark mode.
+   Nilainya literal, jadi @theme biasa (bukan inline) sudah cukup.
+   ============================================================ */
+@theme {
+  --color-canvas: #f8fafc;
+  --color-ink: #0f172a;
+
+  /* Warna status slot (selaras dengan SLOT_STATUS_STYLE di domain/constants.ts) */
+  --color-slot-available: #dcfce7;
+  --color-slot-available-line: #16a34a;
+  --color-slot-pending: #fef3c7;
+  --color-slot-pending-line: #d97706;
+  --color-slot-confirmed: #fee2e2;
+  --color-slot-confirmed-line: #dc2626;
+  --color-slot-facility: #e2e8f0;
+  --color-slot-facility-line: #94a3b8;
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+    scroll-padding-top: 5rem; /* offset header sticky saat lompat ke anchor */
+  }
+
+  body {
+    background-color: #f8fafc;
+    color: #0f172a;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Fokus keyboard yang konsisten & terlihat di seluruh aplikasi */
+  :focus-visible {
+    outline: 2px solid #0f172a;
+    outline-offset: 2px;
+    border-radius: 0.375rem;
+  }
+
+  /* Scrollbar halus */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border: 3px solid transparent;
+    border-radius: 9999px;
+    background-clip: padding-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: #94a3b8;
+  }
+
+  /* Angka tabel/nominal sejajar rapi */
+  table,
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  /* Kartu putih standar: dipakai kalau tidak memakai komponen <Card />. */
+  .card {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 2px 0 rgb(15 23 42 / 0.05);
+  }
+
+  /* Pembungkus tabel admin agar bisa digeser mendatar di layar kecil. */
+  .table-wrap {
+    overflow-x: auto;
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 2px 0 rgb(15 23 42 / 0.05);
+  }
+
+  /* Baris nav yang bisa digeser tanpa batang scroll terlihat (mobile). */
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}

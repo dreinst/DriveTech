@@ -1,0 +1,29 @@
+# Konfigurasi Supabase CLI untuk proyek Sistem Pameran.
+# Sengaja minimal: hanya kunci yang benar-benar dipakai.
+project_id = "sistem-pameran"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+# Pendaftaran mandiri dimatikan: admin dibuat manual oleh panitia.
+enable_signup = false
+
+[storage]
+enabled = true
+# Bukti transfer dibatasi 2 MB (sama dengan MAX_PROOF_BYTES di aplikasi).
+file_size_limit = "2MiB"

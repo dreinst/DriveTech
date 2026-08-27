@@ -1,0 +1,529 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1123" height="1600" viewBox="0 0 1123 1600" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="denah-title denah-desc" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif">
+  <title id="denah-title">Denah Pameran Mobil &amp; Motor Bekas</title>
+  <desc id="denah-desc">Denah lokasi pameran: tenda pameran mobil baru, area pameran mobil, area pameran mobil dan motor, area UMKM, warung, serta fasilitas umum. Setiap slot punya id yang sama dengan kolom svg_element_id di database, dan atribut data-status yang menentukan warnanya (available, pending, confirmed, facility).</desc>
+  <style>
+    .slot rect { fill:#dcfce7; stroke:#16a34a; stroke-width:2; transition:fill .15s ease; }
+    .slot[data-status="pending"]   rect { fill:#fef3c7; stroke:#d97706; }
+    .slot[data-status="confirmed"] rect { fill:#fee2e2; stroke:#dc2626; }
+    .slot[data-status="facility"]  rect { fill:#e2e8f0; stroke:#94a3b8; }
+    .slot[role="button"] { cursor:pointer; }
+    .slot[role="button"]:hover rect { stroke-width:3.5; }
+    .slot[role="button"]:focus-visible rect { stroke:#0f172a; stroke-width:3.5; outline:none; }
+    .zone-box   { fill:#ffffff; stroke:#cbd5e1; stroke-width:1.5; }
+    .zone-title { fill:#ffffff; font-weight:700; font-size:14px; }
+    .zone-count { fill:#475569; font-size:11px; }
+    .decor-taman { fill:#e8f5e9; stroke:#a5d6a7; stroke-width:1.5; }
+    .decor-label { fill:#66a06b; font-size:12px; font-weight:600; }
+    .note { fill:#1e293b; font-size:12px; font-weight:700; }
+    .legend-label { fill:#334155; font-size:13px; }
+  </style>
+  <rect width="1123" height="1600" fill="#f8fafc"/>
+  <rect x="24" y="24" width="1075" height="1552" rx="8" fill="none" stroke="#1e293b" stroke-width="2"/>
+  <text x="561" y="64" text-anchor="middle" font-size="21" font-weight="800" fill="#0f172a">DENAH PAMERAN MOBIL &amp; MOTOR BEKAS</text>
+  <g id="denah-dekor" aria-hidden="true" pointer-events="none">
+    <rect id="pagar-atas" x="122" y="96" width="766" height="10" rx="5" fill="#7cb342"/>
+    <rect id="taman-tengah" class="decor-taman" x="468" y="378" width="46" height="452" rx="6"/>
+    <text class="decor-label" x="491" y="604" transform="rotate(-90 491 604)" text-anchor="middle" dominant-baseline="middle">Taman</text>
+    <rect id="taman-kanan" class="decor-taman" x="890" y="456" width="120" height="674" rx="6"/>
+    <text class="decor-label" x="950" y="793" transform="rotate(-90 950 793)" text-anchor="middle" dominant-baseline="middle">Taman</text>
+    <rect id="taman-kiri-bawah" class="decor-taman" x="122" y="1012" width="440" height="116" rx="6"/>
+    <text class="decor-label" x="342" y="1070" text-anchor="middle" dominant-baseline="middle">Taman</text>
+    <rect id="taman-tengah-bawah" class="decor-taman" x="655" y="1012" width="185" height="116" rx="6"/>
+    <text class="decor-label" x="747.5" y="1070" text-anchor="middle" dominant-baseline="middle">Taman</text>
+  </g>
+  <g id="denah-anotasi" aria-hidden="true" pointer-events="none">
+    <text class="note" x="970" y="145" text-anchor="middle">PINTU MASUK &amp; KELUAR</text>
+    <text class="note" x="970" y="167" text-anchor="middle">REST AREA KOSTRAD</text>
+    <path d="M 1040 180 L 1040 330" stroke="#1e293b" stroke-width="3" fill="none"/>
+  </g>
+  <g id="zone-mobil-baru" data-zone-type-accent="#7030a0">
+    <rect class="zone-box" x="505" y="110" width="348" height="216" rx="10"/>
+    <rect x="505" y="110" width="348" height="24" rx="10" fill="#7030a0"/>
+    <rect x="505" y="122" width="348" height="12" fill="#7030a0"/>
+    <text class="zone-title" x="679" y="123" text-anchor="middle" dominant-baseline="middle">TENDA PAMERAN MOBIL BARU</text>
+    <text x="845" y="123" text-anchor="end" font-size="11" fill="#ffffff" fill-opacity="0.8" dominant-baseline="middle">10 slot</text>
+    <g class="slots">
+      <g id="slot-mobil-baru-01" class="slot" data-status="available" data-slot="slot-mobil-baru-01" role="button" tabindex="0" aria-label="Slot 1">
+        <rect x="512" y="140" width="62" height="58" rx="4"/>
+        <text x="543" y="169" font-size="18" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">1</text>
+      </g>
+      <g id="slot-mobil-baru-02" class="slot" data-status="available" data-slot="slot-mobil-baru-02" role="button" tabindex="0" aria-label="Slot 2">
+        <rect x="579" y="140" width="62" height="58" rx="4"/>
+        <text x="610" y="169" font-size="18" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">2</text>
+      </g>
+      <g id="slot-mobil-baru-03" class="slot" data-status="available" data-slot="slot-mobil-baru-03" role="button" tabindex="0" aria-label="Slot 3">
+        <rect x="646" y="140" width="62" height="58" rx="4"/>
+        <text x="677" y="169" font-size="18" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">3</text>
+      </g>
+      <g id="slot-mobil-baru-04" class="slot" data-status="available" data-slot="slot-mobil-baru-04" role="button" tabindex="0" aria-label="Slot 4">
+        <rect x="713" y="140" width="62" height="58" rx="4"/>
+        <text x="744" y="169" font-size="18" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">4</text>
+      </g>
+      <g id="slot-mobil-baru-05" class="slot" data-status="available" data-slot="slot-mobil-baru-05" role="button" tabindex="0" aria-label="Slot 5">
+        <rect x="780" y="140" width="62" height="58" rx="4"/>
+        <text x="811" y="169" font-size="18" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">5</text>
+      </g>
+      <g id="slot-mobil-baru-06" class="slot" data-status="available" data-slot="slot-mobil-baru-06" role="button" tabindex="0" aria-label="Slot 6">
+        <rect x="512" y="258" width="62" height="58" rx="4"/>
+        <text x="543" y="287" font-size="18" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">6</text>
+      </g>
+      <g id="slot-mobil-baru-07" class="slot" data-status="available" data-slot="slot-mobil-baru-07" role="button" tabindex="0" aria-label="Slot 7">
+        <rect x="579" y="258" width="62" height="58" rx="4"/>
+        <text x="610" y="287" font-size="18" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">7</text>
+      </g>
+      <g id="slot-mobil-baru-08" class="slot" data-status="available" data-slot="slot-mobil-baru-08" role="button" tabindex="0" aria-label="Slot 8">
+        <rect x="646" y="258" width="62" height="58" rx="4"/>
+        <text x="677" y="287" font-size="18" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">8</text>
+      </g>
+      <g id="slot-mobil-baru-09" class="slot" data-status="available" data-slot="slot-mobil-baru-09" role="button" tabindex="0" aria-label="Slot 9">
+        <rect x="713" y="258" width="62" height="58" rx="4"/>
+        <text x="744" y="287" font-size="18" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">9</text>
+      </g>
+      <g id="slot-mobil-baru-10" class="slot" data-status="available" data-slot="slot-mobil-baru-10" role="button" tabindex="0" aria-label="Slot 10">
+        <rect x="780" y="258" width="62" height="58" rx="4"/>
+        <text x="811" y="287" font-size="18" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">10</text>
+      </g>
+    </g>
+  </g>
+  <g id="zone-mobil-bekas" data-zone-type-accent="#c00000">
+    <rect class="zone-box" x="514" y="366" width="250" height="444" rx="10"/>
+    <rect x="514" y="366" width="250" height="24" rx="10" fill="#c00000"/>
+    <rect x="514" y="378" width="250" height="12" fill="#c00000"/>
+    <text class="zone-title" x="639" y="379" text-anchor="middle" dominant-baseline="middle">AREA PAMERAN MOBIL</text>
+    <text x="756" y="379" text-anchor="end" font-size="11" fill="#ffffff" fill-opacity="0.8" dominant-baseline="middle">30 slot</text>
+    <g class="slots">
+      <g id="slot-mobil-bekas-01" class="slot" data-status="available" data-slot="slot-mobil-bekas-01" role="button" tabindex="0" aria-label="Slot 1">
+        <rect x="520" y="416" width="52" height="33" rx="4"/>
+        <text x="546" y="432.5" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">1</text>
+      </g>
+      <g id="slot-mobil-bekas-02" class="slot" data-status="available" data-slot="slot-mobil-bekas-02" role="button" tabindex="0" aria-label="Slot 2">
+        <rect x="520" y="454.5" width="52" height="33" rx="4"/>
+        <text x="546" y="471" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">2</text>
+      </g>
+      <g id="slot-mobil-bekas-03" class="slot" data-status="available" data-slot="slot-mobil-bekas-03" role="button" tabindex="0" aria-label="Slot 3">
+        <rect x="520" y="493" width="52" height="33" rx="4"/>
+        <text x="546" y="509.5" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">3</text>
+      </g>
+      <g id="slot-mobil-bekas-04" class="slot" data-status="available" data-slot="slot-mobil-bekas-04" role="button" tabindex="0" aria-label="Slot 4">
+        <rect x="520" y="531.5" width="52" height="33" rx="4"/>
+        <text x="546" y="548" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">4</text>
+      </g>
+      <g id="slot-mobil-bekas-05" class="slot" data-status="available" data-slot="slot-mobil-bekas-05" role="button" tabindex="0" aria-label="Slot 5">
+        <rect x="520" y="570" width="52" height="33" rx="4"/>
+        <text x="546" y="586.5" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">5</text>
+      </g>
+      <g id="slot-mobil-bekas-06" class="slot" data-status="available" data-slot="slot-mobil-bekas-06" role="button" tabindex="0" aria-label="Slot 6">
+        <rect x="520" y="608.5" width="52" height="33" rx="4"/>
+        <text x="546" y="625" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">6</text>
+      </g>
+      <g id="slot-mobil-bekas-07" class="slot" data-status="available" data-slot="slot-mobil-bekas-07" role="button" tabindex="0" aria-label="Slot 7">
+        <rect x="520" y="647" width="52" height="33" rx="4"/>
+        <text x="546" y="663.5" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">7</text>
+      </g>
+      <g id="slot-mobil-bekas-08" class="slot" data-status="available" data-slot="slot-mobil-bekas-08" role="button" tabindex="0" aria-label="Slot 8">
+        <rect x="520" y="685.5" width="52" height="33" rx="4"/>
+        <text x="546" y="702" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">8</text>
+      </g>
+      <g id="slot-mobil-bekas-09" class="slot" data-status="available" data-slot="slot-mobil-bekas-09" role="button" tabindex="0" aria-label="Slot 9">
+        <rect x="520" y="724" width="52" height="33" rx="4"/>
+        <text x="546" y="740.5" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">9</text>
+      </g>
+      <g id="slot-mobil-bekas-10" class="slot" data-status="available" data-slot="slot-mobil-bekas-10" role="button" tabindex="0" aria-label="Slot 10">
+        <rect x="520" y="762.5" width="52" height="33" rx="4"/>
+        <text x="546" y="779" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">10</text>
+      </g>
+      <g id="slot-mobil-bekas-11" class="slot" data-status="available" data-slot="slot-mobil-bekas-11" role="button" tabindex="0" aria-label="Slot 11">
+        <rect x="632" y="410" width="56" height="33" rx="4"/>
+        <text x="660" y="426.5" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">11</text>
+      </g>
+      <g id="slot-mobil-bekas-12" class="slot" data-status="available" data-slot="slot-mobil-bekas-12" role="button" tabindex="0" aria-label="Slot 12">
+        <rect x="632" y="448.5" width="56" height="33" rx="4"/>
+        <text x="660" y="465" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">12</text>
+      </g>
+      <g id="slot-mobil-bekas-13" class="slot" data-status="available" data-slot="slot-mobil-bekas-13" role="button" tabindex="0" aria-label="Slot 13">
+        <rect x="632" y="487" width="56" height="33" rx="4"/>
+        <text x="660" y="503.5" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">13</text>
+      </g>
+      <g id="slot-mobil-bekas-14" class="slot" data-status="available" data-slot="slot-mobil-bekas-14" role="button" tabindex="0" aria-label="Slot 14">
+        <rect x="632" y="525.5" width="56" height="33" rx="4"/>
+        <text x="660" y="542" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">14</text>
+      </g>
+      <g id="slot-mobil-bekas-15" class="slot" data-status="available" data-slot="slot-mobil-bekas-15" role="button" tabindex="0" aria-label="Slot 15">
+        <rect x="632" y="564" width="56" height="33" rx="4"/>
+        <text x="660" y="580.5" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">15</text>
+      </g>
+      <g id="slot-mobil-bekas-16" class="slot" data-status="available" data-slot="slot-mobil-bekas-16" role="button" tabindex="0" aria-label="Slot 16">
+        <rect x="632" y="602.5" width="56" height="33" rx="4"/>
+        <text x="660" y="619" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">16</text>
+      </g>
+      <g id="slot-mobil-bekas-17" class="slot" data-status="available" data-slot="slot-mobil-bekas-17" role="button" tabindex="0" aria-label="Slot 17">
+        <rect x="632" y="641" width="56" height="33" rx="4"/>
+        <text x="660" y="657.5" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">17</text>
+      </g>
+      <g id="slot-mobil-bekas-18" class="slot" data-status="available" data-slot="slot-mobil-bekas-18" role="button" tabindex="0" aria-label="Slot 18">
+        <rect x="632" y="679.5" width="56" height="33" rx="4"/>
+        <text x="660" y="696" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">18</text>
+      </g>
+      <g id="slot-mobil-bekas-19" class="slot" data-status="available" data-slot="slot-mobil-bekas-19" role="button" tabindex="0" aria-label="Slot 19">
+        <rect x="632" y="718" width="56" height="33" rx="4"/>
+        <text x="660" y="734.5" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">19</text>
+      </g>
+      <g id="slot-mobil-bekas-20" class="slot" data-status="available" data-slot="slot-mobil-bekas-20" role="button" tabindex="0" aria-label="Slot 20">
+        <rect x="632" y="756.5" width="56" height="33" rx="4"/>
+        <text x="660" y="773" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">20</text>
+      </g>
+      <g id="slot-mobil-bekas-21" class="slot" data-status="available" data-slot="slot-mobil-bekas-21" role="button" tabindex="0" aria-label="Slot 21">
+        <rect x="698" y="410" width="56" height="33" rx="4"/>
+        <text x="726" y="426.5" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">21</text>
+      </g>
+      <g id="slot-mobil-bekas-22" class="slot" data-status="available" data-slot="slot-mobil-bekas-22" role="button" tabindex="0" aria-label="Slot 22">
+        <rect x="698" y="448.5" width="56" height="33" rx="4"/>
+        <text x="726" y="465" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">22</text>
+      </g>
+      <g id="slot-mobil-bekas-23" class="slot" data-status="available" data-slot="slot-mobil-bekas-23" role="button" tabindex="0" aria-label="Slot 23">
+        <rect x="698" y="487" width="56" height="33" rx="4"/>
+        <text x="726" y="503.5" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">23</text>
+      </g>
+      <g id="slot-mobil-bekas-24" class="slot" data-status="available" data-slot="slot-mobil-bekas-24" role="button" tabindex="0" aria-label="Slot 24">
+        <rect x="698" y="525.5" width="56" height="33" rx="4"/>
+        <text x="726" y="542" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">24</text>
+      </g>
+      <g id="slot-mobil-bekas-25" class="slot" data-status="available" data-slot="slot-mobil-bekas-25" role="button" tabindex="0" aria-label="Slot 25">
+        <rect x="698" y="564" width="56" height="33" rx="4"/>
+        <text x="726" y="580.5" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">25</text>
+      </g>
+      <g id="slot-mobil-bekas-26" class="slot" data-status="available" data-slot="slot-mobil-bekas-26" role="button" tabindex="0" aria-label="Slot 26">
+        <rect x="698" y="602.5" width="56" height="33" rx="4"/>
+        <text x="726" y="619" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">26</text>
+      </g>
+      <g id="slot-mobil-bekas-27" class="slot" data-status="available" data-slot="slot-mobil-bekas-27" role="button" tabindex="0" aria-label="Slot 27">
+        <rect x="698" y="641" width="56" height="33" rx="4"/>
+        <text x="726" y="657.5" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">27</text>
+      </g>
+      <g id="slot-mobil-bekas-28" class="slot" data-status="available" data-slot="slot-mobil-bekas-28" role="button" tabindex="0" aria-label="Slot 28">
+        <rect x="698" y="679.5" width="56" height="33" rx="4"/>
+        <text x="726" y="696" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">28</text>
+      </g>
+      <g id="slot-mobil-bekas-29" class="slot" data-status="available" data-slot="slot-mobil-bekas-29" role="button" tabindex="0" aria-label="Slot 29">
+        <rect x="698" y="718" width="56" height="33" rx="4"/>
+        <text x="726" y="734.5" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">29</text>
+      </g>
+      <g id="slot-mobil-bekas-30" class="slot" data-status="available" data-slot="slot-mobil-bekas-30" role="button" tabindex="0" aria-label="Slot 30">
+        <rect x="698" y="756.5" width="56" height="33" rx="4"/>
+        <text x="726" y="773" font-size="14" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">30</text>
+      </g>
+    </g>
+    <g class="zone-annotations" aria-hidden="true" pointer-events="none">
+      <text x="556" y="403" font-size="11" font-weight="700" fill="#334155">MASUK</text>
+      <path d="M 596 399 l 9 4 l -9 4 z" fill="#334155"/>
+      <text x="694" y="403" font-size="11" font-weight="700" fill="#334155">KELUAR</text>
+      <path d="M 740 399 l 9 4 l -9 4 z" fill="#334155"/>
+    </g>
+  </g>
+  <g id="zone-mobil-motor" data-zone-type-accent="#ff00ff">
+    <rect class="zone-box" x="774" y="430" width="90" height="430" rx="10"/>
+    <rect x="774" y="430" width="24" height="430" rx="10" fill="#ff00ff"/>
+    <text class="zone-title" x="786" y="645" transform="rotate(-90 786 645)" text-anchor="middle" dominant-baseline="middle">AREA PAMERAN MOBIL &amp; MOTOR</text>
+    <text class="zone-count" x="858" y="447" text-anchor="end">14 slot</text>
+    <g class="slots">
+      <g id="slot-mobil-motor-01" class="slot" data-status="available" data-slot="slot-mobil-motor-01" role="button" tabindex="0" aria-label="Slot 1">
+        <rect x="800" y="462" width="48" height="24" rx="4"/>
+        <text x="824" y="474" font-size="10" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">1</text>
+      </g>
+      <g id="slot-mobil-motor-02" class="slot" data-status="available" data-slot="slot-mobil-motor-02" role="button" tabindex="0" aria-label="Slot 2">
+        <rect x="800" y="489.6" width="48" height="24" rx="4"/>
+        <text x="824" y="501.6" font-size="10" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">2</text>
+      </g>
+      <g id="slot-mobil-motor-03" class="slot" data-status="available" data-slot="slot-mobil-motor-03" role="button" tabindex="0" aria-label="Slot 3">
+        <rect x="800" y="517.2" width="48" height="24" rx="4"/>
+        <text x="824" y="529.2" font-size="10" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">3</text>
+      </g>
+      <g id="slot-mobil-motor-04" class="slot" data-status="available" data-slot="slot-mobil-motor-04" role="button" tabindex="0" aria-label="Slot 4">
+        <rect x="800" y="544.8" width="48" height="24" rx="4"/>
+        <text x="824" y="556.8" font-size="10" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">4</text>
+      </g>
+      <g id="slot-mobil-motor-05" class="slot" data-status="available" data-slot="slot-mobil-motor-05" role="button" tabindex="0" aria-label="Slot 5">
+        <rect x="800" y="572.4" width="48" height="24" rx="4"/>
+        <text x="824" y="584.4" font-size="10" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">5</text>
+      </g>
+      <g id="slot-mobil-motor-06" class="slot" data-status="available" data-slot="slot-mobil-motor-06" role="button" tabindex="0" aria-label="Slot 6">
+        <rect x="800" y="600" width="48" height="24" rx="4"/>
+        <text x="824" y="612" font-size="10" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">6</text>
+      </g>
+      <g id="slot-mobil-motor-07" class="slot" data-status="available" data-slot="slot-mobil-motor-07" role="button" tabindex="0" aria-label="Slot 7">
+        <rect x="800" y="627.6" width="48" height="24" rx="4"/>
+        <text x="824" y="639.6" font-size="10" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">7</text>
+      </g>
+      <g id="slot-mobil-motor-08" class="slot" data-status="available" data-slot="slot-mobil-motor-08" role="button" tabindex="0" aria-label="Slot 8">
+        <rect x="800" y="655.2" width="48" height="24" rx="4"/>
+        <text x="824" y="667.2" font-size="10" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">8</text>
+      </g>
+      <g id="slot-mobil-motor-09" class="slot" data-status="available" data-slot="slot-mobil-motor-09" role="button" tabindex="0" aria-label="Slot 9">
+        <rect x="800" y="682.8" width="48" height="24" rx="4"/>
+        <text x="824" y="694.8" font-size="10" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">9</text>
+      </g>
+      <g id="slot-mobil-motor-10" class="slot" data-status="available" data-slot="slot-mobil-motor-10" role="button" tabindex="0" aria-label="Slot 10">
+        <rect x="800" y="710.4" width="48" height="24" rx="4"/>
+        <text x="824" y="722.4" font-size="10" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">10</text>
+      </g>
+      <g id="slot-mobil-motor-11" class="slot" data-status="available" data-slot="slot-mobil-motor-11" role="button" tabindex="0" aria-label="Slot 11">
+        <rect x="800" y="738" width="48" height="24" rx="4"/>
+        <text x="824" y="750" font-size="10" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">11</text>
+      </g>
+      <g id="slot-mobil-motor-12" class="slot" data-status="available" data-slot="slot-mobil-motor-12" role="button" tabindex="0" aria-label="Slot 12">
+        <rect x="800" y="765.6" width="48" height="24" rx="4"/>
+        <text x="824" y="777.6" font-size="10" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">12</text>
+      </g>
+      <g id="slot-mobil-motor-13" class="slot" data-status="available" data-slot="slot-mobil-motor-13" role="button" tabindex="0" aria-label="Slot 13">
+        <rect x="800" y="793.2" width="48" height="24" rx="4"/>
+        <text x="824" y="805.2" font-size="10" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">13</text>
+      </g>
+      <g id="slot-mobil-motor-14" class="slot" data-status="available" data-slot="slot-mobil-motor-14" role="button" tabindex="0" aria-label="Slot 14">
+        <rect x="800" y="820.8" width="48" height="24" rx="4"/>
+        <text x="824" y="832.8" font-size="10" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">14</text>
+      </g>
+    </g>
+  </g>
+  <g id="zone-umkm" data-zone-type-accent="#0070c0">
+    <rect class="zone-box" x="236" y="444" width="230" height="386" rx="10"/>
+    <rect x="236" y="444" width="230" height="24" rx="10" fill="#0070c0"/>
+    <rect x="236" y="456" width="230" height="12" fill="#0070c0"/>
+    <text class="zone-title" x="351" y="457" text-anchor="middle" dominant-baseline="middle">AREA UMKM</text>
+    <text x="458" y="457" text-anchor="end" font-size="11" fill="#ffffff" fill-opacity="0.8" dominant-baseline="middle">30 slot</text>
+    <g class="slots">
+      <g id="slot-umkm-01" class="slot" data-status="available" data-slot="slot-umkm-01" role="button" tabindex="0" aria-label="Slot 1">
+        <rect x="240" y="474" width="34" height="32" rx="4"/>
+        <text x="257" y="490" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">1</text>
+      </g>
+      <g id="slot-umkm-02" class="slot" data-status="available" data-slot="slot-umkm-02" role="button" tabindex="0" aria-label="Slot 2">
+        <rect x="240" y="508.4" width="34" height="32" rx="4"/>
+        <text x="257" y="524.4" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">2</text>
+      </g>
+      <g id="slot-umkm-03" class="slot" data-status="available" data-slot="slot-umkm-03" role="button" tabindex="0" aria-label="Slot 3">
+        <rect x="240" y="542.8" width="34" height="32" rx="4"/>
+        <text x="257" y="558.8" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">3</text>
+      </g>
+      <g id="slot-umkm-04" class="slot" data-status="available" data-slot="slot-umkm-04" role="button" tabindex="0" aria-label="Slot 4">
+        <rect x="240" y="577.2" width="34" height="32" rx="4"/>
+        <text x="257" y="593.2" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">4</text>
+      </g>
+      <g id="slot-umkm-05" class="slot" data-status="available" data-slot="slot-umkm-05" role="button" tabindex="0" aria-label="Slot 5">
+        <rect x="240" y="611.6" width="34" height="32" rx="4"/>
+        <text x="257" y="627.6" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">5</text>
+      </g>
+      <g id="slot-umkm-06" class="slot" data-status="available" data-slot="slot-umkm-06" role="button" tabindex="0" aria-label="Slot 6">
+        <rect x="240" y="646" width="34" height="32" rx="4"/>
+        <text x="257" y="662" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">6</text>
+      </g>
+      <g id="slot-umkm-07" class="slot" data-status="available" data-slot="slot-umkm-07" role="button" tabindex="0" aria-label="Slot 7">
+        <rect x="240" y="680.4" width="34" height="32" rx="4"/>
+        <text x="257" y="696.4" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">7</text>
+      </g>
+      <g id="slot-umkm-08" class="slot" data-status="available" data-slot="slot-umkm-08" role="button" tabindex="0" aria-label="Slot 8">
+        <rect x="240" y="714.8" width="34" height="32" rx="4"/>
+        <text x="257" y="730.8" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">8</text>
+      </g>
+      <g id="slot-umkm-09" class="slot" data-status="available" data-slot="slot-umkm-09" role="button" tabindex="0" aria-label="Slot 9">
+        <rect x="240" y="749.2" width="34" height="32" rx="4"/>
+        <text x="257" y="765.2" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">9</text>
+      </g>
+      <g id="slot-umkm-10" class="slot" data-status="available" data-slot="slot-umkm-10" role="button" tabindex="0" aria-label="Slot 10">
+        <rect x="240" y="783.6" width="34" height="32" rx="4"/>
+        <text x="257" y="799.6" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">10</text>
+      </g>
+      <g id="slot-umkm-11" class="slot" data-status="available" data-slot="slot-umkm-11" role="button" tabindex="0" aria-label="Slot 11">
+        <rect x="322" y="474" width="34" height="32" rx="4"/>
+        <text x="339" y="490" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">11</text>
+      </g>
+      <g id="slot-umkm-12" class="slot" data-status="available" data-slot="slot-umkm-12" role="button" tabindex="0" aria-label="Slot 12">
+        <rect x="322" y="508.4" width="34" height="32" rx="4"/>
+        <text x="339" y="524.4" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">12</text>
+      </g>
+      <g id="slot-umkm-13" class="slot" data-status="available" data-slot="slot-umkm-13" role="button" tabindex="0" aria-label="Slot 13">
+        <rect x="322" y="542.8" width="34" height="32" rx="4"/>
+        <text x="339" y="558.8" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">13</text>
+      </g>
+      <g id="slot-umkm-14" class="slot" data-status="available" data-slot="slot-umkm-14" role="button" tabindex="0" aria-label="Slot 14">
+        <rect x="322" y="577.2" width="34" height="32" rx="4"/>
+        <text x="339" y="593.2" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">14</text>
+      </g>
+      <g id="slot-umkm-15" class="slot" data-status="available" data-slot="slot-umkm-15" role="button" tabindex="0" aria-label="Slot 15">
+        <rect x="322" y="611.6" width="34" height="32" rx="4"/>
+        <text x="339" y="627.6" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">15</text>
+      </g>
+      <g id="slot-umkm-16" class="slot" data-status="available" data-slot="slot-umkm-16" role="button" tabindex="0" aria-label="Slot 16">
+        <rect x="322" y="646" width="34" height="32" rx="4"/>
+        <text x="339" y="662" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">16</text>
+      </g>
+      <g id="slot-umkm-17" class="slot" data-status="available" data-slot="slot-umkm-17" role="button" tabindex="0" aria-label="Slot 17">
+        <rect x="322" y="680.4" width="34" height="32" rx="4"/>
+        <text x="339" y="696.4" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">17</text>
+      </g>
+      <g id="slot-umkm-18" class="slot" data-status="available" data-slot="slot-umkm-18" role="button" tabindex="0" aria-label="Slot 18">
+        <rect x="322" y="714.8" width="34" height="32" rx="4"/>
+        <text x="339" y="730.8" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">18</text>
+      </g>
+      <g id="slot-umkm-19" class="slot" data-status="available" data-slot="slot-umkm-19" role="button" tabindex="0" aria-label="Slot 19">
+        <rect x="322" y="749.2" width="34" height="32" rx="4"/>
+        <text x="339" y="765.2" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">19</text>
+      </g>
+      <g id="slot-umkm-20" class="slot" data-status="available" data-slot="slot-umkm-20" role="button" tabindex="0" aria-label="Slot 20">
+        <rect x="322" y="783.6" width="34" height="32" rx="4"/>
+        <text x="339" y="799.6" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">20</text>
+      </g>
+      <g id="slot-umkm-21" class="slot" data-status="available" data-slot="slot-umkm-21" role="button" tabindex="0" aria-label="Slot 21">
+        <rect x="430" y="474" width="34" height="32" rx="4"/>
+        <text x="447" y="490" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">21</text>
+      </g>
+      <g id="slot-umkm-22" class="slot" data-status="available" data-slot="slot-umkm-22" role="button" tabindex="0" aria-label="Slot 22">
+        <rect x="430" y="508.4" width="34" height="32" rx="4"/>
+        <text x="447" y="524.4" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">22</text>
+      </g>
+      <g id="slot-umkm-23" class="slot" data-status="available" data-slot="slot-umkm-23" role="button" tabindex="0" aria-label="Slot 23">
+        <rect x="430" y="542.8" width="34" height="32" rx="4"/>
+        <text x="447" y="558.8" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">23</text>
+      </g>
+      <g id="slot-umkm-24" class="slot" data-status="available" data-slot="slot-umkm-24" role="button" tabindex="0" aria-label="Slot 24">
+        <rect x="430" y="577.2" width="34" height="32" rx="4"/>
+        <text x="447" y="593.2" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">24</text>
+      </g>
+      <g id="slot-umkm-25" class="slot" data-status="available" data-slot="slot-umkm-25" role="button" tabindex="0" aria-label="Slot 25">
+        <rect x="430" y="611.6" width="34" height="32" rx="4"/>
+        <text x="447" y="627.6" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">25</text>
+      </g>
+      <g id="slot-umkm-26" class="slot" data-status="available" data-slot="slot-umkm-26" role="button" tabindex="0" aria-label="Slot 26">
+        <rect x="430" y="646" width="34" height="32" rx="4"/>
+        <text x="447" y="662" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">26</text>
+      </g>
+      <g id="slot-umkm-27" class="slot" data-status="available" data-slot="slot-umkm-27" role="button" tabindex="0" aria-label="Slot 27">
+        <rect x="430" y="680.4" width="34" height="32" rx="4"/>
+        <text x="447" y="696.4" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">27</text>
+      </g>
+      <g id="slot-umkm-28" class="slot" data-status="available" data-slot="slot-umkm-28" role="button" tabindex="0" aria-label="Slot 28">
+        <rect x="430" y="714.8" width="34" height="32" rx="4"/>
+        <text x="447" y="730.8" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">28</text>
+      </g>
+      <g id="slot-umkm-29" class="slot" data-status="available" data-slot="slot-umkm-29" role="button" tabindex="0" aria-label="Slot 29">
+        <rect x="430" y="749.2" width="34" height="32" rx="4"/>
+        <text x="447" y="765.2" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">29</text>
+      </g>
+      <g id="slot-umkm-30" class="slot" data-status="available" data-slot="slot-umkm-30" role="button" tabindex="0" aria-label="Slot 30">
+        <rect x="430" y="783.6" width="34" height="32" rx="4"/>
+        <text x="447" y="799.6" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">30</text>
+      </g>
+    </g>
+  </g>
+  <g id="zone-warung" data-zone-type-accent="#bf8f00">
+    <g class="slots">
+      <g id="slot-warung-warmindo" class="slot" data-status="available" data-slot="slot-warung-warmindo" role="button" tabindex="0" aria-label="Warmindo">
+        <rect x="122" y="440" width="113" height="120" rx="4"/>
+        <text x="178.5" y="500" font-size="18" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle"><tspan x="178.5" dy="0">Warmindo</tspan></text>
+      </g>
+      <g id="slot-warung-01" class="slot" data-status="available" data-slot="slot-warung-01" role="button" tabindex="0" aria-label="Warung 1">
+        <rect x="122" y="632" width="113" height="108" rx="4"/>
+        <text x="178.5" y="686" font-size="17" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle"><tspan x="178.5" dy="0">Warung 1</tspan></text>
+      </g>
+      <g id="slot-warung-02" class="slot" data-status="available" data-slot="slot-warung-02" role="button" tabindex="0" aria-label="Warung 2">
+        <rect x="122" y="744" width="113" height="56" rx="4"/>
+        <text x="178.5" y="772" font-size="10" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle"><tspan x="178.5" dy="0">Warung 2</tspan></text>
+      </g>
+      <g id="slot-warung-03" class="slot" data-status="available" data-slot="slot-warung-03" role="button" tabindex="0" aria-label="Warung 3">
+        <rect x="122" y="804" width="113" height="54" rx="4"/>
+        <text x="178.5" y="831" font-size="10" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle"><tspan x="178.5" dy="0">Warung 3</tspan></text>
+      </g>
+      <g id="slot-warung-04" class="slot" data-status="available" data-slot="slot-warung-04" role="button" tabindex="0" aria-label="Warung 4">
+        <rect x="122" y="862" width="113" height="42" rx="4"/>
+        <text x="178.5" y="883" font-size="10" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle"><tspan x="178.5" dy="0">Warung 4</tspan></text>
+      </g>
+      <g id="slot-warung-05" class="slot" data-status="available" data-slot="slot-warung-05" role="button" tabindex="0" aria-label="Warung 5">
+        <rect x="122" y="908" width="93" height="96" rx="4"/>
+        <text x="168.5" y="956" transform="rotate(-90 168.5 956)" font-size="15" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle"><tspan x="168.5" dy="0">Warung 5</tspan></text>
+      </g>
+      <g id="slot-warung-06" class="slot" data-status="available" data-slot="slot-warung-06" role="button" tabindex="0" aria-label="Warung 6">
+        <rect x="219" y="908" width="64" height="96" rx="4"/>
+        <text x="251" y="956" transform="rotate(-90 251 956)" font-size="10" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle"><tspan x="251" dy="0">Warung 6</tspan></text>
+      </g>
+      <g id="slot-warung-07" class="slot" data-status="available" data-slot="slot-warung-07" role="button" tabindex="0" aria-label="Warung 7">
+        <rect x="287" y="908" width="64" height="96" rx="4"/>
+        <text x="319" y="956" transform="rotate(-90 319 956)" font-size="10" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle"><tspan x="319" dy="0">Warung 7</tspan></text>
+      </g>
+      <g id="slot-warung-08" class="slot" data-status="available" data-slot="slot-warung-08" role="button" tabindex="0" aria-label="Warung 8">
+        <rect x="355" y="908" width="64" height="96" rx="4"/>
+        <text x="387" y="956" transform="rotate(-90 387 956)" font-size="10" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle"><tspan x="387" dy="0">Warung 8</tspan></text>
+      </g>
+      <g id="slot-warung-09" class="slot" data-status="available" data-slot="slot-warung-09" role="button" tabindex="0" aria-label="Warung 9">
+        <rect x="423" y="908" width="66" height="96" rx="4"/>
+        <text x="456" y="956" transform="rotate(-90 456 956)" font-size="11" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle"><tspan x="456" dy="0">Warung 9</tspan></text>
+      </g>
+      <g id="slot-warung-10" class="slot" data-status="available" data-slot="slot-warung-10" role="button" tabindex="0" aria-label="Warung 10">
+        <rect x="493" y="908" width="66" height="96" rx="4"/>
+        <text x="526" y="956" transform="rotate(-90 526 956)" font-size="11" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle"><tspan x="526" dy="0">Warung 10</tspan></text>
+      </g>
+      <g id="slot-warung-sate-gule" class="slot" data-status="available" data-slot="slot-warung-sate-gule" role="button" tabindex="0" aria-label="Warung Sate &amp; Gule">
+        <rect x="655" y="908" width="185" height="96" rx="4"/>
+        <text x="747.5" y="956" font-size="15" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle"><tspan x="747.5" dy="0">Warung Sate &amp; Gule</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g id="zone-fasilitas" data-zone-type-accent="#808080">
+    <g class="slots">
+      <g id="slot-fasilitas-kantor-sekretariat" class="slot facility" data-status="facility" data-slot="slot-fasilitas-kantor-sekretariat" aria-label="Kantor Sekretariat &amp; Rest Area Kostrad">
+        <rect x="122" y="133" width="168" height="64" rx="4"/>
+        <text x="206" y="159.25" font-size="10" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle"><tspan x="206" dy="0">Kantor Sekretariat &amp; Rest Area</tspan><tspan x="206" dy="11.5">Kostrad</tspan></text>
+      </g>
+      <g id="slot-fasilitas-stage-utama" class="slot facility" data-status="facility" data-slot="slot-fasilitas-stage-utama" aria-label="Stage Utama">
+        <rect x="385" y="138" width="74" height="48" rx="4"/>
+        <text x="422" y="162" font-size="10" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle"><tspan x="422" dy="0">Stage Utama</tspan></text>
+      </g>
+      <g id="slot-fasilitas-tempat-cuci" class="slot facility" data-status="facility" data-slot="slot-fasilitas-tempat-cuci" aria-label="Tempat Cuci Mobil &amp; Motor">
+        <rect x="122" y="272" width="113" height="164" rx="4"/>
+        <text x="178.5" y="343.65" transform="rotate(-90 178.5 354)" font-size="18" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle"><tspan x="178.5" dy="0">Tempat Cuci</tspan><tspan x="178.5" dy="20.7">Mobil &amp; Motor</tspan></text>
+      </g>
+      <g id="slot-fasilitas-area-zumba" class="slot facility" data-status="facility" data-slot="slot-fasilitas-area-zumba" aria-label="Area Zumba">
+        <rect x="239" y="272" width="222" height="164" rx="4"/>
+        <text x="350" y="354" font-size="22" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle"><tspan x="350" dy="0">Area Zumba</tspan></text>
+      </g>
+      <g id="slot-fasilitas-musholah" class="slot facility" data-status="facility" data-slot="slot-fasilitas-musholah" aria-label="Musholah">
+        <rect x="890" y="325" width="120" height="126" rx="4"/>
+        <text x="950" y="388" font-size="19" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle"><tspan x="950" dy="0">Musholah</tspan></text>
+      </g>
+      <g id="slot-fasilitas-lapangan-tembak" class="slot facility" data-status="facility" data-slot="slot-fasilitas-lapangan-tembak" aria-label="Lapangan Tembak">
+        <rect x="120" y="1180" width="570" height="250" rx="4"/>
+        <text x="405" y="1305" font-size="22" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle"><tspan x="405" dy="0">Lapangan Tembak</tspan></text>
+      </g>
+      <g id="slot-fasilitas-parkiran" class="slot facility" data-status="facility" data-slot="slot-fasilitas-parkiran" aria-label="Parkiran Untuk Pengunjung">
+        <rect x="695" y="1180" width="110" height="250" rx="4"/>
+        <text x="750" y="1305" transform="rotate(-90 750 1305)" font-size="18" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle"><tspan x="750" dy="0">Parkiran Untuk Pengunjung</tspan></text>
+      </g>
+      <g id="slot-fasilitas-kolam-pemancingan" class="slot facility" data-status="facility" data-slot="slot-fasilitas-kolam-pemancingan" aria-label="Kolam Pemancingan">
+        <rect x="810" y="1180" width="225" height="250" rx="4"/>
+        <text x="922.5" y="1305" font-size="22" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle"><tspan x="922.5" dy="0">Kolam Pemancingan</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g id="denah-legenda" aria-hidden="true" pointer-events="none">
+    <line x1="60" y1="1448" x2="1063" y2="1448" stroke="#cbd5e1" stroke-width="1"/>
+    <text x="60" y="1472" font-size="14" font-weight="800" fill="#0f172a">KETERANGAN</text>
+    <rect x="60" y="1486" width="24" height="20" rx="4" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+    <text class="legend-label" x="92" y="1496" dominant-baseline="middle">Tersedia</text>
+    <rect x="175" y="1486" width="24" height="20" rx="4" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+    <text class="legend-label" x="207" y="1496" dominant-baseline="middle">Menunggu Pembayaran</text>
+    <rect x="366" y="1486" width="24" height="20" rx="4" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+    <text class="legend-label" x="398" y="1496" dominant-baseline="middle">Terisi</text>
+    <rect x="466" y="1486" width="24" height="20" rx="4" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/>
+    <text class="legend-label" x="498" y="1496" dominant-baseline="middle">Fasilitas / tidak disewakan</text>
+    <rect x="60" y="1526" width="16" height="16" rx="3" fill="#7030a0"/>
+    <text class="legend-label" x="82" y="1535" font-size="12" dominant-baseline="middle">Tenda Mobil Baru</text>
+    <rect x="210" y="1526" width="16" height="16" rx="3" fill="#c00000"/>
+    <text class="legend-label" x="232" y="1535" font-size="12" dominant-baseline="middle">Area Pameran Mobil</text>
+    <rect x="375" y="1526" width="16" height="16" rx="3" fill="#ff00ff"/>
+    <text class="legend-label" x="397" y="1535" font-size="12" dominant-baseline="middle">Area Mobil &amp; Motor</text>
+    <rect x="540" y="1526" width="16" height="16" rx="3" fill="#0070c0"/>
+    <text class="legend-label" x="562" y="1535" font-size="12" dominant-baseline="middle">Area UMKM</text>
+    <rect x="646" y="1526" width="16" height="16" rx="3" fill="#bf8f00"/>
+    <text class="legend-label" x="668" y="1535" font-size="12" dominant-baseline="middle">Warung</text>
+    <rect x="732" y="1526" width="16" height="16" rx="3" fill="#808080"/>
+    <text class="legend-label" x="754" y="1535" font-size="12" dominant-baseline="middle">Fasilitas</text>
+    <text x="1063" y="1562" text-anchor="end" font-size="11" fill="#94a3b8">Sumber: Layout Sistem Pameran.jpeg &#183; 104 slot (96 dapat disewa) &#183; id tiap slot = kolom svg_element_id di database</text>
+  </g>
+</svg>

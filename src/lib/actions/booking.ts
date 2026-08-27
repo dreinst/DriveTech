@@ -1,0 +1,240 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+
+import { MAX_PROOF_BYTES, STORAGE_BUCKET_BUKTI } from "@/lib/domain/constants";
+import { TENANT_TYPE_BY_ZONE_TYPE } from "@/lib/domain/labels";
+import {
+  cancelBooking,
+  createBooking,
+  getBookingByCode,
+  getBookingDetail,
+  submitPayment,
+} from "@/lib/services/booking";
+import { getSlotDetail } from "@/lib/services/slots";
+import { createAdminSupabase } from "@/lib/supabase/admin";
+import { isServiceRoleConfigured } from "@/lib/supabase/config";
+import {
+  cancelBookingSchema,
+  createBookingSchema,
+  submitPaymentSchema,
+  zodFieldErrors,
+} from "@/lib/validation/schemas";
+import { errorState, type ActionState } from "./state";
+
+/* ------------------------------------------------------------------ */
+/* Utilitas internal                                                   */
+/* ------------------------------------------------------------------ */
+
+/**
+ * React memanggil action dengan (prevState, formData) lewat useActionState,
+ * tapi <form action={fn}> hanya mengirim (formData). Pembaca ini menerima keduanya.
+ */
+function ambilFormData(prevState: ActionState, formData: FormData): FormData {
+  if (formData instanceof FormData) return formData;
+  const kandidat = prevState as unknown;
+  if (kandidat instanceof FormData) return kandidat;
+  return new FormData();
+}
+
+function teks(formData: FormData, key: string): string {
+  const value = formData.get(key);
+  return typeof value === "string" ? value : "";
+}
+
+/** Field bebas dengan awalan "detail." dikumpulkan ke kolom jsonb tenants.detail. */
+function ambilDetail(formData: FormData): Record<string, unknown> {
+  const detail: Record<string, unknown> = {};
+  for (const [key, value] of formData.entries()) {
+    if (!key.startsWith("detail.")) continue;
+    const nama = key.slice("detail.".length).trim();
+    if (nama.length === 0 || typeof value !== "string") continue;
+    if (value.trim().length === 0) continue;
+    detail[nama] = value.trim();
+  }
+  return detail;
+}
+
+const JENIS_BUKTI_DIIZINKAN = ["image/jpeg", "image/png", "image/webp"];
+
+function ekstensiBukti(mime: string): string {
+  if (mime === "image/png") return "png";
+  if (mime === "image/webp") return "webp";
+  return "jpg";
+}
+
+/* ------------------------------------------------------------------ */
+/* Action                                                              */
+/* ------------------------------------------------------------------ */
+
+/** Form data tenant di /booking/[slotId]. */
+export async function createBookingAction(
+  prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const form = ambilFormData(prevState, formData);
+  const slotId = teks(form, "slotId");
+
+  // Tipe tenant ditentukan tipe zona slot; nilai dari form hanya cadangan.
+  let tenantType = teks(form, "tenantType");
+  if (slotId.length > 0) {
+    const slot = await getSlotDetail(slotId);
+    if (slot.ok) {
+      const otomatis = TENANT_TYPE_BY_ZONE_TYPE[slot.data.zone.zone_type];
+      if (otomatis) tenantType = otomatis;
+    }
+  }
+
+  const detail = ambilDetail(form);
+  const parsed = createBookingSchema.safeParse({
+    slotId,
+    tenantName: teks(form, "tenantName"),
+    tenantPhone: teks(form, "tenantPhone"),
+    tenantEmail: teks(form, "tenantEmail"),
+    tenantType,
+    detail: Object.keys(detail).length > 0 ? detail : undefined,
+    notes: teks(form, "notes"),
+  });
+
+  if (!parsed.success) {
+    return errorState("Periksa kembali isian formulir.", zodFieldErrors(parsed.error));
+  }
+
+  const result = await createBooking(parsed.data);
+  if (!result.ok) {
+    return errorState(result.error, result.code === "SLOT_TAKEN" ? { slotId: result.error } : undefined);
+  }
+
+  revalidatePath("/");
+  revalidatePath(`/booking/${parsed.data.slotId}`);
+  revalidatePath("/admin/bookings");
+
+  // redirect() melempar NEXT_REDIRECT — jangan dibungkus try/catch.
+  redirect(`/booking/${result.data.bookingId}/bayar`);
+  // Tidak pernah tercapai: redirect() melempar NEXT_REDIRECT.
+  return { status: "success" };
+}
+
+/** Pilih metode pembayaran + unggah bukti transfer di /booking/[bookingId]/bayar. */
+export async function submitPaymentAction(
+  prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const form = ambilFormData(prevState, formData);
+  const bookingId = teks(form, "bookingId");
+  const method = teks(form, "method");
+
+  const bookingResult = await getBookingDetail(bookingId);
+  if (!bookingResult.ok) {
+    return errorState(bookingResult.error, { bookingId: bookingResult.error });
+  }
+  const booking = bookingResult.data;
+
+  let proofUrl = booking.payment?.proof_url ?? "";
+
+  const berkasMentah = form.get("proof");
+  const berkas =
+    berkasMentah instanceof File && berkasMentah.size > 0 ? berkasMentah : null;
+
+  if (method === "transfer" && berkas !== null) {
+    if (berkas.size > MAX_PROOF_BYTES) {
+      return errorState("Ukuran bukti transfer maksimal 2 MB.", {
+        proof: "Ukuran bukti transfer maksimal 2 MB.",
+      });
+    }
+    if (!JENIS_BUKTI_DIIZINKAN.includes(berkas.type)) {
+      return errorState("Format bukti transfer harus JPG, PNG, atau WEBP.", {
+        proof: "Format bukti transfer harus JPG, PNG, atau WEBP.",
+      });
+    }
+    if (!isServiceRoleConfigured()) {
+      return errorState(
+        "Supabase belum dikonfigurasi. Salin .env.example ke .env.local dan isi kredensialnya.",
+      );
+    }
+
+    const supabase = createAdminSupabase();
+    const nama = `${booking.id}-${booking.slot_id}.${ekstensiBukti(berkas.type)}`;
+    const unggah = await supabase.storage.from(STORAGE_BUCKET_BUKTI).upload(nama, berkas, {
+      upsert: true,
+      contentType: berkas.type,
+      cacheControl: "3600",
+    });
+
+    if (unggah.error) {
+      return errorState(`Gagal mengunggah bukti transfer: ${unggah.error.message}`, {
+        proof: "Bukti transfer gagal diunggah, coba lagi.",
+      });
+    }
+
+    const { data } = supabase.storage.from(STORAGE_BUCKET_BUKTI).getPublicUrl(nama);
+    proofUrl = data.publicUrl;
+  }
+
+  const parsed = submitPaymentSchema.safeParse({ bookingId, method, proofUrl });
+  if (!parsed.success) {
+    const errors = zodFieldErrors(parsed.error);
+    // Nama field di formulir adalah "proof", sedangkan skema memakai "proofUrl".
+    if (errors.proofUrl && !errors.proof) errors.proof = errors.proofUrl;
+    return errorState("Periksa kembali pilihan pembayaran.", errors);
+  }
+
+  const result = await submitPayment(parsed.data);
+  if (!result.ok) return errorState(result.error);
+
+  revalidatePath(`/booking/${bookingId}/bayar`);
+  revalidatePath(`/booking/${bookingId}/status`);
+  revalidatePath("/admin/bookings");
+  revalidatePath("/admin");
+
+  redirect(`/booking/${bookingId}/status`);
+  // Tidak pernah tercapai: redirect() melempar NEXT_REDIRECT.
+  return { status: "success" };
+}
+
+/** Batalkan booking dari halaman status; slot kembali tersedia. */
+export async function cancelBookingAction(
+  prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const form = ambilFormData(prevState, formData);
+  const parsed = cancelBookingSchema.safeParse({ bookingId: teks(form, "bookingId") });
+  if (!parsed.success) {
+    return errorState("Data booking tidak valid.", zodFieldErrors(parsed.error));
+  }
+
+  const result = await cancelBooking(parsed.data.bookingId);
+  if (!result.ok) return errorState(result.error);
+
+  revalidatePath("/");
+  revalidatePath(`/booking/${parsed.data.bookingId}/status`);
+  revalidatePath("/admin/bookings");
+  revalidatePath("/admin/slots");
+
+  redirect(`/booking/${parsed.data.bookingId}/status`);
+  // Tidak pernah tercapai: redirect() melempar NEXT_REDIRECT.
+  return { status: "success" };
+}
+
+/** Cek status booking lewat kode "BK-XXXXXX" lalu arahkan ke halaman statusnya. */
+export async function cekStatusAction(
+  prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const form = ambilFormData(prevState, formData);
+  const kode = teks(form, "code").trim();
+
+  if (kode.length === 0) {
+    return errorState("Masukkan kode booking Anda.", { code: "Kode booking wajib diisi." });
+  }
+
+  const result = await getBookingByCode(kode);
+  if (!result.ok) {
+    return errorState(result.error, { code: result.error });
+  }
+
+  redirect(`/booking/${result.data.id}/status`);
+  // Tidak pernah tercapai: redirect() melempar NEXT_REDIRECT.
+  return { status: "success" };
+}
