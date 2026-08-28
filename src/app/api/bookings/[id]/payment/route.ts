@@ -92,7 +92,8 @@ async function unggahBukti(
  * POST /api/bookings/{bookingId}/payment
  *
  * Menerima DUA bentuk body (dideteksi lewat header Content-Type):
- *  1. application/json      -> { method: "cash" | "transfer", proofUrl?: string }
+ *  1. application/json      -> { method: "transfer", proofUrl?: string }
+ *     (opsi cash dihapus 2026-08-28 — booking hanya dikunci lewat transfer)
  *  2. multipart/form-data   -> field "method", "proof" (berkas gambar), "proofUrl" (opsional)
  *
  * Sukses 200: { bookingId }

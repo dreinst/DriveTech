@@ -15,7 +15,8 @@ import {
   verifyPayment,
   type LeasingApplicationPatch,
 } from "@/lib/services/admin";
-import { requireAdmin, signInAdmin, signOutAdmin } from "@/lib/services/auth";
+import { requireAdmin, requireFullAdmin, signInAdmin, signOutAdmin } from "@/lib/services/auth";
+import { tujuanAdminAman } from "@/lib/utils";
 import {
   addEventDateSchema,
   adminLoginSchema,
@@ -44,12 +45,6 @@ function ambilFormData(prevState: ActionState, formData: FormData): FormData {
 function teks(formData: FormData, key: string): string {
   const value = formData.get(key);
   return typeof value === "string" ? value : "";
-}
-
-/** Hanya izinkan tujuan internal supaya tidak bisa dipakai open redirect. */
-function tujuanAman(next: string): string {
-  if (next.startsWith("/") && !next.startsWith("//")) return next;
-  return "/admin";
 }
 
 /** Segarkan seluruh halaman admin yang menampilkan data slot/booking. */
@@ -84,7 +79,7 @@ export async function adminLoginAction(
   const result = await signInAdmin(parsed.data.email, parsed.data.password);
   if (!result.ok) return errorState(result.error);
 
-  const tujuan = tujuanAman(teks(form, "next"));
+  const tujuan = tujuanAdminAman(teks(form, "next"));
   revalidatePath("/admin");
 
   // redirect() melempar NEXT_REDIRECT — jangan dibungkus try/catch.
@@ -124,7 +119,8 @@ export async function overrideSlotStatusAction(
   formData: FormData,
 ): Promise<ActionState> {
   const form = ambilFormData(prevState, formData);
-  await requireAdmin();
+  const gate = await requireFullAdmin();
+  if (!gate.ok) return errorState(gate.error);
 
   const parsed = overrideSlotSchema.safeParse({
     slotId: teks(form, "slotId"),
@@ -198,7 +194,8 @@ export async function updateLeasingApplicationAction(
   formData: FormData,
 ): Promise<ActionState> {
   const form = ambilFormData(prevState, formData);
-  await requireAdmin();
+  const gate = await requireFullAdmin();
+  if (!gate.ok) return errorState(gate.error);
 
   const parsed = updateLeasingSchema.safeParse({
     id: teks(form, "id"),
@@ -243,7 +240,8 @@ export async function setCommissionPaidAction(
   formData: FormData,
 ): Promise<ActionState> {
   const form = ambilFormData(prevState, formData);
-  await requireAdmin();
+  const gate = await requireFullAdmin();
+  if (!gate.ok) return errorState(gate.error);
 
   const id = teks(form, "id");
   if (id.length === 0) return errorState("ID pengajuan tidak valid.", { id: "ID wajib diisi." });
@@ -265,7 +263,8 @@ export async function upsertPartnerAction(
   formData: FormData,
 ): Promise<ActionState> {
   const form = ambilFormData(prevState, formData);
-  await requireAdmin();
+  const gate = await requireFullAdmin();
+  if (!gate.ok) return errorState(gate.error);
 
   const parsed = upsertPartnerSchema.safeParse({
     id: teks(form, "id"),
@@ -297,7 +296,8 @@ export async function addEventDateAction(
   formData: FormData,
 ): Promise<ActionState> {
   const form = ambilFormData(prevState, formData);
-  await requireAdmin();
+  const gate = await requireFullAdmin();
+  if (!gate.ok) return errorState(gate.error);
 
   const parsed = addEventDateSchema.safeParse({ date: teks(form, "date") });
   if (!parsed.success) {
@@ -318,7 +318,8 @@ export async function setEventDateActiveAction(
   formData: FormData,
 ): Promise<ActionState> {
   const form = ambilFormData(prevState, formData);
-  await requireAdmin();
+  const gate = await requireFullAdmin();
+  if (!gate.ok) return errorState(gate.error);
 
   const id = teks(form, "id");
   if (id.length === 0) return errorState("ID tanggal tidak valid.", { id: "ID wajib diisi." });
@@ -344,7 +345,8 @@ export async function updateZoneFeeAction(
   formData: FormData,
 ): Promise<ActionState> {
   const form = ambilFormData(prevState, formData);
-  await requireAdmin();
+  const gate = await requireFullAdmin();
+  if (!gate.ok) return errorState(gate.error);
 
   const parsed = updateZoneFeeSchema.safeParse({
     zoneId: teks(form, "zoneId"),

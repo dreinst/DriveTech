@@ -191,6 +191,7 @@ export async function createBooking(
   }
 
   let tenant = (existingTenant.data ?? null) as TenantRow | null;
+  let tenantBaru = false;
   if (!tenant) {
     const inserted = await supabase
       .from("tenants")
@@ -205,10 +206,39 @@ export async function createBooking(
       .single();
 
     if (inserted.error || !inserted.data) {
-      return dbFail<Out>(inserted.error as PgError, "Gagal menyimpan data tenant");
+      if ((inserted.error as PgError)?.code !== UNIQUE_VIOLATION) {
+        return dbFail<Out>(inserted.error as PgError, "Gagal menyimpan data tenant");
+      }
+      // Kena index unik tenants_phone_type_uidx: request lain baru saja membuat
+      // tenant dengan (telepon, jenis) yang sama — pakai baris itu, jangan ganda.
+      const ulang = await supabase
+        .from("tenants")
+        .select("*")
+        .eq("phone", data.tenantPhone)
+        .eq("tenant_type", tenantType)
+        .limit(1)
+        .maybeSingle();
+      if (ulang.error || !ulang.data) {
+        return dbFail<Out>(
+          (ulang.error ?? inserted.error) as PgError,
+          "Gagal menyimpan data tenant",
+        );
+      }
+      tenant = ulang.data as TenantRow;
+    } else {
+      tenant = inserted.data as TenantRow;
+      tenantBaru = true;
     }
-    tenant = inserted.data as TenantRow;
   }
+
+  // Kompensasi bersama: tenant yang BARU dibuat request ini ikut dihapus saat
+  // langkah berikutnya gagal, supaya tidak ada baris PII yatim tanpa booking.
+  // Tenant lama (ditemukan lewat telepon) tidak pernah disentuh.
+  const tenantId = tenant.id;
+  const hapusTenantYatim = async (): Promise<void> => {
+    if (!tenantBaru) return;
+    await supabase.from("tenants").delete().eq("id", tenantId);
+  };
 
   /* --- Langkah 1: insert booking --- */
   const bookingInsert = await supabase
@@ -223,6 +253,7 @@ export async function createBooking(
     .single();
 
   if (bookingInsert.error || !bookingInsert.data) {
+    await hapusTenantYatim();
     const error = bookingInsert.error as PgError;
     if (error?.code === UNIQUE_VIOLATION) {
       return fail<Out>("Slot ini baru saja dibooking orang lain.", "SLOT_TAKEN");
@@ -244,6 +275,7 @@ export async function createBooking(
     // Kompensasi: booking batal dibuat (cascade menghapus baris booking_dates
     // yang mungkin sempat masuk).
     await supabase.from("bookings").delete().eq("id", booking.id);
+    await hapusTenantYatim();
     if ((datesInsert.error as PgError)?.code === UNIQUE_VIOLATION) {
       return fail<Out>(
         "Sebagian tanggal yang dipilih baru saja terisi. Silakan pilih tanggal lain.",
@@ -259,13 +291,16 @@ export async function createBooking(
   const paymentInsert = await supabase.from("admin_fee_payments").insert({
     booking_id: booking.id,
     amount,
-    method: "cash",
+    // Transfer-only: tagihan langsung memakai metode transfer; booking yang
+    // tidak kunjung membayar dibatalkan otomatis expire_unpaid_bookings().
+    method: "transfer",
     status: "unpaid",
   });
 
   if (paymentInsert.error) {
     // Kompensasi: booking batal dibuat (booking_dates ikut terhapus lewat cascade).
     await supabase.from("bookings").delete().eq("id", booking.id);
+    await hapusTenantYatim();
     return dbFail<Out>(paymentInsert.error as PgError, "Gagal membuat tagihan biaya admin");
   }
 

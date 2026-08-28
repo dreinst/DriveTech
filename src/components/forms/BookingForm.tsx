@@ -12,6 +12,7 @@ import { SubmitButton } from "@/components/ui/SubmitButton";
 import { createBookingAction } from "@/lib/actions/booking";
 import { initialActionState } from "@/lib/actions/state";
 import { EVENT_INFO } from "@/lib/domain/constants";
+import { slotAdminFee } from "@/lib/domain/harga";
 import { hitungTotalBiaya } from "@/lib/domain/ketersediaan";
 import { TENANT_TYPE_BY_ZONE_TYPE, TENANT_TYPE_LABEL } from "@/lib/domain/labels";
 import type { BookingStatus, SlotDetail, TenantType } from "@/lib/types/database";
@@ -70,7 +71,10 @@ export function BookingForm({ slot, eventDates, takenDates, initialDates }: Book
     }
   }
 
-  const totalBiaya = hitungTotalBiaya(slot.zone.admin_fee, dipilih.length);
+  // Harga efektif WAJIB lewat slotAdminFee (override per slot ?? harga zona) —
+  // nilai inilah yang dipakai server saat menagih (createBooking).
+  const biayaPerTanggal = slotAdminFee(slot, slot.zone);
+  const totalBiaya = hitungTotalBiaya(biayaPerTanggal, dipilih.length);
   const adaTerisi = eventDates.some((t) => takenDates[t] !== undefined);
 
   /** Status chip per tanggal untuk slot INI (dipakai DateChips sadar-slot). */
@@ -144,7 +148,7 @@ export function BookingForm({ slot, eventDates, takenDates, initialDates }: Book
           <div className="flex items-baseline justify-between gap-3">
             <dt className="text-sm text-muted">Biaya admin</dt>
             <dd className="tabular text-sm font-medium text-ink">
-              {formatRupiah(slot.zone.admin_fee)} / tanggal
+              {formatRupiah(biayaPerTanggal)} / tanggal
             </dd>
           </div>
           <div className="mt-1.5 flex items-baseline justify-between gap-3">

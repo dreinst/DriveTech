@@ -33,8 +33,13 @@ function ambilKolom(rows: ExportCsvRow[]): string[] {
 
 function bungkus(nilai: string | number | null | undefined): string {
   if (nilai === null || nilai === undefined) return "";
-  const teks = String(nilai).replace(/\r?\n/g, " ").trim();
+  let teks = String(nilai).replace(/\r?\n/g, " ").trim();
   if (teks.length === 0) return "";
+  // Anti injeksi formula spreadsheet: Excel/Sheets tetap mengevaluasi sel yang
+  // diawali = + - @ atau tab MESKI sudah dikutip CSV, dan nilai seperti nama
+  // tenant berasal dari input publik. Apostrof di depan memaksa sel jadi teks
+  // (tidak ikut ditampilkan oleh Excel/Sheets).
+  if (/^[=+\-@\t]/.test(teks)) teks = `'${teks}`;
   if (teks.includes(PEMISAH) || teks.includes('"') || teks.includes(",")) {
     return `"${teks.replace(/"/g, '""')}"`;
   }

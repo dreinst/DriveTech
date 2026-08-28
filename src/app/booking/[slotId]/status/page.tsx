@@ -14,6 +14,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Stepper } from "@/components/ui/Stepper";
 import { EVENT_INFO } from "@/lib/domain/constants";
+import { slotAdminFee } from "@/lib/domain/harga";
 import { hitungTotalBiaya } from "@/lib/domain/ketersediaan";
 import { PAYMENT_METHOD_LABEL } from "@/lib/domain/labels";
 import { getBookingDetail } from "@/lib/services/booking";
@@ -64,7 +65,10 @@ export default async function StatusBookingPage({ params }: PageProps) {
   // payment.amount sudah = biaya per tanggal x jumlah tanggal (dihitung createBooking).
   const nominal =
     payment?.amount ??
-    hitungTotalBiaya(booking.slot.zone.admin_fee, Math.max(booking.dates.length, 1));
+    hitungTotalBiaya(
+      slotAdminFee(booking.slot, booking.slot.zone),
+      Math.max(booking.dates.length, 1),
+    );
 
   return (
     <div className={WRAP}>

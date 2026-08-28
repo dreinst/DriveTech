@@ -88,7 +88,9 @@ export const createBookingSchema = z.object({
 export const submitPaymentSchema = z
   .object({
     bookingId: uuid("ID booking"),
-    method: z.enum(["cash", "transfer"], { error: "Metode pembayaran tidak valid." }),
+    // Opsi cash dihapus (keputusan pemilik, 2026-08-28): booking hanya dikunci
+    // lewat transfer + bukti. Enum DB masih menyimpan 'cash' untuk data lama.
+    method: z.literal("transfer", { error: "Pembayaran hanya menerima transfer bank." }),
     proofUrl: optionalUrl,
   })
   .superRefine((value, ctx) => {

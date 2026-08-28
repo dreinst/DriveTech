@@ -3,6 +3,24 @@ export function cn(...classes: Array<string | false | null | undefined>): string
   return classes.filter(Boolean).join(" ");
 }
 
+/**
+ * Hanya izinkan tujuan redirect internal (anti open-redirect) untuk parameter
+ * `next` di alur login admin. Backslash ditolak: browser menormalkan `\` jadi
+ * `/`, sehingga `/\evil.com` berubah menjadi `//evil.com` (protocol-relative).
+ */
+export function tujuanAdminAman(next: string | string[] | undefined): string {
+  const nilai = Array.isArray(next) ? next[0] : next;
+  if (
+    typeof nilai === "string" &&
+    nilai.startsWith("/") &&
+    !nilai.startsWith("//") &&
+    !nilai.includes("\\")
+  ) {
+    return nilai;
+  }
+  return "/admin";
+}
+
 const rupiahFormatter = new Intl.NumberFormat("id-ID", {
   style: "currency",
   currency: "IDR",
