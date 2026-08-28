@@ -4,10 +4,13 @@ import { EVENT_INFO } from "@/lib/domain/constants";
 
 type NavItem = { href: string; label: string };
 
-/** Anchor menuju bagian-bagian beranda + halaman katalog kendaraan per jenis. */
+/**
+ * Anchor menuju bagian-bagian beranda + halaman katalog kendaraan.
+ * Katalog satu tautan saja — pembedaan mobil/motor terjadi DI DALAM halaman
+ * lewat chips filter jenis (keputusan pemilik, 2026-08-28).
+ */
 const NAV_ITEMS: readonly NavItem[] = [
-  { href: "/katalog?jenis=mobil", label: "Katalog Mobil" },
-  { href: "/katalog?jenis=motor", label: "Katalog Motor" },
+  { href: "/katalog", label: "Katalog" },
   { href: "/#zona", label: "Zona" },
   { href: "/#denah", label: "Peta Lokasi" },
   { href: "/#cek-status", label: "Cek Status" },
