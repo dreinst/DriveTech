@@ -6,7 +6,12 @@ import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { buttonClass } from "@/components/ui/Button";
-import { EVENT_INFO, VEHICLE_ZONE_TYPES } from "@/lib/domain/constants";
+import {
+  EVENT_INFO,
+  VEHICLE_KIND_LABEL,
+  VEHICLE_ZONE_TYPES,
+  type VehicleKind,
+} from "@/lib/domain/constants";
 import { ZONE_TYPE_LABEL } from "@/lib/domain/labels";
 import { listCatalog } from "@/lib/services/catalog";
 import type { CatalogItem, ZoneType } from "@/lib/types/database";
@@ -21,7 +26,11 @@ export const metadata: Metadata = {
 };
 
 type PageProps = {
-  searchParams: Promise<{ tanggal?: string | string[]; zona?: string | string[] }>;
+  searchParams: Promise<{
+    tanggal?: string | string[];
+    zona?: string | string[];
+    jenis?: string | string[];
+  }>;
 };
 
 function satu(value: string | string[] | undefined): string | undefined {
@@ -45,15 +54,19 @@ export default async function KatalogPage({ searchParams }: PageProps) {
   const zona = (VEHICLE_ZONE_TYPES as readonly string[]).includes(zonaParam ?? "")
     ? (zonaParam as ZoneType)
     : undefined;
+  const jenisParam = satu(params.jenis);
+  const jenis =
+    jenisParam === "mobil" || jenisParam === "motor" ? (jenisParam as VehicleKind) : undefined;
 
-  const result = await listCatalog(tanggal);
+  const result = await listCatalog(tanggal, jenis);
   const data = result.ok ? result.data : { dates: [], selectedDate: null, items: [] };
   const items = zona ? data.items.filter((i) => i.slot.zone.zone_type === zona) : data.items;
 
-  const hrefKatalog = (t?: string | null, z?: ZoneType) => {
+  const hrefKatalog = (t?: string | null, z?: ZoneType, j?: VehicleKind) => {
     const query = new URLSearchParams();
     if (t) query.set("tanggal", t);
     if (z) query.set("zona", z);
+    if (j) query.set("jenis", j);
     const qs = query.toString();
     return qs.length > 0 ? `/katalog?${qs}` : "/katalog";
   };
@@ -80,7 +93,7 @@ export default async function KatalogPage({ searchParams }: PageProps) {
                 return (
                   <li key={t}>
                     <Link
-                      href={hrefKatalog(t, zona)}
+                      href={hrefKatalog(t, zona, jenis)}
                       aria-current={aktif ? "date" : undefined}
                       className={cn(
                         "inline-flex min-h-9 items-center rounded-full border px-3.5 text-sm font-medium transition-colors duration-150",
@@ -98,25 +111,55 @@ export default async function KatalogPage({ searchParams }: PageProps) {
           </nav>
         ) : null}
 
-        {/* ---------- Filter zona ---------- */}
+        {/* ---------- Filter jenis (mobil/motor) + zona ---------- */}
         {data.dates.length > 0 ? (
-          <nav aria-label="Filter jenis kendaraan" className="mb-6">
+          <nav aria-label="Filter kendaraan" className="mb-6 space-y-2">
             <ul className="flex flex-wrap gap-2">
               <li>
                 <Link
-                  href={hrefKatalog(data.selectedDate)}
+                  href={hrefKatalog(data.selectedDate, zona)}
+                  className={cn(
+                    "inline-flex min-h-8 items-center rounded-full border px-3.5 text-xs font-semibold transition-colors duration-150",
+                    !jenis
+                      ? "border-ink bg-ink text-app"
+                      : "border-line bg-card text-muted hover:border-ink hover:text-ink",
+                  )}
+                >
+                  Semua Jenis
+                </Link>
+              </li>
+              {(Object.keys(VEHICLE_KIND_LABEL) as VehicleKind[]).map((j) => (
+                <li key={j}>
+                  <Link
+                    href={hrefKatalog(data.selectedDate, zona, j)}
+                    className={cn(
+                      "inline-flex min-h-8 items-center rounded-full border px-3.5 text-xs font-semibold transition-colors duration-150",
+                      jenis === j
+                        ? "border-ink bg-ink text-app"
+                        : "border-line bg-card text-muted hover:border-ink hover:text-ink",
+                    )}
+                  >
+                    {VEHICLE_KIND_LABEL[j]}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <ul className="flex flex-wrap gap-2">
+              <li>
+                <Link
+                  href={hrefKatalog(data.selectedDate, undefined, jenis)}
                   className={cn(
                     "inline-flex min-h-8 items-center rounded-full px-3 text-xs font-medium transition-colors duration-150",
                     !zona ? "bg-surface-3 text-ink" : "text-muted hover:text-ink",
                   )}
                 >
-                  Semua
+                  Semua Zona
                 </Link>
               </li>
               {VEHICLE_ZONE_TYPES.map((z) => (
                 <li key={z}>
                   <Link
-                    href={hrefKatalog(data.selectedDate, z)}
+                    href={hrefKatalog(data.selectedDate, z, jenis)}
                     className={cn(
                       "inline-flex min-h-8 items-center rounded-full px-3 text-xs font-medium transition-colors duration-150",
                       zona === z ? "bg-surface-3 text-ink" : "text-muted hover:text-ink",
@@ -173,8 +216,9 @@ function KartuKendaraan({ item }: { item: CatalogItem }) {
           loading="lazy"
           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
         />
-        <span className="absolute left-3 top-3">
+        <span className="absolute left-3 top-3 flex gap-1.5">
           <Badge tone="blue">{ZONE_TYPE_LABEL[item.slot.zone.zone_type]}</Badge>
+          {item.vehicle_kind === "motor" ? <Badge tone="amber">Motor</Badge> : null}
         </span>
       </div>
 

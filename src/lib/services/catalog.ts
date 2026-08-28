@@ -79,8 +79,12 @@ export type CatalogData = {
 /**
  * Katalog kendaraan publik per tanggal. Hanya listing milik booking CONFIRMED
  * (pembayaran terverifikasi) yang tampil — keputusan pemilik 2026-08-28.
+ * `jenis` menyaring mobil/motor (tautan navbar "Katalog Mobil"/"Katalog Motor").
  */
-export async function listCatalog(tanggal?: string): Promise<Result<CatalogData>> {
+export async function listCatalog(
+  tanggal?: string,
+  jenis?: "mobil" | "motor",
+): Promise<Result<CatalogData>> {
   if (!isServiceRoleConfigured()) return fail<CatalogData>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
   const supabase = createAdminSupabase();
@@ -112,6 +116,7 @@ export async function listCatalog(tanggal?: string): Promise<Result<CatalogData>
     .map(normalizeCatalogRow)
     .filter((item): item is CatalogItem => item !== null)
     .filter((item) => item.dates.includes(selectedDate))
+    .filter((item) => (jenis ? item.vehicle_kind === jenis : true))
     .sort((a, b) => {
       if (a.slot.zone.display_order !== b.slot.zone.display_order) {
         return a.slot.zone.display_order - b.slot.zone.display_order;

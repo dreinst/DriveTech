@@ -75,6 +75,11 @@ const tanggal = z
  */
 export const vehicleInfoSchema = z.object({
   vehicleName: z.string().trim().min(2, "Nama kendaraan minimal 2 karakter."),
+  /** mobil | motor — hanya bisa dipilih di zona campuran; default mobil di service. */
+  kind: z.preprocess(
+    emptyToUndefined,
+    z.enum(["mobil", "motor"], { error: "Jenis kendaraan tidak valid." }).optional(),
+  ),
   plateNumber: z
     .string()
     .trim()

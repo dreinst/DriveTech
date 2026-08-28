@@ -154,6 +154,7 @@ export async function createBookingAction(
 
     vehicle = {
       vehicleName: teks(form, "vehicleName"),
+      kind: teks(form, "vehicleKind"),
       plateNumber: teks(form, "plateNumber"),
       price: teks(form, "vehiclePrice"),
       year: teks(form, "vehicleYear"),

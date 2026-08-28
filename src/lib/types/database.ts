@@ -486,6 +486,7 @@ export type Database = {
           booking_id: string;
           slot_id: string;
           vehicle_name: string;
+          vehicle_kind: "mobil" | "motor";
           plate_number: string;
           price: number;
           year: number | null;
@@ -503,6 +504,7 @@ export type Database = {
           booking_id: string;
           slot_id: string;
           vehicle_name: string;
+          vehicle_kind?: "mobil" | "motor";
           plate_number: string;
           price: number;
           year?: number | null;
@@ -520,6 +522,7 @@ export type Database = {
           booking_id?: string;
           slot_id?: string;
           vehicle_name?: string;
+          vehicle_kind?: "mobil" | "motor";
           plate_number?: string;
           price?: number;
           year?: number | null;

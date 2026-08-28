@@ -78,7 +78,7 @@ var INIT_HEADERS = {
   Payments: ["bookingCode", "status", "method", "amount", "proofUrl", "submittedAt", "verifiedAt", "rejectReason"],
   Purchases: ["transactionCode", "status", "slot", "zona", "buyerName", "buyerPhone", "paymentMethod", "unitDescription", "unitPrice"],
   Leasing: ["leasingId", "purchaseTransactionId", "status", "dpAmount", "tenorBulan", "commissionAmount", "commissionPaid", "notes"],
-  Katalog: ["bookingCode", "vehicleName", "plate", "price", "tahun", "km", "transmisi", "warna", "slot", "zona", "tanggal", "photoUrl", "tampil"],
+  Katalog: ["bookingCode", "vehicleName", "jenis", "plate", "price", "tahun", "km", "transmisi", "warna", "slot", "zona", "tanggal", "photoUrl", "tampil"],
 };
 
 /**

@@ -89,6 +89,10 @@ export function isVehicleZoneType(z: ZoneType): boolean {
   return (VEHICLE_ZONE_TYPES as readonly ZoneType[]).includes(z);
 }
 
+/** Jenis kendaraan di katalog — filter navbar "Katalog Mobil" / "Katalog Motor". */
+export const VEHICLE_KIND_LABEL = { mobil: "Mobil", motor: "Motor" } as const;
+export type VehicleKind = keyof typeof VEHICLE_KIND_LABEL;
+
 /** Pilihan transmisi kendaraan di form booking & katalog. */
 export const TRANSMISSION_OPTIONS = ["manual", "matic"] as const;
 export type TransmissionOption = (typeof TRANSMISSION_OPTIONS)[number];

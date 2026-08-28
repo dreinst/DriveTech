@@ -326,6 +326,7 @@ export async function createBooking(
       booking_id: booking.id,
       slot_id: slot.id,
       vehicle_name: v.vehicleName,
+      vehicle_kind: v.kind ?? "mobil",
       plate_number: v.plateNumber,
       price: v.price,
       year: v.year ?? null,
@@ -347,6 +348,7 @@ export async function createBooking(
     void syncToSheet("vehicle", {
       bookingCode: booking.booking_code,
       vehicleName: v.vehicleName,
+      jenis: v.kind ?? "mobil",
       plate: v.plateNumber,
       price: v.price,
       tahun: v.year ?? "",
