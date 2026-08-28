@@ -51,6 +51,7 @@ var SHEET_BY_ENTITY = {
   payment: "Payments",
   purchase: "Purchases",
   leasing: "Leasing",
+  vehicle: "Katalog",
 };
 
 var UPDATED_AT_HEADER = "updated_at";
@@ -63,7 +64,7 @@ var UPDATED_AT_HEADER = "updated_at";
 var RESET_KEY = "dt-reset-c9k4x7wq21";
 
 /** Sheet yang boleh dihapus oleh aksi reset (dibuat ulang otomatis saat sync). */
-var SHEET_RESETTABLE = ["Bookings", "Payments", "Purchases", "Leasing", "Lainnya"];
+var SHEET_RESETTABLE = ["Bookings", "Payments", "Purchases", "Leasing", "Katalog", "Lainnya"];
 
 /**
  * Hapus seluruh sheet entity supaya dibuat ulang bersih (header baru) pada

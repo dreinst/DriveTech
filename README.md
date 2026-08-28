@@ -186,6 +186,8 @@ Peran yang tersedia: `admin` (akses penuh) dan `verifikator` (fokus verifikasi p
 | --- | --- |
 | `/` | Landing + denah interaktif ala tiket bioskop: pilih zona → ketuk slot → pilih tanggal di panel slot; legenda status & cek kode booking. |
 | `/booking/{slotId}` | Formulir data tenant + ringkasan slot, tanggal terpilih, dan total biaya admin (per tanggal × jumlah tanggal). |
+| `/katalog` | Katalog kendaraan publik per tanggal gelaran: unit milik booking terkonfirmasi di zona kendaraan (foto, harga, plat, lokasi slot). Filter zona + chips tanggal. |
+| `/katalog/{listingId}` | Detail satu kendaraan: foto besar, spesifikasi, tanggal hadir, lokasi slot. Pembelian offline di lokasi. |
 | `/booking/by-svg/{svgElementId}` | Jembatan denah statis → form: cari slot lewat `svg_element_id` lalu redirect ke `/booking/{slotId}`; id tak dikenal → 404. |
 | `/booking/{bookingId}/bayar` | Transfer bank + unggah bukti (opsi cash dihapus 2026-08-28; booking dikunci lewat pembayaran). |
 | `/booking/{bookingId}/status` | Status booking + pembayaran, tombol batal. |

@@ -67,8 +67,36 @@ export const SLOT_SELECTED_STYLE = {
 /** Bucket publik Supabase Storage untuk bukti transfer. */
 export const STORAGE_BUCKET_BUKTI = "bukti-transfer";
 
+/** Bucket publik Supabase Storage untuk foto kendaraan di katalog. */
+export const STORAGE_BUCKET_FOTO_KENDARAAN = "foto-kendaraan";
+
 /** Batas ukuran unggahan bukti transfer: 2 MB. */
 export const MAX_PROOF_BYTES = 2 * 1024 * 1024;
+
+/**
+ * Zona yang slotnya memuat kendaraan untuk dijual — booking di zona ini WAJIB
+ * menyertakan data kendaraan (nama, plat, harga, 1 foto) dan tampil di /katalog
+ * setelah pembayarannya diverifikasi.
+ */
+export const VEHICLE_ZONE_TYPES = [
+  "mobil_baru",
+  "mobil_bekas",
+  "mobil_motor_bekas",
+] as const satisfies readonly ZoneType[];
+
+/** True kalau tipe zona memuat kendaraan (katalog + field kendaraan di form). */
+export function isVehicleZoneType(z: ZoneType): boolean {
+  return (VEHICLE_ZONE_TYPES as readonly ZoneType[]).includes(z);
+}
+
+/** Pilihan transmisi kendaraan di form booking & katalog. */
+export const TRANSMISSION_OPTIONS = ["manual", "matic"] as const;
+export type TransmissionOption = (typeof TRANSMISSION_OPTIONS)[number];
+
+export const TRANSMISSION_LABEL: Record<TransmissionOption, string> = {
+  manual: "Manual",
+  matic: "Matic",
+};
 
 /** Pilihan tenor cicilan leasing (bulan). */
 export const TENOR_OPTIONS: readonly number[] = [12, 18, 24, 36, 48, 60];

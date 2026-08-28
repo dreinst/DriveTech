@@ -15,6 +15,7 @@ import {
   verifyPayment,
   type LeasingApplicationPatch,
 } from "@/lib/services/admin";
+import { setVehicleVisibility } from "@/lib/services/catalog";
 import { requireAdmin, requireFullAdmin, signInAdmin, signOutAdmin } from "@/lib/services/auth";
 import { tujuanAdminAman } from "@/lib/utils";
 import {
@@ -135,6 +136,32 @@ export async function overrideSlotStatusAction(
 
   revalidateAdmin();
   return successState("Status slot berhasil diperbarui.");
+}
+
+/** Tampilkan / sembunyikan satu kendaraan dari katalog publik (/admin/bookings). */
+export async function setVehicleVisibilityAction(
+  prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const form = ambilFormData(prevState, formData);
+  const gate = await requireFullAdmin();
+  if (!gate.ok) return errorState(gate.error);
+
+  const listingId = teks(form, "listingId");
+  if (listingId.length === 0) {
+    return errorState("ID listing tidak valid.", { listingId: "ID wajib diisi." });
+  }
+  const nilai = form.get("visible");
+  const visible = nilai === "on" || nilai === "true" || nilai === "1";
+
+  const result = await setVehicleVisibility(listingId, visible);
+  if (!result.ok) return errorState(result.error);
+
+  revalidatePath("/katalog");
+  revalidatePath("/admin/bookings");
+  return successState(
+    visible ? "Kendaraan ditampilkan di katalog." : "Kendaraan disembunyikan dari katalog.",
+  );
 }
 
 /* ------------------------------------------------------------------ */

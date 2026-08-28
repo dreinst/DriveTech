@@ -487,6 +487,19 @@ export async function verifyPayment(paymentId: string, adminId: string): Promise
     status: "confirmed",
   });
 
+  // Booking confirmed = kendaraannya (bila ada) mulai tampil di /katalog.
+  const listing = await supabase
+    .from("vehicle_listings")
+    .select("id, is_visible")
+    .eq("booking_id", booking.id)
+    .maybeSingle();
+  if (!listing.error && listing.data) {
+    void syncToSheet("vehicle", {
+      bookingCode: booking.booking_code,
+      tampil: (listing.data as { is_visible: boolean }).is_visible ? "ya" : "disembunyikan-admin",
+    });
+  }
+
   return ok(null);
 }
 

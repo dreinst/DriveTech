@@ -1,4 +1,4 @@
-import { isBookableZoneType } from "@/lib/domain/constants";
+import { isBookableZoneType, isVehicleZoneType } from "@/lib/domain/constants";
 import { slotAdminFee } from "@/lib/domain/harga";
 import { hitungTotalBiaya } from "@/lib/domain/ketersediaan";
 import { TENANT_TYPE_BY_ZONE_TYPE } from "@/lib/domain/labels";
@@ -13,6 +13,7 @@ import type {
   Json,
   SlotRow,
   TenantRow,
+  VehicleListingRow,
   ZoneRow,
 } from "@/lib/types/database";
 import {
@@ -45,7 +46,7 @@ const UNIQUE_VIOLATION = "23505";
  * disaring di normalizeBookingRow sesuai kontrak (BookingDetail.dates = aktif saja).
  */
 export const BOOKING_SELECT =
-  "*, slot:slots(*, zone:zones(*)), tenant:tenants(*), payment:admin_fee_payments(*), booking_dates(event_date, is_active)";
+  "*, slot:slots(*, zone:zones(*)), tenant:tenants(*), payment:admin_fee_payments(*), booking_dates(event_date, is_active), listing:vehicle_listings(*)";
 
 type RawSlotWithZone = SlotRow & { zone: ZoneRow | ZoneRow[] | null };
 type RawBookingDate = { event_date: string; is_active: boolean };
@@ -54,6 +55,7 @@ type RawBooking = BookingRow & {
   tenant: TenantRow | TenantRow[] | null;
   payment: AdminFeePaymentRow | AdminFeePaymentRow[] | null;
   booking_dates: RawBookingDate[] | null;
+  listing: VehicleListingRow | VehicleListingRow[] | null;
 };
 
 /** Rapikan baris mentah PostgREST jadi BookingDetail. Dipakai juga oleh services/admin.ts. */
@@ -73,12 +75,14 @@ export function normalizeBookingRow(raw: unknown): BookingDetail | null {
     tenant: _tenant,
     payment: _payment,
     booking_dates: _dates,
+    listing: _listing,
     ...bookingOnly
   } = row;
   void _slot;
   void _tenant;
   void _payment;
   void _dates;
+  void _listing;
 
   const dates = (row.booking_dates ?? [])
     .filter((d) => d.is_active)
@@ -91,6 +95,7 @@ export function normalizeBookingRow(raw: unknown): BookingDetail | null {
     tenant,
     payment: pickOne<AdminFeePaymentRow>(row.payment),
     dates,
+    listing: pickOne<VehicleListingRow>(row.listing),
   };
 }
 
@@ -147,6 +152,16 @@ export async function createBooking(
   // Tipe tenant harus cocok dengan tipe zona (mis. zona UMKM hanya untuk tenant umkm).
   const expectedTenantType = TENANT_TYPE_BY_ZONE_TYPE[slot.zone.zone_type];
   const tenantType = expectedTenantType ?? data.tenantType;
+
+  // Zona kendaraan WAJIB menyertakan data kendaraan untuk katalog publik
+  // (1 slot = 1 kendaraan); zona lain mengabaikan field vehicle bila terkirim.
+  const zonaKendaraan = isVehicleZoneType(slot.zone.zone_type);
+  if (zonaKendaraan && !data.vehicle) {
+    return fail<Out>(
+      "Data kendaraan (nama, plat, harga, dan foto) wajib diisi untuk slot zona kendaraan.",
+      "VALIDATION",
+    );
+  }
 
   const supabase = createAdminSupabase();
 
@@ -302,6 +317,48 @@ export async function createBooking(
     await supabase.from("bookings").delete().eq("id", booking.id);
     await hapusTenantYatim();
     return dbFail<Out>(paymentInsert.error as PgError, "Gagal membuat tagihan biaya admin");
+  }
+
+  /* --- Langkah 4: simpan data kendaraan untuk katalog (khusus zona kendaraan) --- */
+  if (zonaKendaraan && data.vehicle) {
+    const v = data.vehicle;
+    const listingInsert = await supabase.from("vehicle_listings").insert({
+      booking_id: booking.id,
+      slot_id: slot.id,
+      vehicle_name: v.vehicleName,
+      plate_number: v.plateNumber,
+      price: v.price,
+      year: v.year ?? null,
+      mileage_km: v.mileageKm ?? null,
+      transmission: v.transmission ?? null,
+      color: v.color ?? null,
+      description: v.description ?? null,
+      photo_url: v.photoUrl,
+    });
+
+    if (listingInsert.error) {
+      // Kompensasi penuh: tanpa listing, katalog kehilangan unitnya — batalkan
+      // seluruh booking supaya penyewa mengulang dengan bersih.
+      await supabase.from("bookings").delete().eq("id", booking.id);
+      await hapusTenantYatim();
+      return dbFail<Out>(listingInsert.error as PgError, "Gagal menyimpan data kendaraan");
+    }
+
+    void syncToSheet("vehicle", {
+      bookingCode: booking.booking_code,
+      vehicleName: v.vehicleName,
+      plate: v.plateNumber,
+      price: v.price,
+      tahun: v.year ?? "",
+      km: v.mileageKm ?? "",
+      transmisi: v.transmission ?? "",
+      warna: v.color ?? "",
+      slot: slot.svg_element_id ?? slot.slot_label ?? slot.id,
+      zona: slot.zone.name,
+      tanggal: dates.join(", "),
+      photoUrl: v.photoUrl,
+      tampil: "menunggu-konfirmasi",
+    });
   }
 
   // Sinkron ke Google Sheets — fire-and-forget, tidak menahan respons.
