@@ -237,19 +237,29 @@ A('      <path d="M 740 399 l 9 4 l -9 4 z" fill="#334155"/>')
 A('    </g>')
 A('  </g>')
 
-# 3. Area Pameran Mobil & Motor — 14 slot
-zone_open('zone-mobil-motor', 'AREA PAMERAN MOBIL & MOTOR', '#ff00ff',
+# 3. Area Pameran Motor — 14 slot (fokus motor, keputusan pemilik 2026-08-29)
+zone_open('zone-mobil-motor', 'AREA PAMERAN MOTOR', '#ff00ff',
           (774, 430, 90, 430), vertical_title=True, total=14)
 for i in range(14):
     slot('slot-mobil-motor-%02d' % (i + 1), 800, 462 + i * 27.6, 48, 24, number=i + 1)
 zone_close()
 
-# 4. Area UMKM — 30 slot (3 kolom x 10 baris)
-zone_open('zone-umkm', 'AREA UMKM', '#0070c0', (236, 444, 230, 386), total=30)
-for col, cx0 in enumerate([240, 322, 430]):
+# 4. Area UMKM — 20 slot (kolom kiri 1-10 & kanan 21-30). Kolom TENGAH (11-20)
+#    adalah zona terpisah Booth Leasing & Brand Otomotif (booth 2 sisi) —
+#    svg_element_id tetap slot-umkm-XX agar cocok dengan database.
+zone_open('zone-umkm', 'AREA UMKM', '#0070c0', (236, 444, 230, 386), total=20)
+for cx0, start in ((240, 1), (430, 21)):
     for row in range(10):
-        n = col * 10 + row + 1
+        n = start + row
         slot('slot-umkm-%02d' % n, cx0, 474 + row * 34.4, 34, 32, number=n)
+zone_close()
+
+# 4b. Booth Leasing & Brand Otomotif — 10 booth 2 sisi di kolom tengah UMKM
+#     (11-15 bank/leasing, 16-20 brand otomotif; tanpa container sendiri).
+zone_open('zone-booth-khusus', 'BOOTH LEASING & OTOMOTIF', '#0f766e', None, total=10)
+for row in range(10):
+    n = 11 + row
+    slot('slot-umkm-%02d' % n, 322, 474 + row * 34.4, 34, 32, number=n)
 zone_close()
 
 # 5. Warung — 12 unit (tersebar, tanpa container).

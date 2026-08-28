@@ -16,8 +16,10 @@ import type {
 export const ZONE_TYPE_LABEL: Record<ZoneType, string> = {
   mobil_baru: "Mobil Baru",
   mobil_bekas: "Mobil Bekas",
-  mobil_motor_bekas: "Mobil & Motor Bekas",
+  // Keputusan pemilik 2026-08-29: zona 14 slot ini fokus MOTOR saja.
+  mobil_motor_bekas: "Motor Bekas",
   umkm: "UMKM",
+  booth_khusus: "Booth Leasing & Otomotif",
   warung: "Warung",
   facility: "Fasilitas Umum",
 };
@@ -75,8 +77,9 @@ export const PURCHASE_PAYMENT_METHOD_LABEL: Record<PurchasePaymentMethod, string
 
 export const TENANT_TYPE_LABEL: Record<TenantType, string> = {
   dealer_mobil_baru: "Dealer Mobil Baru",
-  individu_bekas: "Individu / Dealer Mobil Bekas",
+  individu_bekas: "Individu / Dealer Kendaraan Bekas",
   umkm: "Pelaku UMKM",
+  mitra_booth: "Bank Leasing / Brand Otomotif",
   warung: "Pemilik Warung",
 };
 
@@ -91,6 +94,7 @@ export const TENANT_TYPE_BY_ZONE_TYPE: Record<ZoneType, TenantType | null> = {
   mobil_bekas: "individu_bekas",
   mobil_motor_bekas: "individu_bekas",
   umkm: "umkm",
+  booth_khusus: "mitra_booth",
   warung: "warung",
   facility: null,
 };

@@ -28,6 +28,7 @@ const TENANT_TYPES: readonly TenantType[] = [
   "dealer_mobil_baru",
   "individu_bekas",
   "umkm",
+  "mitra_booth",
   "warung",
 ];
 
@@ -253,7 +254,9 @@ export function BookingForm({ slot, eventDates, takenDates, initialDates }: Book
           idPrefix={id}
           errors={errors}
           tampilkanKm={slot.zone.zone_type !== "mobil_baru"}
-          pilihJenis={slot.zone.zone_type === "mobil_motor_bekas"}
+          // Jenis mengikuti zonanya: zona motor selalu motor, zona mobil selalu
+          // mobil (keputusan pemilik 2026-08-29 — zona 14 slot fokus motor).
+          jenis={slot.zone.zone_type === "mobil_motor_bekas" ? "motor" : "mobil"}
         />
       ) : null}
 
@@ -353,6 +356,36 @@ function DetailFields({ tenantType, idPrefix, errors }: DetailFieldsProps) {
     );
   }
 
+  if (tenantType === "mitra_booth") {
+    return (
+      <DetailGroup judul="Data Mitra Booth">
+        <Field
+          label="Nama perusahaan / brand"
+          htmlFor={`${idPrefix}-perusahaan`}
+          hint="Booth 11-15 untuk bank/leasing, booth 16-20 untuk brand otomotif (lihat peruntukan slot)."
+          error={errors["detail.nama_perusahaan"]}
+        >
+          <Input
+            id={`${idPrefix}-perusahaan`}
+            name="detail.nama_perusahaan"
+            placeholder="Contoh: BCA Finance / Honda"
+          />
+        </Field>
+        <Field
+          label="Produk / layanan yang ditawarkan"
+          htmlFor={`${idPrefix}-produk-booth`}
+          error={errors["detail.produk_layanan"]}
+        >
+          <Input
+            id={`${idPrefix}-produk-booth`}
+            name="detail.produk_layanan"
+            placeholder="Contoh: Kredit kendaraan DP ringan / display unit terbaru"
+          />
+        </Field>
+      </DetailGroup>
+    );
+  }
+
   if (tenantType === "individu_bekas") {
     return (
       <DetailGroup judul="Data Unit Bekas">
@@ -433,20 +466,20 @@ type VehicleFieldsProps = {
   errors: Record<string, string>;
   /** Kilometer hanya relevan untuk kendaraan bekas. */
   tampilkanKm: boolean;
-  /** Pilihan mobil/motor hanya di zona campuran; zona lain selalu mobil. */
-  pilihJenis: boolean;
+  /** Jenis kendaraan otomatis dari zona slot (mobil / motor). */
+  jenis: "mobil" | "motor";
 };
 
 /**
  * Diisi penyewa slot; hasilnya tampil di /katalog untuk pengunjung umum
  * SETELAH pembayaran diverifikasi panitia. 1 slot = 1 kendaraan.
  */
-function VehicleFields({ idPrefix, errors, tampilkanKm, pilihJenis }: VehicleFieldsProps) {
+function VehicleFields({ idPrefix, errors, tampilkanKm, jenis }: VehicleFieldsProps) {
   return (
     <div role="group" aria-label="Data kendaraan" className="space-y-4 border-t border-line pt-4">
       <div>
         <p className="text-xs font-semibold tracking-wide text-subtle uppercase">
-          Data Kendaraan untuk Katalog
+          Data {jenis === "motor" ? "Motor" : "Mobil"} untuk Katalog
         </p>
         <p className="mt-1 text-xs text-muted">
           Ditampilkan di katalog online untuk pengunjung setelah pembayaran terverifikasi —
@@ -454,27 +487,8 @@ function VehicleFields({ idPrefix, errors, tampilkanKm, pilihJenis }: VehicleFie
         </p>
       </div>
 
-      {pilihJenis ? (
-        <Field
-          label="Jenis kendaraan"
-          htmlFor={`${idPrefix}-jenis-kendaraan`}
-          error={errors["vehicle.kind"]}
-          required
-        >
-          <Select
-            id={`${idPrefix}-jenis-kendaraan`}
-            name="vehicleKind"
-            defaultValue="mobil"
-            aria-invalid={errors["vehicle.kind"] ? true : undefined}
-            required
-          >
-            <option value="mobil">Mobil</option>
-            <option value="motor">Motor</option>
-          </Select>
-        </Field>
-      ) : (
-        <input type="hidden" name="vehicleKind" value="mobil" />
-      )}
+      {/* Jenis mengikuti zona slot — tidak bisa dipilih manual. */}
+      <input type="hidden" name="vehicleKind" value={jenis} />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field

@@ -259,6 +259,9 @@ function upsertRow_(sheet, data) {
   }
 
   // 5. Tulis nilai per kolom (hanya kolom yang dikirim + updated_at).
+  //    Anti injeksi formula: setValue() mengeksekusi string berawalan = + - @
+  //    sebagai formula, padahal nilai seperti nama tenant/kendaraan berasal
+  //    dari input publik — string seperti itu diberi apostrof pengaman.
   for (var c = 0; c < headers.length; c++) {
     var header = headers[c];
     if (header === UPDATED_AT_HEADER) {
@@ -267,6 +270,9 @@ function upsertRow_(sheet, data) {
       var value = data[header];
       if (value !== null && typeof value === "object") {
         value = JSON.stringify(value);
+      }
+      if (typeof value === "string" && /^[=+\-@]/.test(value)) {
+        value = "'" + value;
       }
       sheet.getRange(targetRow, c + 1).setValue(value);
     }

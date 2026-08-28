@@ -56,7 +56,7 @@ where extract(dow from d) in (0, 6)
 on conflict (event_date) do nothing;
 
 -- -----------------------------------------------------------------------------
--- 2. Zona (6 zona) — admin_fee flat per zona, dalam rupiah
+-- 2. Zona (7 zona) — admin_fee flat per zona, dalam rupiah
 -- -----------------------------------------------------------------------------
 insert into public.zones (event_id, name, zone_type, svg_group_id, admin_fee, description, display_order)
 values
@@ -66,18 +66,21 @@ values
   ('11111111-1111-4111-8111-111111111111', 'Area Pameran Mobil',
    'mobil_bekas',       'zone-mobil-bekas',    50000,
    'Area pameran mobil bekas untuk individu maupun dealer, 30 slot.',       2),
-  ('11111111-1111-4111-8111-111111111111', 'Area Pameran Mobil & Motor',
+  ('11111111-1111-4111-8111-111111111111', 'Area Pameran Motor',
    'mobil_motor_bekas', 'zone-mobil-motor',    25000,
-   'Area campuran mobil dan motor bekas, 14 slot.',                         3),
+   'Area pameran motor bekas, 14 slot (fokus motor, keputusan 2026-08-29).', 3),
   ('11111111-1111-4111-8111-111111111111', 'Area UMKM',
    'umkm',              'zone-umkm',          250000,
-   'Area UMKM non-kuliner, 30 slot dalam tiga kolom.',                      4),
+   'Area UMKM non-kuliner, 20 slot (kolom kiri 1-10 dan kanan 21-30).',     4),
+  ('11111111-1111-4111-8111-111111111111', 'Booth Leasing & Brand Otomotif',
+   'booth_khusus',      'zone-booth-khusus',  500000,
+   'Booth premium 2 sisi: 5 bank/leasing (11-15) + 5 brand otomotif (16-20).', 5),
   ('11111111-1111-4111-8111-111111111111', 'Warung',
    'warung',            'zone-warung',       500000,
-   'Unit warung/kuliner, 12 unit termasuk unit bernama.',                   5),
+   'Unit warung/kuliner, 12 unit termasuk unit bernama.',                   6),
   ('11111111-1111-4111-8111-111111111111', 'Fasilitas Umum',
    'facility',          'zone-fasilitas',          0,
-   'Fasilitas non-sewa: tampil di denah tetapi tidak bisa dibooking.',      6)
+   'Fasilitas non-sewa: tampil di denah tetapi tidak bisa dibooking.',      7)
 on conflict (svg_group_id) do nothing;
 
 -- -----------------------------------------------------------------------------
@@ -109,35 +112,24 @@ cross join generate_series(1, 14) as i
 where z.svg_group_id = 'zone-mobil-motor'
 on conflict (svg_element_id) do nothing;
 
--- 3d. zone-umkm : slot 1..30 -> slot-umkm-01 .. slot-umkm-30
+-- 3d. zone-umkm : slot 1-10 & 21-30 -> slot-umkm-01.. (kolom tengah = booth)
 insert into public.slots (zone_id, slot_number, slot_label, svg_element_id)
 select z.id, i, null, 'slot-umkm-' || lpad(i::text, 2, '0')
 from public.zones z
 cross join generate_series(1, 30) as i
 where z.svg_group_id = 'zone-umkm'
+  and (i between 1 and 10 or i between 21 and 30)
 on conflict (svg_element_id) do nothing;
 
--- 3e. Override harga per-slot zona UMKM (keputusan pemilik):
---       slot 11-15 -> 500.000, peruntukan 'Booth Leasing'
---       slot 16-20 -> 500.000, peruntukan 'Booth Otomotif'
---       slot 1-10 & 21-30 tanpa override (ikut harga zona 250.000).
---     ASUMSI: slot 21 = UMKM biasa (pemilik tidak menyebutnya eksplisit).
---     Idempotent: update biasa, aman dijalankan berulang.
-update public.slots s
-set admin_fee_override = 500000,
-    peruntukan         = 'Booth Leasing'
+-- 3e. zone-booth-khusus : slot 11..20 (svg id tetap slot-umkm-XX; booth 2 sisi)
+--     11-15 'Booth Leasing', 16-20 'Booth Otomotif'; harga ikut zones.admin_fee.
+insert into public.slots (zone_id, slot_number, slot_label, svg_element_id, peruntukan)
+select z.id, i, null, 'slot-umkm-' || lpad(i::text, 2, '0'),
+       case when i <= 15 then 'Booth Leasing' else 'Booth Otomotif' end
 from public.zones z
-where z.id = s.zone_id
-  and z.svg_group_id = 'zone-umkm'
-  and s.slot_number between 11 and 15;
-
-update public.slots s
-set admin_fee_override = 500000,
-    peruntukan         = 'Booth Otomotif'
-from public.zones z
-where z.id = s.zone_id
-  and z.svg_group_id = 'zone-umkm'
-  and s.slot_number between 16 and 20;
+cross join generate_series(11, 20) as i
+where z.svg_group_id = 'zone-booth-khusus'
+on conflict (svg_element_id) do nothing;
 
 -- -----------------------------------------------------------------------------
 -- 4. Warung — 12 unit, ditulis eksplisit sesuai urutan pada denah.

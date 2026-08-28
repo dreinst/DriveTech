@@ -16,23 +16,25 @@ export const ADMIN_FEE_BY_ZONE_TYPE: Record<ZoneType, number> = {
   mobil_bekas: 50_000,
   mobil_motor_bekas: 25_000,
   umkm: 250_000,
+  booth_khusus: 500_000,
   warung: 500_000,
   facility: 0,
 };
 
 /**
- * Override per-slot zona UMKM (harus sama dengan seed.sql):
- * slot 11-15 Booth Leasing, slot 16-20 Booth Otomotif, keduanya Rp500.000.
+ * Peruntukan per-slot zona booth_khusus (harus sama dengan seed.sql):
+ * slot 11-15 Booth Leasing, slot 16-20 Booth Otomotif — harga ikut zona
+ * (Rp500.000), tanpa override per slot.
  */
-function umkmOverride(slotNumber: number | null): {
+function boothPeruntukan(slotNumber: number | null): {
   admin_fee_override: number | null;
   peruntukan: string | null;
 } {
   if (slotNumber !== null && slotNumber >= 11 && slotNumber <= 15) {
-    return { admin_fee_override: 500_000, peruntukan: "Booth Leasing" };
+    return { admin_fee_override: null, peruntukan: "Booth Leasing" };
   }
   if (slotNumber !== null && slotNumber >= 16 && slotNumber <= 20) {
-    return { admin_fee_override: 500_000, peruntukan: "Booth Otomotif" };
+    return { admin_fee_override: null, peruntukan: "Booth Otomotif" };
   }
   return { admin_fee_override: null, peruntukan: null };
 }
@@ -54,8 +56,8 @@ export function fallbackZonesFromLayout(): ZoneWithSlots[] {
       slot_label: slot.slotNumber === null ? slot.label : null,
       status: "available",
       svg_element_id: slot.svgElementId,
-      ...(zone.zoneType === "umkm"
-        ? umkmOverride(slot.slotNumber)
+      ...(zone.zoneType === "booth_khusus"
+        ? boothPeruntukan(slot.slotNumber)
         : { admin_fee_override: null, peruntukan: null }),
       created_at: FALLBACK_TIMESTAMP,
       updated_at: FALLBACK_TIMESTAMP,

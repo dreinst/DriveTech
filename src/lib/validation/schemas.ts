@@ -23,10 +23,16 @@ const optionalEmail = z.preprocess(
   z.email("Format email tidak valid.").optional(),
 );
 
-const optionalUrl = z.preprocess(
-  emptyToUndefined,
-  z.url("Tautan bukti tidak valid.").optional(),
-);
+/**
+ * URL http/https saja. z.url() polos menerima skema apa pun — termasuk
+ * `javascript:` — dan proof_url dirender sebagai tautan di panel admin
+ * (temuan audit: stored XSS via POST /api/bookings/[id]/payment).
+ */
+const httpUrl = z
+  .url("Tautan tidak valid.")
+  .refine((value) => /^https?:\/\//i.test(value), "Tautan harus diawali http(s)://.");
+
+const optionalUrl = z.preprocess(emptyToUndefined, httpUrl.optional());
 
 const optionalPositiveNumber = z.preprocess(
   emptyToUndefined,
@@ -112,7 +118,9 @@ export const vehicleInfoSchema = z.object({
   ),
   color: optionalText,
   description: optionalText,
-  photoUrl: z.url("Foto kendaraan wajib diunggah."),
+  photoUrl: z
+    .url("Foto kendaraan wajib diunggah.")
+    .refine((value) => /^https?:\/\//i.test(value), "Tautan foto harus diawali http(s)://."),
 });
 
 export const createBookingSchema = z.object({
