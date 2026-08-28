@@ -201,7 +201,7 @@ export default async function AdminBookingsPage({ searchParams }: PageProps) {
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <ExportCsvButton
-            filename="mokas-festival-bookings.csv"
+            filename="drive-tech-bookings.csv"
             rows={susunBarisCsv(bookings)}
             label="Ekspor CSV"
           />

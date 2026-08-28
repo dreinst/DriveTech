@@ -1,6 +1,6 @@
-# Mokas Festival — Booking Lapak Per Tanggal & Modul Leasing
+# Drive Tech — Booking Lapak Per Tanggal & Modul Leasing
 
-Aplikasi web untuk **Mokas Festival** — pasar otomotif akhir pekan di **Kampung Tentara, Singosari, Malang**,
+Aplikasi web untuk **Drive Tech** — pasar otomotif akhir pekan di **Kampung Tentara, Singosari, Malang**,
 digelar **setiap Sabtu & Minggu, mulai 12-13 September 2026**, untuk mobil baru, mobil & motor bekas, UMKM, dan kuliner.
 Pengunjung dan calon tenant melihat **denah interaktif** yang sinkron *realtime* dengan
 database, lalu memesan lapak sendiri **per tanggal**: pilih satu atau beberapa tanggal
@@ -260,7 +260,7 @@ curl -s "http://localhost:3000/api/bookings?status=available&zone=zone-umkm"
 {
   "event": {
     "id": "1f0a…",
-    "name": "Mokas Festival",
+    "name": "Drive Tech",
     "location": "Kota Malang",
     "startDate": null,
     "endDate": null

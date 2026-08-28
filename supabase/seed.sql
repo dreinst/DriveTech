@@ -25,7 +25,7 @@ set search_path = public, extensions;
 insert into public.events (id, name, location, start_date, end_date, is_active)
 values (
   '11111111-1111-4111-8111-111111111111',
-  'Mokas Festival',
+  'Drive Tech',
   'Kampung Tentara, Singosari, Malang',
   null,
   null,

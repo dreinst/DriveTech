@@ -6,7 +6,7 @@ import { isBookableZoneType } from "./constants";
  * Aturan ketersediaan model "per tanggal" — modul MURNI (tanpa Supabase/DOM)
  * supaya bisa dipakai server (services) maupun komponen client (denah).
  *
- * Semantik (kontrak Mokas Festival per tanggal), diberi pilihan tanggal S (>= 1) dan
+ * Semantik (kontrak Drive Tech per tanggal), diberi pilihan tanggal S (>= 1) dan
  * occupancy dari view slot_date_status:
  *   - "blocked"   : slots.status != 'available' (DIBLOKIR PANITIA untuk semua
  *                   tanggal) ATAU zona tidak bisa dibooking online.

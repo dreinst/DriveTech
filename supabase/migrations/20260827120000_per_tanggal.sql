@@ -1,5 +1,5 @@
 -- =============================================================================
--- Mokas Festival — Migrasi "booking per tanggal"
+-- Drive Tech — Migrasi "booking per tanggal"
 -- =============================================================================
 -- Model booking berubah: pemesan memilih >= 1 tanggal weekend (event_dates),
 -- dan slot yang sama boleh disewa orang berbeda di tanggal berbeda.
