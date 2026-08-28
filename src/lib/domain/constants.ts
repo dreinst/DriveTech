@@ -118,8 +118,10 @@ export const ZONE_TYPE_FALLBACK: Record<ZoneType, readonly ZoneType[]> = {
   mobil_baru: [],
   mobil_bekas: ["mobil_motor_bekas"],
   mobil_motor_bekas: ["mobil_bekas"],
-  // UMKM non-kuliner dan warung kuliner beda peruntukan -> tidak saling disarankan.
+  // UMKM non-kuliner, booth mitra, dan warung kuliner beda peruntukan
+  // -> tidak saling disarankan.
   umkm: [],
+  booth_khusus: [],
   warung: [],
   facility: [],
 };

@@ -108,19 +108,27 @@ const mobilMotorSlots: LayoutSlot[] = Array.from({ length: 14 }, (_, i) =>
   }),
 );
 
-/* ---------- Zona 4: Area UMKM (30 slot, 3 kolom x 10, atas->bawah per kolom) ---------- */
+/* ---------- Zona 4: Area UMKM (20 slot: kolom kiri 1-10 & kanan 21-30) ---------- */
+/* Kolom TENGAH (nomor 11-20) adalah zona terpisah Booth Leasing & Brand
+ * Otomotif (booth 2 sisi) — keputusan pemilik 2026-08-29. svg_element_id
+ * kolom tengah tetap "slot-umkm-11..20" agar cocok dengan database. */
 
-const UMKM_COLUMN_X = [240, 322, 430];
+const UMKM_SLOT_RECT = { width: 34, height: 32 };
+const umkmY = (i: number): number => round1(474 + i * 34.4);
 
-const umkmSlots: LayoutSlot[] = UMKM_COLUMN_X.flatMap((x, col) =>
-  Array.from({ length: 10 }, (_, i) =>
-    numberedSlot("umkm", col * 10 + i + 1, {
-      x,
-      y: round1(474 + i * 34.4),
-      width: 34,
-      height: 32,
-    }),
+const umkmSlots: LayoutSlot[] = [
+  ...Array.from({ length: 10 }, (_, i) =>
+    numberedSlot("umkm", i + 1, { x: 240, y: umkmY(i), ...UMKM_SLOT_RECT }),
   ),
+  ...Array.from({ length: 10 }, (_, i) =>
+    numberedSlot("umkm", i + 21, { x: 430, y: umkmY(i), ...UMKM_SLOT_RECT }),
+  ),
+];
+
+/* ---------- Zona 4b: Booth Leasing & Brand Otomotif (10 booth 2 sisi) ---------- */
+
+const boothKhususSlots: LayoutSlot[] = Array.from({ length: 10 }, (_, i) =>
+  numberedSlot("umkm", i + 11, { x: 322, y: umkmY(i), ...UMKM_SLOT_RECT }),
 );
 
 /* ---------- Zona 5: Warung (12 unit, posisi tersebar, ditulis eksplisit) ---------- */
@@ -179,7 +187,7 @@ export const FLOOR_PLAN_ZONES: LayoutZone[] = [
   },
   {
     svgGroupId: "zone-mobil-motor",
-    name: "Area Pameran Mobil & Motor",
+    name: "Area Pameran Motor",
     zoneType: "mobil_motor_bekas",
     accent: "#ff00ff",
     container: { x: 774, y: 430, width: 90, height: 430, labelOrientation: "vertical" },
@@ -192,6 +200,17 @@ export const FLOOR_PLAN_ZONES: LayoutZone[] = [
     accent: "#0070c0",
     container: { x: 234, y: 444, width: 232, height: 386, labelOrientation: "horizontal" },
     slots: umkmSlots,
+  },
+  {
+    // Kolom tengah area UMKM: booth premium 2 sisi (bank leasing & brand
+    // otomotif). Tanpa container sendiri — secara fisik berada di dalam
+    // kotak Area UMKM; pembeda visualnya label peruntukan di panel slot.
+    svgGroupId: "zone-booth-khusus",
+    name: "Booth Leasing & Brand Otomotif",
+    zoneType: "booth_khusus",
+    accent: "#0f766e",
+    container: null,
+    slots: boothKhususSlots,
   },
   {
     svgGroupId: "zone-warung",

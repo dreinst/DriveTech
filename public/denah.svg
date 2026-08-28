@@ -335,7 +335,7 @@
   <g id="zone-mobil-motor" data-zone-type-accent="#ff00ff">
     <rect class="zone-box" x="774" y="430" width="90" height="430" rx="10"/>
     <rect x="774" y="430" width="24" height="430" rx="10" fill="#ff00ff"/>
-    <text class="zone-title" x="786" y="645" transform="rotate(-90 786 645)" text-anchor="middle" dominant-baseline="middle">AREA PAMERAN MOBIL &amp; MOTOR</text>
+    <text class="zone-title" x="786" y="645" transform="rotate(-90 786 645)" text-anchor="middle" dominant-baseline="middle">AREA PAMERAN MOTOR</text>
     <text class="zone-count" x="858" y="447" text-anchor="end">14 slot</text>
     <g class="slots">
       <a href="/booking/by-svg/slot-mobil-motor-01" aria-label="Slot 1 — buka form booking">
@@ -429,7 +429,7 @@
     <rect x="236" y="444" width="230" height="24" rx="10" fill="#0070c0"/>
     <rect x="236" y="456" width="230" height="12" fill="#0070c0"/>
     <text class="zone-title" x="351" y="457" text-anchor="middle" dominant-baseline="middle">AREA UMKM</text>
-    <text x="458" y="457" text-anchor="end" font-size="11" fill="#ffffff" fill-opacity="0.8" dominant-baseline="middle">30 slot</text>
+    <text x="458" y="457" text-anchor="end" font-size="11" fill="#ffffff" fill-opacity="0.8" dominant-baseline="middle">20 slot</text>
     <g class="slots">
       <a href="/booking/by-svg/slot-umkm-01" aria-label="Slot 1 — buka form booking">
       <g id="slot-umkm-01" class="slot" data-status="available" data-slot="slot-umkm-01" data-form="/booking/by-svg/slot-umkm-01">
@@ -491,66 +491,6 @@
         <text x="257" y="799.6" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">10</text>
       </g>
       </a>
-      <a href="/booking/by-svg/slot-umkm-11" aria-label="Slot 11 — buka form booking">
-      <g id="slot-umkm-11" class="slot" data-status="available" data-slot="slot-umkm-11" data-form="/booking/by-svg/slot-umkm-11">
-        <rect x="322" y="474" width="34" height="32" rx="4"/>
-        <text x="339" y="490" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">11</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-umkm-12" aria-label="Slot 12 — buka form booking">
-      <g id="slot-umkm-12" class="slot" data-status="available" data-slot="slot-umkm-12" data-form="/booking/by-svg/slot-umkm-12">
-        <rect x="322" y="508.4" width="34" height="32" rx="4"/>
-        <text x="339" y="524.4" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">12</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-umkm-13" aria-label="Slot 13 — buka form booking">
-      <g id="slot-umkm-13" class="slot" data-status="available" data-slot="slot-umkm-13" data-form="/booking/by-svg/slot-umkm-13">
-        <rect x="322" y="542.8" width="34" height="32" rx="4"/>
-        <text x="339" y="558.8" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">13</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-umkm-14" aria-label="Slot 14 — buka form booking">
-      <g id="slot-umkm-14" class="slot" data-status="available" data-slot="slot-umkm-14" data-form="/booking/by-svg/slot-umkm-14">
-        <rect x="322" y="577.2" width="34" height="32" rx="4"/>
-        <text x="339" y="593.2" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">14</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-umkm-15" aria-label="Slot 15 — buka form booking">
-      <g id="slot-umkm-15" class="slot" data-status="available" data-slot="slot-umkm-15" data-form="/booking/by-svg/slot-umkm-15">
-        <rect x="322" y="611.6" width="34" height="32" rx="4"/>
-        <text x="339" y="627.6" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">15</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-umkm-16" aria-label="Slot 16 — buka form booking">
-      <g id="slot-umkm-16" class="slot" data-status="available" data-slot="slot-umkm-16" data-form="/booking/by-svg/slot-umkm-16">
-        <rect x="322" y="646" width="34" height="32" rx="4"/>
-        <text x="339" y="662" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">16</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-umkm-17" aria-label="Slot 17 — buka form booking">
-      <g id="slot-umkm-17" class="slot" data-status="available" data-slot="slot-umkm-17" data-form="/booking/by-svg/slot-umkm-17">
-        <rect x="322" y="680.4" width="34" height="32" rx="4"/>
-        <text x="339" y="696.4" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">17</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-umkm-18" aria-label="Slot 18 — buka form booking">
-      <g id="slot-umkm-18" class="slot" data-status="available" data-slot="slot-umkm-18" data-form="/booking/by-svg/slot-umkm-18">
-        <rect x="322" y="714.8" width="34" height="32" rx="4"/>
-        <text x="339" y="730.8" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">18</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-umkm-19" aria-label="Slot 19 — buka form booking">
-      <g id="slot-umkm-19" class="slot" data-status="available" data-slot="slot-umkm-19" data-form="/booking/by-svg/slot-umkm-19">
-        <rect x="322" y="749.2" width="34" height="32" rx="4"/>
-        <text x="339" y="765.2" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">19</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-umkm-20" aria-label="Slot 20 — buka form booking">
-      <g id="slot-umkm-20" class="slot" data-status="available" data-slot="slot-umkm-20" data-form="/booking/by-svg/slot-umkm-20">
-        <rect x="322" y="783.6" width="34" height="32" rx="4"/>
-        <text x="339" y="799.6" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">20</text>
-      </g>
-      </a>
       <a href="/booking/by-svg/slot-umkm-21" aria-label="Slot 21 — buka form booking">
       <g id="slot-umkm-21" class="slot" data-status="available" data-slot="slot-umkm-21" data-form="/booking/by-svg/slot-umkm-21">
         <rect x="430" y="474" width="34" height="32" rx="4"/>
@@ -609,6 +549,70 @@
       <g id="slot-umkm-30" class="slot" data-status="available" data-slot="slot-umkm-30" data-form="/booking/by-svg/slot-umkm-30">
         <rect x="430" y="783.6" width="34" height="32" rx="4"/>
         <text x="447" y="799.6" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">30</text>
+      </g>
+      </a>
+    </g>
+  </g>
+  <g id="zone-booth-khusus" data-zone-type-accent="#0f766e">
+    <g class="slots">
+      <a href="/booking/by-svg/slot-umkm-11" aria-label="Slot 11 — buka form booking">
+      <g id="slot-umkm-11" class="slot" data-status="available" data-slot="slot-umkm-11" data-form="/booking/by-svg/slot-umkm-11">
+        <rect x="322" y="474" width="34" height="32" rx="4"/>
+        <text x="339" y="490" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">11</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-umkm-12" aria-label="Slot 12 — buka form booking">
+      <g id="slot-umkm-12" class="slot" data-status="available" data-slot="slot-umkm-12" data-form="/booking/by-svg/slot-umkm-12">
+        <rect x="322" y="508.4" width="34" height="32" rx="4"/>
+        <text x="339" y="524.4" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">12</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-umkm-13" aria-label="Slot 13 — buka form booking">
+      <g id="slot-umkm-13" class="slot" data-status="available" data-slot="slot-umkm-13" data-form="/booking/by-svg/slot-umkm-13">
+        <rect x="322" y="542.8" width="34" height="32" rx="4"/>
+        <text x="339" y="558.8" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">13</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-umkm-14" aria-label="Slot 14 — buka form booking">
+      <g id="slot-umkm-14" class="slot" data-status="available" data-slot="slot-umkm-14" data-form="/booking/by-svg/slot-umkm-14">
+        <rect x="322" y="577.2" width="34" height="32" rx="4"/>
+        <text x="339" y="593.2" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">14</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-umkm-15" aria-label="Slot 15 — buka form booking">
+      <g id="slot-umkm-15" class="slot" data-status="available" data-slot="slot-umkm-15" data-form="/booking/by-svg/slot-umkm-15">
+        <rect x="322" y="611.6" width="34" height="32" rx="4"/>
+        <text x="339" y="627.6" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">15</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-umkm-16" aria-label="Slot 16 — buka form booking">
+      <g id="slot-umkm-16" class="slot" data-status="available" data-slot="slot-umkm-16" data-form="/booking/by-svg/slot-umkm-16">
+        <rect x="322" y="646" width="34" height="32" rx="4"/>
+        <text x="339" y="662" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">16</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-umkm-17" aria-label="Slot 17 — buka form booking">
+      <g id="slot-umkm-17" class="slot" data-status="available" data-slot="slot-umkm-17" data-form="/booking/by-svg/slot-umkm-17">
+        <rect x="322" y="680.4" width="34" height="32" rx="4"/>
+        <text x="339" y="696.4" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">17</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-umkm-18" aria-label="Slot 18 — buka form booking">
+      <g id="slot-umkm-18" class="slot" data-status="available" data-slot="slot-umkm-18" data-form="/booking/by-svg/slot-umkm-18">
+        <rect x="322" y="714.8" width="34" height="32" rx="4"/>
+        <text x="339" y="730.8" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">18</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-umkm-19" aria-label="Slot 19 — buka form booking">
+      <g id="slot-umkm-19" class="slot" data-status="available" data-slot="slot-umkm-19" data-form="/booking/by-svg/slot-umkm-19">
+        <rect x="322" y="749.2" width="34" height="32" rx="4"/>
+        <text x="339" y="765.2" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">19</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-umkm-20" aria-label="Slot 20 — buka form booking">
+      <g id="slot-umkm-20" class="slot" data-status="available" data-slot="slot-umkm-20" data-form="/booking/by-svg/slot-umkm-20">
+        <rect x="322" y="783.6" width="34" height="32" rx="4"/>
+        <text x="339" y="799.6" font-size="13" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="middle">20</text>
       </g>
       </a>
     </g>
