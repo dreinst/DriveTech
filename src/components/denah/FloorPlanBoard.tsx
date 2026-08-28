@@ -4,7 +4,11 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { DateChips, type DateChipStatus } from "@/components/denah/DateChips";
-import { FloorPlan, type SelectedSlotPayload } from "@/components/denah/FloorPlan";
+import {
+  FloorPlan,
+  type ActiveZoneFilter,
+  type SelectedSlotPayload,
+} from "@/components/denah/FloorPlan";
 import { FloorPlanLegend } from "@/components/denah/FloorPlanLegend";
 import { SlotSuggestions } from "@/components/denah/SlotSuggestions";
 import { useMapViewport } from "@/components/denah/useMapViewport";
@@ -149,48 +153,6 @@ function RealtimeIndicator({ connected }: { connected: boolean }) {
   );
 }
 
-/* ---------- Kontrol zoom: pil vertikal gelap mengambang kanan-bawah ---------- */
-
-const ZOOM_BUTTON_CLASS =
-  "flex h-11 w-11 items-center justify-center text-ink transition-colors duration-150 hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--ring)]";
-
-function ZoomControls({
-  onZoomIn,
-  onZoomOut,
-  onReset,
-}: {
-  onZoomIn: () => void;
-  onZoomOut: () => void;
-  onReset: () => void;
-}) {
-  return (
-    <div className="absolute bottom-4 right-4 z-10 flex flex-col divide-y divide-line overflow-hidden rounded-full border border-line bg-surface-3 shadow-[var(--shadow-md)]">
-      <button type="button" onClick={onZoomIn} aria-label="Perbesar peta" className={ZOOM_BUTTON_CLASS}>
-        <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-          <path d="M12 5v14M5 12h14" />
-        </svg>
-      </button>
-      <button type="button" onClick={onZoomOut} aria-label="Perkecil peta" className={ZOOM_BUTTON_CLASS}>
-        <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-          <path d="M5 12h14" />
-        </svg>
-      </button>
-      <button
-        type="button"
-        onClick={onReset}
-        aria-label="Kembalikan tampilan peta"
-        className={ZOOM_BUTTON_CLASS}
-      >
-        <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-          <circle cx="12" cy="12" r="6.5" />
-          <path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3" />
-          <circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none" />
-        </svg>
-      </button>
-    </div>
-  );
-}
-
 /* ---------- Langkah 1: pilih zona (kartu ala pilih studio bioskop) ---------- */
 
 type ZoneCardData = {
@@ -282,8 +244,15 @@ function ZoneStep({ cards, onPick }: ZoneStepProps) {
       </div>
 
       <p className="mt-4 text-xs text-muted">
-        Setelah memilih zona, peta terbuka langsung ter-zoom ke zona itu — tinggal ketuk slotnya.
-        Biaya admin dihitung per tanggal.
+        Setelah memilih zona, peta terbuka langsung ter-zoom dan terkunci ke zona itu — hanya
+        slot zona tersebut yang bisa diketuk. Biaya admin dihitung per tanggal. Mau lihat tata
+        letak seluruh area dulu?{" "}
+        <Link
+          href="/denah"
+          className="font-medium text-accent underline-offset-2 hover:underline"
+        >
+          Lihat denah lengkap →
+        </Link>
       </p>
     </div>
   );
@@ -298,8 +267,9 @@ function InfoPanel({ stats }: { stats: VerdictStats }) {
     <div className="rounded-2xl border border-line bg-card p-6 shadow-[var(--shadow-sm)]">
       <h2 className="text-2xl font-semibold tracking-[-0.01em] text-ink">Tata Letak Lokasi</h2>
       <p className="mt-2 text-sm leading-relaxed text-muted">
-        Ketuk slot hijau untuk melihat tanggal yang masih kosong dan mulai memesan. Gulir untuk
-        zoom, seret untuk menggeser peta.
+        Peta terkunci pada zona pilihanmu — hanya slot zona ini yang bisa diketuk. Ketuk slot
+        hijau untuk melihat tanggal yang masih kosong; mau pindah zona, kembali lewat tombol
+        &ldquo;Pilih Zona&rdquo;.
       </p>
 
       <div className="mt-5 grid grid-cols-2 gap-3">
@@ -498,15 +468,18 @@ function SlotDetailPanel({
  *
  *   1. PILIH ZONA   — kartu zona dengan biaya/tanggal & hitungan slot yang masih
  *                     punya tanggal kosong (slotStatusAcrossDates);
- *   2. PETA         — terbuka langsung ter-zoom ke zona terpilih, slot diwarnai
- *                     verdict LINTAS tanggal (hijau = masih ada tanggal kosong);
+ *   2. PETA         — terbuka langsung ter-zoom DAN TERKUNCI ke zona terpilih:
+ *                     tanpa pan/pinch/wheel, hanya slot zona itu yang bisa
+ *                     diketuk (zona lain diredupkan), slot diwarnai verdict
+ *                     LINTAS tanggal (hijau = masih ada tanggal kosong);
  *   3. PANEL SLOT   — ketuk slot hijau: chip tanggal per slot (yang terisi
  *                     dinonaktifkan), total = biaya admin x jumlah tanggal.
  *
+ * Denah lengkap yang bebas dijelajahi (tanpa pemesanan) ada di halaman /denah.
  * Peta selalu ter-mount (langkah 2 hanya disembunyikan dengan display:none)
- * supaya listener wheel/pinch di useMapViewport terpasang sekali dan zoom
- * otomatis tinggal dianimasikan saat langkahnya terbuka. Tersinkron realtime
- * dengan tabel slots (blokir panitia) dan booking_dates (okupansi per tanggal).
+ * supaya zoom otomatis tinggal dianimasikan saat langkahnya terbuka. Tersinkron
+ * realtime dengan tabel slots (blokir panitia) dan booking_dates (okupansi per
+ * tanggal).
  */
 export function FloorPlanBoard({
   zones: initialZones,
@@ -524,8 +497,12 @@ export function FloorPlanBoard({
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [fallbackDates, setFallbackDates] = useState<EventDateItem[]>([]);
 
-  const { containerRef, contentRef, containerHandlers, zoomIn, zoomOut, reset, zoomToRect } =
-    useMapViewport();
+  // Peta booking SELALU terkunci: navigasi manual (wheel/drag/pinch) mati,
+  // pengunjung tidak bisa menggeser ke slot zona lain. Denah bebas jelajah
+  // tersedia di halaman /denah (hanya melihat, tanpa pemesanan).
+  const { containerRef, contentRef, containerHandlers, reset, zoomToRect } = useMapViewport({
+    locked: true,
+  });
 
   // Mode fallback tanpa event_dates: bangkitkan hari Minggu 12 minggu ke depan
   // (client-only, lihat weekendFallbackDates) supaya alurnya tetap bisa dicoba.
@@ -629,26 +606,44 @@ export function FloorPlanBoard({
     [selectedZone],
   );
 
+  // Pembatas peta terkunci: hanya slot milik zona terpilih (baris DB) yang bisa
+  // diklik; slot & container zona lain diredupkan oleh FloorPlan.
+  const activeZoneFilter = useMemo<ActiveZoneFilter | null>(() => {
+    if (!selectedZone) return null;
+    return {
+      slotIds: new Set(selectedZone.slots.map((slot) => slot.id)),
+      svgGroupId: layoutZoneFor(selectedZone)?.svgGroupId ?? selectedZone.svg_group_id,
+    };
+  }, [selectedZone]);
+
   // Saat langkah peta terbuka: animasikan zoom ke zona terpilih. rAF memastikan
-  // container sudah keluar dari display:none sebelum ukurannya dibaca.
+  // container sudah keluar dari display:none sebelum ukurannya dibaca. Karena
+  // navigasi manual terkunci, ukuran jendela berubah = pas-kan ulang zonanya.
   useEffect(() => {
     if (step !== "peta" || !zoomTargetRect) return;
     const raf = requestAnimationFrame(() => zoomToRect(zoomTargetRect, { animate: true }));
-    return () => cancelAnimationFrame(raf);
+    const handleResize = () => zoomToRect(zoomTargetRect, { animate: false });
+    window.addEventListener("resize", handleResize);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", handleResize);
+    };
   }, [step, zoomTargetRect, zoomToRect]);
 
   /* ---------- Pilihan slot + tanggal per slot ---------- */
 
   const handleSelectSlot = useCallback(
     (slot: SelectedSlotPayload) => {
-      // Denah sudah menonaktifkan klik zona non-bookable & slot diblokir; lapis kedua.
+      // Denah sudah menonaktifkan klik zona non-bookable, slot diblokir, dan
+      // slot di luar zona terpilih; ini lapis kedua.
       if (!isBookableZoneType(slot.zoneType)) return;
+      if (zoneId !== null && slot.zone_id !== zoneId) return;
       setSelectedSlotId(slot.id);
       // Preselect satu tanggal bebas TERDEKAT — lebih ramah daripada mulai kosong.
       const free = freeDatesForSlot({ slotId: slot.id, activeDates, occupancy });
       setSelectedDates(free.slice(0, 1));
     },
-    [activeDates, occupancy],
+    [zoneId, activeDates, occupancy],
   );
 
   const handleCloseDetail = useCallback(() => {
@@ -759,9 +754,11 @@ export function FloorPlanBoard({
                 : "Ketuk slot untuk memilih tanggal"}
             </p>
           </div>
-          <Button variant="ghost" size="sm" onClick={reset}>
-            Lihat seluruh denah
-          </Button>
+          {/* Denah lengkap dibuka di halaman terpisah yang hanya untuk melihat —
+              peta booking ini tetap terkunci pada zona terpilih. */}
+          <Link href="/denah" className={buttonClass("ghost", "sm")}>
+            Lihat Denah Lengkap
+          </Link>
         </div>
 
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
@@ -770,7 +767,7 @@ export function FloorPlanBoard({
             <div
               ref={containerRef}
               {...containerHandlers}
-              className="relative h-[26rem] w-full cursor-grab select-none active:cursor-grabbing sm:h-[34rem] lg:h-[calc(100vh-8rem)] lg:max-h-[50rem] lg:min-h-[36rem]"
+              className="relative h-[26rem] w-full select-none sm:h-[34rem] lg:h-[calc(100vh-8rem)] lg:max-h-[50rem] lg:min-h-[36rem]"
             >
               <div ref={contentRef} className="absolute inset-0">
                 <FloorPlan
@@ -778,12 +775,12 @@ export function FloorPlanBoard({
                   selectedSlotId={selectedSlotId}
                   onSelectSlot={handleSelectSlot}
                   verdicts={verdicts}
+                  activeZone={activeZoneFilter}
                 />
               </div>
             </div>
 
             <RealtimeIndicator connected={connected} />
-            <ZoomControls onZoomIn={zoomIn} onZoomOut={zoomOut} onReset={reset} />
 
             {/*
               Tanpa JavaScript, denah interaktif di atas tidak bisa dioperasikan.

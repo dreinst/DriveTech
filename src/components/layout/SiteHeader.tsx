@@ -8,11 +8,13 @@ type NavItem = { href: string; label: string };
  * Anchor menuju bagian-bagian beranda + halaman katalog kendaraan.
  * Katalog satu tautan saja — pembedaan mobil/motor terjadi DI DALAM halaman
  * lewat chips filter jenis (keputusan pemilik, 2026-08-28).
+ * "Denah" menuju halaman /denah yang hanya untuk melihat tata letak lengkap;
+ * alur pemesanan (peta terkunci per zona) tetap lewat CTA "Pesan Slot".
  */
 const NAV_ITEMS: readonly NavItem[] = [
   { href: "/katalog", label: "Katalog" },
   { href: "/#zona", label: "Zona" },
-  { href: "/#denah", label: "Peta Lokasi" },
+  { href: "/denah", label: "Denah" },
   { href: "/#cek-status", label: "Cek Status" },
 ];
 

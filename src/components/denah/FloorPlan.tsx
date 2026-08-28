@@ -27,10 +27,29 @@ import { slotDisplayName } from "@/lib/utils";
 /** Baris slot dari database + identitas zonanya, dikirim balik lewat onSelectSlot. */
 export type SelectedSlotPayload = SlotRow & { zoneName: string; zoneType: ZoneType };
 
+/**
+ * Pembatas "hanya zona ini yang aktif" untuk alur booking per zona.
+ * Keanggotaan slot ditentukan dari BARIS DATABASE (slotIds), bukan grup layout,
+ * supaya pemisahan UMKM (1-10, 21-30) vs Booth Leasing & Brand (11-20) yang
+ * berbagi kolom fisik tetap benar. svgGroupId dipakai sebagai fallback untuk
+ * slot layout tanpa baris DB dan untuk meredupkan container zona lain.
+ */
+export type ActiveZoneFilter = {
+  slotIds: ReadonlySet<string>;
+  svgGroupId: string | null;
+};
+
 export type FloorPlanProps = {
   zones: ZoneWithSlots[];
   selectedSlotId?: string | null;
   onSelectSlot?: (slot: SelectedSlotPayload) => void;
+  /**
+   * Kalau diisi, HANYA slot milik zona ini yang bisa diklik/di-fokus; slot dan
+   * container zona lain diredupkan dan disembunyikan dari screen reader.
+   * null/undefined = semua zona bookable aktif (perilaku lama, mis. halaman
+   * denah lengkap yang read-only).
+   */
+  activeZone?: ActiveZoneFilter | null;
   /**
    * Skala zoom viewport saat denah dibesarkan (1 = tanpa zoom). Dipakai untuk
    * kompensasi ketebalan garis slot supaya tidak menebal berlebihan saat zoom.
@@ -235,9 +254,11 @@ type ZoneContainerProps = {
   zone: LayoutZone;
   available: number;
   total: number;
+  /** True = bukan zona aktif saat peta terkunci per zona -> digambar redup. */
+  dimmed?: boolean;
 };
 
-function ZoneContainer({ zone, available, total }: ZoneContainerProps) {
+function ZoneContainer({ zone, available, total, dimmed = false }: ZoneContainerProps) {
   const container = zone.container;
   if (!container) return null;
 
@@ -246,7 +267,7 @@ function ZoneContainer({ zone, available, total }: ZoneContainerProps) {
   const stat = `${available}/${total} tersedia`;
 
   return (
-    <g aria-hidden="true" style={{ pointerEvents: "none" }}>
+    <g aria-hidden="true" opacity={dimmed ? 0.4 : undefined} style={{ pointerEvents: "none" }}>
       <rect
         x={container.x}
         y={container.y}
@@ -392,6 +413,8 @@ type SlotShapeProps = {
   strokeScale: number;
   /** Verdict per-tanggal slot ini; undefined = pakai slots.status mentah. */
   verdict?: SlotDateVerdict;
+  /** False = di luar zona aktif saat peta terkunci: redup, tak bisa diklik. */
+  inActiveZone: boolean;
 };
 
 function SlotShape({
@@ -403,6 +426,7 @@ function SlotShape({
   onSelectSlot,
   strokeScale,
   verdict,
+  inActiveZone,
 }: SlotShapeProps) {
   // Zona non-bookable (facility + warung) digambar netral abu & tidak bisa diklik.
   const bookable = isBookableZoneType(zoneType);
@@ -420,7 +444,7 @@ function SlotShape({
   // Slot yang sedang dipilih memakai gaya "Dipilih" biru ala mockup.
   const style = selected && bookable ? SLOT_SELECTED_STYLE : SLOT_STATUS_STYLE[status];
   const interactive =
-    bookable && !blocked && row !== undefined && onSelectSlot !== undefined;
+    inActiveZone && bookable && !blocked && row !== undefined && onSelectSlot !== undefined;
 
   // Label: pakai nama dari database kalau ada, kalau tidak pakai label geometri.
   const text = row?.slot_label ?? layoutSlot.label;
@@ -449,9 +473,13 @@ function SlotShape({
         : `${displayName} — fasilitas umum, tidak disewakan`
       : null;
 
-  const ariaLabel = interactive
-    ? `${zoneName}, ${displayName}, ${SLOT_LEGEND_LABEL[status]}. Tekan Enter untuk memilih slot ini.`
-    : nonInteractiveLabel ?? undefined;
+  // Di luar zona aktif: sembunyikan dari screen reader sekalian — saat peta
+  // terkunci per zona, hanya slot zona itu yang relevan untuk dinavigasi.
+  const ariaLabel = !inActiveZone
+    ? undefined
+    : interactive
+      ? `${zoneName}, ${displayName}, ${SLOT_LEGEND_LABEL[status]}. Tekan Enter untuk memilih slot ini.`
+      : nonInteractiveLabel ?? undefined;
 
   const fitted = isNumberOnly ? null : fitLabel(text, layoutSlot, layoutSlot.labelOrientation);
 
@@ -471,6 +499,7 @@ function SlotShape({
       onClick={interactive ? handleSelect : undefined}
       onKeyDown={interactive ? handleKeyDown : undefined}
       className={interactive ? "group cursor-pointer" : "cursor-default"}
+      opacity={inActiveZone ? undefined : 0.35}
       style={interactive ? undefined : { pointerEvents: "none" }}
     >
       <rect
@@ -542,6 +571,7 @@ export function FloorPlan({
   onSelectSlot,
   interactionScale,
   verdicts,
+  activeZone,
 }: FloorPlanProps) {
   const strokeScale = Math.max(interactionScale ?? 1, 1);
   // Satu Map untuk semua slot: lookup O(1) saat menggambar 104 kotak.
@@ -628,6 +658,7 @@ export function FloorPlan({
             zone={zone}
             available={stat.available}
             total={stat.total}
+            dimmed={activeZone ? zone.svgGroupId !== activeZone.svgGroupId : false}
           />
         );
       })}
@@ -637,6 +668,13 @@ export function FloorPlan({
         <g key={zone.svgGroupId} id={zone.svgGroupId}>
           {zone.slots.map((layoutSlot) => {
             const row = slotIndex.get(layoutSlot.svgElementId);
+            // Keanggotaan zona aktif dari baris DB; slot tanpa baris DB jatuh
+            // ke perbandingan grup layout (mode fallback tanpa database).
+            const inActiveZone = !activeZone
+              ? true
+              : row
+                ? activeZone.slotIds.has(row.id)
+                : zone.svgGroupId === activeZone.svgGroupId;
             return (
               <SlotShape
                 key={layoutSlot.svgElementId}
@@ -648,6 +686,7 @@ export function FloorPlan({
                 onSelectSlot={onSelectSlot}
                 strokeScale={strokeScale}
                 verdict={row ? verdicts?.get(row.id) : undefined}
+                inActiveZone={inActiveZone}
               />
             );
           })}

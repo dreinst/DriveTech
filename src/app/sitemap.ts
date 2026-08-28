@@ -4,9 +4,10 @@ import { getSiteUrl } from "@/lib/site-url";
 const siteUrl = getSiteUrl();
 
 /**
- * Hanya rute publik yang statis: beranda (denah + cek status lewat anchor)
- * dan katalog kendaraan. Rute /booking/* dan /beli/* bergantung slotId —
- * tidak untuk diindeks massal; /admin/* privat (diblok di robots.ts).
+ * Hanya rute publik yang statis: beranda (peta booking + cek status lewat
+ * anchor), katalog kendaraan, dan denah lengkap (hanya melihat). Rute
+ * /booking/* dan /beli/* bergantung slotId — tidak untuk diindeks massal;
+ * /admin/* privat (diblok di robots.ts).
  */
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
@@ -21,6 +22,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       changeFrequency: "daily",
       priority: 0.8,
+    },
+    {
+      url: `${siteUrl}/denah`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.6,
     },
   ];
 }
