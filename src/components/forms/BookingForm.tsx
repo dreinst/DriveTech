@@ -5,13 +5,19 @@ import { useActionState, useId, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 
 import { DateChips, type DateChipStatus } from "@/components/denah/DateChips";
+import { FotoInput } from "@/components/forms/FotoInput";
 import { Alert } from "@/components/ui/Alert";
 import { buttonClass } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 import { createBookingAction } from "@/lib/actions/booking";
 import { initialActionState } from "@/lib/actions/state";
-import { EVENT_INFO } from "@/lib/domain/constants";
+import {
+  EVENT_INFO,
+  isVehicleZoneType,
+  TRANSMISSION_LABEL,
+  TRANSMISSION_OPTIONS,
+} from "@/lib/domain/constants";
 import { slotAdminFee } from "@/lib/domain/harga";
 import { hitungTotalBiaya } from "@/lib/domain/ketersediaan";
 import { TENANT_TYPE_BY_ZONE_TYPE, TENANT_TYPE_LABEL } from "@/lib/domain/labels";
@@ -242,6 +248,14 @@ export function BookingForm({ slot, eventDates, takenDates, initialDates }: Book
 
       <DetailFields tenantType={tenantType} idPrefix={id} errors={errors} />
 
+      {isVehicleZoneType(slot.zone.zone_type) ? (
+        <VehicleFields
+          idPrefix={id}
+          errors={errors}
+          tampilkanKm={slot.zone.zone_type !== "mobil_baru"}
+        />
+      ) : null}
+
       <div className="border-t border-line pt-4">
         <Field
           label="Catatan untuk panitia (opsional)"
@@ -406,6 +420,176 @@ function DetailFields({ tenantType, idPrefix, errors }: DetailFieldsProps) {
         </label>
       </div>
     </DetailGroup>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Data kendaraan untuk katalog publik (khusus zona kendaraan)          */
+/* ------------------------------------------------------------------ */
+
+type VehicleFieldsProps = {
+  idPrefix: string;
+  errors: Record<string, string>;
+  /** Kilometer hanya relevan untuk kendaraan bekas. */
+  tampilkanKm: boolean;
+};
+
+/**
+ * Diisi penyewa slot; hasilnya tampil di /katalog untuk pengunjung umum
+ * SETELAH pembayaran diverifikasi panitia. 1 slot = 1 kendaraan.
+ */
+function VehicleFields({ idPrefix, errors, tampilkanKm }: VehicleFieldsProps) {
+  return (
+    <div role="group" aria-label="Data kendaraan" className="space-y-4 border-t border-line pt-4">
+      <div>
+        <p className="text-xs font-semibold tracking-wide text-subtle uppercase">
+          Data Kendaraan untuk Katalog
+        </p>
+        <p className="mt-1 text-xs text-muted">
+          Ditampilkan di katalog online untuk pengunjung setelah pembayaran terverifikasi —
+          lengkapi agar unit Anda mudah ditemukan pembeli.
+        </p>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field
+          label="Nama kendaraan"
+          htmlFor={`${idPrefix}-kendaraan`}
+          error={errors["vehicle.vehicleName"]}
+          required
+        >
+          <Input
+            id={`${idPrefix}-kendaraan`}
+            name="vehicleName"
+            placeholder="Contoh: Toyota Avanza G 2019"
+            aria-invalid={errors["vehicle.vehicleName"] ? true : undefined}
+            required
+          />
+        </Field>
+
+        <Field
+          label="Nomor plat"
+          htmlFor={`${idPrefix}-plat`}
+          error={errors["vehicle.plateNumber"]}
+          required
+        >
+          <Input
+            id={`${idPrefix}-plat`}
+            name="plateNumber"
+            placeholder="Contoh: N 1234 AB"
+            className="uppercase"
+            aria-invalid={errors["vehicle.plateNumber"] ? true : undefined}
+            required
+          />
+        </Field>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field
+          label="Harga jual (Rp)"
+          htmlFor={`${idPrefix}-harga`}
+          error={errors["vehicle.price"]}
+          required
+        >
+          <Input
+            id={`${idPrefix}-harga`}
+            name="vehiclePrice"
+            type="number"
+            inputMode="numeric"
+            min={1}
+            step={1}
+            placeholder="Contoh: 135000000"
+            aria-invalid={errors["vehicle.price"] ? true : undefined}
+            required
+          />
+        </Field>
+
+        <Field label="Tahun" htmlFor={`${idPrefix}-tahun`} error={errors["vehicle.year"]}>
+          <Input
+            id={`${idPrefix}-tahun`}
+            name="vehicleYear"
+            type="number"
+            inputMode="numeric"
+            min={1950}
+            max={2100}
+            step={1}
+            placeholder="Contoh: 2019"
+            aria-invalid={errors["vehicle.year"] ? true : undefined}
+          />
+        </Field>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        {tampilkanKm ? (
+          <Field
+            label="Kilometer"
+            htmlFor={`${idPrefix}-km`}
+            error={errors["vehicle.mileageKm"]}
+          >
+            <Input
+              id={`${idPrefix}-km`}
+              name="vehicleMileage"
+              type="number"
+              inputMode="numeric"
+              min={0}
+              step={1}
+              placeholder="Contoh: 45000"
+              aria-invalid={errors["vehicle.mileageKm"] ? true : undefined}
+            />
+          </Field>
+        ) : null}
+
+        <Field
+          label="Transmisi"
+          htmlFor={`${idPrefix}-transmisi`}
+          error={errors["vehicle.transmission"]}
+        >
+          <Select
+            id={`${idPrefix}-transmisi`}
+            name="vehicleTransmission"
+            defaultValue=""
+            aria-invalid={errors["vehicle.transmission"] ? true : undefined}
+          >
+            <option value="">Pilih transmisi…</option>
+            {TRANSMISSION_OPTIONS.map((opsi) => (
+              <option key={opsi} value={opsi}>
+                {TRANSMISSION_LABEL[opsi]}
+              </option>
+            ))}
+          </Select>
+        </Field>
+
+        <Field label="Warna" htmlFor={`${idPrefix}-warna`} error={errors["vehicle.color"]}>
+          <Input
+            id={`${idPrefix}-warna`}
+            name="vehicleColor"
+            placeholder="Contoh: Hitam metalik"
+          />
+        </Field>
+      </div>
+
+      <Field
+        label="Deskripsi unit (opsional)"
+        htmlFor={`${idPrefix}-deskripsi`}
+        hint="Kondisi, kelengkapan surat, keunggulan unit, dsb."
+        error={errors["vehicle.description"]}
+      >
+        <Textarea
+          id={`${idPrefix}-deskripsi`}
+          name="vehicleDescription"
+          rows={3}
+          placeholder="Contoh: Pajak hidup, servis rutin, tangan pertama…"
+        />
+      </Field>
+
+      <FotoInput
+        name="vehiclePhoto"
+        id={`${idPrefix}-foto`}
+        label="Foto terbaik kendaraan"
+        error={errors.vehiclePhoto ?? errors["vehicle.photoUrl"]}
+        required
+      />
+    </div>
   );
 }
 

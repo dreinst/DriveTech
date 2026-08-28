@@ -68,6 +68,48 @@ const tanggal = z
 
 /* ---------- Booking (tenant sewa slot) ---------- */
 
+/**
+ * Data kendaraan untuk katalog publik — WAJIB saat booking slot zona kendaraan
+ * (mobil_baru / mobil_bekas / mobil_motor_bekas); service yang menegakkannya
+ * karena butuh tipe zona slot. photoUrl diisi action setelah unggah foto.
+ */
+export const vehicleInfoSchema = z.object({
+  vehicleName: z.string().trim().min(2, "Nama kendaraan minimal 2 karakter."),
+  plateNumber: z
+    .string()
+    .trim()
+    .min(3, "Nomor plat minimal 3 karakter.")
+    .max(12, "Nomor plat maksimal 12 karakter.")
+    .transform((value) => value.toUpperCase().replace(/\s+/g, " ")),
+  price: z.coerce
+    .number({ error: "Harga harus berupa angka." })
+    .positive("Harga harus lebih besar dari 0."),
+  year: z.preprocess(
+    emptyToUndefined,
+    z.coerce
+      .number()
+      .int("Tahun harus bilangan bulat.")
+      .min(1950, "Tahun tidak valid.")
+      .max(2100, "Tahun tidak valid.")
+      .optional(),
+  ),
+  mileageKm: z.preprocess(
+    emptyToUndefined,
+    z.coerce
+      .number()
+      .int("Kilometer harus bilangan bulat.")
+      .min(0, "Kilometer tidak boleh negatif.")
+      .optional(),
+  ),
+  transmission: z.preprocess(
+    emptyToUndefined,
+    z.enum(["manual", "matic"], { error: "Transmisi tidak valid." }).optional(),
+  ),
+  color: optionalText,
+  description: optionalText,
+  photoUrl: z.url("Foto kendaraan wajib diunggah."),
+});
+
 export const createBookingSchema = z.object({
   slotId: uuid("ID slot"),
   /** Tanggal weekend yang disewa (model per tanggal), minimal satu. */
@@ -83,6 +125,8 @@ export const createBookingSchema = z.object({
   }),
   detail: z.record(z.string(), z.unknown()).optional(),
   notes: optionalText,
+  /** Wajib untuk zona kendaraan — ditegakkan createBooking (butuh tipe zona). */
+  vehicle: vehicleInfoSchema.optional(),
 });
 
 export const submitPaymentSchema = z
@@ -200,6 +244,7 @@ export const upsertPartnerSchema = z.object({
 /* ---------- Tipe input ---------- */
 
 export type CreateBookingInput = z.infer<typeof createBookingSchema>;
+export type VehicleInfoInput = z.infer<typeof vehicleInfoSchema>;
 export type SubmitPaymentInput = z.infer<typeof submitPaymentSchema>;
 export type CancelBookingInput = z.infer<typeof cancelBookingSchema>;
 export type CreatePurchaseInput = z.infer<typeof createPurchaseSchema>;

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { AutoRefresh } from "@/components/admin/AutoRefresh";
 import { BookingDateChips } from "@/components/admin/BookingDateChips";
 import { ExportCsvButton, type ExportCsvRow } from "@/components/admin/ExportCsvButton";
+import { KatalogToggle } from "@/components/admin/KatalogToggle";
 import { PaymentVerifyForm } from "@/components/admin/PaymentVerifyForm";
 import { ProofThumb } from "@/components/admin/ProofThumb";
 import { Alert } from "@/components/ui/Alert";
@@ -317,6 +318,7 @@ export default async function AdminBookingsPage({ searchParams }: PageProps) {
                     bookingCode={booking.booking_code}
                   />
                 </div>
+                <KatalogToggle listing={booking.listing} className="mt-2" />
               </li>
             );
           })}
@@ -365,6 +367,7 @@ export default async function AdminBookingsPage({ searchParams }: PageProps) {
                       <td className="px-3 py-3">
                         <p className="font-medium text-ink">{slotDisplayName(booking.slot)}</p>
                         <p className="text-xs text-muted">{booking.slot.zone.name}</p>
+                        <KatalogToggle listing={booking.listing} className="mt-2" />
                       </td>
 
                       <td className="max-w-[13rem] px-3 py-3">

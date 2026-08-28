@@ -3,7 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { MAX_PROOF_BYTES, STORAGE_BUCKET_BUKTI } from "@/lib/domain/constants";
+import {
+  isVehicleZoneType,
+  MAX_PROOF_BYTES,
+  STORAGE_BUCKET_BUKTI,
+  STORAGE_BUCKET_FOTO_KENDARAAN,
+} from "@/lib/domain/constants";
 import { TENANT_TYPE_BY_ZONE_TYPE } from "@/lib/domain/labels";
 import {
   cancelBooking,
@@ -97,12 +102,67 @@ export async function createBookingAction(
 
   // Tipe tenant ditentukan tipe zona slot; nilai dari form hanya cadangan.
   let tenantType = teks(form, "tenantType");
+  let zonaKendaraan = false;
   if (slotId.length > 0) {
     const slot = await getSlotDetail(slotId);
     if (slot.ok) {
       const otomatis = TENANT_TYPE_BY_ZONE_TYPE[slot.data.zone.zone_type];
       if (otomatis) tenantType = otomatis;
+      zonaKendaraan = isVehicleZoneType(slot.data.zone.zone_type);
     }
+  }
+
+  // Zona kendaraan: unggah foto DULU supaya URL-nya ikut divalidasi skema.
+  // Kalau booking gagal setelah ini, file yatim di storage tidak berbahaya
+  // (bucket publik khusus foto) — pola yang sama dengan bukti transfer.
+  let vehicle: Record<string, unknown> | undefined;
+  if (zonaKendaraan) {
+    const fotoMentah = form.get("vehiclePhoto");
+    const foto = fotoMentah instanceof File && fotoMentah.size > 0 ? fotoMentah : null;
+    if (foto === null) {
+      return errorState("Foto kendaraan wajib diunggah.", {
+        vehiclePhoto: "Unggah 1 foto terbaik kendaraan Anda.",
+      });
+    }
+    if (foto.size > MAX_PROOF_BYTES) {
+      return errorState("Ukuran foto kendaraan maksimal 2 MB.", {
+        vehiclePhoto: "Ukuran foto maksimal 2 MB.",
+      });
+    }
+    if (!JENIS_BUKTI_DIIZINKAN.includes(foto.type)) {
+      return errorState("Format foto kendaraan harus JPG, PNG, atau WEBP.", {
+        vehiclePhoto: "Format foto harus JPG, PNG, atau WEBP.",
+      });
+    }
+    if (!isServiceRoleConfigured()) {
+      return errorState(
+        "Supabase belum dikonfigurasi. Salin .env.example ke .env.local dan isi kredensialnya.",
+      );
+    }
+
+    const supabase = createAdminSupabase();
+    const nama = `${crypto.randomUUID()}.${ekstensiBukti(foto.type)}`;
+    const unggah = await supabase.storage
+      .from(STORAGE_BUCKET_FOTO_KENDARAAN)
+      .upload(nama, foto, { contentType: foto.type, cacheControl: "3600" });
+    if (unggah.error) {
+      return errorState(`Gagal mengunggah foto kendaraan: ${unggah.error.message}`, {
+        vehiclePhoto: "Foto gagal diunggah, coba lagi.",
+      });
+    }
+    const { data } = supabase.storage.from(STORAGE_BUCKET_FOTO_KENDARAAN).getPublicUrl(nama);
+
+    vehicle = {
+      vehicleName: teks(form, "vehicleName"),
+      plateNumber: teks(form, "plateNumber"),
+      price: teks(form, "vehiclePrice"),
+      year: teks(form, "vehicleYear"),
+      mileageKm: teks(form, "vehicleMileage"),
+      transmission: teks(form, "vehicleTransmission"),
+      color: teks(form, "vehicleColor"),
+      description: teks(form, "vehicleDescription"),
+      photoUrl: data.publicUrl,
+    };
   }
 
   const detail = ambilDetail(form);
@@ -115,6 +175,7 @@ export async function createBookingAction(
     tenantType,
     detail: Object.keys(detail).length > 0 ? detail : undefined,
     notes: teks(form, "notes"),
+    vehicle,
   });
 
   if (!parsed.success) {

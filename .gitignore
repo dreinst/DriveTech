@@ -35,3 +35,4 @@ yarn-error.log*
 
 # rencana teknis internal — sengaja tidak dipublikasikan
 Sistem Pameran Arsitektur.md
+.env*

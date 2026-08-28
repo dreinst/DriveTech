@@ -480,6 +480,75 @@ export type Database = {
           },
         ];
       };
+      vehicle_listings: {
+        Row: {
+          id: string;
+          booking_id: string;
+          slot_id: string;
+          vehicle_name: string;
+          plate_number: string;
+          price: number;
+          year: number | null;
+          mileage_km: number | null;
+          transmission: string | null;
+          color: string | null;
+          description: string | null;
+          photo_url: string;
+          is_visible: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          booking_id: string;
+          slot_id: string;
+          vehicle_name: string;
+          plate_number: string;
+          price: number;
+          year?: number | null;
+          mileage_km?: number | null;
+          transmission?: string | null;
+          color?: string | null;
+          description?: string | null;
+          photo_url: string;
+          is_visible?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          booking_id?: string;
+          slot_id?: string;
+          vehicle_name?: string;
+          plate_number?: string;
+          price?: number;
+          year?: number | null;
+          mileage_km?: number | null;
+          transmission?: string | null;
+          color?: string | null;
+          description?: string | null;
+          photo_url?: string;
+          is_visible?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_listings_booking_id_fkey";
+            columns: ["booking_id"];
+            isOneToOne: true;
+            referencedRelation: "bookings";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "vehicle_listings_slot_id_fkey";
+            columns: ["slot_id"];
+            isOneToOne: false;
+            referencedRelation: "slots";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       admin_users: {
         Row: {
           id: string;
@@ -557,6 +626,7 @@ export type LeasingApplicationRow = Tables<"leasing_applications">;
 export type AdminUserRow = Tables<"admin_users">;
 export type EventDateRow = Tables<"event_dates">;
 export type BookingDateRow = Tables<"booking_dates">;
+export type VehicleListingRow = Tables<"vehicle_listings">;
 
 /** Satu baris view publik slot_date_status (okupansi per slot per tanggal). */
 export type SlotDateStatusRow =
@@ -605,6 +675,18 @@ export type BookingDetail = BookingRow & {
   tenant: TenantRow;
   payment: AdminFeePaymentRow | null;
   /** Tanggal (YYYY-MM-DD) yang disewa booking ini — hanya baris aktif, urut naik. */
+  dates: string[];
+  /** Kendaraan untuk katalog (1:1, hanya booking zona kendaraan). */
+  listing: VehicleListingRow | null;
+};
+
+/**
+ * Item katalog kendaraan publik: listing + slot (lokasi parkir) + tanggal hadir.
+ * HANYA berisi kolom aman untuk publik — data tenant TIDAK pernah ikut.
+ */
+export type CatalogItem = VehicleListingRow & {
+  slot: SlotDetail;
+  /** Tanggal hadir di pameran (YYYY-MM-DD, dari booking_dates aktif), urut naik. */
   dates: string[];
 };
 

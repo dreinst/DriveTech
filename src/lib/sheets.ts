@@ -23,7 +23,7 @@ if (typeof window !== "undefined") {
 }
 
 /** Jenis entitas yang disinkronkan; menjadi nama sheet di spreadsheet tujuan. */
-export type SheetEntity = "booking" | "payment" | "purchase" | "leasing";
+export type SheetEntity = "booking" | "payment" | "purchase" | "leasing" | "vehicle";
 
 /** Batas tunggu webhook (ms) — jangan sampai menahan respons ke pengguna. */
 const SHEETS_TIMEOUT_MS = 4000;
