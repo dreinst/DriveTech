@@ -16,7 +16,7 @@ export type ProofThumbProps = {
  */
 export function ProofThumb({ url, alt = "Bukti transfer" }: ProofThumbProps) {
   if (!url) {
-    return <span className="text-xs text-slate-400">Belum ada bukti</span>;
+    return <span className="text-xs text-subtle">Belum ada bukti</span>;
   }
 
   return (
@@ -24,7 +24,7 @@ export function ProofThumb({ url, alt = "Bukti transfer" }: ProofThumbProps) {
       href={url}
       target="_blank"
       rel="noreferrer"
-      className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-1 pr-2 transition-colors hover:border-slate-400"
+      className="inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-sm)] border border-line bg-card p-1 pr-2 transition-[border-color,background-color] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] hover:border-line-strong"
       title="Buka bukti transfer di tab baru"
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -34,9 +34,9 @@ export function ProofThumb({ url, alt = "Bukti transfer" }: ProofThumbProps) {
         width={36}
         height={36}
         loading="lazy"
-        className="h-9 w-9 shrink-0 rounded-md border border-slate-100 bg-slate-50 object-cover"
+        className="h-9 w-9 shrink-0 rounded-md border border-line bg-app object-cover"
       />
-      <span className="text-xs font-medium text-slate-700">Lihat</span>
+      <span className="text-xs font-medium text-muted">Lihat</span>
     </Link>
   );
 }

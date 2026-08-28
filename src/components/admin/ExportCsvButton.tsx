@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 
-import { Button } from "@/components/ui/Button";
-import type { ButtonSize, ButtonVariant } from "@/components/ui/Button";
+import { cn } from "@/lib/utils";
 
 /** Satu baris CSV: nama kolom -> nilai. */
 export type ExportCsvRow = Record<string, string | number | null>;
@@ -12,8 +11,6 @@ export type ExportCsvButtonProps = {
   filename: string;
   rows: ExportCsvRow[];
   label?: string;
-  variant?: ButtonVariant;
-  size?: ButtonSize;
   className?: string;
 };
 
@@ -59,13 +56,14 @@ function namaBerkas(filename: string): string {
   return bersih.toLowerCase().endsWith(".csv") ? bersih : `${bersih}.csv`;
 }
 
-/** Tombol unduh CSV dari data yang sudah dirender di halaman (dibuat di browser). */
+/**
+ * Tombol unduh CSV dari data yang sudah dirender di halaman (dibuat di browser).
+ * Gayanya "pil terang lembut" tema gelap: bg-surface-3 + teks putih.
+ */
 export function ExportCsvButton({
   filename,
   rows,
   label = "Unduh CSV",
-  variant = "secondary",
-  size = "sm",
   className,
 }: ExportCsvButtonProps) {
   const [pesan, setPesan] = useState<string | null>(null);
@@ -91,7 +89,17 @@ export function ExportCsvButton({
 
   return (
     <div className={className}>
-      <Button variant={variant} size={size} onClick={unduh} disabled={kosong} title={kosong ? "Tidak ada data untuk diunduh" : undefined}>
+      <button
+        type="button"
+        onClick={unduh}
+        disabled={kosong}
+        title={kosong ? "Tidak ada data untuk diunduh" : undefined}
+        className={cn(
+          "inline-flex h-9 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-surface-3 px-4 text-xs font-medium leading-none text-ink",
+          "transition-[background-color,opacity,transform] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-line-strong active:scale-[0.98]",
+          "disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]",
+        )}
+      >
         <svg
           width="14"
           height="14"
@@ -108,9 +116,9 @@ export function ExportCsvButton({
           <path d="M4 15.5h12" />
         </svg>
         {label}
-      </Button>
+      </button>
       {pesan ? (
-        <p className="mt-1 text-xs text-red-600" role="alert">
+        <p className="mt-1 text-xs text-danger" role="alert">
           {pesan}
         </p>
       ) : null}

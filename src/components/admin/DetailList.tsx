@@ -109,15 +109,15 @@ export function DetailList({ data, className, emptyText = "Tidak ada detail tamb
   const entries = detailEntries(data);
 
   if (entries.length === 0) {
-    return <p className={cn("text-xs text-slate-400", className)}>{emptyText}</p>;
+    return <p className={cn("text-xs text-subtle", className)}>{emptyText}</p>;
   }
 
   return (
     <dl className={cn("space-y-1", className)}>
       {entries.map((entri) => (
         <div key={entri.key} className="flex flex-wrap gap-x-1.5 text-xs leading-5">
-          <dt className="font-medium text-slate-500">{entri.label}:</dt>
-          <dd className="min-w-0 text-slate-800">{entri.value}</dd>
+          <dt className="font-medium text-muted">{entri.label}:</dt>
+          <dd className="min-w-0 text-ink">{entri.value}</dd>
         </div>
       ))}
     </dl>

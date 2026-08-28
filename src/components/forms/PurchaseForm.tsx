@@ -2,6 +2,7 @@
 
 import { useActionState, useId, useState } from "react";
 
+import { FadeUp } from "@/components/motion/motion";
 import { Alert } from "@/components/ui/Alert";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { SubmitButton } from "@/components/ui/SubmitButton";
@@ -16,24 +17,17 @@ import {
   hitungAngsuran,
   parseRupiahInput,
   SIMULASI_BUNGA_FLAT_TAHUNAN,
-  SIMULASI_DISCLAIMER,
 } from "@/lib/domain/simulasi";
 import type { PurchasePaymentMethod } from "@/lib/types/database";
 import { formatRupiah } from "@/lib/utils";
 
-const METODE: Array<{ value: PurchasePaymentMethod; deskripsi: string }> = [
-  {
-    value: "cash",
-    deskripsi: "Bayar lunas tunai langsung ke tenant di lokasi pameran saat serah terima unit.",
-  },
-  {
-    value: "transfer",
-    deskripsi: "Bayar lunas lewat transfer ke rekening tenant. Simpan buktinya untuk serah terima.",
-  },
+const METODE: Array<{ value: PurchasePaymentMethod; deskripsi: string; badge?: string }> = [
+  { value: "cash", deskripsi: "Bayar lunas ke tenant saat serah terima di lokasi." },
+  { value: "transfer", deskripsi: "Transfer ke rekening tenant penjual, simpan buktinya." },
   {
     value: "credit",
-    deskripsi:
-      "Beli dengan cicilan. Data Anda akan diteruskan ke mitra leasing rekanan pameran pada langkah berikutnya.",
+    deskripsi: "Pengajuan cicilan Anda diproses mitra leasing rekanan pameran.",
+    badge: "Didukung mitra leasing resmi",
   },
 ];
 
@@ -89,9 +83,11 @@ export function PurchaseForm({ slotId, namaLapak }: PurchaseFormProps) {
 
       <fieldset disabled={isPending} className="space-y-5">
         {state.status === "error" && state.message ? (
-          <Alert tone="error" title="Pengajuan belum bisa diproses">
-            {state.message}
-          </Alert>
+          <FadeUp>
+            <Alert tone="error" title="Pengajuan belum bisa diproses">
+              {state.message}
+            </Alert>
+          </FadeUp>
         ) : null}
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -114,7 +110,7 @@ export function PurchaseForm({ slotId, namaLapak }: PurchaseFormProps) {
           <Field
             label="Nomor HP / WhatsApp"
             htmlFor={`${idPrefix}-hp`}
-            hint="Contoh: 081234567890. Dipakai tenant dan panitia untuk menghubungi Anda."
+            hint="Dipakai tenant untuk menghubungi Anda."
             error={errors.buyerPhone}
             required
           >
@@ -136,8 +132,8 @@ export function PurchaseForm({ slotId, namaLapak }: PurchaseFormProps) {
           htmlFor={`${idPrefix}-unit`}
           hint={
             namaLapak
-              ? `Sebutkan merek, tipe, dan tahun unit yang Anda lihat di ${namaLapak}.`
-              : "Sebutkan merek, tipe, dan tahun unit yang Anda minati."
+              ? `Merek, tipe, dan tahun unit yang Anda lihat di ${namaLapak}.`
+              : "Merek, tipe, dan tahun unit yang Anda minati."
           }
           error={errors.unitDescription}
         >
@@ -145,7 +141,7 @@ export function PurchaseForm({ slotId, namaLapak }: PurchaseFormProps) {
             id={`${idPrefix}-unit`}
             name="unitDescription"
             rows={3}
-            placeholder="Contoh: Toyota Avanza G 2018, warna silver, plat D"
+            placeholder="Contoh: Toyota Avanza G 2018, warna silver, plat N"
             aria-invalid={errors.unitDescription ? true : undefined}
           />
         </Field>
@@ -153,12 +149,12 @@ export function PurchaseForm({ slotId, namaLapak }: PurchaseFormProps) {
         <Field
           label="Perkiraan harga unit"
           htmlFor={`${idPrefix}-harga`}
-          hint="Boleh dikosongkan. Diisi supaya estimasi cicilan bisa dihitung."
+          hint="Opsional; dipakai untuk menghitung estimasi cicilan."
           error={errors.unitPrice}
         >
           <div className="relative">
             <span
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-slate-500"
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted"
               aria-hidden="true"
             >
               Rp
@@ -168,7 +164,7 @@ export function PurchaseForm({ slotId, namaLapak }: PurchaseFormProps) {
               type="text"
               inputMode="numeric"
               autoComplete="off"
-              className="pl-9"
+              className="tabular pl-9"
               placeholder="150.000.000"
               value={hargaText === "" ? "" : formatRibuan(harga)}
               onChange={(event) => ubahHarga(event.target.value)}
@@ -177,151 +173,164 @@ export function PurchaseForm({ slotId, namaLapak }: PurchaseFormProps) {
           </div>
         </Field>
 
-        <fieldset className="space-y-2">
-          <legend className="text-sm font-medium text-slate-700">
+        <fieldset className="space-y-2.5">
+          <legend className="text-sm font-medium text-ink">
             Metode pembayaran
-            <span className="ml-0.5 text-red-600" aria-hidden="true">
+            <span className="ml-0.5 text-danger" aria-hidden="true">
               *
             </span>
           </legend>
-          <div className="grid gap-2">
+          {/* Tiga kartu radio metode — pola "payment-card" mockup: terpilih = bingkai & latar aksen. */}
+          <div className="grid gap-2.5 sm:grid-cols-3">
             {METODE.map((item) => {
               const dipilih = metode === item.value;
               return (
                 <label
                   key={item.value}
-                  className={`flex cursor-pointer items-start gap-3 rounded-xl border px-3.5 py-3 transition-colors ${
+                  className={`flex min-h-11 cursor-pointer flex-col gap-1.5 rounded-[var(--radius)] border px-4 py-3.5 transition-[background-color,border-color,box-shadow] duration-150 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[var(--ring)] ${
                     dipilih
-                      ? "border-slate-900 bg-slate-50"
-                      : "border-slate-200 bg-white hover:border-slate-300"
+                      ? "border-accent bg-accent-soft"
+                      : "border-line bg-surface-2 hover:border-accent"
                   }`}
                 >
+                  <span className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-semibold text-ink">
+                      {PURCHASE_PAYMENT_METHOD_LABEL[item.value]}
+                    </span>
+                    <span
+                      className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-colors duration-150 ${
+                        dipilih ? "border-accent bg-accent" : "border-line-strong bg-card"
+                      }`}
+                      aria-hidden="true"
+                    >
+                      {dipilih ? (
+                        <span className="h-1.5 w-1.5 rounded-full bg-app" />
+                      ) : null}
+                    </span>
+                  </span>
                   <input
                     type="radio"
                     name="paymentMethod"
                     value={item.value}
                     checked={dipilih}
                     onChange={() => setMetode(item.value)}
-                    className="mt-1 h-4 w-4 shrink-0 accent-slate-900"
+                    className="sr-only"
                     required
                   />
-                  <span className="min-w-0">
-                    <span className="block text-sm font-semibold text-slate-900">
-                      {PURCHASE_PAYMENT_METHOD_LABEL[item.value]}
+                  {item.badge ? (
+                    /* Badge kecil penonjol opsi Kredit — pil aksen solid teks gelap agar tetap
+                       terbaca baik pada kartu terpilih (latar accent-soft) maupun tidak. */
+                    <span className="inline-flex w-fit items-center rounded-full bg-accent px-2 py-0.5 text-[0.6875rem] font-medium leading-4 text-app">
+                      {item.badge}
                     </span>
-                    <span className="mt-0.5 block text-xs leading-relaxed text-slate-500">
-                      {item.deskripsi}
-                    </span>
-                  </span>
+                  ) : null}
+                  <span className="text-xs leading-relaxed text-muted">{item.deskripsi}</span>
                 </label>
               );
             })}
           </div>
           {errors.paymentMethod ? (
-            <p className="text-xs font-medium text-red-600" role="alert">
+            <p className="text-xs font-medium text-danger" role="alert">
               {errors.paymentMethod}
             </p>
           ) : null}
         </fieldset>
 
         {metode === "credit" ? (
-          <section className="space-y-4 rounded-xl border border-blue-200 bg-blue-50/60 p-4">
-            <div className="space-y-1">
-              <h3 className="text-sm font-semibold text-slate-900">Simulasi cicilan (estimasi)</h3>
-              <p className="text-xs leading-relaxed text-slate-600">
-                Coba-coba angka DP dan tenor di sini dulu. Pengajuan resmi ke mitra leasing
-                dilakukan pada langkah berikutnya setelah data pembeli tersimpan.
-              </p>
-            </div>
+          <FadeUp>
+            <section className="space-y-4 rounded-[var(--radius)] border border-line bg-surface-2 p-4 sm:p-5">
+              <h3 className="text-xs font-semibold uppercase tracking-[0.08em] text-subtle">
+                Simulasi Cicilan (Estimasi)
+              </h3>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field
-                label="Uang muka (DP)"
-                htmlFor={`${idPrefix}-dp`}
-                hint={`Terisi otomatis 20% dari harga unit${
-                  dpDiubahManual ? " sebelum Anda ubah" : ""
-                }.`}
-              >
-                <div className="relative">
-                  <span
-                    className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-slate-500"
-                    aria-hidden="true"
-                  >
-                    Rp
-                  </span>
-                  <Input
-                    id={`${idPrefix}-dp`}
-                    type="text"
-                    inputMode="numeric"
-                    autoComplete="off"
-                    className="pl-9"
-                    placeholder="30.000.000"
-                    value={dpText === "" ? "" : formatRibuan(dp)}
-                    onChange={(event) => ubahDp(event.target.value)}
-                  />
-                </div>
-              </Field>
-
-              <Field label="Tenor" htmlFor={`${idPrefix}-tenor`} hint="Lama cicilan dalam bulan.">
-                <Select
-                  id={`${idPrefix}-tenor`}
-                  value={String(tenor)}
-                  onChange={(event) => setTenor(Number(event.target.value))}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field
+                  label="Uang muka (DP)"
+                  htmlFor={`${idPrefix}-dp`}
+                  hint="Otomatis 20% dari harga unit; boleh diubah."
                 >
-                  {TENOR_OPTIONS.map((bulan) => (
-                    <option key={bulan} value={bulan}>
-                      {bulan} bulan
-                    </option>
-                  ))}
-                </Select>
-              </Field>
-            </div>
+                  <div className="relative">
+                    <span
+                      className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted"
+                      aria-hidden="true"
+                    >
+                      Rp
+                    </span>
+                    <Input
+                      id={`${idPrefix}-dp`}
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="off"
+                      className="tabular pl-9"
+                      placeholder="30.000.000"
+                      value={dpText === "" ? "" : formatRibuan(dp)}
+                      onChange={(event) => ubahDp(event.target.value)}
+                    />
+                  </div>
+                </Field>
 
-            {simulasi.valid ? (
-              <div className="rounded-lg border border-blue-200 bg-white p-3.5">
-                <p className="text-xs text-slate-500">Estimasi angsuran per bulan</p>
-                <p className="mt-0.5 text-2xl font-semibold tracking-tight text-slate-900">
-                  {formatRupiah(simulasi.angsuranPerBulan)}
-                </p>
-                <dl className="mt-3 grid gap-x-4 gap-y-1.5 text-xs sm:grid-cols-2">
-                  <div className="flex justify-between gap-2 sm:block">
-                    <dt className="text-slate-500">Pokok pembiayaan</dt>
-                    <dd className="font-medium text-slate-900">{formatRupiah(simulasi.pokok)}</dd>
-                  </div>
-                  <div className="flex justify-between gap-2 sm:block">
-                    <dt className="text-slate-500">Total bunga ({bungaPersen}% flat/tahun)</dt>
-                    <dd className="font-medium text-slate-900">
-                      {formatRupiah(simulasi.totalBunga)}
-                    </dd>
-                  </div>
-                  <div className="flex justify-between gap-2 sm:block">
-                    <dt className="text-slate-500">Tenor</dt>
-                    <dd className="font-medium text-slate-900">{simulasi.tenorBulan} bulan</dd>
-                  </div>
-                  <div className="flex justify-between gap-2 sm:block">
-                    <dt className="text-slate-500">Total bayar setelah DP</dt>
-                    <dd className="font-medium text-slate-900">
-                      {formatRupiah(simulasi.totalPembayaran)}
-                    </dd>
-                  </div>
-                </dl>
+                <Field label="Tenor" htmlFor={`${idPrefix}-tenor`} hint="Lama cicilan dalam bulan.">
+                  <Select
+                    id={`${idPrefix}-tenor`}
+                    value={String(tenor)}
+                    onChange={(event) => setTenor(Number(event.target.value))}
+                  >
+                    {TENOR_OPTIONS.map((bulan) => (
+                      <option key={bulan} value={bulan}>
+                        {bulan} bulan
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
               </div>
-            ) : (
-              <Alert tone="info">
-                {harga <= 0
-                  ? "Isi perkiraan harga unit di atas untuk melihat estimasi angsuran."
-                  : "DP sudah menutupi seluruh harga unit, jadi tidak ada sisa yang perlu dicicil."}
-              </Alert>
-            )}
 
-            <p className="text-xs leading-relaxed text-slate-500">{SIMULASI_DISCLAIMER}</p>
-          </section>
+              {simulasi.valid ? (
+                <div className="rounded-[var(--radius-sm)] border border-line bg-card p-4">
+                  <p className="text-xs text-muted">Estimasi angsuran per bulan</p>
+                  <p className="tabular mt-1 text-2xl font-semibold tracking-tight text-accent">
+                    {formatRupiah(simulasi.angsuranPerBulan)}
+                  </p>
+                  <dl className="tabular mt-4 grid gap-x-4 gap-y-1.5 border-t border-line pt-3 text-xs sm:grid-cols-2">
+                    <div className="flex justify-between gap-2 sm:block">
+                      <dt className="text-muted">Pokok pembiayaan</dt>
+                      <dd className="font-medium text-ink">{formatRupiah(simulasi.pokok)}</dd>
+                    </div>
+                    <div className="flex justify-between gap-2 sm:block">
+                      <dt className="text-muted">Total bunga ({bungaPersen}% flat/tahun)</dt>
+                      <dd className="font-medium text-ink">{formatRupiah(simulasi.totalBunga)}</dd>
+                    </div>
+                    <div className="flex justify-between gap-2 sm:block">
+                      <dt className="text-muted">Tenor</dt>
+                      <dd className="font-medium text-ink">{simulasi.tenorBulan} bulan</dd>
+                    </div>
+                    <div className="flex justify-between gap-2 sm:block">
+                      <dt className="text-muted">Total bayar setelah DP</dt>
+                      <dd className="font-medium text-ink">
+                        {formatRupiah(simulasi.totalPembayaran)}
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+              ) : (
+                <Alert tone="info">
+                  {harga <= 0
+                    ? "Isi perkiraan harga unit di atas untuk melihat estimasi angsuran."
+                    : "DP sudah menutupi seluruh harga unit — tidak ada sisa yang perlu dicicil."}
+                </Alert>
+              )}
+
+              <p className="text-xs leading-relaxed text-muted">
+                Estimasi tidak mengikat — DP, tenor, bunga, dan biaya final ditentukan mitra
+                leasing setelah verifikasi.
+              </p>
+            </section>
+          </FadeUp>
         ) : null}
 
         <Field
           label="Catatan untuk tenant"
           htmlFor={`${idPrefix}-catatan`}
-          hint="Opsional. Misalnya jadwal Anda datang ke lokasi atau permintaan test drive."
+          hint="Opsional; misalnya jadwal datang atau permintaan test drive."
           error={errors.notes}
         >
           <Textarea
@@ -333,14 +342,14 @@ export function PurchaseForm({ slotId, namaLapak }: PurchaseFormProps) {
           />
         </Field>
 
-        <div className="flex flex-wrap items-center gap-3 border-t border-slate-100 pt-4">
+        <div className="flex flex-wrap items-center gap-3 border-t border-line pt-4">
           <SubmitButton pendingText="Menyimpan…">
             {metode === "credit" ? "Lanjut ke Pengajuan Leasing" : "Kirim Data Pembelian"}
           </SubmitButton>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-muted">
             {metode === "credit"
-              ? "Setelah ini Anda memilih mitra leasing dan mengisi DP serta tenor."
-              : "Setelah ini Anda mendapat kode transaksi untuk ditunjukkan ke tenant."}
+              ? "Berikutnya: pilih mitra leasing, DP, dan tenor."
+              : "Anda akan mendapat kode transaksi untuk ditunjukkan ke tenant."}
           </p>
         </div>
       </fieldset>

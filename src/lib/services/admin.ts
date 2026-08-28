@@ -1,12 +1,18 @@
 import { fail, ok, type Result } from "@/lib/result";
+import { syncToSheet } from "@/lib/sheets";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { isServiceRoleConfigured } from "@/lib/supabase/config";
+import { isBookableZoneType } from "@/lib/domain/constants";
 import type {
   AdminFeePaymentRow,
   BookingDetail,
   BookingStatus,
+  EventDateRow,
+  SlotDateStatusRow,
   LeasingApplicationRow,
   LeasingPartnerRow,
+  LeasingStatus,
+  PaymentMethod,
   PaymentStatus,
   PurchaseDetail,
   PurchaseTransactionRow,
@@ -15,9 +21,14 @@ import type {
   SlotStatus,
   TablesUpdate,
   TenantRow,
+  ZoneRow,
   ZoneType,
 } from "@/lib/types/database";
-import { upsertPartnerSchema, type UpsertPartnerInput } from "@/lib/validation/schemas";
+import {
+  addEventDateSchema,
+  upsertPartnerSchema,
+  type UpsertPartnerInput,
+} from "@/lib/validation/schemas";
 import { BOOKING_SELECT, normalizeBookingRow } from "./booking";
 import { normalizePurchaseRow, PURCHASE_SELECT } from "./purchase";
 import {
@@ -27,6 +38,7 @@ import {
   normalizeSlotDetail,
   pickOne,
   SLOT_WITH_ZONE_SELECT,
+  tanggalHariIniJakarta,
   type PgError,
 } from "./slots";
 
@@ -39,7 +51,11 @@ if (typeof window !== "undefined") {
 /* Tipe publik lapisan admin                                           */
 /* ------------------------------------------------------------------ */
 
-/** Rekap satu zona untuk dashboard. */
+/**
+ * Rekap satu zona untuk dashboard — model per tanggal: available/pending/
+ * confirmed dihitung untuk SATU tanggal (tanggal aktif terdekat), sedangkan
+ * blocked = slot yang diblokir panitia (slots.status != 'available').
+ */
 export type ZoneSlotStat = {
   zoneId: string;
   name: string;
@@ -48,11 +64,19 @@ export type ZoneSlotStat = {
   available: number;
   pending: number;
   confirmed: number;
+  blocked: number;
 };
 
 export type DashboardStats = {
   totalSlot: number;
-  /** Rekap per zona (nama zona, tipe, total, available, pending, confirmed). */
+  /**
+   * Tanggal (YYYY-MM-DD) yang dipakai menghitung okupansi per zona:
+   * tanggal gelaran aktif terdekat >= hari ini. Null kalau tidak ada
+   * tanggal mendatang — okupansi lalu dihitung tanpa baris booking
+   * (semua slot tak terblokir dianggap available).
+   */
+  tanggalOkupansi: string | null;
+  /** Rekap per zona (nama zona, tipe, total, available, pending, confirmed, blocked). */
   totalPerStatus: ZoneSlotStat[];
   pembayaranMenungguVerifikasi: number;
   bookingAktif: number;
@@ -93,6 +117,43 @@ export type LeasingApplicationPatch = TablesUpdate<"leasing_applications">;
 const BOOKING_AKTIF: BookingStatus[] = ["pending_payment", "confirmed"];
 const LEASING_MASUK = ["submitted", "verifying"];
 
+/**
+ * Tanggal gelaran aktif terdekat (>= hari ini WIB) beserta okupansinya dari
+ * view slot_date_status. Dipakai dashboard & analitik supaya okupansi punya
+ * makna jelas pada model per tanggal: "per <tanggal>".
+ */
+async function ambilOkupansiTanggalTerdekat(
+  supabase: ReturnType<typeof createAdminSupabase>,
+): Promise<Result<{ tanggal: string | null; occupancy: SlotDateStatusRow[] }>> {
+  type Out = { tanggal: string | null; occupancy: SlotDateStatusRow[] };
+
+  const today = tanggalHariIniJakarta();
+  const dateQuery = await supabase
+    .from("event_dates")
+    .select("event_date")
+    .eq("is_active", true)
+    .gte("event_date", today)
+    .order("event_date", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (dateQuery.error) {
+    return dbFail<Out>(dateQuery.error as PgError, "Gagal memuat tanggal gelaran");
+  }
+
+  const tanggal = ((dateQuery.data ?? null) as { event_date: string } | null)?.event_date ?? null;
+  if (!tanggal) return ok<Out>({ tanggal: null, occupancy: [] });
+
+  const occQuery = await supabase
+    .from("slot_date_status")
+    .select("slot_id, event_date, status")
+    .eq("event_date", tanggal);
+  if (occQuery.error) {
+    return dbFail<Out>(occQuery.error as PgError, "Gagal memuat okupansi slot");
+  }
+
+  return ok<Out>({ tanggal, occupancy: (occQuery.data ?? []) as SlotDateStatusRow[] });
+}
+
 /** Ringkasan angka untuk /admin. */
 export async function getDashboardStats(): Promise<Result<DashboardStats>> {
   if (!isServiceRoleConfigured()) return fail<DashboardStats>(NO_CONFIG_MESSAGE, "NO_CONFIG");
@@ -123,16 +184,38 @@ export async function getDashboardStats(): Promise<Result<DashboardStats>> {
     status: SlotStatus;
   }>;
 
+  // Okupansi dihitung untuk tanggal gelaran aktif terdekat (model per tanggal).
+  const okupansiResult = await ambilOkupansiTanggalTerdekat(supabase);
+  if (!okupansiResult.ok) {
+    return fail<DashboardStats>(okupansiResult.error, okupansiResult.code);
+  }
+  const { tanggal: tanggalOkupansi, occupancy } = okupansiResult.data;
+  const statusPerSlot = new Map<string, BookingStatus>();
+  for (const row of occupancy) {
+    // confirmed menang atas pending_payment kalau (secara teori) keduanya ada.
+    if (statusPerSlot.get(row.slot_id) !== "confirmed") {
+      statusPerSlot.set(row.slot_id, row.status);
+    }
+  }
+
   const perZona: ZoneSlotStat[] = zones.map((zone) => {
     const milik = slots.filter((slot) => slot.zone_id === zone.id);
+    // slots.status != 'available' = DIBLOKIR PANITIA untuk semua tanggal.
+    const blocked = milik.filter((slot) => slot.status !== "available").length;
+    const bebas = milik.filter((slot) => slot.status === "available");
+    const confirmed = bebas.filter((slot) => statusPerSlot.get(slot.id) === "confirmed").length;
+    const pending = bebas.filter(
+      (slot) => statusPerSlot.get(slot.id) === "pending_payment",
+    ).length;
     return {
       zoneId: zone.id,
       name: zone.name,
       zoneType: zone.zone_type,
       total: milik.length,
-      available: milik.filter((slot) => slot.status === "available").length,
-      pending: milik.filter((slot) => slot.status === "pending").length,
-      confirmed: milik.filter((slot) => slot.status === "confirmed").length,
+      available: bebas.length - confirmed - pending,
+      pending,
+      confirmed,
+      blocked,
     };
   });
 
@@ -167,6 +250,7 @@ export async function getDashboardStats(): Promise<Result<DashboardStats>> {
 
   return ok<DashboardStats>({
     totalSlot: slots.length,
+    tanggalOkupansi,
     totalPerStatus: perZona,
     pembayaranMenungguVerifikasi: paymentRows.filter((row) => row.status === "submitted").length,
     bookingAktif,
@@ -288,7 +372,11 @@ export async function listSlots(filter?: SlotFilter): Promise<Result<SlotDetail[
   return ok(rows);
 }
 
-/** Override manual status slot oleh admin (dipakai saat pembayaran offline / koreksi). */
+/**
+ * Override manual status slot oleh admin. Model per tanggal: 'available' =
+ * normal, selain itu berarti slot DIBLOKIR PANITIA untuk semua tanggal
+ * (label UI: "Diblokir") — bukan lagi status booking.
+ */
 export async function overrideSlotStatus(
   slotId: string,
   status: SlotStatus,
@@ -328,8 +416,11 @@ async function ambilPayment(paymentId: string): Promise<Result<PaymentLite>> {
 }
 
 /**
- * Verifikasi pembayaran: payment -> verified, booking -> confirmed, slot -> confirmed.
- * Tanpa transaksi: setiap langkah punya kompensasi manual kalau langkah lanjutan gagal.
+ * Verifikasi pembayaran: payment -> verified, booking -> confirmed.
+ * slots.status TIDAK disentuh lagi (model per tanggal): trigger
+ * sync_booking_dates_active menjaga baris booking_dates tetap aktif, dan
+ * peta membaca okupansi dari view slot_date_status.
+ * Tanpa transaksi: ada kompensasi manual kalau langkah lanjutan gagal.
  * SARAN PRODUKSI: jadikan satu Postgres function (rpc) supaya atomik.
  */
 export async function verifyPayment(paymentId: string, adminId: string): Promise<Result<null>> {
@@ -345,14 +436,14 @@ export async function verifyPayment(paymentId: string, adminId: string): Promise
 
   const bookingQuery = await supabase
     .from("bookings")
-    .select("id, slot_id, status")
+    .select("id, booking_code, status")
     .eq("id", payment.booking_id)
     .maybeSingle();
   if (bookingQuery.error) {
     return dbFail<null>(bookingQuery.error as PgError, "Gagal memuat booking");
   }
   const booking = (bookingQuery.data ?? null) as
-    | { id: string; slot_id: string; status: BookingStatus }
+    | { id: string; booking_code: string; status: BookingStatus }
     | null;
   if (!booking) return fail<null>("Booking terkait tidak ditemukan.", "NOT_FOUND");
   if (booking.status === "cancelled") {
@@ -386,26 +477,23 @@ export async function verifyPayment(paymentId: string, adminId: string): Promise
     return dbFail<null>(bookingUpdate.error as PgError, "Gagal mengonfirmasi booking");
   }
 
-  const slotUpdate = await supabase
-    .from("slots")
-    .update({ status: "confirmed", updated_at: now })
-    .eq("id", booking.slot_id);
-  if (slotUpdate.error) {
-    // Kompensasi berantai: booking dan pembayaran dikembalikan.
-    await supabase.from("bookings").update({ status: booking.status }).eq("id", booking.id);
-    await supabase
-      .from("admin_fee_payments")
-      .update({ status: payment.status, verified_by: null, verified_at: null })
-      .eq("id", payment.id);
-    return dbFail<null>(slotUpdate.error as PgError, "Gagal mengunci slot");
-  }
+  void syncToSheet("payment", {
+    bookingCode: booking.booking_code,
+    status: "verified",
+    verifiedAt: now,
+  });
+  void syncToSheet("booking", {
+    bookingCode: booking.booking_code,
+    status: "confirmed",
+  });
 
   return ok(null);
 }
 
 /**
  * Tolak pembayaran: hanya status pembayaran + alasan yang berubah.
- * Booking tetap pending_payment dan slot tetap pending supaya tenant bisa unggah ulang.
+ * Booking tetap pending_payment (tanggal-tanggal sewanya tetap terkunci)
+ * supaya tenant bisa mengunggah bukti baru. slots.status tidak disentuh.
  */
 export async function rejectPayment(
   paymentId: string,
@@ -436,6 +524,23 @@ export async function rejectPayment(
     .eq("id", paymentResult.data.id);
 
   if (error) return dbFail<null>(error as PgError, "Gagal menolak pembayaran");
+
+  // Kode booking hanya untuk sinkron sheet — kegagalan query tidak menggagalkan operasi.
+  const bookingQuery = await supabase
+    .from("bookings")
+    .select("booking_code")
+    .eq("id", paymentResult.data.booking_id)
+    .maybeSingle();
+  const bookingCode =
+    ((bookingQuery.data ?? null) as { booking_code: string } | null)?.booking_code ?? null;
+  if (bookingCode) {
+    void syncToSheet("payment", {
+      bookingCode,
+      status: "rejected",
+      rejectReason: alasan,
+    });
+  }
+
   return ok(null);
 }
 
@@ -543,7 +648,20 @@ export async function updateLeasingApplication(
     return dbFail<LeasingApplicationRow>(error as PgError, "Gagal memperbarui pengajuan leasing");
   }
   if (!data) return fail<LeasingApplicationRow>("Pengajuan leasing tidak ditemukan.", "NOT_FOUND");
-  return ok(data as LeasingApplicationRow);
+
+  const row = data as LeasingApplicationRow;
+  void syncToSheet("leasing", {
+    leasingId: row.id,
+    purchaseTransactionId: row.purchase_transaction_id,
+    status: row.status,
+    dpAmount: row.dp_amount ?? "",
+    tenorBulan: row.tenor_bulan ?? "",
+    commissionAmount: row.commission_amount ?? "",
+    commissionPaid: row.commission_paid === true,
+    notes: row.notes ?? "",
+  });
+
+  return ok(row);
 }
 
 /** Semua partner leasing (aktif maupun tidak) untuk pengelolaan admin. */
@@ -625,4 +743,313 @@ export async function setCommissionPaid(id: string, paid: boolean): Promise<Resu
 
   if (error) return dbFail<null>(error as PgError, "Gagal memperbarui status komisi");
   return ok(null);
+}
+
+/* ------------------------------------------------------------------ */
+/* Pengaturan zona (biaya admin)                                       */
+/* ------------------------------------------------------------------ */
+
+/** Semua zona (urut display_order) untuk halaman pengaturan admin. */
+export async function listZonesAdmin(): Promise<Result<ZoneRow[]>> {
+  if (!isServiceRoleConfigured()) return fail<ZoneRow[]>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+
+  const supabase = createAdminSupabase();
+  const { data, error } = await supabase
+    .from("zones")
+    .select("*")
+    .order("display_order", { ascending: true });
+
+  if (error) return dbFail<ZoneRow[]>(error as PgError, "Gagal memuat daftar zona");
+  return ok((data ?? []) as ZoneRow[]);
+}
+
+/** Ubah biaya admin satu zona (dipakai /admin/pengaturan). */
+export async function updateZoneFee(zoneId: string, adminFee: number): Promise<Result<ZoneRow>> {
+  if (!isServiceRoleConfigured()) return fail<ZoneRow>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!Number.isFinite(adminFee) || adminFee < 0) {
+    return fail<ZoneRow>("Biaya admin tidak boleh negatif.", "VALIDATION");
+  }
+
+  const supabase = createAdminSupabase();
+  const { data, error } = await supabase
+    .from("zones")
+    .update({ admin_fee: adminFee })
+    .eq("id", zoneId)
+    .select("*")
+    .maybeSingle();
+
+  if (error) return dbFail<ZoneRow>(error as PgError, "Gagal menyimpan biaya admin zona");
+  if (!data) return fail<ZoneRow>("Zona tidak ditemukan.", "NOT_FOUND");
+  return ok(data as ZoneRow);
+}
+
+/* ------------------------------------------------------------------ */
+/* Tanggal gelaran (event_dates)                                       */
+/* ------------------------------------------------------------------ */
+
+/** Semua tanggal gelaran (aktif maupun tidak), urut naik. */
+export async function listEventDates(): Promise<Result<EventDateRow[]>> {
+  if (!isServiceRoleConfigured()) return fail<EventDateRow[]>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+
+  const supabase = createAdminSupabase();
+  const { data, error } = await supabase
+    .from("event_dates")
+    .select("*")
+    .order("event_date", { ascending: true });
+
+  if (error) return dbFail<EventDateRow[]>(error as PgError, "Gagal memuat tanggal gelaran");
+  return ok((data ?? []) as EventDateRow[]);
+}
+
+/** Tambah satu tanggal gelaran baru (YYYY-MM-DD). */
+export async function addEventDate(date: string): Promise<Result<EventDateRow>> {
+  if (!isServiceRoleConfigured()) return fail<EventDateRow>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+
+  const parsed = addEventDateSchema.safeParse({ date });
+  if (!parsed.success) {
+    const first = parsed.error.issues[0]?.message ?? "Tanggal tidak valid.";
+    return fail<EventDateRow>(first, "VALIDATION");
+  }
+
+  const supabase = createAdminSupabase();
+
+  // Tanggal ditautkan ke event aktif (satu event saja di sistem ini).
+  const eventQuery = await supabase
+    .from("events")
+    .select("id")
+    .eq("is_active", true)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (eventQuery.error) {
+    return dbFail<EventDateRow>(eventQuery.error as PgError, "Gagal memuat data event");
+  }
+  const eventId = ((eventQuery.data ?? null) as { id: string } | null)?.id ?? null;
+
+  const inserted = await supabase
+    .from("event_dates")
+    .insert({ event_id: eventId, event_date: parsed.data.date, is_active: true })
+    .select("*")
+    .single();
+
+  if (inserted.error || !inserted.data) {
+    const err = inserted.error as PgError;
+    if (err?.code === "23505") {
+      return fail<EventDateRow>("Tanggal tersebut sudah terdaftar.", "ALREADY_EXISTS");
+    }
+    return dbFail<EventDateRow>(err, "Gagal menambah tanggal gelaran");
+  }
+  return ok(inserted.data as EventDateRow);
+}
+
+/** Aktifkan / nonaktifkan satu tanggal gelaran. */
+export async function setEventDateActive(
+  id: string,
+  active: boolean,
+): Promise<Result<EventDateRow>> {
+  if (!isServiceRoleConfigured()) return fail<EventDateRow>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+
+  const supabase = createAdminSupabase();
+  const { data, error } = await supabase
+    .from("event_dates")
+    .update({ is_active: active })
+    .eq("id", id)
+    .select("*")
+    .maybeSingle();
+
+  if (error) return dbFail<EventDateRow>(error as PgError, "Gagal memperbarui tanggal gelaran");
+  if (!data) return fail<EventDateRow>("Tanggal gelaran tidak ditemukan.", "NOT_FOUND");
+  return ok(data as EventDateRow);
+}
+
+/* ------------------------------------------------------------------ */
+/* Analitik                                                            */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Okupansi satu zona pada SATU tanggal (tanggal aktif terdekat) — model per
+ * tanggal. `diblokir` = slot yang ditutup panitia (slots.status != 'available').
+ */
+export type ZoneOccupancyPoint = {
+  zona: string;
+  terisi: number;
+  menunggu: number;
+  tersedia: number;
+  diblokir: number;
+};
+
+export type DailyBookingPoint = {
+  /** Kunci tanggal "YYYY-MM-DD" (zona waktu Asia/Jakarta). */
+  tanggal: string;
+  jumlah: number;
+};
+
+export type LeasingStatusPoint = { status: LeasingStatus; jumlah: number };
+export type PaymentMethodPoint = { metode: PaymentMethod; jumlah: number };
+
+export type AnalyticsData = {
+  /**
+   * Tanggal (YYYY-MM-DD) yang dipakai menghitung okupansiPerZona — tanggal
+   * gelaran aktif terdekat >= hari ini; null kalau tidak ada tanggal mendatang.
+   * UI menampilkan "per <tanggal>" dari nilai ini.
+   */
+  tanggalOkupansi: string | null;
+  okupansiPerZona: ZoneOccupancyPoint[];
+  bookingPerHari: DailyBookingPoint[];
+  leasingPerStatus: LeasingStatusPoint[];
+  metodePembayaran: PaymentMethodPoint[];
+};
+
+/** "2026-08-27" untuk sebuah timestamp, dihitung pada zona waktu Indonesia bagian barat. */
+const tanggalJakarta = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Asia/Jakarta",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+function kunciTanggal(iso: string): string | null {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return null;
+  return tanggalJakarta.format(date);
+}
+
+const LEASING_STATUS_URUT: readonly LeasingStatus[] = [
+  "submitted",
+  "verifying",
+  "approved",
+  "rejected",
+  "completed",
+];
+
+/**
+ * Semua seri untuk /admin/analitik dalam satu panggilan.
+ * Data sedikit itu wajar (event baru): seri kosong dikembalikan sebagai array
+ * kosong supaya halaman bisa menampilkan EmptyState per kartu.
+ */
+export async function getAnalyticsData(): Promise<Result<AnalyticsData>> {
+  if (!isServiceRoleConfigured()) return fail<AnalyticsData>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+
+  const supabase = createAdminSupabase();
+
+  const zonesQuery = await supabase
+    .from("zones")
+    .select("id, name, zone_type, display_order")
+    .order("display_order", { ascending: true });
+  if (zonesQuery.error) {
+    return dbFail<AnalyticsData>(zonesQuery.error as PgError, "Gagal memuat zona");
+  }
+  const zones = (zonesQuery.data ?? []) as Array<{
+    id: string;
+    name: string;
+    zone_type: ZoneType;
+    display_order: number;
+  }>;
+
+  const slotsQuery = await supabase.from("slots").select("id, zone_id, status");
+  if (slotsQuery.error) {
+    return dbFail<AnalyticsData>(slotsQuery.error as PgError, "Gagal memuat slot");
+  }
+  const slots = (slotsQuery.data ?? []) as Array<{
+    id: string;
+    zone_id: string;
+    status: SlotStatus;
+  }>;
+
+  // (a) Okupansi per zona bookable pada tanggal aktif terdekat (model per tanggal).
+  const okupansiResult = await ambilOkupansiTanggalTerdekat(supabase);
+  if (!okupansiResult.ok) {
+    return fail<AnalyticsData>(okupansiResult.error, okupansiResult.code);
+  }
+  const { tanggal: tanggalOkupansi, occupancy } = okupansiResult.data;
+  const statusPerSlot = new Map<string, BookingStatus>();
+  for (const row of occupancy) {
+    if (statusPerSlot.get(row.slot_id) !== "confirmed") {
+      statusPerSlot.set(row.slot_id, row.status);
+    }
+  }
+
+  const okupansiPerZona: ZoneOccupancyPoint[] = zones
+    .filter((zone) => isBookableZoneType(zone.zone_type))
+    .map((zone) => {
+      const milik = slots.filter((slot) => slot.zone_id === zone.id);
+      const diblokir = milik.filter((slot) => slot.status !== "available").length;
+      const bebas = milik.filter((slot) => slot.status === "available");
+      const terisi = bebas.filter((slot) => statusPerSlot.get(slot.id) === "confirmed").length;
+      const menunggu = bebas.filter(
+        (slot) => statusPerSlot.get(slot.id) === "pending_payment",
+      ).length;
+      return {
+        zona: zone.name,
+        terisi,
+        menunggu,
+        tersedia: bebas.length - terisi - menunggu,
+        diblokir,
+      };
+    })
+    .filter((zone) => zone.terisi + zone.menunggu + zone.tersedia + zone.diblokir > 0);
+
+  // (b) Booking per hari dari created_at (dikelompokkan di server, hari kosong diisi 0).
+  const bookingsQuery = await supabase.from("bookings").select("created_at");
+  if (bookingsQuery.error) {
+    return dbFail<AnalyticsData>(bookingsQuery.error as PgError, "Gagal memuat booking");
+  }
+  const perTanggal = new Map<string, number>();
+  for (const row of (bookingsQuery.data ?? []) as Array<{ created_at: string }>) {
+    const kunci = kunciTanggal(row.created_at);
+    if (!kunci) continue;
+    perTanggal.set(kunci, (perTanggal.get(kunci) ?? 0) + 1);
+  }
+  const kunciUrut = Array.from(perTanggal.keys()).sort();
+  const bookingPerHari: DailyBookingPoint[] = [];
+  if (kunciUrut.length > 0) {
+    // Isi hari tanpa booking dengan 0 supaya garis tren tidak melompat.
+    const mulai = new Date(`${kunciUrut[0]}T00:00:00Z`);
+    const selesai = new Date(`${kunciUrut[kunciUrut.length - 1]}T00:00:00Z`);
+    const MS_SEHARI = 24 * 60 * 60 * 1000;
+    const MAKS_HARI = 90; // pengaman: event tunggal, rentang wajar
+    for (
+      let t = mulai.getTime(), n = 0;
+      t <= selesai.getTime() && n < MAKS_HARI;
+      t += MS_SEHARI, n += 1
+    ) {
+      const kunci = new Date(t).toISOString().slice(0, 10);
+      bookingPerHari.push({ tanggal: kunci, jumlah: perTanggal.get(kunci) ?? 0 });
+    }
+  }
+
+  // (c) Leasing per status.
+  const leasingQuery = await supabase.from("leasing_applications").select("status");
+  if (leasingQuery.error) {
+    return dbFail<AnalyticsData>(leasingQuery.error as PgError, "Gagal memuat pengajuan leasing");
+  }
+  const leasingRows = (leasingQuery.data ?? []) as Array<{ status: LeasingStatus }>;
+  const leasingPerStatus: LeasingStatusPoint[] =
+    leasingRows.length === 0
+      ? []
+      : LEASING_STATUS_URUT.map((status) => ({
+          status,
+          jumlah: leasingRows.filter((row) => row.status === status).length,
+        }));
+
+  // (d) Metode pembayaran biaya admin (cash vs transfer).
+  const paymentsQuery = await supabase.from("admin_fee_payments").select("method");
+  if (paymentsQuery.error) {
+    return dbFail<AnalyticsData>(paymentsQuery.error as PgError, "Gagal memuat pembayaran");
+  }
+  const paymentRows = (paymentsQuery.data ?? []) as Array<{ method: PaymentMethod }>;
+  const metodePembayaran: PaymentMethodPoint[] = (["transfer", "cash"] as const)
+    .map((metode) => ({
+      metode,
+      jumlah: paymentRows.filter((row) => row.method === metode).length,
+    }))
+    .filter((titik) => titik.jumlah > 0);
+
+  return ok<AnalyticsData>({
+    tanggalOkupansi,
+    okupansiPerZona,
+    bookingPerHari,
+    leasingPerStatus,
+    metodePembayaran,
+  });
 }

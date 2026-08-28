@@ -1,3 +1,4 @@
+import type { OccupancyRow } from "@/lib/domain/ketersediaan";
 import { suggestAlternatives as pickAlternatives } from "@/lib/domain/suggestions";
 import { fail, ok, type Result } from "@/lib/result";
 import { createAdminSupabase } from "@/lib/supabase/admin";
@@ -65,13 +66,29 @@ import { compareSlots } from "@/lib/domain/urutan";
 
 export { compareSlots } from "@/lib/domain/urutan";
 
+/** Formatter "YYYY-MM-DD" pada zona waktu penyelenggara (Asia/Jakarta). */
+const tanggalJakartaFormat = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Asia/Jakarta",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+/** "Hari ini" versi penyelenggara (WIB), dipakai membatasi tanggal gelaran mendatang. */
+export function tanggalHariIniJakarta(): string {
+  return tanggalJakartaFormat.format(new Date());
+}
+
 /* ------------------------------------------------------------------ */
 /* Service                                                             */
 /* ------------------------------------------------------------------ */
 
 /**
- * Data denah publik: event aktif + seluruh zona (urut display_order) beserta slotnya.
- * Dipakai halaman "/" dan sebagai basis langganan realtime tabel slots.
+ * Data denah publik: event aktif + seluruh zona (urut display_order) beserta
+ * slotnya, ditambah (model per tanggal):
+ *   - eventDates: tanggal gelaran aktif >= hari ini (WIB), urut naik;
+ *   - occupancy : baris view slot_date_status untuk tanggal-tanggal tersebut.
+ * Dipakai halaman "/" dan sebagai basis langganan realtime (slots + booking_dates).
  */
 export async function getFloorPlan(): Promise<Result<FloorPlanData>> {
   if (!isServiceRoleConfigured()) return fail<FloorPlanData>(NO_CONFIG_MESSAGE, "NO_CONFIG");
@@ -110,7 +127,78 @@ export async function getFloorPlan(): Promise<Result<FloorPlanData>> {
     .map((zone) => ({ ...zone, slots: [...(zone.slots ?? [])].sort(compareSlots) }))
     .sort((a, b) => a.display_order - b.display_order || a.name.localeCompare(b.name, "id-ID"));
 
-  return ok<FloorPlanData>({ event, zones });
+  // Tanggal gelaran aktif mendatang (>= hari ini WIB), urut naik.
+  const today = tanggalHariIniJakarta();
+  const datesQuery = await supabase
+    .from("event_dates")
+    .select("id, event_date")
+    .eq("is_active", true)
+    .gte("event_date", today)
+    .order("event_date", { ascending: true });
+
+  if (datesQuery.error) {
+    return dbFail<FloorPlanData>(datesQuery.error as PgError, "Gagal memuat tanggal gelaran");
+  }
+  const eventDates = (datesQuery.data ?? []) as { id: string; event_date: string }[];
+
+  // Okupansi per (slot, tanggal) untuk tanggal aktif mendatang saja.
+  const aktif = new Set(eventDates.map((d) => d.event_date));
+  const occupancyQuery = await supabase
+    .from("slot_date_status")
+    .select("slot_id, event_date, status")
+    .gte("event_date", today);
+
+  if (occupancyQuery.error) {
+    return dbFail<FloorPlanData>(occupancyQuery.error as PgError, "Gagal memuat okupansi slot");
+  }
+  const occupancy = ((occupancyQuery.data ?? []) as FloorPlanData["occupancy"]).filter((row) =>
+    aktif.has(row.event_date),
+  );
+
+  return ok<FloorPlanData>({ event, zones, eventDates, occupancy });
+}
+
+/**
+ * Tanggal gelaran aktif >= hari ini (WIB), urut naik — versi ringan getFloorPlan
+ * untuk halaman yang tidak butuh zona/slot (mis. /booking/[slotId]).
+ */
+export async function getActiveEventDates(): Promise<Result<{ id: string; event_date: string }[]>> {
+  if (!isServiceRoleConfigured()) {
+    return fail<{ id: string; event_date: string }[]>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  }
+
+  const supabase = createAdminSupabase();
+  const { data, error } = await supabase
+    .from("event_dates")
+    .select("id, event_date")
+    .eq("is_active", true)
+    .gte("event_date", tanggalHariIniJakarta())
+    .order("event_date", { ascending: true });
+
+  if (error) {
+    return dbFail<{ id: string; event_date: string }[]>(error as PgError, "Gagal memuat tanggal gelaran");
+  }
+  return ok((data ?? []) as { id: string; event_date: string }[]);
+}
+
+/**
+ * Okupansi SATU slot dari view slot_date_status untuk tanggal >= hari ini (WIB)
+ * — dipakai halaman /booking/[slotId] agar chip tanggalnya sadar-slot (tanggal
+ * terisi dinonaktifkan). Validasi server createBooking (DATE_TAKEN) tetap
+ * sumber kebenaran terakhir.
+ */
+export async function getSlotOccupancy(slotId: string): Promise<Result<OccupancyRow[]>> {
+  if (!isServiceRoleConfigured()) return fail<OccupancyRow[]>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+
+  const supabase = createAdminSupabase();
+  const { data, error } = await supabase
+    .from("slot_date_status")
+    .select("slot_id, event_date, status")
+    .eq("slot_id", slotId)
+    .gte("event_date", tanggalHariIniJakarta());
+
+  if (error) return dbFail<OccupancyRow[]>(error as PgError, "Gagal memuat okupansi slot");
+  return ok((data ?? []) as OccupancyRow[]);
 }
 
 /** Satu slot beserta zona induknya (untuk halaman booking / beli). */
@@ -191,9 +279,9 @@ export type SlotTenant = {
  * nama tenant perlu terlihat di alur pembelian — itulah yang membuat entity Tenant
  * benar-benar dipakai bersama oleh kedua alur transaksi.
  *
- * Berkat unique index parsial bookings(slot_id) where status in
- * ('pending_payment','confirmed'), satu lapak paling banyak punya SATU booking aktif.
- * Mengembalikan ok(null) kalau lapak belum ada penyewanya — itu bukan error.
+ * Model per tanggal: satu lapak bisa punya beberapa booking aktif (tanggal
+ * berbeda). Untuk alur /beli cukup ditampilkan penyewa aktif pertama
+ * (terlama) — mengembalikan ok(null) kalau lapak belum ada penyewanya.
  */
 export async function getSlotTenant(slotId: string): Promise<Result<SlotTenant | null>> {
   if (!isServiceRoleConfigured()) return fail<SlotTenant | null>(NO_CONFIG_MESSAGE, "NO_CONFIG");
@@ -204,6 +292,7 @@ export async function getSlotTenant(slotId: string): Promise<Result<SlotTenant |
     .select("id, status, booking_code, tenant:tenants(*)")
     .eq("slot_id", slotId)
     .in("status", ["pending_payment", "confirmed"])
+    .order("created_at", { ascending: true })
     .limit(1)
     .maybeSingle();
 

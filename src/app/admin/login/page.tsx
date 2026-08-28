@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 
 import { LoginForm } from "@/components/admin/LoginForm";
 import { Alert } from "@/components/ui/Alert";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
+import { EVENT_INFO } from "@/lib/domain/constants";
 import { getCurrentAdmin } from "@/lib/services/auth";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
@@ -33,39 +33,38 @@ export default async function AdminLoginPage({ searchParams }: PageProps) {
   const terkonfigurasi = isSupabaseConfigured();
 
   return (
-    <div className="mx-auto w-full max-w-md py-4 sm:py-10">
-      <Card>
-        <CardHeader>
-          <CardTitle>Masuk Panel Admin</CardTitle>
-          <CardDescription>
-            Khusus panitia pameran. Gunakan email dan kata sandi akun admin Anda.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+    <div className="flex min-h-[calc(100dvh-4rem)] items-center justify-center bg-app px-4 py-10">
+      <div className="w-full max-w-sm">
+        {/* Wordmark oranye */}
+        <div className="mb-8 text-center">
+          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-accent">
+            {EVENT_INFO.name}
+          </p>
+          <h1 className="mt-2 text-2xl font-semibold tracking-[-0.01em] text-ink sm:text-3xl">
+            Panel Admin
+          </h1>
+          <p className="mt-1.5 text-sm text-muted">Khusus panitia pameran.</p>
+        </div>
+
+        {/* Kartu kecil terpusat */}
+        <div className="rounded-2xl border border-line bg-card p-6 shadow-[var(--shadow-md)] sm:p-7">
           {terkonfigurasi ? (
             <LoginForm next={tujuanAman(next)} />
           ) : (
-            <Alert tone="warning" title="Koneksi database belum dikonfigurasi">
-              Login belum bisa dipakai karena kredensial Supabase belum diisi. Salin{" "}
-              <code className="rounded bg-white/70 px-1 py-0.5 text-xs">.env.example</code> menjadi{" "}
-              <code className="rounded bg-white/70 px-1 py-0.5 text-xs">.env.local</code>, isi
-              NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, dan
-              SUPABASE_SERVICE_ROLE_KEY, lalu jalankan ulang server pengembangan.
+            <Alert tone="warning" title="Supabase belum dikonfigurasi">
+              Isi kredensial Supabase di{" "}
+              <code className="rounded bg-surface-3 px-1 py-0.5 text-xs">.env.local</code> (contoh di{" "}
+              <code className="rounded bg-surface-3 px-1 py-0.5 text-xs">.env.example</code>), lalu
+              jalankan ulang server.
             </Alert>
           )}
+        </div>
 
-          <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs leading-relaxed text-slate-600">
-            <p className="font-medium text-slate-700">Belum punya akun?</p>
-            <p className="mt-0.5">
-              Akun admin dibuat lebih dulu lewat Supabase Auth (email &amp; kata sandi), lalu
-              didaftarkan pada tabel <code className="font-mono">admin_users</code> beserta perannya
-              (<span className="font-medium">admin</span> atau{" "}
-              <span className="font-medium">verifikator</span>). Langkah lengkapnya ada di{" "}
-              <code className="font-mono">supabase/README.md</code>.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+        <p className="mt-5 text-center text-xs leading-relaxed text-muted">
+          Akun admin dibuat panitia lewat Supabase Auth — langkahnya ada di{" "}
+          <code className="font-mono">supabase/README.md</code>.
+        </p>
+      </div>
     </div>
   );
 }

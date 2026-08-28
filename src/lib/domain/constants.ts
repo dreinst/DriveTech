@@ -1,15 +1,25 @@
 import type { SlotStatus, ZoneType } from "@/lib/types/database";
 
-/** Data event di-hardcode: sistem ini khusus untuk satu pameran (keputusan di .md). */
+/**
+ * Data event di-hardcode: sistem ini khusus untuk satu gelaran (keputusan di .md).
+ * Model per tanggal: TIDAK ada lagi startDate/endDate — jadwal ditampilkan lewat
+ * scheduleText, dan tanggal konkretnya diambil dari tabel event_dates.
+ */
 export const EVENT_INFO = {
-  name: "Pameran Mobil & Motor Bekas",
-  location: "Lapangan Utama, Kota Bandung",
-  startDate: "2026-09-12",
-  endDate: "2026-09-14",
-  organizer: "Panitia Pameran Mobil & Motor",
-  contact: "0812-3456-7890",
+  name: "Mokas Festival",
+  location: "Kampung Tentara, Singosari, Malang",
+  /** Tautan Google Maps lokasi — tampilkan "Lihat di Google Maps" (_blank, rel noopener). */
+  mapsUrl: "https://maps.app.goo.gl/g3tuQ5juNDEVowEp7",
+  /**
+   * URL embed Google Maps TANPA API key untuk iframe peta di section kontak.
+   * Lokasi resmi: Rest Area Singosari Malang (alias Kampung Tentara).
+   */
+  mapsEmbedUrl: "https://www.google.com/maps?q=-7.8773823,112.6773862&z=16&output=embed",
+  scheduleText: "Setiap hari Minggu mulai September 2026",
+  organizer: "Panitia Mokas Festival",
+  contact: "08123456789",
   description:
-    "Pameran mobil baru, mobil & motor bekas, UMKM, dan kuliner. Pilih slot di denah, isi data, lalu bayar biaya admin.",
+    "Pasar otomotif akhir pekan di Kota Malang: pilih tanggal, pilih zona, lalu booking lapak langsung dari denah.",
 } as const;
 
 /** Rekening tujuan untuk pembayaran biaya admin via transfer. */
@@ -18,6 +28,18 @@ export const BANK_ACCOUNT = {
   accountNumber: "1234567890",
   accountName: "Panitia Pameran Mobil & Motor",
 } as const;
+
+/**
+ * SUMBER KEBENARAN TUNGGAL zona yang tidak bisa dibooking online.
+ * facility memang tidak disewakan; warung SEMENTARA ditutup untuk booking online
+ * (keputusan produk) — denah, saran slot, dan service booking semua merujuk ke sini.
+ */
+export const NON_BOOKABLE_ZONE_TYPES = ["facility", "warung"] as const satisfies readonly ZoneType[];
+
+/** True kalau tipe zona bisa dibooking online. */
+export function isBookableZoneType(z: ZoneType): boolean {
+  return !(NON_BOOKABLE_ZONE_TYPES as readonly ZoneType[]).includes(z);
+}
 
 /**
  * Warna isi kotak slot pada denah ditentukan STATUS (bukan zona) supaya
@@ -29,6 +51,18 @@ export const SLOT_STATUS_STYLE: Record<SlotStatus | "facility", { fill: string; 
   confirmed: { fill: "#fee2e2", stroke: "#dc2626", text: "#991b1b" },
   facility: { fill: "#e2e8f0", stroke: "#94a3b8", text: "#475569" },
 };
+
+/**
+ * Gaya slot yang sedang DIPILIH pengguna di denah (status "Dipilih" biru ala
+ * mockup auto_market_weekend): isi biru lembut + garis & teks biru aksen.
+ */
+export const SLOT_SELECTED_STYLE = {
+  // Terpilih: isi oranye aksen + garis TEBAL HITAM — sengaja bukan garis oranye,
+  // supaya tidak tertukar dengan status "Tertunda" (amber) di peta.
+  fill: "rgba(255,140,0,0.20)",
+  stroke: "#0A0A0A",
+  text: "#0A0A0A",
+} as const;
 
 /** Bucket publik Supabase Storage untuk bukti transfer. */
 export const STORAGE_BUCKET_BUKTI = "bukti-transfer";

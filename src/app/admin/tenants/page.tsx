@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { AutoRefresh } from "@/components/admin/AutoRefresh";
 import { DetailList, detailKeTeks } from "@/components/admin/DetailList";
 import { ExportCsvButton, type ExportCsvRow } from "@/components/admin/ExportCsvButton";
 import { Alert } from "@/components/ui/Alert";
 import { Button, buttonClass } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Field, Input } from "@/components/ui/Field";
-import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { BOOKING_STATUS_LABEL, TENANT_TYPE_LABEL } from "@/lib/domain/labels";
 import { listBookings, listTenants, type TenantListItem } from "@/lib/services/admin";
@@ -59,11 +59,8 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
 
   if (!tenantResult.ok) {
     return (
-      <div className="space-y-4">
-        <PageHeader
-          title="Daftar Tenant"
-          description="Semua penyewa slot yang pernah melakukan booking."
-        />
+      <div className="space-y-6">
+        <h1 className="text-3xl font-bold tracking-[-0.02em] text-ink sm:text-4xl">Tenant</h1>
         <Alert tone="error" title="Daftar tenant belum bisa dimuat">
           {tenantResult.error}
         </Alert>
@@ -106,17 +103,24 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
   });
 
   return (
-    <div className="space-y-4">
-      <PageHeader
-        title="Daftar Tenant"
-        description="Semua penyewa slot yang pernah melakukan booking, lengkap dengan kontak dan detail tambahannya."
-        action={<ExportCsvButton filename="daftar-tenant-pameran.csv" rows={barisCsv} />}
-      />
+    <div className="space-y-6">
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div className="min-w-0 space-y-2">
+          <h1 className="text-3xl font-bold tracking-[-0.02em] text-ink sm:text-4xl">Tenant</h1>
+          <p className="max-w-2xl text-sm leading-relaxed text-muted sm:text-base">
+            Semua penyewa slot yang pernah melakukan booking.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <AutoRefresh />
+          <ExportCsvButton filename="daftar-tenant-pameran.csv" rows={barisCsv} />
+        </div>
+      </header>
 
       {/* ---------- Pencarian ---------- */}
       <form
         method="get"
-        className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end"
+        className="grid gap-3 rounded-[var(--radius)] border border-line bg-card p-4 shadow-[var(--shadow-sm)] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end"
       >
         <Field
           label="Cari tenant"
@@ -149,7 +153,7 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
         </Alert>
       ) : null}
 
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-muted">
         {q.length > 0
           ? `Menampilkan ${tenants.length} dari ${semuaTenant.length} tenant untuk pencarian "${q}".`
           : `Total ${semuaTenant.length} tenant terdaftar.`}
@@ -177,10 +181,10 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
           }
         />
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="overflow-x-auto rounded-[var(--radius)] border border-line bg-card shadow-[var(--shadow-sm)]">
           <table className="w-full min-w-[1040px] border-collapse text-sm">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs font-medium tracking-wide text-slate-500 uppercase">
+              <tr className="border-b border-line bg-surface-2 text-left text-xs font-medium tracking-wide text-subtle uppercase">
                 <th scope="col" className="px-3 py-2.5">Nama</th>
                 <th scope="col" className="px-3 py-2.5">Tipe</th>
                 <th scope="col" className="px-3 py-2.5">Kontak</th>
@@ -190,20 +194,20 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
                 <th scope="col" className="px-3 py-2.5">Tanggal daftar</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-line">
               {tenants.map((tenant) => {
                 const bookings = bookingPerTenant.get(tenant.id) ?? [];
 
                 return (
-                  <tr key={tenant.id} className="align-top hover:bg-slate-50/70">
+                  <tr key={tenant.id} className="align-top hover:bg-surface-2">
                     <td className="px-3 py-2.5">
-                      <p className="font-medium text-slate-900">{tenant.name}</p>
-                      <p className="mt-0.5 text-xs text-slate-500">
+                      <p className="font-medium text-ink">{tenant.name}</p>
+                      <p className="mt-0.5 text-xs text-muted">
                         {tenant.bookingCount} booking aktif
                       </p>
                     </td>
 
-                    <td className="px-3 py-2.5 text-slate-700">
+                    <td className="px-3 py-2.5 text-muted">
                       {TENANT_TYPE_LABEL[tenant.tenant_type]}
                     </td>
 
@@ -213,40 +217,40 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
                           <p>
                             <a
                               href={`tel:${tenant.phone.replace(/\s+/g, "")}`}
-                              className="text-slate-900 underline underline-offset-2 hover:text-slate-600"
+                              className="text-ink underline underline-offset-2 hover:text-accent"
                             >
                               {tenant.phone}
                             </a>
                           </p>
                         ) : (
-                          <p className="text-slate-400">Tanpa nomor HP</p>
+                          <p className="text-subtle">Tanpa nomor HP</p>
                         )}
                         {tenant.email ? (
                           <p>
                             <a
                               href={`mailto:${tenant.email}`}
-                              className="break-all text-slate-600 underline underline-offset-2 hover:text-slate-900"
+                              className="break-all text-muted underline underline-offset-2 hover:text-accent"
                             >
                               {tenant.email}
                             </a>
                           </p>
                         ) : (
-                          <p className="text-slate-400">Tanpa email</p>
+                          <p className="text-subtle">Tanpa email</p>
                         )}
                       </div>
                     </td>
 
                     <td className="px-3 py-2.5">
                       {bookings.length === 0 ? (
-                        <span className="text-xs text-slate-400">&mdash;</span>
+                        <span className="text-xs text-subtle">&mdash;</span>
                       ) : (
                         <ul className="space-y-1.5">
                           {bookings.map((booking) => (
                             <li key={`slot-${booking.id}`} className="text-xs">
-                              <span className="font-medium text-slate-900">
+                              <span className="font-medium text-ink">
                                 {slotDisplayName(booking.slot)}
                               </span>
-                              <span className="text-slate-500"> &middot; {booking.slot.zone.name}</span>
+                              <span className="text-muted"> &middot; {booking.slot.zone.name}</span>
                             </li>
                           ))}
                         </ul>
@@ -255,13 +259,13 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
 
                     <td className="px-3 py-2.5">
                       {bookings.length === 0 ? (
-                        <span className="text-xs text-slate-400">&mdash;</span>
+                        <span className="text-xs text-subtle">&mdash;</span>
                       ) : (
                         <ul className="space-y-1.5">
                           {bookings.map((booking) => (
                             <li key={`status-${booking.id}`} className="space-y-0.5">
                               <StatusBadge status={booking.status} kind="booking" />
-                              <p className="font-mono text-[11px] text-slate-400">
+                              <p className="font-mono text-[11px] text-subtle">
                                 {booking.booking_code}
                               </p>
                             </li>
@@ -274,7 +278,7 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
                       <DetailList data={tenant.detail} className="max-w-[16rem]" />
                     </td>
 
-                    <td className="px-3 py-2.5 text-xs whitespace-nowrap text-slate-600">
+                    <td className="px-3 py-2.5 text-xs whitespace-nowrap text-muted">
                       {formatTanggal(tenant.created_at)}
                     </td>
                   </tr>
@@ -285,10 +289,6 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
         </div>
       )}
 
-      <p className="text-xs text-slate-500">
-        Tombol Unduh CSV membuat berkas langsung di peramban dari data yang sedang ditampilkan,
-        termasuk hasil pencarian yang sedang aktif.
-      </p>
     </div>
   );
 }

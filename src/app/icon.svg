@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <!-- Favicon Mokas Festival: monogram M oranye di ubin gelap (versi garis tunggal agar terbaca 16px). -->
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FBA43B"/>
+      <stop offset="1" stop-color="#F27405"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="#0a0a0a"/>
+  <path d="M28 100 V48 L52 26 L64 38 L76 26 L100 48 V100" fill="none" stroke="url(#g)" stroke-width="13" stroke-linecap="square" stroke-miterlimit="8"/>
+  <path d="M64 28 L73 37 L64 46 L55 37 Z" fill="url(#g)"/>
+</svg>

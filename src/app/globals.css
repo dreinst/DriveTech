@@ -1,53 +1,144 @@
 @import "tailwindcss";
 
 /* ============================================================
-   Token tema — tema tunggal TERANG. Tidak ada dark mode.
-   Nilainya literal, jadi @theme biasa (bukan inline) sudah cukup.
-   ============================================================ */
-@theme {
-  --color-canvas: #f8fafc;
-  --color-ink: #0f172a;
+   Sistem Pameran — token desain tema GELAP ORANYE.
+   Sumber: referensi Stitch pemilik (stitch-orange/beranda +
+   pembayaran) di atas kerangka "Apple-Inspired" sebelumnya.
+   Nama token dipertahankan; nilainya dibalik ke gelap.
 
-  /* Warna status slot (selaras dengan SLOT_STATUS_STYLE di domain/constants.ts) */
-  --color-slot-available: #dcfce7;
-  --color-slot-available-line: #16a34a;
-  --color-slot-pending: #fef3c7;
-  --color-slot-pending-line: #d97706;
-  --color-slot-confirmed: #fee2e2;
-  --color-slot-confirmed-line: #dc2626;
-  --color-slot-facility: #e2e8f0;
-  --color-slot-facility-line: #94a3b8;
+   Warna denah SVG (status slot, zona, taman, tank) TIDAK di sini:
+   itu data denah di domain/layout.ts & constants.ts.
+   ============================================================ */
+:root {
+  /* --- Token kontrak --- */
+  --bg: #0a0a0a;
+  --card: #1a1a1a;
+  --surface-2: #111111;
+  --surface-3: #222222;
+  --ink: #ffffff;
+  --ink-2: #e5e2e1;
+  --muted: #a0a0a0;
+  --subtle: #6e6e6e;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.18);
+  /* Aksen oranye Stitch: primary #FF7B00, tertiary #FFA500.
+     Status ok/warn/danger tidak diubah — semantik. */
+  --accent: #ff7b00;
+  --accent-hover: #ff8c22;
+  --accent-soft: rgba(255, 123, 0, 0.15);
+  --accent-3: #ffa500;
+  --accent-3-soft: rgba(255, 165, 0, 0.16);
+  --ok: #34c759;
+  --ok-soft: rgba(52, 199, 89, 0.16);
+  --warn: #ff9f0a;
+  --warn-soft: rgba(255, 159, 10, 0.16);
+  --danger: #ff453a;
+  --danger-soft: rgba(255, 69, 58, 0.16);
+
+  /* Kanvas denah TETAP TERANG di dalam bingkai gelap (lihat screenshot denah). */
+  --map-canvas: #e9e9e9;
+
+  --radius: 16px;
+  --radius-sm: 12px;
+
+  /* Tema gelap memisah lapisan lewat warna tonal, bukan bayangan —
+     bayangan nyaris nol, hanya definisi tepi yang sangat halus. */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.4);
+
+  /* Ring fokus: 2px oranye aksen lembut. */
+  --ring: rgba(255, 123, 0, 0.4);
+
+  /* --- Alias lawas (kompatibilitas selama migrasi restyle) ---
+     File yang belum direstyle masih memakai nama token lama;
+     semuanya dipetakan ke palet baru supaya tampilan tetap satu bahasa. */
+  --surface: var(--card);
+  --surface-hover: rgba(255, 255, 255, 0.06);
+  --border: var(--line);
+  --border-strong: var(--line-strong);
+  --text: var(--ink);
+  --text-muted: var(--muted);
+  --text-subtle: var(--subtle);
+  --primary: var(--accent);
+  --primary-foreground: #0a0a0a;
+  --primary-soft: var(--accent-soft);
+  --primary-ring: var(--ring);
+  --accent-2: var(--accent-3);
+  --accent-2-soft: var(--accent-3-soft);
+  --lux-gradient: linear-gradient(135deg, var(--ink) 0%, var(--ink-2) 100%);
+  --lux-gradient-text: linear-gradient(135deg, var(--ink) 0%, var(--ink-2) 100%);
+}
+
+/* Peta token -> utility Tailwind v4 (bg-app, bg-card, text-ink, border-line, …). */
+@theme inline {
+  /* Kontrak */
+  --color-app: var(--bg);
+  --color-card: var(--card);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-surface-3: var(--surface-3);
+  --color-map-canvas: var(--map-canvas);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+
+  /* Alias lawas (hapus setelah semua file memakai token kontrak) */
+  --color-surface: var(--card);
+  --color-surface-2: var(--surface-2);
+  --color-content: var(--ink);
+  --color-primary: var(--accent);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-soft: var(--accent-soft);
+  --color-accent2: var(--accent);
+  --color-accent2-soft: var(--accent-soft);
+
+  /* SF Pro di perangkat Apple, Inter (next/font) di lainnya. */
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+    var(--font-inter), "Helvetica Neue", sans-serif;
 }
 
 @layer base {
-  :root {
-    color-scheme: light;
-  }
-
   html {
+    color-scheme: dark;
     -webkit-text-size-adjust: 100%;
-    scroll-behavior: smooth;
     scroll-padding-top: 5rem; /* offset header sticky saat lompat ke anchor */
   }
 
   body {
-    background-color: #f8fafc;
-    color: #0f172a;
+    background-color: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Fokus keyboard yang konsisten & terlihat di seluruh aplikasi */
-  :focus-visible {
-    outline: 2px solid #0f172a;
+  ::selection {
+    background-color: var(--accent-soft);
+  }
+
+  /* Fokus keyboard konsisten: ring 2px oranye aksen lembut.
+     Komponen interaktif boleh menimpanya dengan ring miliknya sendiri. */
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--ring);
     outline-offset: 2px;
-    border-radius: 0.375rem;
+    border-radius: var(--radius-sm);
   }
 
   /* Scrollbar halus */
   * {
     scrollbar-width: thin;
-    scrollbar-color: #cbd5e1 transparent;
+    scrollbar-color: var(--line-strong) transparent;
   }
 
   ::-webkit-scrollbar {
@@ -60,27 +151,28 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background-color: #cbd5e1;
+    background-color: var(--line-strong);
     border: 3px solid transparent;
     border-radius: 9999px;
     background-clip: padding-box;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background-color: #94a3b8;
+    background-color: var(--subtle);
   }
 
   /* Angka tabel/nominal sejajar rapi */
-  table,
-  .tabular {
+  table {
     font-variant-numeric: tabular-nums;
   }
 
-  @media (prefers-reduced-motion: reduce) {
+  @media (prefers-reduced-motion: no-preference) {
     html {
-      scroll-behavior: auto;
+      scroll-behavior: smooth;
     }
+  }
 
+  @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
     *::after {
@@ -91,22 +183,55 @@
   }
 }
 
-@layer components {
-  /* Kartu putih standar: dipakai kalau tidak memakai komponen <Card />. */
-  .card {
-    background-color: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.75rem;
-    box-shadow: 0 1px 2px 0 rgb(15 23 42 / 0.05);
+/* ------------------------------------------------------------
+   Gerak masuk fallback CSS untuk elemen yang dirender server
+   (tanpa framer-motion). Pakai HEMAT — gerak harus bertujuan.
+   ------------------------------------------------------------ */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
-  /* Pembungkus tabel admin agar bisa digeser mendatar di layar kecil. */
+  .anim-fade-up {
+    animation: fade-up 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* Nama lawas — sama dengan .anim-fade-up. */
+  .anim-rise {
+    animation: fade-up 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
+@layer utilities {
+  /* Angka uang/statistik selalu tabular agar kolom sejajar. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer components {
+  /* Kartu gelap standar: dipakai kalau tidak memakai komponen <Card />. */
+  .card {
+    background-color: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* Pembungkus tabel agar bisa digeser mendatar di layar kecil. */
   .table-wrap {
     overflow-x: auto;
-    background-color: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.75rem;
-    box-shadow: 0 1px 2px 0 rgb(15 23 42 / 0.05);
+    background-color: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
   }
 
   /* Baris nav yang bisa digeser tanpa batang scroll terlihat (mobile). */

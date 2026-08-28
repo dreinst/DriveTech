@@ -333,6 +333,18 @@ do $$ begin
   if exists (select 1 from pg_roles where rolname = 'authenticated') then
     grant select on public.events, public.zones, public.slots, public.leasing_partners to authenticated;
   end if;
+  -- service_role dipakai seluruh service layer aplikasi (createAdminSupabase).
+  -- Image Supabase terbaru TIDAK lagi memberi default privileges penuh ke role
+  -- aplikasi, jadi grant harus eksplisit; tanpa ini semua query service gagal
+  -- dengan "permission denied" (42501). RLS tetap di-bypass service_role,
+  -- tapi grant level SQL tidak pernah di-bypass siapa pun.
+  if exists (select 1 from pg_roles where rolname = 'service_role') then
+    grant usage on schema public to service_role;
+    grant all on all tables in schema public to service_role;
+    grant all on all sequences in schema public to service_role;
+    alter default privileges in schema public grant all on tables to service_role;
+    alter default privileges in schema public grant all on sequences to service_role;
+  end if;
 end $$;
 
 -- -----------------------------------------------------------------------------

@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 
+import { AutoRefresh } from "@/components/admin/AutoRefresh";
 import { LeasingUpdateForm } from "@/components/admin/LeasingUpdateForm";
 import { PartnerForm } from "@/components/admin/PartnerForm";
 import { Alert } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { LEASING_STATUS_LABEL } from "@/lib/domain/labels";
 import { listLeasingApplications, listPartners, type AdminLeasingItem } from "@/lib/services/admin";
@@ -48,13 +48,11 @@ const KOLOM_MITRA = ["Nama", "Kontak", "Rate Komisi", "Status", "Aksi"];
 /** Kartu angka ringkas untuk baris ringkasan di atas halaman. */
 function Ringkas({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
-    <Card>
-      <CardContent className="space-y-0.5">
-        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
-        <p className="text-lg font-semibold text-slate-900">{value}</p>
-        {hint ? <p className="text-xs text-slate-400">{hint}</p> : null}
-      </CardContent>
-    </Card>
+    <div className="rounded-[var(--radius)] border border-line bg-card p-4 shadow-[var(--shadow-sm)]">
+      <p className="text-xs font-medium uppercase tracking-wide text-muted">{label}</p>
+      <p className="tabular mt-1 text-lg font-semibold text-ink">{value}</p>
+      {hint ? <p className="mt-0.5 text-xs text-subtle">{hint}</p> : null}
+    </div>
   );
 }
 
@@ -87,13 +85,16 @@ export default async function AdminLeasingPage() {
   }));
 
   return (
-    <div className="space-y-5">
-      <PageHeader
-        title="Leasing & Komisi"
-        description="Pantau pengajuan pembiayaan pengunjung, catat komisi platform, dan kelola mitra leasing."
-        backHref="/admin"
-        backLabel="Kembali ke dasbor"
-      />
+    <div className="space-y-6">
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div className="min-w-0 space-y-2">
+          <h1 className="text-3xl font-bold tracking-[-0.02em] text-ink sm:text-4xl">Leasing</h1>
+          <p className="max-w-2xl text-sm leading-relaxed text-muted sm:text-base">
+            Pantau pengajuan pembiayaan pengunjung dan komisi platform.
+          </p>
+        </div>
+        <AutoRefresh />
+      </header>
 
       {!pengajuanResult.ok ? (
         <Alert tone="error" title="Data pengajuan leasing belum bisa dimuat">
@@ -112,7 +113,7 @@ export default async function AdminLeasingPage() {
           <Ringkas
             label="Komisi terkumpul"
             value={formatRupiah(komisiTerkumpul)}
-            hint="Sudah ditandai dibayar mitra."
+            hint="Sudah dibayar mitra."
           />
           <Ringkas
             label="Komisi belum dibayar"
@@ -127,29 +128,25 @@ export default async function AdminLeasingPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-            Pengajuan per status
-          </span>
           {jumlahPerStatus.map((item) => (
             <span
               key={item.status}
-              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-600"
+              className="inline-flex items-center gap-1.5 rounded-full border border-line bg-card px-2.5 py-1 text-xs text-muted"
             >
               {LEASING_STATUS_LABEL[item.status]}
-              <strong className="font-semibold text-slate-900">{item.jumlah}</strong>
+              <strong className="tabular font-semibold text-ink">{item.jumlah}</strong>
             </span>
           ))}
         </div>
       </section>
 
       {/* (a) Pengajuan leasing */}
-      <section className="space-y-3">
+      <section>
         <Card>
           <CardHeader>
             <CardTitle>Pengajuan Leasing</CardTitle>
             <CardDescription>
-              Perbarui status pengajuan, catat nominal komisi platform, dan tandai komisi yang sudah
-              dibayarkan mitra.
+              Perbarui status, catat komisi, dan tandai komisi yang sudah dibayar mitra.
             </CardDescription>
           </CardHeader>
 
@@ -157,13 +154,13 @@ export default async function AdminLeasingPage() {
             <CardContent>
               <EmptyState
                 title="Belum ada pengajuan leasing"
-                description="Pengajuan muncul otomatis ketika pengunjung memilih metode kredit pada halaman pembelian unit."
+                description="Pengajuan muncul saat pengunjung memilih metode kredit di halaman pembelian unit."
               />
             </CardContent>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto rounded-b-[var(--radius)]">
               <table className="w-full min-w-[76rem] border-collapse text-left text-sm">
-                <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                <thead className="bg-surface-2 text-xs uppercase tracking-wide text-subtle">
                   <tr>
                     {KOLOM_PENGAJUAN.map((kolom) => (
                       <th key={kolom} scope="col" className="whitespace-nowrap px-3 py-2.5 font-semibold">
@@ -172,7 +169,7 @@ export default async function AdminLeasingPage() {
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-line">
                   {pengajuan.map((row) => {
                     const purchase = row.purchase;
                     const slot = purchase?.slot ?? null;
@@ -180,47 +177,47 @@ export default async function AdminLeasingPage() {
                     const lunas = row.commission_paid === true;
 
                     return (
-                      <tr key={row.id} className="align-top hover:bg-slate-50/70">
+                      <tr key={row.id} className="align-top hover:bg-surface-2">
                         <td className="px-3 py-3">
-                          <p className="font-mono text-xs font-semibold text-slate-900">
+                          <p className="font-mono text-xs font-semibold text-ink">
                             {purchase?.transaction_code ?? "—"}
                           </p>
-                          <p className="mt-0.5 text-xs text-slate-400">
+                          <p className="mt-0.5 text-xs text-subtle">
                             {formatTanggalWaktu(row.created_at)}
                           </p>
                         </td>
 
                         <td className="px-3 py-3">
-                          <p className="font-medium text-slate-900">{purchase?.buyer_name ?? "—"}</p>
-                          <p className="text-xs text-slate-500">{purchase?.buyer_phone ?? "—"}</p>
+                          <p className="font-medium text-ink">{purchase?.buyer_name ?? "—"}</p>
+                          <p className="text-xs text-muted">{purchase?.buyer_phone ?? "—"}</p>
                         </td>
 
                         <td className="px-3 py-3">
-                          <p className="max-w-[16rem] text-slate-700">
+                          <p className="max-w-[16rem] text-muted">
                             {purchase?.unit_description ?? "—"}
                           </p>
-                          <p className="text-xs font-medium text-slate-900">
+                          <p className="tabular text-xs font-medium text-ink">
                             {hargaUnit === null ? "Harga belum dicatat" : formatRupiah(hargaUnit)}
                           </p>
                         </td>
 
                         <td className="px-3 py-3">
-                          <p className="font-medium text-slate-900">
+                          <p className="font-medium text-ink">
                             {slot ? slotDisplayName(slot) : "—"}
                           </p>
-                          <p className="text-xs text-slate-500">{slot?.zone.name ?? "—"}</p>
+                          <p className="text-xs text-muted">{slot?.zone.name ?? "—"}</p>
                         </td>
 
                         <td className="px-3 py-3">
-                          <p className="font-medium text-slate-900">{row.partner?.name ?? "—"}</p>
-                          <p className="text-xs text-slate-500">{row.partner?.contact ?? "—"}</p>
+                          <p className="font-medium text-ink">{row.partner?.name ?? "—"}</p>
+                          <p className="text-xs text-muted">{row.partner?.contact ?? "—"}</p>
                         </td>
 
-                        <td className="whitespace-nowrap px-3 py-3 text-slate-700">
+                        <td className="tabular whitespace-nowrap px-3 py-3 text-muted">
                           {formatRupiah(row.dp_amount)}
                         </td>
 
-                        <td className="whitespace-nowrap px-3 py-3 text-slate-700">
+                        <td className="whitespace-nowrap px-3 py-3 text-muted">
                           {typeof row.tenor_bulan === "number" ? `${row.tenor_bulan} bulan` : "—"}
                         </td>
 
@@ -229,7 +226,7 @@ export default async function AdminLeasingPage() {
                         </td>
 
                         <td className="px-3 py-3">
-                          <p className="whitespace-nowrap font-medium text-slate-900">
+                          <p className="tabular whitespace-nowrap font-medium text-ink">
                             {formatRupiah(row.commission_amount)}
                           </p>
                           <div className="mt-1">
@@ -264,7 +261,7 @@ export default async function AdminLeasingPage() {
           <CardHeader>
             <CardTitle>Mitra Leasing</CardTitle>
             <CardDescription>
-              Hanya mitra berstatus aktif yang muncul pada pilihan pengunjung di halaman pengajuan.
+              Hanya mitra aktif yang tampil pada pilihan pengunjung.
             </CardDescription>
           </CardHeader>
 
@@ -272,13 +269,13 @@ export default async function AdminLeasingPage() {
             <CardContent>
               <EmptyState
                 title="Belum ada mitra leasing"
-                description="Tambahkan mitra lewat formulir di samping agar pengunjung bisa memilihnya."
+                description="Tambahkan mitra lewat formulir di samping."
               />
             </CardContent>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto rounded-b-[var(--radius)]">
               <table className="w-full min-w-[40rem] border-collapse text-left text-sm">
-                <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                <thead className="bg-surface-2 text-xs uppercase tracking-wide text-subtle">
                   <tr>
                     {KOLOM_MITRA.map((kolom) => (
                       <th key={kolom} scope="col" className="whitespace-nowrap px-3 py-2.5 font-semibold">
@@ -287,12 +284,12 @@ export default async function AdminLeasingPage() {
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-line">
                   {mitra.map((partner) => (
-                    <tr key={partner.id} className="align-top hover:bg-slate-50/70">
-                      <td className="px-3 py-3 font-medium text-slate-900">{partner.name}</td>
-                      <td className="px-3 py-3 text-slate-600">{partner.contact ?? "—"}</td>
-                      <td className="whitespace-nowrap px-3 py-3 text-slate-700">
+                    <tr key={partner.id} className="align-top hover:bg-surface-2">
+                      <td className="px-3 py-3 font-medium text-ink">{partner.name}</td>
+                      <td className="px-3 py-3 text-muted">{partner.contact ?? "—"}</td>
+                      <td className="tabular whitespace-nowrap px-3 py-3 text-muted">
                         {typeof partner.commission_rate === "number"
                           ? `${partner.commission_rate}%`
                           : "—"}
@@ -316,7 +313,7 @@ export default async function AdminLeasingPage() {
         <Card>
           <CardHeader>
             <CardTitle>Tambah Mitra</CardTitle>
-            <CardDescription>Daftarkan perusahaan pembiayaan baru beserta rate komisinya.</CardDescription>
+            <CardDescription>Daftarkan perusahaan pembiayaan baru.</CardDescription>
           </CardHeader>
           <CardContent>
             <PartnerForm />

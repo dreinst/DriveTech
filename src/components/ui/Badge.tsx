@@ -3,19 +3,29 @@ import type { ReactNode } from "react";
 export type BadgeTone = "green" | "amber" | "red" | "slate" | "blue";
 
 const TONE_CLASS: Record<BadgeTone, string> = {
-  green: "border-green-200 bg-green-50 text-green-700",
-  amber: "border-amber-200 bg-amber-50 text-amber-700",
-  red: "border-red-200 bg-red-50 text-red-700",
-  slate: "border-slate-200 bg-slate-100 text-slate-600",
-  blue: "border-blue-200 bg-blue-50 text-blue-700",
+  green: "bg-ok-soft text-ok",
+  amber: "bg-warn-soft text-warn",
+  red: "bg-danger-soft text-danger",
+  slate: "bg-surface-3 text-muted",
+  blue: "bg-accent-soft text-accent",
 };
 
-/** Label kecil berwarna untuk status, kategori, atau penanda singkat. */
-export function Badge({ tone = "slate", children }: { tone?: BadgeTone; children: ReactNode }) {
+export type BadgeProps = {
+  tone?: BadgeTone;
+  /** Tampilkan titik bulat kecil di depan teks (dipakai badge status). */
+  dot?: boolean;
+  children: ReactNode;
+};
+
+/** Pil kecil untuk status, kategori, atau penanda singkat. */
+export function Badge({ tone = "slate", dot = false, children }: BadgeProps) {
   return (
     <span
-      className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full border px-2 py-0.5 text-xs font-medium leading-5 ${TONE_CLASS[tone]}`}
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium leading-5 ${TONE_CLASS[tone]}`}
     >
+      {dot ? (
+        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-current" aria-hidden="true" />
+      ) : null}
       {children}
     </span>
   );

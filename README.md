@@ -1,13 +1,15 @@
-# Sistem Pameran — Booking Slot & Modul Leasing
+# Mokas Festival — Booking Lapak Per Tanggal & Modul Leasing
 
-Aplikasi web untuk satu event pameran mobil baru, mobil & motor bekas, UMKM, dan kuliner.
+Aplikasi web untuk **Mokas Festival** — pasar otomotif akhir pekan di **Kampung Tentara, Singosari, Malang**,
+digelar **setiap hari Minggu mulai September 2026**, untuk mobil baru, mobil & motor bekas, UMKM, dan kuliner.
 Pengunjung dan calon tenant melihat **denah interaktif** yang sinkron *realtime* dengan
-database, lalu memesan lapak sendiri tanpa perlu menghubungi panitia satu per satu.
+database, lalu memesan lapak sendiri **per tanggal**: pilih satu atau beberapa tanggal
+weekend, dan slot yang sama bisa disewa orang berbeda di tanggal yang berbeda.
 
 Sumber kebenaran fungsionalnya adalah dokumen rencana teknis internal
 `Sistem Pameran Arsitektur.md` — dokumen itu **tidak ikut dipublikasikan di repo ini**,
-tetapi seluruh keputusannya sudah dirangkum di README ini (§8 Keputusan yang Diambil dan
-§9 Denah). Tata letak denah diekstrak dari gambar **`Layout Sistem Pameran.jpeg`** di root,
+tetapi seluruh keputusannya sudah dirangkum di README ini (§9 Keputusan yang Diambil dan
+§10 Denah). Tata letak denah diekstrak dari gambar **`Layout Sistem Pameran.jpeg`** di root,
 yang ikut disertakan.
 
 **Stack:** Next.js 15 (App Router) · React 19 · TypeScript strict · Tailwind CSS v4 ·
@@ -20,20 +22,28 @@ semua ikon adalah SVG inline.
 
 Keduanya berbagi entitas **Zone → Slot → Tenant**, tetapi berdiri sendiri.
 
-### A. Booking Engine (tenant menyewa lapak)
+### A. Booking Engine (tenant menyewa lapak — per tanggal)
 
 ```
-Denah "/"  →  pilih slot tersedia
-           →  /booking/{slotId}          isi data tenant            → booking (pending_payment), slot → pending
+Denah "/"  →  pilih ZONA → ketuk SLOT di peta → pilih TANGGAL (≥1 tanggal weekend) di panel slot
+           →  /booking/{slotId}          isi data tenant            → booking (pending_payment)
+                                                                      + baris booking_dates per tanggal
            →  /booking/{bookingId}/bayar pilih cash / transfer      → pembayaran (submitted)
            →  /booking/{bookingId}/status pantau verifikasi panitia
                                      ↓
-              Admin /admin/bookings  verifikasi                     → booking confirmed, slot → confirmed
-                                     tolak                          → pembayaran rejected, slot tetap pending
+              Admin /admin/bookings  verifikasi                     → booking confirmed
+                                     tolak                          → pembayaran rejected, tanggal tetap terkunci
 ```
 
-Biaya admin **flat per zona** (kolom `zones.admin_fee`). Anti double-booking dijaga
-database lewat unique index parsial `bookings_active_slot_idx`.
+Biaya admin berlaku **per tanggal** (kolom `zones.admin_fee`): total tagihan = biaya admin
+zona × jumlah tanggal yang dipilih; hanya tanggal yang masih bebas untuk slot itu yang
+bisa dipilih (peta menandai slot "Tersedia" selama masih ada minimal satu tanggal kosong).
+Anti double-booking dijaga database lewat unique index parsial
+`booking_dates_active_slot_date_idx` pada pasangan `(slot_id, event_date)` — slot yang sama
+bisa disewa orang berbeda di tanggal yang berbeda. Kolom `slots.status` kini berarti kondisi
+slotnya sendiri: `available` = normal, selain itu = **diblokir panitia** untuk semua tanggal
+(label UI "Diblokir") — bukan lagi status booking. Daftar tanggal gelaran (tabel
+`event_dates`) dikelola panitia di `/admin/pengaturan`.
 
 ### B. Modul Leasing (pengunjung membeli unit di lokasi)
 
@@ -111,7 +121,41 @@ Skrip npm yang tersedia:
 
 ---
 
-## 4. Membuat Admin Pertama
+## 4. Integrasi Google Sheets
+
+Semua entitas (booking, pembayaran, pembelian unit, pengajuan leasing) bisa disinkronkan
+otomatis ke Google Sheets lewat webhook Apps Script — ditambah tombol **Ekspor CSV** manual
+di `/admin/bookings`.
+
+Cara pasang (± 3 menit, cukup sekali):
+
+1. Buka spreadsheet tujuan:
+   <https://docs.google.com/spreadsheets/d/1Ov8JwanwXF-9lNwszkdccQTK0w2BQ2s0S0Orrx-Igz8/>.
+2. Menu **Extensions → Apps Script**, hapus isi editor bawaan, lalu tempel seluruh isi
+   `tools/google-sheets-webhook.gs`. Skrip memakai `SpreadsheetApp.getActiveSpreadsheet()`,
+   jadi wajib dipasang **di dalam** spreadsheet itu — bukan sebagai project Apps Script lepas.
+3. **Deploy → New deployment → Web app**: *Execute as* = **Me**, *Who has access* =
+   **Anyone**, lalu klik Deploy dan izinkan akses saat diminta.
+4. Salin **Web app URL** (berakhiran `/exec`) ke `.env.local`:
+
+```env
+SHEETS_WEBHOOK_URL=https://script.google.com/macros/s/…/exec
+```
+
+Perilakunya:
+
+* Aplikasi mengirim POST JSON `{ entity, sentAt, data }` setelah operasi sukses — buat
+  booking, submit/verifikasi/tolak pembayaran, batal booking, pembelian unit, pengajuan &
+  update leasing (lihat `src/lib/sheets.ts`).
+* Skrip membuat satu sheet per entitas (**Bookings**, **Payments**, **Purchases**,
+  **Leasing**), header otomatis dari keys data, lalu meng-*upsert* baris berdasarkan kolom
+  pertama (kode/id) dan mengisi kolom `updated_at`.
+* Sinkronisasi bersifat *fire-and-forget*: bila `SHEETS_WEBHOOK_URL` kosong atau webhook
+  gagal, operasi utama **tidak ikut gagal** (hanya tercatat `console.warn` di server).
+
+---
+
+## 5. Membuat Admin Pertama
 
 Tabel `admin_users` mengacu ke `auth.users(id)`, jadi user Auth harus dibuat lebih dulu
 dan barisnya tidak bisa ikut di-seed. Pendaftaran mandiri sengaja dimatikan.
@@ -134,14 +178,15 @@ Peran yang tersedia: `admin` (akses penuh) dan `verifikator` (fokus verifikasi p
 
 ---
 
-## 5. Peta Rute
+## 6. Peta Rute
 
 ### Publik
 
 | Rute | Isi |
 | --- | --- |
-| `/` | Landing + denah SVG interaktif, legenda status, cek status booking lewat kode. |
-| `/booking/{slotId}` | Formulir data tenant + ringkasan slot & biaya admin. |
+| `/` | Landing + denah interaktif ala tiket bioskop: pilih zona → ketuk slot → pilih tanggal di panel slot; legenda status & cek kode booking. |
+| `/booking/{slotId}` | Formulir data tenant + ringkasan slot, tanggal terpilih, dan total biaya admin (per tanggal × jumlah tanggal). |
+| `/booking/by-svg/{svgElementId}` | Jembatan denah statis → form: cari slot lewat `svg_element_id` lalu redirect ke `/booking/{slotId}`; id tak dikenal → 404. |
 | `/booking/{bookingId}/bayar` | Pilih cash/transfer, unggah bukti transfer. |
 | `/booking/{bookingId}/status` | Status booking + pembayaran, tombol batal. |
 | `/beli/{slotId}` | Formulir pembeli unit: cash / transfer / credit. |
@@ -158,11 +203,13 @@ Peran yang tersedia: `admin` (akses penuh) dan `verifikator` (fokus verifikasi p
 | Rute | Isi |
 | --- | --- |
 | `/admin/login` | Login email + password. |
-| `/admin` | Dashboard: slot terisi/kosong per zona, pembayaran & leasing menunggu. |
-| `/admin/slots` | Override status slot manual. |
-| `/admin/bookings` | Verifikasi / tolak pembayaran biaya admin. |
+| `/admin` | Dashboard: okupansi per zona untuk tanggal gelaran terdekat, pembayaran & leasing menunggu. |
+| `/admin/slots` | Blokir / buka slot untuk semua tanggal (override panitia). |
+| `/admin/bookings` | Verifikasi / tolak pembayaran, chip tanggal sewa, tombol Ekspor CSV. |
 | `/admin/leasing` | Kelola mitra leasing, status pengajuan, komisi. |
 | `/admin/tenants` | Daftar tenant beserta lapaknya. |
+| `/admin/analitik` | Grafik okupansi (per tanggal terdekat), tren booking, leasing, metode bayar. |
+| `/admin/pengaturan` | Kelola tanggal event (`event_dates`), biaya admin per zona, info event. |
 
 ### API (Route Handler, `runtime = "nodejs"`, `dynamic = "force-dynamic"`)
 
@@ -179,7 +226,7 @@ semuanya memakai Server Action, sesuai rencana teknis bagian 5.
 
 ---
 
-## 6. Dokumentasi API
+## 7. Dokumentasi API
 
 Semua endpoint mengembalikan JSON dengan bentuk seragam:
 
@@ -192,7 +239,7 @@ Peta status HTTP (`src/app/api/_lib/respond.ts`):
 | --- | ---: | --- |
 | `VALIDATION` / `INVALID_BODY` | 400 | Body atau field tidak valid. |
 | `NOT_FOUND` | 404 | Slot / booking / transaksi tidak ada. |
-| `SLOT_TAKEN`, `ALREADY_EXISTS`, `ALREADY_VERIFIED`, `CANCELLED` | 409 | Bentrok status. |
+| `SLOT_TAKEN`, `DATE_TAKEN`, `ALREADY_EXISTS`, `ALREADY_VERIFIED`, `CANCELLED` | 409 | Bentrok status (slot diblokir / sebagian tanggal baru saja terisi). |
 | `PROOF_TOO_LARGE` | 413 | Bukti transfer > 2 MB. |
 | `PROOF_TYPE` | 415 | Bukti transfer bukan JPG/PNG/WEBP. |
 | `NOT_BOOKABLE`, `NOT_CREDIT`, `INACTIVE_PARTNER` | 422 | Aturan bisnis dilanggar. |
@@ -200,7 +247,7 @@ Peta status HTTP (`src/app/api/_lib/respond.ts`):
 | `NO_CONFIG` | 503 | Env Supabase belum diisi. |
 | lainnya / tak dikenal | 500 | Kesalahan internal, pesan digenerikkan. |
 
-### 6.1 `GET /api/bookings` — polling ketersediaan slot
+### 7.1 `GET /api/bookings` — polling ketersediaan slot
 
 Query opsional: `status=available|pending|confirmed`, `zone=<svg_group_id>`,
 `bookable=true` (hanya slot yang bisa dibooking, fasilitas dibuang).
@@ -213,11 +260,13 @@ curl -s "http://localhost:3000/api/bookings?status=available&zone=zone-umkm"
 {
   "event": {
     "id": "1f0a…",
-    "name": "Pameran Mobil & Motor Bekas",
-    "location": "Lapangan Utama, Kota Bandung",
-    "startDate": "2026-09-12",
-    "endDate": "2026-09-14"
+    "name": "Mokas Festival",
+    "location": "Kota Malang",
+    "startDate": null,
+    "endDate": null
   },
+  "eventDates": [{ "id": "5d2c…", "date": "2026-08-29" }],
+  "occupancy": [{ "slotId": "3b21…", "date": "2026-08-29", "status": "confirmed" }],
   "total": 28,
   "fetchedAt": "2026-08-26T09:15:00.000Z",
   "slots": [
@@ -241,17 +290,21 @@ curl -s "http://localhost:3000/api/bookings?status=available&zone=zone-umkm"
 }
 ```
 
-Halaman publik sendiri tidak memakai endpoint ini — ia berlangganan Realtime tabel
-`slots`. Endpoint ini disediakan untuk integrasi eksternal (papan info, bot WhatsApp,
-dsb.) yang lebih mudah melakukan polling.
+Model per tanggal: `slots[].status` adalah kondisi slotnya sendiri (`available` = normal,
+selain itu = diblokir panitia), sedangkan ketersediaan per tanggal dihitung dari
+`eventDates` (tanggal gelaran aktif mendatang) + `occupancy` (baris view
+`slot_date_status`). Halaman publik sendiri tidak memakai endpoint ini — ia berlangganan
+Realtime tabel `slots` dan `booking_dates`. Endpoint ini disediakan untuk integrasi
+eksternal (papan info, bot WhatsApp, dsb.) yang lebih mudah melakukan polling.
 
-### 6.2 `POST /api/bookings` — buat booking
+### 7.2 `POST /api/bookings` — buat booking
 
 ```bash
 curl -s -X POST http://localhost:3000/api/bookings \
   -H "Content-Type: application/json" \
   -d '{
     "slotId": "3b21c9d4-0000-4000-8000-000000000001",
+    "eventDates": ["2026-08-29", "2026-08-30"],
     "tenantName": "Warung Bu Sri",
     "tenantPhone": "081234567890",
     "tenantEmail": "busri@example.com",
@@ -277,11 +330,15 @@ Gagal validasi — `400`
 }
 ```
 
-Slot direbut orang lain — `409`
+Sebagian tanggal direbut orang lain — `409`
 
 ```json
-{ "error": "Slot ini baru saja dibooking orang lain.", "code": "SLOT_TAKEN" }
+{ "error": "Sebagian tanggal yang dipilih baru saja terisi. Silakan pilih tanggal lain.", "code": "DATE_TAKEN" }
 ```
+
+`eventDates` wajib berisi 1–16 tanggal `YYYY-MM-DD` yang terdaftar aktif di `event_dates`
+dan belum lewat; slot harus bebas di **semua** tanggal itu. Tagihan yang terbit =
+`zones.admin_fee × jumlah tanggal`.
 
 Env belum diisi — `503`
 
@@ -289,7 +346,7 @@ Env belum diisi — `503`
 { "error": "Supabase belum dikonfigurasi. Salin .env.example ke .env.local dan isi kredensialnya.", "code": "NO_CONFIG" }
 ```
 
-### 6.3 `POST /api/bookings/{bookingId}/payment` — submit pembayaran
+### 7.3 `POST /api/bookings/{bookingId}/payment` — submit pembayaran
 
 Menerima **dua bentuk body**, dideteksi lewat header `Content-Type`.
 
@@ -334,7 +391,7 @@ Transfer tanpa bukti — `400`
 
 Batas berkas: **2 MB**, tipe `image/jpeg`, `image/png`, `image/webp`.
 
-### 6.4 `POST /api/purchases` — transaksi pembelian unit
+### 7.4 `POST /api/purchases` — transaksi pembelian unit
 
 ```bash
 curl -s -X POST http://localhost:3000/api/purchases \
@@ -359,7 +416,7 @@ curl -s -X POST http://localhost:3000/api/purchases \
 `needsLeasing` bernilai `true` bila `paymentMethod = "credit"` — lanjutkan ke endpoint
 berikutnya. Slot **tidak** berubah statusnya: slot adalah lapak tenant, bukan unit yang dijual.
 
-### 6.5 `POST /api/purchases/{transactionId}/leasing` — pengajuan pembiayaan
+### 7.5 `POST /api/purchases/{transactionId}/leasing` — pengajuan pembiayaan
 
 ```bash
 curl -s -X POST http://localhost:3000/api/purchases/b8d1…/leasing \
@@ -395,16 +452,16 @@ Tenor yang diterima: `12, 18, 24, 36, 48, 60`. Komisi platform dihitung otomatis
 
 ---
 
-## 7. Struktur Folder
+## 8. Struktur Folder
 
 ```
 .
 ├── Layout Sistem Pameran.jpeg     Denah asli event — sumber kebenaran tata letak
 ├── public/denah.svg               Denah statis hasil generator (fallback & pratinjau)
-├── tools/                         Skrip bantu (generator SVG denah, Python)
+├── tools/                         Skrip bantu: generator SVG denah + webhook Google Sheets (.gs)
 ├── supabase/
 │   ├── migrations/                Skema: enum, tabel, index, trigger, RLS, Realtime, Storage
-│   ├── seed.sql                   1 event, 6 zona, 104 slot, 3 mitra leasing
+│   ├── seed.sql                   1 event, 12 hari Minggu mulai Sep 2026, 6 zona, 104 slot, 3 mitra leasing
 │   └── README.md                  Panduan database (lokal, cloud, RLS, Storage)
 └── src/
     ├── middleware.ts              Refresh sesi Supabase di setiap request
@@ -434,7 +491,7 @@ Tenor yang diterima: `12, 18, 24, 36, 48, 60`. Komisi platform dihitung otomatis
 
 ---
 
-## 8. Keputusan yang Diambil
+## 9. Keputusan yang Diambil
 
 Menjawab tiga pertanyaan terbuka di bagian 6 rencana teknis.
 
@@ -453,7 +510,7 @@ barisnya di `admin_users`. Kalau ternyata pembagian peran tidak dibutuhkan, cuku
 semua orang role `admin` — tidak ada migrasi yang perlu dibatalkan. Sebaliknya, menambah
 role baru nanti hanya perlu `alter type admin_role add value`.
 
-### (b) Nominal admin fee — flat per zona lewat `zones.admin_fee`
+### (b) Nominal admin fee — flat per zona lewat `zones.admin_fee`, ditagih per tanggal
 
 Biaya admin disimpan **satu angka per zona** (kolom `zones.admin_fee`, `numeric`), bukan
 per slot dan bukan tabel tarif terpisah. Panitia bisa mengubahnya lewat SQL tanpa deploy
@@ -468,8 +525,9 @@ ulang. Nilai default di `supabase/seed.sql`:
 | Warung | `warung` | Rp 500.000 |
 | Fasilitas Umum | `facility` | Rp 0 (tidak bisa dibooking) |
 
-Nominal disalin ke `admin_fee_payments.amount` saat booking dibuat, sehingga perubahan
-tarif di kemudian hari tidak mengubah tagihan yang sudah terbit.
+Model per tanggal: tagihan booking = `admin_fee × jumlah tanggal terpilih`. Hasil kalinya
+disalin ke `admin_fee_payments.amount` saat booking dibuat, sehingga perubahan tarif di
+kemudian hari tidak mengubah tagihan yang sudah terbit.
 
 ### (c) Bukti transfer — dikompresi di klien sebelum diunggah
 
@@ -517,7 +575,7 @@ penyewa harus mengonfirmasi sendiri.
 
 ---
 
-## 9. Denah
+## 10. Denah
 
 Geometri SVG denah **diekstrak dari `Layout Sistem Pameran.jpeg`** di root proyek, bukan
 dari deskripsi teks. Semua koordinat hidup di `src/lib/domain/layout.ts` dengan
@@ -554,6 +612,23 @@ diwarnai ulang dari luar aplikasi:
 document.getElementById("slot-umkm-07").dataset.status = "confirmed";
 ```
 
+### Tautan SVG ke Form
+
+Setiap slot di kedua render membawa penunjuk langsung ke form bookingnya:
+
+- **`FloorPlan.tsx` (peta React)** — `<g>` slot yang punya baris database diberi
+  `data-slot-uuid` (uuid baris `slots`) dan `data-form-url` (`/booking/<uuid>`), sehingga
+  script/test/ekstensi luar bisa menyambungkan kotak denah ke form tanpa menebak URL.
+  Slot tanpa baris database tidak diberi kedua atribut itu.
+- **`public/denah.svg` (denah statis)** — tiap slot **bookable** dibungkus
+  `<a href="/booking/by-svg/<svg_element_id>">` dan `<g>`-nya diberi atribut `data-form`
+  berisi URL yang sama, jadi file SVG yang dibuka langsung (browser, embed, PDF viewer
+  yang mendukung tautan) pun bisa diklik menuju form slot itu. Slot fasilitas & warung
+  tidak diberi `<a>`.
+- **Rute `/booking/by-svg/<svg_element_id>`** menerjemahkan id elemen SVG (mis.
+  `slot-umkm-07`) menjadi uuid slot lewat `getSlotBySvgId()` lalu redirect ke
+  `/booking/<slotId>`; id yang tidak dikenal menghasilkan 404.
+
 ### Mengubah tata letak
 
 Id elemen adalah perekat antara gambar, kode, dan database — **ketiganya harus tetap sinkron**:
@@ -571,16 +646,17 @@ Setelah mengubah seed, jalankan `supabase db reset`.
 
 ---
 
-## 10. Catatan Produksi
+## 11. Catatan Produksi
 
 Hal-hal yang perlu diketahui sebelum dipakai sungguhan.
 
 * **Operasi multi-tabel belum atomik.** `createBooking` menjalankan
-  insert tenant → insert booking → insert tagihan → update slot secara berurutan dengan
-  *kompensasi manual* bila salah satu langkah gagal. Pengaman sebenarnya ada di unique
-  index `bookings_active_slot_idx`. Untuk produksi, pindahkan rangkaian ini ke satu
-  **Postgres function (RPC)** agar benar-benar berjalan dalam satu transaksi. Hal yang
-  sama berlaku untuk `verifyPayment` dan `cancelBooking`.
+  insert tenant → insert booking → insert booking_dates → insert tagihan secara berurutan
+  dengan *kompensasi manual* bila salah satu langkah gagal. Pengaman sebenarnya ada di
+  unique index `booking_dates_active_slot_date_idx` (satu penyewa aktif per pasangan
+  slot-tanggal). Untuk produksi, pindahkan rangkaian ini ke satu **Postgres function
+  (RPC)** agar benar-benar berjalan dalam satu transaksi. Hal yang sama berlaku untuk
+  `verifyPayment` dan `cancelBooking`.
 * **RLS hanya membuka `select` publik** untuk `events`, `zones`, `slots`, dan
   `leasing_partners` (baris `is_active` saja). Tabel lain **tanpa policy sama sekali**,
   jadi hanya `service_role` yang bisa mengaksesnya.
@@ -596,13 +672,13 @@ Hal-hal yang perlu diketahui sebelum dipakai sungguhan.
   sebelum dibuka ke publik; endpoint booking sangat mungkin jadi sasaran spam.
 * **Belum ada CAPTCHA / verifikasi nomor telepon.** Tenant dikenali dari nomor telepon
   saja, sehingga booking iseng memakai nomor palsu tidak tersaring otomatis.
-* **Tidak ada kedaluwarsa booking otomatis.** Slot berstatus `pending` akan tertahan
-  sampai admin memverifikasi atau membatalkannya. Pertimbangkan cron (`pg_cron`) yang
-  membatalkan booking `pending_payment` yang lewat N jam.
+* **Tidak ada kedaluwarsa booking otomatis.** Booking `pending_payment` mengunci
+  tanggal-tanggal sewanya sampai admin memverifikasi atau membatalkannya. Pertimbangkan
+  cron (`pg_cron`) yang membatalkan booking `pending_payment` yang lewat N jam.
 
 ---
 
-## 11. Yang Belum Dikerjakan
+## 12. Yang Belum Dikerjakan
 
 Jujur, ini yang belum ada di versi sekarang:
 

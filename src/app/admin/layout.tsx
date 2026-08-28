@@ -1,11 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { AdminNav } from "@/components/admin/AdminNav";
-import { LogoutButton } from "@/components/admin/LogoutButton";
-import { Badge } from "@/components/ui/Badge";
-import { buttonClass } from "@/components/ui/Button";
 import { ADMIN_ROLE_LABEL } from "@/lib/domain/labels";
 import { getCurrentAdmin } from "@/lib/services/auth";
 
@@ -20,7 +16,9 @@ export const metadata: Metadata = {
 };
 
 /**
- * Kerangka seluruh area /admin.
+ * Kerangka seluruh area /admin ala mockup dasbor gelap:
+ * sidebar hitam pekat border-r di kiri (>= lg), bar atas yang bisa digeser
+ * di layar kecil, dan area konten lega di kanan.
  *
  * Layout ini SENGAJA tidak pernah memanggil redirect(): /admin/login berada di
  * bawahnya, jadi kalau belum ada sesi admin kita cukup merender children polos
@@ -36,31 +34,22 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   const nama = admin.full_name?.trim() || admin.email;
 
   return (
-    <div className="space-y-4">
-      <header className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-        <div className="min-w-0">
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Panel Admin</p>
-          <p className="truncate text-sm font-semibold text-slate-900">{nama}</p>
-          <p className="truncate text-xs text-slate-500">{admin.email}</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge tone={admin.role === "admin" ? "blue" : "slate"}>
-            {ADMIN_ROLE_LABEL[admin.role]}
-          </Badge>
-          <Link href="/" className={buttonClass("secondary", "sm")}>
-            Lihat Denah Publik
-          </Link>
-          <LogoutButton />
-        </div>
-      </header>
+    <div className="flex min-h-[calc(100dvh-4rem)] w-full flex-col lg:flex-row">
+      {/* Sidebar (>= lg) / bar navigasi atas (< lg) — hitam lebih pekat dari kanvas. */}
+      <aside className="sticky top-16 z-30 shrink-0 border-b border-line bg-[#050505] lg:h-[calc(100dvh-4rem)] lg:w-64 lg:border-b-0 lg:border-r">
+        <AdminNav
+          admin={{
+            name: nama,
+            email: admin.email,
+            roleLabel: ADMIN_ROLE_LABEL[admin.role],
+          }}
+        />
+      </aside>
 
-      <div className="lg:grid lg:grid-cols-[210px_minmax(0,1fr)] lg:gap-6">
-        <aside className="mb-4 lg:mb-0">
-          <AdminNav />
-        </aside>
-        {/* Bukan <main>: layout root sudah menyediakan landmark <main>. */}
-        <section className="min-w-0">{children}</section>
-      </div>
+      {/* Bukan <main>: layout root sudah menyediakan landmark <main>. */}
+      <section className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
+        <div className="mx-auto w-full max-w-6xl">{children}</div>
+      </section>
     </div>
   );
 }

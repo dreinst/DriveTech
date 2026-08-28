@@ -4,20 +4,25 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import {
+  addEventDate,
   overrideSlotStatus,
   rejectPayment,
   setCommissionPaid,
+  setEventDateActive,
   updateLeasingApplication,
+  updateZoneFee,
   upsertPartner,
   verifyPayment,
   type LeasingApplicationPatch,
 } from "@/lib/services/admin";
 import { requireAdmin, signInAdmin, signOutAdmin } from "@/lib/services/auth";
 import {
+  addEventDateSchema,
   adminLoginSchema,
   overrideSlotSchema,
   rejectPaymentSchema,
   updateLeasingSchema,
+  updateZoneFeeSchema,
   upsertPartnerSchema,
   verifyPaymentSchema,
   zodFieldErrors,
@@ -157,7 +162,7 @@ export async function verifyPaymentAction(
   if (!result.ok) return errorState(result.error);
 
   revalidateAdmin();
-  return successState("Pembayaran diverifikasi, slot dikunci sebagai terisi.");
+  return successState("Pembayaran diverifikasi, booking dikonfirmasi.");
 }
 
 /** Tolak bukti pembayaran beserta alasannya. */
@@ -280,4 +285,82 @@ export async function upsertPartnerAction(
 
   revalidatePath("/admin/leasing");
   return successState("Data partner leasing tersimpan.");
+}
+
+/* ------------------------------------------------------------------ */
+/* Tanggal gelaran                                                     */
+/* ------------------------------------------------------------------ */
+
+/** Tambah tanggal gelaran baru di /admin/pengaturan (field form: "date"). */
+export async function addEventDateAction(
+  prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const form = ambilFormData(prevState, formData);
+  await requireAdmin();
+
+  const parsed = addEventDateSchema.safeParse({ date: teks(form, "date") });
+  if (!parsed.success) {
+    return errorState("Periksa kembali tanggal yang diisi.", zodFieldErrors(parsed.error));
+  }
+
+  const result = await addEventDate(parsed.data.date);
+  if (!result.ok) return errorState(result.error);
+
+  revalidatePath("/");
+  revalidatePath("/admin/pengaturan");
+  return successState("Tanggal gelaran ditambahkan.");
+}
+
+/** Aktifkan / nonaktifkan satu tanggal gelaran (field form: "id", "active"). */
+export async function setEventDateActiveAction(
+  prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const form = ambilFormData(prevState, formData);
+  await requireAdmin();
+
+  const id = teks(form, "id");
+  if (id.length === 0) return errorState("ID tanggal tidak valid.", { id: "ID wajib diisi." });
+
+  const nilai = teks(form, "active");
+  const active = nilai === "on" || nilai === "true" || nilai === "1";
+
+  const result = await setEventDateActive(id, active);
+  if (!result.ok) return errorState(result.error);
+
+  revalidatePath("/");
+  revalidatePath("/admin/pengaturan");
+  return successState(active ? "Tanggal gelaran diaktifkan." : "Tanggal gelaran dinonaktifkan.");
+}
+
+/* ------------------------------------------------------------------ */
+/* Pengaturan                                                          */
+/* ------------------------------------------------------------------ */
+
+/** Simpan biaya admin satu zona di /admin/pengaturan. */
+export async function updateZoneFeeAction(
+  prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const form = ambilFormData(prevState, formData);
+  await requireAdmin();
+
+  const parsed = updateZoneFeeSchema.safeParse({
+    zoneId: teks(form, "zoneId"),
+    adminFee: teks(form, "adminFee"),
+  });
+  if (!parsed.success) {
+    return errorState("Periksa kembali biaya admin.", zodFieldErrors(parsed.error));
+  }
+
+  const result = await updateZoneFee(parsed.data.zoneId, parsed.data.adminFee);
+  if (!result.ok) return errorState(result.error);
+
+  // Biaya tampil di denah publik, dashboard, dan halaman pengaturan.
+  revalidatePath("/");
+  revalidatePath("/admin");
+  revalidatePath("/admin/pengaturan");
+  revalidatePath("/admin/slots");
+  return successState("Biaya admin zona tersimpan.");
 }

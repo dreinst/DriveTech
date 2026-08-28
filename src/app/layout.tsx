@@ -1,47 +1,66 @@
 import type { Metadata, Viewport } from "next";
+import { Inter } from "next/font/google";
 import type { ReactNode } from "react";
 import "./globals.css";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { EVENT_INFO } from "@/lib/domain/constants";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+/* SF Pro dipakai otomatis di perangkat Apple (font stack di globals.css);
+   Inter variable jadi padanannya di perangkat lain. */
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3001";
+
+const siteTitle = `${EVENT_INFO.name} — Booking Slot`;
+const siteDescription = EVENT_INFO.description;
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: `${EVENT_INFO.name} — Booking Slot`,
+    default: siteTitle,
     template: `%s | ${EVENT_INFO.name}`,
   },
-  description:
-    "Pilih slot pameran langsung dari denah lokasi, isi data penyewa, lalu bayar biaya admin. Tersedia untuk dealer mobil baru, mobil & motor bekas, UMKM, dan warung.",
+  description: siteDescription,
   applicationName: EVENT_INFO.name,
   openGraph: {
     type: "website",
     locale: "id_ID",
     siteName: EVENT_INFO.name,
-    title: `${EVENT_INFO.name} — Booking Slot`,
-    description: "Denah interaktif, booking slot mandiri, dan pembayaran biaya admin.",
+    title: siteTitle,
+    description: siteDescription,
+    images: [{ url: "/gambar/og.jpg", width: 1200, height: 630, alt: EVENT_INFO.name }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: siteTitle,
+    description: siteDescription,
+    images: ["/gambar/og.jpg"],
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f8fafc",
-  colorScheme: "light",
+  themeColor: "#0a0a0a",
+  colorScheme: "dark",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="id">
-      <body className="flex min-h-dvh flex-col bg-[#f8fafc] font-sans text-slate-900 antialiased">
+    <html lang="id" className={inter.variable}>
+      <body className="flex min-h-dvh flex-col bg-app font-sans text-ink antialiased">
         <a
           href="#konten-utama"
-          className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded-lg focus:bg-slate-900 focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-white"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded-full focus:bg-accent focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-[#0a0a0a]"
         >
           Lewati ke konten utama
         </a>
         <SiteHeader />
-        <main id="konten-utama" className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">
+        {/* Tiap halaman mengatur container-nya sendiri (hero beranda full-bleed). */}
+        <main id="konten-utama" className="w-full flex-1">
           {children}
         </main>
         <SiteFooter />

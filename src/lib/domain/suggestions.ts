@@ -1,4 +1,4 @@
-import { ZONE_TYPE_FALLBACK } from "@/lib/domain/constants";
+import { isBookableZoneType, ZONE_TYPE_FALLBACK } from "@/lib/domain/constants";
 import type { SlotDetail } from "@/lib/types/database";
 
 /**
@@ -12,7 +12,9 @@ import type { SlotDetail } from "@/lib/types/database";
  *    penuh -> Area Pameran Mobil & Motor, contoh eksplisit di .md yang justru
  *    melintasi zone_type). Keduanya diurut display_order zona lalu nomor slot.
  * 3. Tidak pernah auto-assign — hasilnya cuma daftar saran.
- * 4. Zona facility dan slot target sendiri selalu dikecualikan.
+ * 4. Zona yang tidak bisa dibooking online (NON_BOOKABLE_ZONE_TYPES: facility &
+ *    warung) dan slot target sendiri selalu dikecualikan — sebagai target maupun
+ *    kandidat saran.
  */
 
 const DEFAULT_LIMIT = 6;
@@ -63,14 +65,14 @@ export function suggestAlternatives(params: {
   const { target, allSlots } = params;
   const limit = Math.max(0, params.limit ?? DEFAULT_LIMIT);
   if (limit === 0) return [];
-  // Fasilitas umum tidak disewakan, jadi tidak punya alternatif.
-  if (target.zone.zone_type === "facility") return [];
+  // Zona non-bookable (fasilitas & warung) tidak disewakan online -> tanpa alternatif.
+  if (!isBookableZoneType(target.zone.zone_type)) return [];
 
   const candidates = allSlots.filter(
     (slot) =>
       slot.id !== target.id &&
       slot.status === "available" &&
-      slot.zone.zone_type !== "facility",
+      isBookableZoneType(slot.zone.zone_type),
   );
 
   const sameZone = candidates

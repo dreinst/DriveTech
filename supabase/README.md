@@ -5,8 +5,26 @@ Folder ini berisi seluruh definisi database untuk sistem booking pameran.
 | Berkas | Isi |
 | --- | --- |
 | `migrations/20260826090000_init.sql` | Skema penuh: extension, enum, tabel, index, trigger `updated_at`, RLS + policy, Realtime, bucket Storage. |
-| `seed.sql` | Data awal: 1 event, 6 zona, 104 slot, 3 mitra leasing. |
+| `migrations/20260827120000_per_tanggal.sql` | Model booking per tanggal: tabel `event_dates` + `booking_dates`, view publik `slot_date_status`, trigger sinkron status, pencabutan aturan lama satu-booking-per-slot. |
+| `seed.sql` | Data awal: 1 event (Mokas Festival, Kota Malang), 12 hari Minggu mulai September 2026, 6 zona, 104 slot, 3 mitra leasing. |
 | `config.toml` | Konfigurasi Supabase CLI untuk pengembangan lokal. |
+
+### Model booking per tanggal (migrasi `20260827120000`)
+
+* Pemesan memilih **>= 1 tanggal weekend** dari `event_dates`; slot yang sama
+  bisa disewa orang berbeda di tanggal berbeda.
+* Setiap tanggal yang disewa satu booking dicatat sebagai baris `booking_dates`.
+  Anti double-booking: unique index parsial
+  `booking_dates_active_slot_date_idx (slot_id, event_date) where is_active`.
+* Trigger `sync_booking_dates_active` membuat `booking_dates.is_active`
+  mengikuti status booking (`pending_payment`/`confirmed` = aktif;
+  `cancelled` = nonaktif, pasangan slot+tanggal lepas kembali).
+* Okupansi publik dibaca lewat view `slot_date_status`
+  (`slot_id`, `event_date`, `status`) — tanpa data pribadi tenant.
+* **Makna `slots.status` berubah**: `available` = normal; nilai lain berarti
+  slot **diblokir panitia** untuk semua tanggal (label UI: "Diblokir") — bukan
+  lagi status booking.
+* Biaya admin = `zones.admin_fee` **per tanggal** x jumlah tanggal terpilih.
 
 Dasar skema: bagian 3 dokumen rencana teknis internal `Sistem Pameran Arsitektur.md`
 (tidak dipublikasikan di repo ini; rangkumannya ada di README utama).
@@ -80,8 +98,11 @@ psql "postgresql://postgres:<password>@db.<project-ref>.supabase.co:5432/postgre
 
 Opsi B — buka **Dashboard > SQL Editor**, tempel isi `seed.sql`, lalu jalankan.
 
-Seed aman diulang: semua insert memakai `on conflict do nothing` atau
-`where not exists`, jadi menjalankannya dua kali tidak menggandakan data.
+Seed aman diulang: insert memakai `on conflict do nothing` / `where not exists`
+(baris event memakai `on conflict do update` agar nama/lokasi terbaru ikut
+terpasang), jadi menjalankannya dua kali tidak menggandakan data. Seed juga
+mengisi `event_dates` dengan 12 hari Minggu mulai September 2026
+dari tanggal seed dijalankan (`current_date`).
 
 Setelah push, isi env project di hosting (Vercel dsb.):
 
@@ -131,10 +152,14 @@ Migrasi sudah menjalankan (secara idempotent):
 ```sql
 alter publication supabase_realtime add table public.slots;
 alter table public.slots replica identity full;
+
+alter publication supabase_realtime add table public.booking_dates;
+alter table public.booking_dates replica identity full;
 ```
 
-Jadi denah publik langsung ikut berubah saat status slot berpindah
-`available` → `pending` → `confirmed` tanpa perlu refresh.
+Jadi denah publik langsung ikut berubah tanpa refresh: `slots` untuk
+blokir/buka slot oleh panitia, `booking_dates` untuk okupansi per tanggal
+(booking baru, konfirmasi, pembatalan).
 
 Bila karena satu dan lain hal publication belum terisi di project cloud, cek dan
 aktifkan manual:
@@ -145,10 +170,11 @@ select * from pg_publication_tables where pubname = 'supabase_realtime';
 
 -- aktifkan
 alter publication supabase_realtime add table public.slots;
+alter publication supabase_realtime add table public.booking_dates;
 ```
 
 Di dashboard, hal yang sama bisa dilakukan lewat **Database > Replication**
-dengan mencentang tabel `slots`.
+dengan mencentang tabel `slots` dan `booking_dates`.
 
 ---
 
@@ -178,23 +204,27 @@ RLS **aktif di semua tabel**.
 | Tabel | Akses publik |
 | --- | --- |
 | `events`, `zones`, `slots` | `select` bebas (`using (true)`) — data denah publik. |
+| `event_dates` | `select` hanya untuk baris `is_active` (daftar tanggal gelaran). |
 | `leasing_partners` | `select` hanya untuk baris `is_active`. |
+| `booking_dates` | **Tanpa policy** — publik membaca okupansinya lewat view `slot_date_status` (security definer, hanya `slot_id`, `event_date`, `status`). |
 | Semua tabel lain | **Tanpa policy sama sekali** → hanya `service_role` yang bisa mengakses. |
 
 Artinya seluruh operasi tulis (booking, pembayaran, transaksi pembelian,
 pengajuan leasing, aksi admin) harus lewat kode server yang memakai
 `SUPABASE_SERVICE_ROLE_KEY`. Jangan pernah mengekspos kunci itu ke browser.
 
-Perlindungan tambahan anti double-booking ada di level database:
+Perlindungan anti double-booking ada di level database — model per tanggal:
 
 ```sql
-create unique index bookings_active_slot_idx
-  on public.bookings (slot_id)
-  where status in ('pending_payment', 'confirmed');
+create unique index booking_dates_active_slot_date_idx
+  on public.booking_dates (slot_id, event_date)
+  where is_active;
 ```
 
-Booking kedua atas slot yang sama akan ditolak Postgres, bukan sekadar dicegah
-oleh logika aplikasi.
+Booking kedua atas pasangan (slot, tanggal) yang sama akan ditolak Postgres,
+bukan sekadar dicegah oleh logika aplikasi. (Index lama
+`bookings_active_slot_idx` — satu booking aktif per slot — sudah dihapus oleh
+migrasi `20260827120000_per_tanggal.sql`.)
 
 ---
 

@@ -1,16 +1,23 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import type { ReactNode } from "react";
 
 import { PurchaseForm } from "@/components/forms/PurchaseForm";
+import { FadeUp } from "@/components/motion/motion";
 import { Alert } from "@/components/ui/Alert";
 import { buttonClass } from "@/components/ui/Button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Stepper } from "@/components/ui/Stepper";
-import { TENANT_TYPE_LABEL, ZONE_TYPE_LABEL } from "@/lib/domain/labels";
+import { EVENT_INFO } from "@/lib/domain/constants";
+import { TENANT_TYPE_LABEL } from "@/lib/domain/labels";
 import { getSlotDetail, getSlotTenant } from "@/lib/services/slots";
 import { slotDisplayName } from "@/lib/utils";
 
@@ -32,18 +39,13 @@ export const metadata: Metadata = {
 
 const LANGKAH = ["Data Pembeli", "Metode Pembayaran", "Selesai"];
 
+/* "Setiap hari Minggu..." -> "setiap hari Minggu..." agar pas di tengah kalimat
+   (nama hari tetap kapital sesuai ejaan). */
+const jadwalDiTengahKalimat =
+  EVENT_INFO.scheduleText.charAt(0).toLowerCase() + EVENT_INFO.scheduleText.slice(1);
+
 /** Postgres menolak id yang bukan uuid; perlakukan seperti 404. */
 const INVALID_UUID = "22P02";
-
-/** Baris keterangan sederhana untuk kartu ringkasan lapak. */
-function Baris({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="flex items-start justify-between gap-3 py-2">
-      <dt className="text-sm text-slate-500">{label}</dt>
-      <dd className="text-right text-sm font-medium text-slate-900">{children}</dd>
-    </div>
-  );
-}
 
 export default async function BeliUnitPage({
   params,
@@ -90,13 +92,34 @@ export default async function BeliUnitPage({
         />
         <Alert tone="info" title="Fasilitas tidak menjual unit">
           <p>
-            {namaSlot} adalah fasilitas umum pameran, bukan lapak tenant. Tidak ada unit yang
-            dijual di sini. Silakan pilih lapak pada zona pameran mobil, mobil &amp; motor, atau
-            mobil baru.
+            {namaSlot} adalah fasilitas umum pameran — tidak ada unit yang dijual di sini.
           </p>
         </Alert>
         <Link href="/" className={buttonClass("secondary", "md")}>
           Lihat denah lokasi
+        </Link>
+      </div>
+    );
+  }
+
+  // Kebijakan: warung kuliner tidak masuk alur pembelian unit.
+  if (slot.zone.zone_type === "warung") {
+    return (
+      <div className="mx-auto w-full max-w-3xl space-y-4">
+        <PageHeader
+          title={namaSlot}
+          backHref="/"
+          backLabel="Kembali ke denah"
+          description={slot.zone.name}
+        />
+        <Alert tone="info" title="Pembelian unit tidak berlaku untuk warung">
+          <p>
+            {namaSlot} adalah warung kuliner. Unit kendaraan dijual di zona mobil baru, mobil
+            bekas, serta mobil &amp; motor bekas pada denah.
+          </p>
+        </Alert>
+        <Link href="/" className={buttonClass("secondary", "md")}>
+          Kembali ke denah
         </Link>
       </div>
     );
@@ -113,9 +136,8 @@ export default async function BeliUnitPage({
         />
         <Alert tone="warning" title="Slot ini belum ada tenant-nya">
           <p>
-            Lapak {namaSlot} di {slot.zone.name} masih kosong, jadi belum ada unit yang dipajang
-            untuk dibeli. Pilih lapak lain yang sudah terisi pada denah, atau booking lapak ini
-            kalau Anda sendiri ingin berjualan di pameran.
+            Lapak {namaSlot} masih kosong, jadi belum ada unit yang dipajang untuk dibeli. Pilih
+            lapak terisi lain di denah, atau booking lapak ini kalau Anda ingin berjualan.
           </p>
         </Alert>
         <div className="flex flex-wrap gap-2">
@@ -136,57 +158,64 @@ export default async function BeliUnitPage({
         title="Beli Unit dari Tenant"
         backHref="/"
         backLabel="Kembali ke denah"
-        description="Isi data Anda dan pilih metode pembayaran. Untuk kredit, pengajuan diteruskan ke mitra leasing rekanan pameran."
+        description={`Panitia hanya mencatat minat Anda — pengecekan unit dan pembayaran dilakukan langsung dengan tenant di lokasi, ${jadwalDiTengahKalimat}.`}
       />
 
       <Stepper steps={LANGKAH} current={0} />
 
       <div className="space-y-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Lapak penjual</CardTitle>
-          </CardHeader>
-          <CardContent className="py-2">
-            <dl className="divide-y divide-slate-100">
-              <Baris label="Nomor lapak">{namaSlot}</Baris>
-              <Baris label="Zona">{slot.zone.name}</Baris>
-              <Baris label="Jenis lapak">{ZONE_TYPE_LABEL[slot.zone.zone_type]}</Baris>
-              <Baris label="Tenant penjual">
-                {penyewa ? (
-                  <span>
-                    {penyewa.tenant.name}
-                    <span className="ml-1 font-normal text-slate-500">
-                      ({TENANT_TYPE_LABEL[penyewa.tenant.tenant_type]})
-                    </span>
-                  </span>
-                ) : (
-                  <span className="font-normal text-slate-500">Belum tercatat</span>
-                )}
-              </Baris>
-              <Baris label="Status lapak">
-                <StatusBadge status={slot.status} kind="slot" />
-              </Baris>
-            </dl>
-          </CardContent>
-        </Card>
+        {/* Kartu ringkasan lapak: nama slot besar + tenant penjual (pola kartu mockup). */}
+        <FadeUp>
+          <Card className="shadow-[var(--shadow-md)]">
+            <CardContent>
+              <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
+                <div className="min-w-0">
+                  <StatusBadge status={slot.status} kind="slot" />
+                  <p className="mt-2.5 text-2xl font-semibold tracking-[-0.01em] text-ink sm:text-3xl">
+                    {namaSlot}
+                  </p>
+                  <p className="mt-1 text-sm text-muted">Zona: {slot.zone.name}</p>
+                </div>
+                <div className="min-w-0 sm:text-right">
+                  <p className="text-xs font-semibold uppercase tracking-[0.08em] text-subtle">
+                    Tenant Penjual
+                  </p>
+                  {penyewa ? (
+                    <>
+                      <p className="mt-1.5 text-lg font-semibold tracking-tight text-ink">
+                        {penyewa.tenant.name}
+                      </p>
+                      <p className="mt-0.5 text-[0.8125rem] text-muted">
+                        {TENANT_TYPE_LABEL[penyewa.tenant.tenant_type]}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="mt-1.5 text-sm text-muted">Belum tercatat</p>
+                  )}
+                </div>
+              </div>
+              {slot.zone.description ? (
+                <p className="mt-5 border-t border-line pt-4 text-sm leading-relaxed text-muted">
+                  {slot.zone.description}
+                </p>
+              ) : null}
+            </CardContent>
+          </Card>
+        </FadeUp>
 
-        <Alert tone="info" title="Cara kerja pembelian di pameran ini">
-          <p>
-            Panitia hanya mencatat minat beli Anda lalu meneruskannya ke tenant pemilik lapak.
-            Serah terima unit, pengecekan kondisi, dan pembayaran dilakukan langsung antara Anda
-            dan tenant di lokasi. Khusus metode kredit, panitia membantu meneruskan pengajuan ke
-            mitra leasing.
-          </p>
-        </Alert>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Data pembeli</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <PurchaseForm slotId={slot.id} namaLapak={namaLapak} />
-          </CardContent>
-        </Card>
+        <FadeUp delay={0.06}>
+          <Card>
+            <CardHeader>
+              <CardTitle>Data Pembeli</CardTitle>
+              <CardDescription>
+                Data ini diteruskan panitia ke tenant penjual sebagai catatan minat pembelian.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PurchaseForm slotId={slot.id} namaLapak={namaLapak} />
+            </CardContent>
+          </Card>
+        </FadeUp>
       </div>
     </div>
   );

@@ -75,6 +75,13 @@ function resolveLabel(status: StatusValue, kind?: StatusKind): string {
   return status;
 }
 
+function resolveTone(status: StatusValue, kind?: StatusKind): BadgeTone {
+  // Slot "confirmed" berarti TERISI (tidak bisa dipesan) -> merah,
+  // beda dengan booking "confirmed" (Terkonfirmasi) -> hijau.
+  if (kind === "slot" && status === "confirmed") return "red";
+  return TONE_BY_STATUS[status] ?? "slate";
+}
+
 export type StatusBadgeProps = {
   status: StatusValue;
   /** Kamus label yang dipakai. Kosongkan untuk menebak dari nilai statusnya. */
@@ -83,5 +90,9 @@ export type StatusBadgeProps = {
 
 /** Badge status berbahasa Indonesia untuk slot, booking, pembayaran, leasing, dan pembelian. */
 export function StatusBadge({ status, kind }: StatusBadgeProps) {
-  return <Badge tone={TONE_BY_STATUS[status] ?? "slate"}>{resolveLabel(status, kind)}</Badge>;
+  return (
+    <Badge tone={resolveTone(status, kind)} dot>
+      {resolveLabel(status, kind)}
+    </Badge>
+  );
 }

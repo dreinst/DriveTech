@@ -8,6 +8,11 @@ import { cn, formatRupiah, slotDisplayName } from "@/lib/utils";
 
 export type SlotSuggestionsProps = {
   suggestions: SlotDetail[];
+  /**
+   * Tanggal terpilih (CSV "YYYY-MM-DD,...") yang diteruskan ke halaman booking
+   * sebagai query ?tanggal= — supaya pengguna tidak memilih ulang tanggalnya.
+   */
+  tanggalCsv?: string;
   className?: string;
 };
 
@@ -16,7 +21,12 @@ export type SlotSuggestionsProps = {
  * (bagian 4 "Sistem Pameran Arsitektur.md": suggestion list, bukan auto-assign).
  * Komponen ini murni tampilan sehingga aman dipakai server maupun client.
  */
-export function SlotSuggestions({ suggestions, className }: SlotSuggestionsProps) {
+export function SlotSuggestions({ suggestions, tanggalCsv, className }: SlotSuggestionsProps) {
+  const hrefFor = (slotId: string): string =>
+    tanggalCsv && tanggalCsv.length > 0
+      ? `/booking/${slotId}?tanggal=${encodeURIComponent(tanggalCsv)}`
+      : `/booking/${slotId}`;
+
   if (suggestions.length === 0) {
     return (
       <EmptyState
@@ -28,8 +38,8 @@ export function SlotSuggestions({ suggestions, className }: SlotSuggestionsProps
 
   return (
     <div className={cn("space-y-2", className)}>
-      <p className="text-xs text-slate-500">
-        Ini hanya <strong className="font-semibold text-slate-700">saran</strong>. Tidak ada slot
+      <p className="text-xs text-muted">
+        Ini hanya <strong className="font-semibold text-ink-2">saran</strong>. Tidak ada slot
         yang dipesan otomatis &mdash; Anda tetap perlu memilih dan mengonfirmasi sendiri.
       </p>
 
@@ -37,18 +47,18 @@ export function SlotSuggestions({ suggestions, className }: SlotSuggestionsProps
         {suggestions.map((slot) => (
           <li
             key={slot.id}
-            className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2"
+            className="flex items-center justify-between gap-3 rounded-[var(--radius-sm)] border border-line bg-card px-3 py-2.5 shadow-[var(--shadow-sm)]"
           >
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-slate-900">
+              <p className="truncate text-sm font-medium text-ink">
                 {slot.zone.name} &middot; {slotDisplayName(slot)}
               </p>
-              <p className="truncate text-xs text-slate-500">
+              <p className="truncate text-xs text-muted">
                 {ZONE_TYPE_LABEL[slot.zone.zone_type]} &middot; biaya admin{" "}
-                {formatRupiah(slot.zone.admin_fee)}
+                <span className="tabular">{formatRupiah(slot.zone.admin_fee)}</span>
               </p>
             </div>
-            <Link href={`/booking/${slot.id}`} className={buttonClass("secondary", "sm")}>
+            <Link href={hrefFor(slot.id)} className={buttonClass("secondary", "sm")}>
               Pilih
             </Link>
           </li>

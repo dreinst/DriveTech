@@ -50,7 +50,7 @@ export function CopyButton({
   }
 
   return (
-    <Button variant="secondary" size="sm" onClick={salin} className={className}>
+    <Button variant="secondary" onClick={salin} className={className}>
       {tersalin ? (
         <>
           <svg

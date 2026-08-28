@@ -1,64 +1,97 @@
 import Link from "next/link";
+import { buttonClass } from "@/components/ui/Button";
 import { EVENT_INFO } from "@/lib/domain/constants";
 
 type NavItem = { href: string; label: string };
 
-/** Rute /booking/status tidak ada; pengecekan status diarahkan ke bagian #cek-status di beranda. */
+/** Anchor menuju bagian-bagian beranda. */
 const NAV_ITEMS: readonly NavItem[] = [
-  { href: "/", label: "Denah" },
-  { href: "/#cek-status", label: "Cek Status Booking" },
-  { href: "/admin", label: "Admin" },
+  { href: "/#zona", label: "Zona" },
+  { href: "/#denah", label: "Peta Lokasi" },
+  { href: "/#cek-status", label: "Cek Status" },
 ];
 
-/** Header sticky tanpa JavaScript: nav digeser mendatar di layar kecil. */
+/**
+ * Header sticky gelap semi-transparan ala referensi Stitch.
+ * Tanpa JavaScript: menu mobile memakai <details>/<summary>.
+ */
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/75">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-4 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:py-3">
-        <Link href="/" className="flex min-w-0 items-center gap-2.5">
-          <span
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-white"
-            aria-hidden="true"
-          >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.7"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <rect x="3" y="3" width="18" height="18" rx="2.5" />
-              <path d="M3 9.5h18" />
-              <path d="M9.5 9.5V21" />
-            </svg>
-          </span>
-          <span className="min-w-0">
-            <span className="block truncate text-sm font-semibold leading-tight text-slate-900">
-              {EVENT_INFO.name}
-            </span>
-            <span className="block truncate text-xs leading-tight text-slate-500">
-              Booking slot & denah lokasi
-            </span>
-          </span>
+    <header className="sticky top-0 z-40 border-b border-line bg-[#0a0a0a]/85 backdrop-blur">
+      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
+        {/* Monogram + wordmark oranye */}
+        <Link
+          href="/"
+          className="flex min-w-0 items-center gap-2.5 text-[15px] font-bold tracking-tight text-accent"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element -- SVG statis, tanpa optimasi */}
+          <img src="/logo-mokas.svg" alt="" aria-hidden="true" className="h-7 w-auto shrink-0" />
+          <span className="truncate">{EVENT_INFO.name}</span>
         </Link>
 
-        <nav aria-label="Navigasi utama" className="no-scrollbar -mx-1 overflow-x-auto sm:mx-0">
-          <ul className="flex items-center gap-1 px-1">
-            {NAV_ITEMS.map((item) => (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className="inline-flex h-8 items-center whitespace-nowrap rounded-lg px-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
-                >
-                  {item.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+          {/* Nav desktop */}
+          <nav aria-label="Navigasi utama" className="hidden md:block">
+            <ul className="flex items-center">
+              {NAV_ITEMS.map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className="inline-flex min-h-11 items-center whitespace-nowrap px-3 text-sm font-medium text-muted transition-colors duration-150 hover:text-ink"
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          {/* CTA pil oranye. Tautan admin sengaja tidak ditampilkan ke publik —
+              panitia mengakses langsung lewat /admin/login. */}
+          <Link href="/#denah" className={buttonClass("primary", "sm")}>
+            Pesan Slot
+          </Link>
+
+          {/* Menu mobile */}
+          <details className="relative md:hidden">
+            <summary
+              className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-full text-ink transition-colors duration-150 hover:bg-ink/5 [&::-webkit-details-marker]:hidden"
+              aria-label="Buka menu navigasi"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                aria-hidden="true"
+              >
+                <path d="M4 7h16" />
+                <path d="M4 12h16" />
+                <path d="M4 17h16" />
+              </svg>
+            </summary>
+            <nav
+              aria-label="Navigasi mobile"
+              className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-56 rounded-[var(--radius)] border border-line bg-card p-2 shadow-[var(--shadow-md)]"
+            >
+              <ul className="space-y-0.5">
+                {NAV_ITEMS.map((item) => (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      className="block rounded-[var(--radius-sm)] px-3 py-2.5 text-sm font-medium text-ink transition-colors duration-150 hover:bg-surface-3"
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </details>
+        </div>
       </div>
     </header>
   );

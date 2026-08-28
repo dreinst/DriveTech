@@ -2,18 +2,19 @@ import type { ReactNode } from "react";
 
 export type AlertTone = "info" | "success" | "warning" | "error";
 
+/** Kartu lembut bg-*-soft + ikon kecil berwarna — tanpa strip kiri. */
 const TONE_CLASS: Record<AlertTone, string> = {
-  info: "border-blue-200 bg-blue-50 text-blue-900",
-  success: "border-green-200 bg-green-50 text-green-900",
-  warning: "border-amber-200 bg-amber-50 text-amber-900",
-  error: "border-red-200 bg-red-50 text-red-900",
+  info: "bg-accent-soft",
+  success: "bg-ok-soft",
+  warning: "bg-warn-soft",
+  error: "bg-danger-soft",
 };
 
 const ICON_CLASS: Record<AlertTone, string> = {
-  info: "text-blue-600",
-  success: "text-green-600",
-  warning: "text-amber-600",
-  error: "text-red-600",
+  info: "text-accent",
+  success: "text-ok",
+  warning: "text-warn",
+  error: "text-danger",
 };
 
 /** Ikon inline (tanpa dependency ikon eksternal). */
@@ -75,12 +76,12 @@ export type AlertProps = {
   children?: ReactNode;
 };
 
-/** Kotak pesan: info, berhasil, peringatan, atau galat. */
+/** Pesan status: info, berhasil, peringatan, atau galat. */
 export function Alert({ tone, title, children }: AlertProps) {
   return (
     <div
       role={tone === "error" ? "alert" : "status"}
-      className={`flex items-start gap-2.5 rounded-xl border px-3.5 py-3 text-sm ${TONE_CLASS[tone]}`}
+      className={`flex items-start gap-2.5 rounded-[var(--radius-sm)] px-4 py-3.5 text-sm text-ink ${TONE_CLASS[tone]}`}
     >
       <AlertIcon tone={tone} />
       <div className="min-w-0 space-y-0.5">

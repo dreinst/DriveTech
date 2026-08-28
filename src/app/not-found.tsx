@@ -8,14 +8,15 @@ export const metadata: Metadata = {
 
 export default function NotFound() {
   return (
-    <div className="mx-auto flex max-w-lg flex-col items-center rounded-xl border border-slate-200 bg-white px-6 py-12 text-center shadow-sm">
-      <p className="text-4xl font-semibold tracking-tight text-slate-300">404</p>
-      <h1 className="mt-2 text-xl font-semibold text-slate-900">Halaman tidak ditemukan</h1>
-      <p className="mt-2 text-sm leading-relaxed text-slate-500">
-        Tautannya mungkin salah ketik, atau slot yang kamu cari sudah tidak ada. Coba kembali ke denah
-        lokasi untuk memilih slot lain.
+    <div className="mx-auto flex max-w-md flex-col items-center px-6 py-24 text-center">
+      <p className="tabular text-6xl font-semibold tracking-[-0.02em] text-subtle">404</p>
+      <h1 className="mt-4 text-2xl font-semibold tracking-[-0.01em] text-ink">
+        Halaman tidak ditemukan
+      </h1>
+      <p className="mt-2 text-sm leading-relaxed text-muted">
+        Tautannya mungkin salah ketik, atau slot yang kamu cari sudah tidak ada.
       </p>
-      <div className="mt-6 flex flex-wrap justify-center gap-2">
+      <div className="mt-8 flex flex-wrap justify-center gap-3">
         <Link href="/" className={buttonClass("primary", "md")}>
           Kembali ke Denah
         </Link>

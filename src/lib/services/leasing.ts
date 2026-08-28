@@ -1,4 +1,5 @@
 import { fail, ok, type Result } from "@/lib/result";
+import { syncToSheet } from "@/lib/sheets";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { isServiceRoleConfigured } from "@/lib/supabase/config";
 import type {
@@ -146,6 +147,19 @@ export async function submitLeasingApplication(
   }
 
   const row = inserted.data as { id: string };
+
+  // Sinkron ke Google Sheets — fire-and-forget, tidak menahan respons.
+  void syncToSheet("leasing", {
+    leasingId: row.id,
+    purchaseTransactionId: purchase.id,
+    status: "submitted",
+    dpAmount: data.dpAmount,
+    tenorBulan: data.tenorBulan,
+    commissionAmount: commission ?? "",
+    commissionPaid: false,
+    notes: data.notes ?? "",
+  });
+
   return ok<Out>({ leasingApplicationId: row.id });
 }
 

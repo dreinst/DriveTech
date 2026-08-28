@@ -1,5 +1,9 @@
+import { isBookableZoneType } from "@/lib/domain/constants";
+import { slotAdminFee } from "@/lib/domain/harga";
+import { hitungTotalBiaya } from "@/lib/domain/ketersediaan";
 import { TENANT_TYPE_BY_ZONE_TYPE } from "@/lib/domain/labels";
 import { fail, ok, type Result } from "@/lib/result";
+import { syncToSheet } from "@/lib/sheets";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { isServiceRoleConfigured } from "@/lib/supabase/config";
 import type {
@@ -23,6 +27,7 @@ import {
   getSlotDetail,
   NO_CONFIG_MESSAGE,
   pickOne,
+  tanggalHariIniJakarta,
   type PgError,
 } from "./slots";
 
@@ -34,15 +39,21 @@ if (typeof window !== "undefined") {
 /** Kode error unique_violation Postgres — dipakai untuk mendeteksi rebutan slot. */
 const UNIQUE_VIOLATION = "23505";
 
-/** Select standar booking + slot + zona + tenant + pembayaran (1:1). */
+/**
+ * Select standar booking + slot + zona + tenant + pembayaran (1:1) + tanggal sewa.
+ * booking_dates ikut diambil mentah (event_date + is_active); baris nonaktif
+ * disaring di normalizeBookingRow sesuai kontrak (BookingDetail.dates = aktif saja).
+ */
 export const BOOKING_SELECT =
-  "*, slot:slots(*, zone:zones(*)), tenant:tenants(*), payment:admin_fee_payments(*)";
+  "*, slot:slots(*, zone:zones(*)), tenant:tenants(*), payment:admin_fee_payments(*), booking_dates(event_date, is_active)";
 
 type RawSlotWithZone = SlotRow & { zone: ZoneRow | ZoneRow[] | null };
+type RawBookingDate = { event_date: string; is_active: boolean };
 type RawBooking = BookingRow & {
   slot: RawSlotWithZone | RawSlotWithZone[] | null;
   tenant: TenantRow | TenantRow[] | null;
   payment: AdminFeePaymentRow | AdminFeePaymentRow[] | null;
+  booking_dates: RawBookingDate[] | null;
 };
 
 /** Rapikan baris mentah PostgREST jadi BookingDetail. Dipakai juga oleh services/admin.ts. */
@@ -57,30 +68,46 @@ export function normalizeBookingRow(raw: unknown): BookingDetail | null {
 
   const { zone: _zone, ...slotOnly } = rawSlot;
   void _zone;
-  const { slot: _slot, tenant: _tenant, payment: _payment, ...bookingOnly } = row;
+  const {
+    slot: _slot,
+    tenant: _tenant,
+    payment: _payment,
+    booking_dates: _dates,
+    ...bookingOnly
+  } = row;
   void _slot;
   void _tenant;
   void _payment;
+  void _dates;
+
+  const dates = (row.booking_dates ?? [])
+    .filter((d) => d.is_active)
+    .map((d) => d.event_date)
+    .sort();
 
   return {
     ...(bookingOnly as BookingRow),
     slot: { ...(slotOnly as SlotRow), zone },
     tenant,
     payment: pickOne<AdminFeePaymentRow>(row.payment),
+    dates,
   };
 }
 
 /**
- * Buat booking baru untuk satu slot.
+ * Buat booking baru untuk satu slot pada >= 1 tanggal weekend (model per tanggal).
  *
  * PENTING — tidak ada transaksi lintas-request di supabase-js, jadi langkah-langkah
  * di bawah dijalankan berurutan dengan KOMPENSASI MANUAL kalau langkah lanjutan gagal:
- *   1. insert bookings            -> gagal: berhenti
- *   2. insert admin_fee_payments  -> gagal: hapus booking (kompensasi)
- *   3. update slots -> 'pending'  -> gagal / 0 baris: hapus booking (cascade menghapus
- *                                    pembayaran) lalu laporkan slot sudah diambil
- * Pengaman utamanya tetap di database: unique index bookings_active_slot_idx.
- * SARAN PRODUKSI: pindahkan tiga langkah ini ke satu Postgres function (rpc)
+ *   1. insert bookings           -> gagal: berhenti
+ *   2. insert booking_dates      -> unique violation: hapus booking (kompensasi)
+ *                                   lalu laporkan DATE_TAKEN (tanggal baru terisi)
+ *   3. insert admin_fee_payments -> gagal: hapus booking (cascade menghapus
+ *                                   booking_dates)
+ * slots.status TIDAK disentuh lagi — kolom itu kini berarti blokir panitia.
+ * Pengaman utamanya tetap di database: unique index parsial
+ * booking_dates_active_slot_date_idx (slot_id, event_date) where is_active.
+ * SARAN PRODUKSI: pindahkan langkah-langkah ini ke satu Postgres function (rpc)
  * agar benar-benar atomik.
  */
 export async function createBooking(
@@ -104,8 +131,17 @@ export async function createBooking(
   if (slot.zone.zone_type === "facility") {
     return fail<Out>("Fasilitas umum tidak bisa dibooking.", "NOT_BOOKABLE");
   }
+  // Warung (dan tipe non-bookable lain di NON_BOOKABLE_ZONE_TYPES) ditutup online.
+  if (!isBookableZoneType(slot.zone.zone_type)) {
+    return fail<Out>(
+      "Zona warung belum dibuka untuk booking online. Hubungi panitia langsung.",
+      "ZONE_CLOSED",
+    );
+  }
+  // Makna baru slots.status: selain 'available' berarti DIBLOKIR PANITIA
+  // untuk semua tanggal (bukan status booking).
   if (slot.status !== "available") {
-    return fail<Out>("Slot ini sudah tidak tersedia.", "SLOT_TAKEN");
+    return fail<Out>("Slot ini sedang diblokir panitia dan tidak bisa dibooking.", "SLOT_TAKEN");
   }
 
   // Tipe tenant harus cocok dengan tipe zona (mis. zona UMKM hanya untuk tenant umkm).
@@ -113,7 +149,33 @@ export async function createBooking(
   const tenantType = expectedTenantType ?? data.tenantType;
 
   const supabase = createAdminSupabase();
-  const now = new Date().toISOString();
+
+  /* --- Validasi tanggal: unik, terdaftar aktif di event_dates, dan >= hari ini --- */
+  const today = tanggalHariIniJakarta();
+  const dates = Array.from(new Set(data.eventDates)).sort();
+
+  if (dates.some((d) => d < today)) {
+    return fail<Out>("Tanggal yang dipilih sudah lewat.", "VALIDATION");
+  }
+
+  const validDatesQuery = await supabase
+    .from("event_dates")
+    .select("event_date")
+    .eq("is_active", true)
+    .in("event_date", dates);
+
+  if (validDatesQuery.error) {
+    return dbFail<Out>(validDatesQuery.error as PgError, "Gagal memeriksa tanggal gelaran");
+  }
+  const terdaftar = new Set(
+    ((validDatesQuery.data ?? []) as Array<{ event_date: string }>).map((d) => d.event_date),
+  );
+  if (dates.some((d) => !terdaftar.has(d))) {
+    return fail<Out>(
+      "Sebagian tanggal yang dipilih bukan tanggal gelaran yang tersedia.",
+      "VALIDATION",
+    );
+  }
 
   /* --- Langkah 0: temukan atau buat tenant (dikunci pada nomor telepon) --- */
   const existingTenant = await supabase
@@ -169,37 +231,55 @@ export async function createBooking(
   }
   const booking = bookingInsert.data as { id: string; booking_code: string };
 
-  /* --- Langkah 2: insert tagihan admin fee (metode final dipilih di halaman bayar) --- */
+  /* --- Langkah 2: kunci pasangan (slot, tanggal) lewat booking_dates --- */
+  const datesInsert = await supabase.from("booking_dates").insert(
+    dates.map((event_date) => ({
+      booking_id: booking.id,
+      slot_id: slot.id,
+      event_date,
+    })),
+  );
+
+  if (datesInsert.error) {
+    // Kompensasi: booking batal dibuat (cascade menghapus baris booking_dates
+    // yang mungkin sempat masuk).
+    await supabase.from("bookings").delete().eq("id", booking.id);
+    if ((datesInsert.error as PgError)?.code === UNIQUE_VIOLATION) {
+      return fail<Out>(
+        "Sebagian tanggal yang dipilih baru saja terisi. Silakan pilih tanggal lain.",
+        "DATE_TAKEN",
+      );
+    }
+    return dbFail<Out>(datesInsert.error as PgError, "Gagal menyimpan tanggal booking");
+  }
+
+  /* --- Langkah 3: insert tagihan admin fee = biaya per tanggal x jumlah tanggal ---
+     Harga per tanggal diresolusi lewat slotAdminFee (override slot > harga zona). */
+  const amount = hitungTotalBiaya(slotAdminFee(slot, slot.zone), dates.length);
   const paymentInsert = await supabase.from("admin_fee_payments").insert({
     booking_id: booking.id,
-    amount: slot.zone.admin_fee,
+    amount,
     method: "cash",
     status: "unpaid",
   });
 
   if (paymentInsert.error) {
-    // Kompensasi: booking batal dibuat.
+    // Kompensasi: booking batal dibuat (booking_dates ikut terhapus lewat cascade).
     await supabase.from("bookings").delete().eq("id", booking.id);
     return dbFail<Out>(paymentInsert.error as PgError, "Gagal membuat tagihan biaya admin");
   }
 
-  /* --- Langkah 3: kunci slot jadi 'pending' (hanya kalau masih 'available') --- */
-  const slotUpdate = await supabase
-    .from("slots")
-    .update({ status: "pending", updated_at: now })
-    .eq("id", slot.id)
-    .eq("status", "available")
-    .select("id");
-
-  const affected = ((slotUpdate.data ?? []) as unknown[]).length;
-  if (slotUpdate.error || affected === 0) {
-    // Kompensasi: hapus booking (admin_fee_payments ikut terhapus lewat cascade).
-    await supabase.from("bookings").delete().eq("id", booking.id);
-    if (slotUpdate.error) {
-      return dbFail<Out>(slotUpdate.error as PgError, "Gagal mengunci slot");
-    }
-    return fail<Out>("Slot ini baru saja dibooking orang lain.", "SLOT_TAKEN");
-  }
+  // Sinkron ke Google Sheets — fire-and-forget, tidak menahan respons.
+  void syncToSheet("booking", {
+    bookingCode: booking.booking_code,
+    status: "pending_payment",
+    tanggal: dates.join(", "),
+    slot: slot.svg_element_id ?? slot.slot_label ?? slot.id,
+    zona: slot.zone.name,
+    tenantName: data.tenantName,
+    phone: data.tenantPhone,
+    amount,
+  });
 
   return ok<Out>({ bookingId: booking.id, bookingCode: booking.booking_code });
 }
@@ -280,11 +360,16 @@ export async function submitPayment(
   const now = new Date().toISOString();
 
   // Tagihan seharusnya sudah dibuat createBooking; kalau hilang, buat ulang
-  // memakai admin_fee zona agar alur pengguna tidak buntu.
+  // memakai harga efektif slot (slotAdminFee) x jumlah tanggal agar alur
+  // pengguna tidak buntu.
   if (!booking.payment) {
+    const amount = hitungTotalBiaya(
+      slotAdminFee(booking.slot, booking.slot.zone),
+      Math.max(booking.dates.length, 1),
+    );
     const inserted = await supabase.from("admin_fee_payments").insert({
       booking_id: booking.id,
-      amount: booking.slot.zone.admin_fee,
+      amount,
       method: data.method,
       status: "submitted",
       proof_url: data.proofUrl ?? null,
@@ -293,6 +378,16 @@ export async function submitPayment(
     if (inserted.error) {
       return dbFail<Out>(inserted.error as PgError, "Gagal menyimpan pembayaran");
     }
+
+    void syncToSheet("payment", {
+      bookingCode: booking.booking_code,
+      status: "submitted",
+      method: data.method,
+      amount,
+      proofUrl: data.proofUrl ?? "",
+      submittedAt: now,
+    });
+
     return ok<Out>({ bookingId: booking.id });
   }
 
@@ -312,12 +407,23 @@ export async function submitPayment(
     return dbFail<Out>(updated.error as PgError, "Gagal menyimpan pembayaran");
   }
 
+  void syncToSheet("payment", {
+    bookingCode: booking.booking_code,
+    status: "submitted",
+    method: data.method,
+    amount: booking.payment.amount,
+    proofUrl: data.proofUrl ?? booking.payment.proof_url ?? "",
+    submittedAt: now,
+  });
+
   return ok<Out>({ bookingId: booking.id });
 }
 
 /**
- * Batalkan booking dan lepas slotnya kembali ke 'available'.
- * Tanpa transaksi: kalau pelepasan slot gagal, status booking dikembalikan (kompensasi).
+ * Batalkan booking. Cukup set status 'cancelled' — trigger
+ * sync_booking_dates_active di database otomatis menonaktifkan baris
+ * booking_dates sehingga pasangan (slot, tanggal) lepas kembali.
+ * slots.status TIDAK disentuh (kolom itu kini berarti blokir panitia).
  */
 export async function cancelBooking(bookingId: string): Promise<Result<null>> {
   if (!isServiceRoleConfigured()) return fail<null>(NO_CONFIG_MESSAGE, "NO_CONFIG");
@@ -325,14 +431,14 @@ export async function cancelBooking(bookingId: string): Promise<Result<null>> {
   const supabase = createAdminSupabase();
   const current = await supabase
     .from("bookings")
-    .select("id, slot_id, status")
+    .select("id, booking_code, status")
     .eq("id", bookingId)
     .maybeSingle();
 
   if (current.error) return dbFail<null>(current.error as PgError, "Gagal memuat data booking");
 
   const booking = (current.data ?? null) as
-    | { id: string; slot_id: string; status: BookingRow["status"] }
+    | { id: string; booking_code: string; status: BookingRow["status"] }
     | null;
   if (!booking) return fail<null>("Booking tidak ditemukan.", "NOT_FOUND");
   if (booking.status === "cancelled") return ok(null); // idempoten
@@ -348,16 +454,10 @@ export async function cancelBooking(bookingId: string): Promise<Result<null>> {
     return dbFail<null>(bookingUpdate.error as PgError, "Gagal membatalkan booking");
   }
 
-  const slotUpdate = await supabase
-    .from("slots")
-    .update({ status: "available", updated_at: now })
-    .eq("id", booking.slot_id);
-
-  if (slotUpdate.error) {
-    // Kompensasi: kembalikan status booking supaya data tidak jadi tidak konsisten.
-    await supabase.from("bookings").update({ status: booking.status }).eq("id", booking.id);
-    return dbFail<null>(slotUpdate.error as PgError, "Gagal melepas slot");
-  }
+  void syncToSheet("booking", {
+    bookingCode: booking.booking_code,
+    status: "cancelled",
+  });
 
   return ok(null);
 }

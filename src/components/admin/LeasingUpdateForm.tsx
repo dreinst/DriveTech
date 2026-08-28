@@ -34,7 +34,7 @@ export type LeasingUpdateFormProps = {
 
 function Pesan({ state }: { state: ActionState }) {
   if (state.status === "idle" || !state.message) return null;
-  const nada = state.status === "success" ? "text-green-700" : "text-red-600";
+  const nada = state.status === "success" ? "text-ok" : "text-danger";
   return (
     <p role="status" className={`text-xs font-medium ${nada}`}>
       {state.message}
@@ -88,7 +88,7 @@ export function LeasingUpdateForm({
         <input type="hidden" name="commissionPaidPresent" value="1" />
 
         <div className="space-y-1">
-          <label htmlFor={statusId} className="block text-xs font-medium text-slate-600">
+          <label htmlFor={statusId} className="block text-xs font-medium text-muted">
             Status pengajuan
           </label>
           <Select id={statusId} name="status" defaultValue={status} className="h-9 py-1 text-xs">
@@ -101,7 +101,7 @@ export function LeasingUpdateForm({
         </div>
 
         <div className="space-y-1">
-          <label htmlFor={komisiId} className="block text-xs font-medium text-slate-600">
+          <label htmlFor={komisiId} className="block text-xs font-medium text-muted">
             Komisi platform (Rp)
           </label>
           <div className="flex items-center gap-1.5">
@@ -129,29 +129,29 @@ export function LeasingUpdateForm({
             ) : null}
           </div>
           {hasilHitung !== null ? (
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-subtle">
               Perkiraan {commissionRate}% dari harga unit: {formatRupiah(hasilHitung)}
             </p>
           ) : (
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-subtle">
               Harga unit atau rate mitra belum terisi, komisi diisi manual.
             </p>
           )}
         </div>
 
-        <label htmlFor={lunasId} className="flex items-center gap-2 text-xs font-medium text-slate-600">
+        <label htmlFor={lunasId} className="flex items-center gap-2 text-xs font-medium text-muted">
           <input
             id={lunasId}
             name="commissionPaid"
             type="checkbox"
             defaultChecked={commissionPaid}
-            className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+            className="h-4 w-4 rounded border-line-strong accent-accent"
           />
           Komisi sudah dibayar mitra
         </label>
 
         <div className="space-y-1">
-          <label htmlFor={catatanId} className="block text-xs font-medium text-slate-600">
+          <label htmlFor={catatanId} className="block text-xs font-medium text-muted">
             Catatan
           </label>
           <Textarea

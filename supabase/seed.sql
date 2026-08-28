@@ -19,17 +19,41 @@ set search_path = public, extensions;
 
 -- -----------------------------------------------------------------------------
 -- 1. Event (satu event saja, id di-hardcode agar seed idempotent)
+--    Model per tanggal: start_date/end_date tidak dipakai lagi (null); jadwal
+--    sesungguhnya ada di tabel event_dates (setiap hari Minggu, mulai September 2026).
 -- -----------------------------------------------------------------------------
 insert into public.events (id, name, location, start_date, end_date, is_active)
 values (
   '11111111-1111-4111-8111-111111111111',
-  'Pameran Mobil & Motor Bekas',
-  'Lapangan Utama, Kota Bandung',
-  '2026-09-12',
-  '2026-09-14',
+  'Mokas Festival',
+  'Kampung Tentara, Singosari, Malang',
+  null,
+  null,
   true
 )
-on conflict (id) do nothing;
+on conflict (id) do update
+  set name       = excluded.name,
+      location   = excluded.location,
+      start_date = excluded.start_date,
+      end_date   = excluded.end_date,
+      is_active  = excluded.is_active;
+
+-- -----------------------------------------------------------------------------
+-- 1b. Tanggal gelaran — SEMUA Sabtu & Minggu mulai weekend terdekat,
+--     sejauh 8 minggu ke depan, berbasis current_date saat seed dijalankan.
+--     dow: 0 = Minggu, 6 = Sabtu.
+-- -----------------------------------------------------------------------------
+-- 12 hari Minggu pertama sejak awal September 2026 (atau sejak hari ini bila
+-- seed dijalankan setelah September berjalan).
+insert into public.event_dates (event_id, event_date, is_active)
+select '11111111-1111-4111-8111-111111111111', d::date, true
+from generate_series(
+       greatest(current_date, date '2026-09-01'),
+       greatest(current_date, date '2026-09-01') + interval '12 weeks',
+       interval '1 day'
+     ) as d
+where extract(dow from d) = 0
+on conflict (event_date) do nothing;
 
 -- -----------------------------------------------------------------------------
 -- 2. Zona (6 zona) — admin_fee flat per zona, dalam rupiah
@@ -37,16 +61,16 @@ on conflict (id) do nothing;
 insert into public.zones (event_id, name, zone_type, svg_group_id, admin_fee, description, display_order)
 values
   ('11111111-1111-4111-8111-111111111111', 'Tenda Pameran Mobil Baru',
-   'mobil_baru',        'zone-mobil-baru',  2500000,
+   'mobil_baru',        'zone-mobil-baru',  1000000,
    'Tenda khusus dealer resmi mobil baru, 10 slot.',                        1),
   ('11111111-1111-4111-8111-111111111111', 'Area Pameran Mobil',
-   'mobil_bekas',       'zone-mobil-bekas',  750000,
+   'mobil_bekas',       'zone-mobil-bekas',    50000,
    'Area pameran mobil bekas untuk individu maupun dealer, 30 slot.',       2),
   ('11111111-1111-4111-8111-111111111111', 'Area Pameran Mobil & Motor',
-   'mobil_motor_bekas', 'zone-mobil-motor',  600000,
+   'mobil_motor_bekas', 'zone-mobil-motor',    25000,
    'Area campuran mobil dan motor bekas, 14 slot.',                         3),
   ('11111111-1111-4111-8111-111111111111', 'Area UMKM',
-   'umkm',              'zone-umkm',         300000,
+   'umkm',              'zone-umkm',          250000,
    'Area UMKM non-kuliner, 30 slot dalam tiga kolom.',                      4),
   ('11111111-1111-4111-8111-111111111111', 'Warung',
    'warung',            'zone-warung',       500000,
@@ -92,6 +116,28 @@ from public.zones z
 cross join generate_series(1, 30) as i
 where z.svg_group_id = 'zone-umkm'
 on conflict (svg_element_id) do nothing;
+
+-- 3e. Override harga per-slot zona UMKM (keputusan pemilik):
+--       slot 11-15 -> 500.000, peruntukan 'Booth Leasing'
+--       slot 16-20 -> 500.000, peruntukan 'Booth Otomotif'
+--       slot 1-10 & 21-30 tanpa override (ikut harga zona 250.000).
+--     ASUMSI: slot 21 = UMKM biasa (pemilik tidak menyebutnya eksplisit).
+--     Idempotent: update biasa, aman dijalankan berulang.
+update public.slots s
+set admin_fee_override = 500000,
+    peruntukan         = 'Booth Leasing'
+from public.zones z
+where z.id = s.zone_id
+  and z.svg_group_id = 'zone-umkm'
+  and s.slot_number between 11 and 15;
+
+update public.slots s
+set admin_fee_override = 500000,
+    peruntukan         = 'Booth Otomotif'
+from public.zones z
+where z.id = s.zone_id
+  and z.svg_group_id = 'zone-umkm'
+  and s.slot_number between 16 and 20;
 
 -- -----------------------------------------------------------------------------
 -- 4. Warung — 12 unit, ditulis eksplisit sesuai urutan pada denah.
