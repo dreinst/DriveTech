@@ -6,7 +6,7 @@ import type { SlotStatus, ZoneType } from "@/lib/types/database";
  * scheduleText, dan tanggal konkretnya diambil dari tabel event_dates.
  */
 export const EVENT_INFO = {
-  name: "Mokas Festival",
+  name: "Drive Tech",
   location: "Kampung Tentara, Singosari, Malang",
   /** Tautan Google Maps lokasi — tampilkan "Lihat di Google Maps" (_blank, rel noopener). */
   mapsUrl: "https://maps.app.goo.gl/g3tuQ5juNDEVowEp7",
@@ -16,7 +16,7 @@ export const EVENT_INFO = {
    */
   mapsEmbedUrl: "https://www.google.com/maps?q=-7.8773823,112.6773862&z=16&output=embed",
   scheduleText: "Setiap Sabtu & Minggu mulai 12 September 2026",
-  organizer: "Panitia Mokas Festival",
+  organizer: "Panitia Drive Tech",
   contact: "08123456789",
   description:
     "Pasar otomotif akhir pekan di Kota Malang: pilih tanggal, pilih zona, lalu booking lapak langsung dari denah.",

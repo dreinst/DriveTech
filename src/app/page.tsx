@@ -286,7 +286,7 @@ export default async function BerandaPage() {
           <div className="h-64 w-full lg:col-span-3 lg:h-auto lg:min-h-[400px]">
             <iframe
               src={EVENT_INFO.mapsEmbedUrl}
-              title="Peta lokasi Mokas Festival di Rest Area Singosari Malang (Kampung Tentara)"
+              title="Peta lokasi Drive Tech di Rest Area Singosari Malang (Kampung Tentara)"
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
               allowFullScreen

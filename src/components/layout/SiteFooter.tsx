@@ -10,7 +10,7 @@ const FOOTER_LINKS = [
 /**
  * Footer ekstra gelap ala referensi Stitch: wordmark uppercase, baris
  * penyelenggara, baris link, baris hak cipta. Format identitas dari pemilik:
- * "Mokas Festival — D'Pro Event Organizer — Dreinst".
+ * "Drive Tech — D'Pro Event Organizer — Dreinst".
  */
 export function SiteFooter() {
   // Model per tanggal: event berjalan terus tiap akhir pekan, jadi tahun hak cipta = tahun berjalan.

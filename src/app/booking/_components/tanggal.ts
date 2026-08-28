@@ -1,5 +1,5 @@
 /**
- * Util tanggal kecil untuk alur booking per tanggal (model Mokas Festival).
+ * Util tanggal kecil untuk alur booking per tanggal (model Drive Tech).
  * Modul MURNI (tanpa Supabase/DOM) sehingga aman diimpor server maupun client.
  */
 

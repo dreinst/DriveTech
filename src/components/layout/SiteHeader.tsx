@@ -25,7 +25,7 @@ export function SiteHeader() {
           className="flex min-w-0 items-center gap-2.5 text-[15px] font-bold tracking-tight text-accent"
         >
           {/* eslint-disable-next-line @next/next/no-img-element -- SVG statis, tanpa optimasi */}
-          <img src="/logo-mokas.svg" alt="" aria-hidden="true" className="h-7 w-auto shrink-0" />
+          <img src="/logo-drivetech.svg" alt="" aria-hidden="true" className="h-7 w-auto shrink-0" />
           <span className="truncate">{EVENT_INFO.name}</span>
         </Link>
 

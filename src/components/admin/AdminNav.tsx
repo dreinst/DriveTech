@@ -199,7 +199,7 @@ function NavInner({ admin }: AdminNavProps) {
       <div className="hidden lg:flex lg:h-full lg:flex-col lg:overflow-y-auto lg:px-4 lg:py-6">
         <div className="flex items-start gap-2.5 px-3">
           {/* eslint-disable-next-line @next/next/no-img-element -- SVG statis */}
-          <img src="/logo-mokas.svg" alt="" aria-hidden="true" className="mt-0.5 h-8 w-auto shrink-0" />
+          <img src="/logo-drivetech.svg" alt="" aria-hidden="true" className="mt-0.5 h-8 w-auto shrink-0" />
           <div className="min-w-0">
           <p className="text-lg font-semibold leading-snug tracking-tight text-ink">
             {EVENT_INFO.name} Admin

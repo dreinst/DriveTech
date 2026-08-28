@@ -1,6 +1,6 @@
 /**
  * =============================================================================
- * Mokas Festival — Webhook Google Sheets (Apps Script)
+ * Drive Tech — Webhook Google Sheets (Apps Script)
  * =============================================================================
  * Menerima POST JSON dari aplikasi (src/lib/sheets.ts) lalu meng-upsert satu
  * baris per entitas ke sheet: Bookings, Payments, Purchases, Leasing.
@@ -102,7 +102,7 @@ function doPost(e) {
 function doGet() {
   return jsonOutput_({
     ok: true,
-    message: "Webhook Google Sheets Mokas Festival aktif. Kirim data lewat POST JSON.",
+    message: "Webhook Google Sheets Drive Tech aktif. Kirim data lewat POST JSON.",
   });
 }
 

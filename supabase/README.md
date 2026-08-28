@@ -6,7 +6,7 @@ Folder ini berisi seluruh definisi database untuk sistem booking pameran.
 | --- | --- |
 | `migrations/20260826090000_init.sql` | Skema penuh: extension, enum, tabel, index, trigger `updated_at`, RLS + policy, Realtime, bucket Storage. |
 | `migrations/20260827120000_per_tanggal.sql` | Model booking per tanggal: tabel `event_dates` + `booking_dates`, view publik `slot_date_status`, trigger sinkron status, pencabutan aturan lama satu-booking-per-slot. |
-| `seed.sql` | Data awal: 1 event (Mokas Festival, Kota Malang), tanggal Sabtu & Minggu mulai 12 Sep 2026, 6 zona, 104 slot, 3 mitra leasing. |
+| `seed.sql` | Data awal: 1 event (Drive Tech, Kota Malang), tanggal Sabtu & Minggu mulai 12 Sep 2026, 6 zona, 104 slot, 3 mitra leasing. |
 | `config.toml` | Konfigurasi Supabase CLI untuk pengembangan lokal. |
 
 ### Model booking per tanggal (migrasi `20260827120000`)
