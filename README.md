@@ -1,7 +1,7 @@
 # Mokas Festival — Booking Lapak Per Tanggal & Modul Leasing
 
 Aplikasi web untuk **Mokas Festival** — pasar otomotif akhir pekan di **Kampung Tentara, Singosari, Malang**,
-digelar **setiap hari Minggu mulai September 2026**, untuk mobil baru, mobil & motor bekas, UMKM, dan kuliner.
+digelar **setiap Sabtu & Minggu, mulai 12-13 September 2026**, untuk mobil baru, mobil & motor bekas, UMKM, dan kuliner.
 Pengunjung dan calon tenant melihat **denah interaktif** yang sinkron *realtime* dengan
 database, lalu memesan lapak sendiri **per tanggal**: pilih satu atau beberapa tanggal
 weekend, dan slot yang sama bisa disewa orang berbeda di tanggal yang berbeda.

@@ -63,21 +63,21 @@ const STEP_LABELS: readonly string[] = ["Pilih Zona", "Pilih Slot", "Pilih Tangg
 /* ---------- Helper tanggal (murni, di luar komponen) ---------- */
 
 /**
- * Hari Minggu 12 minggu ke depan (mulai September 2026) — HANYA untuk mode fallback
+ * Sabtu & Minggu 12 pekan ke depan (mulai 12-13 September 2026) — HANYA untuk mode fallback
  * saat database belum terhubung. Logikanya sama dengan seed event_dates
  * (generate_series + dow in (0,6)); ini bukan data karangan melainkan jadwal
- * produk "Setiap hari Minggu". Dipanggil dari useEffect (client-only)
+ * produk "Setiap Sabtu & Minggu". Dipanggil dari useEffect (client-only)
  * supaya tidak menimbulkan hydration mismatch.
  */
 function weekendFallbackDates(weeks = 12): EventDateItem[] {
   const out: EventDateItem[] = [];
   const cursor = new Date();
   cursor.setHours(0, 0, 0, 0);
-  const mulaiSeptember = new Date(2026, 8, 1); // jadwal resmi mulai September 2026
+  const mulaiSeptember = new Date(2026, 8, 12); // jadwal resmi mulai akhir pekan 12-13 September 2026
   if (cursor < mulaiSeptember) cursor.setTime(mulaiSeptember.getTime());
   for (let i = 0; i < weeks * 7; i += 1) {
     const day = cursor.getDay();
-    if (day === 0) {
+    if (day === 0 || day === 6) {
       const iso = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, "0")}-${String(cursor.getDate()).padStart(2, "0")}`;
       out.push({ id: `fallback-${iso}`, event_date: iso });
     }

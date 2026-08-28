@@ -119,7 +119,7 @@ export default async function AdminPengaturanPage() {
                       {hari}, <span className="tabular">{formatTanggal(row.event_date)}</span>
                     </p>
                     {!adalahAkhirPekan(row.event_date) ? (
-                      <p className="mt-0.5 text-xs text-subtle">Di luar jadwal reguler hari Minggu</p>
+                      <p className="mt-0.5 text-xs text-subtle">Di luar jadwal reguler Sabtu &amp; Minggu</p>
                     ) : null}
                   </div>
                   <div className="flex shrink-0 items-center gap-3">
