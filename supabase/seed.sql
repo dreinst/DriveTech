@@ -43,16 +43,16 @@ on conflict (id) do update
 --     sejauh 8 minggu ke depan, berbasis current_date saat seed dijalankan.
 --     dow: 0 = Minggu, 6 = Sabtu.
 -- -----------------------------------------------------------------------------
--- 12 hari Minggu pertama sejak awal September 2026 (atau sejak hari ini bila
--- seed dijalankan setelah September berjalan).
+-- Setiap Sabtu & Minggu selama 12 pekan, mulai akhir pekan 12-13 September 2026
+-- (atau sejak hari ini bila seed dijalankan setelah tanggal itu lewat).
 insert into public.event_dates (event_id, event_date, is_active)
 select '11111111-1111-4111-8111-111111111111', d::date, true
 from generate_series(
-       greatest(current_date, date '2026-09-01'),
-       greatest(current_date, date '2026-09-01') + interval '12 weeks',
+       greatest(current_date, date '2026-09-12'),
+       greatest(current_date, date '2026-09-12') + interval '12 weeks',
        interval '1 day'
      ) as d
-where extract(dow from d) = 0
+where extract(dow from d) in (0, 6)
 on conflict (event_date) do nothing;
 
 -- -----------------------------------------------------------------------------

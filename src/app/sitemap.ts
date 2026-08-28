@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
+import { getSiteUrl } from "@/lib/site-url";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3001";
+const siteUrl = getSiteUrl();
 
 /**
  * Hanya rute publik yang statis: beranda (denah + cek status lewat anchor).

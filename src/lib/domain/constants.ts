@@ -15,7 +15,7 @@ export const EVENT_INFO = {
    * Lokasi resmi: Rest Area Singosari Malang (alias Kampung Tentara).
    */
   mapsEmbedUrl: "https://www.google.com/maps?q=-7.8773823,112.6773862&z=16&output=embed",
-  scheduleText: "Setiap hari Minggu mulai September 2026",
+  scheduleText: "Setiap Sabtu & Minggu mulai 12 September 2026",
   organizer: "Panitia Mokas Festival",
   contact: "08123456789",
   description:

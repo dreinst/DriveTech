@@ -5,6 +5,7 @@ import "./globals.css";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { EVENT_INFO } from "@/lib/domain/constants";
+import { getSiteUrl } from "@/lib/site-url";
 
 /* SF Pro dipakai otomatis di perangkat Apple (font stack di globals.css);
    Inter variable jadi padanannya di perangkat lain. */
@@ -14,7 +15,7 @@ const inter = Inter({
   display: "swap",
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3001";
+const siteUrl = getSiteUrl();
 
 const siteTitle = `${EVENT_INFO.name} — Booking Slot`;
 const siteDescription = EVENT_INFO.description;
