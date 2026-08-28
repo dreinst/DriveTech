@@ -1,4 +1,4 @@
-# Database Supabase — Sistem Pameran
+# Database Supabase — Drive Tech
 
 Folder ini berisi seluruh definisi database untuk sistem booking pameran.
 
@@ -30,7 +30,7 @@ Dasar skema: bagian 3 dokumen rencana teknis internal `Sistem Pameran Arsitektur
 (tidak dipublikasikan di repo ini; rangkumannya ada di README utama).
 Kolom/objek di luar dokumen itu ditandai komentar `-- [tambahan]` di dalam file migrasi.
 
-Sumber inventaris slot: gambar **`Layout Sistem Pameran.jpeg`** di root proyek.
+Sumber inventaris slot: gambar **`layout-venue.jpeg`** di root proyek.
 Bila gambar berbeda dengan dokumen, **gambar yang menang**.
 
 ---

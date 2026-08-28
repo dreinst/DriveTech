@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Generator public/denah.svg dari hasil ekstraksi "Layout Sistem Pameran.jpeg".
+"""Generator public/denah.svg dari hasil ekstraksi "layout-venue.jpeg".
 
 Jalankan: python3 tools/generate-denah-svg.py
 
@@ -318,7 +318,7 @@ for x, accent, lbl in [
     A('    <text class="legend-label" x="%g" y="1535" font-size="12" dominant-baseline="middle">%s</text>'
       % (x + 22, lbl))
 A('    <text x="1063" y="1562" text-anchor="end" font-size="11" fill="#94a3b8">'
-  'Sumber: Layout Sistem Pameran.jpeg &#183; 104 slot (84 dapat disewa online) &#183; '
+  'Sumber: layout-venue.jpeg &#183; 104 slot (84 dapat disewa online) &#183; '
   'id tiap slot = kolom svg_element_id di database &#183; '
   'klik slot bookable = /booking/by-svg/&lt;id&gt;</text>')
 A('  </g>')

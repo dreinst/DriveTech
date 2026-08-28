@@ -1,7 +1,7 @@
 -- =============================================================================
--- Sistem Pameran — Data Awal (seed)
+-- Drive Tech — Data Awal (seed)
 -- =============================================================================
--- Sumber kebenaran inventaris: gambar denah "Layout Sistem Pameran.jpeg" di root
+-- Sumber kebenaran inventaris: gambar denah "layout-venue.jpeg" di root
 -- proyek. Di mana pun gambar berbeda dari "Sistem Pameran Arsitektur.md",
 -- GAMBAR YANG MENANG. Perbedaan yang diketahui:
 --   * Warung  : 12 unit di gambar (dokumen menulis "~9")

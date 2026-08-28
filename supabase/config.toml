@@ -1,6 +1,6 @@
-# Konfigurasi Supabase CLI untuk proyek Sistem Pameran.
+# Konfigurasi Supabase CLI untuk proyek Drive Tech.
 # Sengaja minimal: hanya kunci yang benar-benar dipakai.
-project_id = "sistem-pameran"
+project_id = "drive-tech"
 
 [api]
 enabled = true

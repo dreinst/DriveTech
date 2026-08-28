@@ -1,5 +1,5 @@
 -- =============================================================================
--- Sistem Pameran — Migrasi Awal (skema penuh)
+-- Drive Tech — Migrasi Awal (skema penuh)
 -- =============================================================================
 -- Dasar skema ini berasal dari dokumen "Sistem Pameran Arsitektur.md" di root
 -- proyek, khususnya BAGIAN 3 "Skema Database (Supabase/Postgres)".

@@ -9,7 +9,7 @@ weekend, dan slot yang sama bisa disewa orang berbeda di tanggal yang berbeda.
 Sumber kebenaran fungsionalnya adalah dokumen rencana teknis internal
 `Sistem Pameran Arsitektur.md` — dokumen itu **tidak ikut dipublikasikan di repo ini**,
 tetapi seluruh keputusannya sudah dirangkum di README ini (§9 Keputusan yang Diambil dan
-§10 Denah). Tata letak denah diekstrak dari gambar **`Layout Sistem Pameran.jpeg`** di root,
+§10 Denah). Tata letak denah diekstrak dari gambar **`layout-venue.jpeg`** di root,
 yang ikut disertakan.
 
 **Stack:** Next.js 15 (App Router) · React 19 · TypeScript strict · Tailwind CSS v4 ·
@@ -456,7 +456,7 @@ Tenor yang diterima: `12, 18, 24, 36, 48, 60`. Komisi platform dihitung otomatis
 
 ```
 .
-├── Layout Sistem Pameran.jpeg     Denah asli event — sumber kebenaran tata letak
+├── layout-venue.jpeg     Denah asli event — sumber kebenaran tata letak
 ├── public/denah.svg               Denah statis hasil generator (fallback & pratinjau)
 ├── tools/                         Skrip bantu: generator SVG denah + webhook Google Sheets (.gs)
 ├── supabase/
@@ -577,7 +577,7 @@ penyewa harus mengonfirmasi sendiri.
 
 ## 10. Denah
 
-Geometri SVG denah **diekstrak dari `Layout Sistem Pameran.jpeg`** di root proyek, bukan
+Geometri SVG denah **diekstrak dari `layout-venue.jpeg`** di root proyek, bukan
 dari deskripsi teks. Semua koordinat hidup di `src/lib/domain/layout.ts` dengan
 `viewBox "0 0 1123 1600"` (portrait).
 
