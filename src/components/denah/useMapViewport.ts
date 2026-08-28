@@ -27,6 +27,13 @@ import { FLOOR_PLAN_VIEWBOX, type Rect } from "@/lib/domain/layout";
  * style.transform — bukan state React — supaya gerakan halus tanpa merender
  * ulang ratusan kotak slot pada tiap frame. Hit-testing DOM mengikuti CSS
  * transform, jadi klik slot tetap jatuh ke slot yang benar saat zoom/pan.
+ *
+ * Mode `locked`: seluruh navigasi manual (wheel, drag, pinch, double click)
+ * dimatikan — peta hanya bisa digerakkan lewat zoomToRect/reset programatik.
+ * Dipakai alur booking per zona: peta dikunci pada zona terpilih supaya
+ * pengunjung tidak bisa menggeser ke slot zona lain. Klik/tap slot tetap
+ * berfungsi, dan touch-action dilonggarkan ke pan-y supaya halaman masih bisa
+ * di-scroll melewati peta di layar sentuh.
  */
 
 const MIN_SCALE = 0.8;
@@ -71,9 +78,20 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
-export function useMapViewport(): UseMapViewportResult {
+export type UseMapViewportOptions = {
+  /** True = kunci navigasi manual (lihat komentar modul). Default false. */
+  locked?: boolean;
+};
+
+export function useMapViewport(options?: UseMapViewportOptions): UseMapViewportResult {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const contentRef = useRef<HTMLDivElement | null>(null);
+
+  const locked = options?.locked ?? false;
+  // Ref supaya handler wheel/pointer yang sudah terpasang membaca nilai terkini
+  // tanpa perlu melepas-pasang listener saat locked berubah.
+  const lockedRef = useRef(locked);
+  lockedRef.current = locked;
 
   const view = useRef<ViewState>({ scale: 1, tx: 0, ty: 0 });
   /** Pointer yang sedang menekan, untuk pan (1 jari) dan pinch (2 jari). */
@@ -216,12 +234,14 @@ export function useMapViewport(): UseMapViewportResult {
 
     // Pointer events butuh touch-action none supaya browser tidak mengambil alih
     // gesture; overscroll dikurung supaya pinch tidak menggeser halaman.
-    container.style.touchAction = "none";
+    // (touch-action diatur di effect terpisah karena bergantung pada `locked`.)
     container.style.overscrollBehavior = "contain";
     content.style.transformOrigin = "0 0";
     content.style.willChange = "transform";
 
     const handleWheel = (event: WheelEvent) => {
+      // Terkunci: biarkan wheel berlaku normal (scroll halaman), tanpa zoom.
+      if (lockedRef.current) return;
       event.preventDefault();
       // Pinch trackpad dikirim sebagai wheel + ctrlKey dengan delta halus.
       const intensity = event.ctrlKey ? 0.01 : 0.0022;
@@ -246,10 +266,21 @@ export function useMapViewport(): UseMapViewportResult {
     };
   }, [relativePoint, zoomAt]);
 
+  // touch-action mengikuti mode: bebas -> none (semua gesture kita tangani);
+  // terkunci -> pan-y supaya sentuhan di atas peta tetap bisa scroll halaman
+  // (pinch di elemen ini ikut terblokir oleh pan-y).
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    container.style.touchAction = locked ? "pan-y" : "none";
+  }, [locked]);
+
   /* ---------- Pointer: pan satu jari + pinch dua jari ---------- */
 
   const onPointerDown = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {
+      // Terkunci: tanpa pan/pinch — tap diteruskan jadi click slot biasa.
+      if (lockedRef.current) return;
       // Hanya tombol utama / sentuhan / pena.
       if (event.pointerType === "mouse" && event.button !== 0) return;
       const point = relativePoint(event.clientX, event.clientY);
@@ -278,6 +309,7 @@ export function useMapViewport(): UseMapViewportResult {
 
   const onPointerMove = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {
+      if (lockedRef.current) return;
       if (!pointers.current.has(event.pointerId)) return;
       const point = relativePoint(event.clientX, event.clientY);
       const prev = pointers.current.get(event.pointerId)!;
@@ -336,6 +368,7 @@ export function useMapViewport(): UseMapViewportResult {
 
   const onDoubleClick = useCallback(
     (event: ReactMouseEvent<HTMLDivElement>) => {
+      if (lockedRef.current) return;
       const point = relativePoint(event.clientX, event.clientY);
       zoomAt(point.x, point.y, STEP_FACTOR, true);
     },
