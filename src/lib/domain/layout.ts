@@ -4,7 +4,7 @@ import type { ZoneType } from "@/lib/types/database";
  * GEOMETRI DENAH — sengaja HARDCODE (keputusan di "Sistem Pameran Arsitektur.md":
  * sistem ini khusus satu event, layout boleh hardcode).
  *
- * Sumber angka: berkas "Layout Sistem Pameran.jpeg" di root proyek, diekstrak ke
+ * Sumber angka: berkas "layout-venue.jpeg" di root proyek, diekstrak ke
  * satuan viewBox portrait 1123 x 1600. Kalau denah asli berubah, ubah file ini saja.
  *
  * svgElementId WAJIB identik dengan kolom slots.svg_element_id di supabase/seed.sql.

@@ -30,7 +30,7 @@
  * 2. Menu Extensions -> Apps Script.
  * 3. Hapus isi editor, tempel SELURUH isi file ini, lalu simpan (Ctrl/Cmd+S).
  * 4. Klik "Deploy" -> "New deployment" -> jenis "Web app":
- *      - Description : bebas, mis. "webhook sistem pameran"
+ *      - Description : bebas, mis. "webhook drive tech"
  *      - Execute as  : Me (akun Anda)
  *      - Who has access: Anyone
  *    Klik "Deploy", izinkan akses saat diminta.

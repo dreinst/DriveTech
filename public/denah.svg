@@ -734,6 +734,6 @@
     <text class="legend-label" x="668" y="1535" font-size="12" dominant-baseline="middle">Warung</text>
     <rect x="732" y="1526" width="16" height="16" rx="3" fill="#808080"/>
     <text class="legend-label" x="754" y="1535" font-size="12" dominant-baseline="middle">Fasilitas</text>
-    <text x="1063" y="1562" text-anchor="end" font-size="11" fill="#94a3b8">Sumber: Layout Sistem Pameran.jpeg &#183; 104 slot (84 dapat disewa online) &#183; id tiap slot = kolom svg_element_id di database &#183; klik slot bookable = /booking/by-svg/&lt;id&gt;</text>
+    <text x="1063" y="1562" text-anchor="end" font-size="11" fill="#94a3b8">Sumber: layout-venue.jpeg &#183; 104 slot (84 dapat disewa online) &#183; id tiap slot = kolom svg_element_id di database &#183; klik slot bookable = /booking/by-svg/&lt;id&gt;</text>
   </g>
 </svg>
