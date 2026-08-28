@@ -56,6 +56,37 @@ var SHEET_BY_ENTITY = {
 var UPDATED_AT_HEADER = "updated_at";
 
 /**
+ * Kunci aksi reset via GET (?action=reset&key=...). Sheet hanyalah cermin
+ * sinkronisasi (sumber kebenaran tetap Supabase), jadi risiko terburuk
+ * penyalahgunaan kunci ini hanyalah sheet dibuat ulang kosong.
+ */
+var RESET_KEY = "dt-reset-c9k4x7wq21";
+
+/** Sheet yang boleh dihapus oleh aksi reset (dibuat ulang otomatis saat sync). */
+var SHEET_RESETTABLE = ["Bookings", "Payments", "Purchases", "Leasing", "Lainnya"];
+
+/**
+ * Hapus seluruh sheet entity supaya dibuat ulang bersih (header baru) pada
+ * sinkronisasi berikutnya. Bisa dijalankan manual dari editor (Run) atau
+ * lewat GET ?action=reset&key=RESET_KEY.
+ */
+function resetSheetUji() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var dihapus = [];
+  for (var i = 0; i < SHEET_RESETTABLE.length; i++) {
+    var sheet = ss.getSheetByName(SHEET_RESETTABLE[i]);
+    if (!sheet) continue;
+    if (ss.getSheets().length === 1) {
+      sheet.clear(); // spreadsheet wajib punya minimal satu sheet
+    } else {
+      ss.deleteSheet(sheet);
+    }
+    dihapus.push(SHEET_RESETTABLE[i]);
+  }
+  return dihapus;
+}
+
+/**
  * Entry point Web App untuk request POST.
  * Selalu membalas JSON: { ok: true, ... } atau { ok: false, error: "..." }.
  */
@@ -98,11 +129,23 @@ function doPost(e) {
   }
 }
 
-/** GET sederhana untuk memastikan deployment hidup (buka URL /exec di browser). */
-function doGet() {
+/**
+ * GET: cek hidup (tanpa parameter) atau aksi reset
+ * (?action=reset&key=RESET_KEY) untuk membersihkan sheet uji dari jarak jauh.
+ */
+function doGet(e) {
+  var action = e && e.parameter ? String(e.parameter.action || "") : "";
+  if (action === "reset") {
+    var key = e.parameter.key ? String(e.parameter.key) : "";
+    if (key !== RESET_KEY) {
+      return jsonOutput_({ ok: false, error: "Kunci reset salah." });
+    }
+    return jsonOutput_({ ok: true, action: "reset", dihapus: resetSheetUji() });
+  }
   return jsonOutput_({
     ok: true,
     message: "Webhook Google Sheets Drive Tech aktif. Kirim data lewat POST JSON.",
+    versi: "2026-08-28-reset",
   });
 }
 
