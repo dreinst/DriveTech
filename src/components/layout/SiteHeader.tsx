@@ -4,9 +4,10 @@ import { EVENT_INFO } from "@/lib/domain/constants";
 
 type NavItem = { href: string; label: string };
 
-/** Anchor menuju bagian-bagian beranda + halaman katalog kendaraan. */
+/** Anchor menuju bagian-bagian beranda + halaman katalog kendaraan per jenis. */
 const NAV_ITEMS: readonly NavItem[] = [
-  { href: "/katalog", label: "Katalog" },
+  { href: "/katalog?jenis=mobil", label: "Katalog Mobil" },
+  { href: "/katalog?jenis=motor", label: "Katalog Motor" },
   { href: "/#zona", label: "Zona" },
   { href: "/#denah", label: "Peta Lokasi" },
   { href: "/#cek-status", label: "Cek Status" },

@@ -253,6 +253,7 @@ export function BookingForm({ slot, eventDates, takenDates, initialDates }: Book
           idPrefix={id}
           errors={errors}
           tampilkanKm={slot.zone.zone_type !== "mobil_baru"}
+          pilihJenis={slot.zone.zone_type === "mobil_motor_bekas"}
         />
       ) : null}
 
@@ -432,13 +433,15 @@ type VehicleFieldsProps = {
   errors: Record<string, string>;
   /** Kilometer hanya relevan untuk kendaraan bekas. */
   tampilkanKm: boolean;
+  /** Pilihan mobil/motor hanya di zona campuran; zona lain selalu mobil. */
+  pilihJenis: boolean;
 };
 
 /**
  * Diisi penyewa slot; hasilnya tampil di /katalog untuk pengunjung umum
  * SETELAH pembayaran diverifikasi panitia. 1 slot = 1 kendaraan.
  */
-function VehicleFields({ idPrefix, errors, tampilkanKm }: VehicleFieldsProps) {
+function VehicleFields({ idPrefix, errors, tampilkanKm, pilihJenis }: VehicleFieldsProps) {
   return (
     <div role="group" aria-label="Data kendaraan" className="space-y-4 border-t border-line pt-4">
       <div>
@@ -450,6 +453,28 @@ function VehicleFields({ idPrefix, errors, tampilkanKm }: VehicleFieldsProps) {
           lengkapi agar unit Anda mudah ditemukan pembeli.
         </p>
       </div>
+
+      {pilihJenis ? (
+        <Field
+          label="Jenis kendaraan"
+          htmlFor={`${idPrefix}-jenis-kendaraan`}
+          error={errors["vehicle.kind"]}
+          required
+        >
+          <Select
+            id={`${idPrefix}-jenis-kendaraan`}
+            name="vehicleKind"
+            defaultValue="mobil"
+            aria-invalid={errors["vehicle.kind"] ? true : undefined}
+            required
+          >
+            <option value="mobil">Mobil</option>
+            <option value="motor">Motor</option>
+          </Select>
+        </Field>
+      ) : (
+        <input type="hidden" name="vehicleKind" value="mobil" />
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field

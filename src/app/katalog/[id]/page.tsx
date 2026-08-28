@@ -37,6 +37,7 @@ export default async function DetailKendaraanPage({ params }: PageProps) {
   const item = result.data;
 
   const spesifikasi: Array<{ label: string; nilai: string | null }> = [
+    { label: "Jenis", nilai: item.vehicle_kind === "motor" ? "Motor" : "Mobil" },
     { label: "Nomor plat", nilai: item.plate_number },
     { label: "Tahun", nilai: item.year !== null ? String(item.year) : null },
     {
