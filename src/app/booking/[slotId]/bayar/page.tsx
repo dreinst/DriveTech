@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Stepper } from "@/components/ui/Stepper";
+import { slotAdminFee } from "@/lib/domain/harga";
 import { hitungTotalBiaya } from "@/lib/domain/ketersediaan";
 import { getBookingDetail } from "@/lib/services/booking";
 import { formatRupiah, slotDisplayName } from "@/lib/utils";
@@ -91,12 +92,13 @@ export default async function BayarPage({ params }: PageProps) {
 
   // Total = biaya admin per tanggal x jumlah tanggal; payment.amount sudah
   // menyimpan hasil kalinya — fallback hanya kalau tagihan belum tercatat.
+  // Harga per tanggal WAJIB lewat slotAdminFee (override per slot ?? harga zona),
+  // sama dengan yang dipakai server saat menagih.
+  const biayaPerTanggal = slotAdminFee(booking.slot, booking.slot.zone);
   const jumlahTanggal = Math.max(booking.dates.length, 1);
-  const nominal =
-    payment?.amount ?? hitungTotalBiaya(booking.slot.zone.admin_fee, jumlahTanggal);
-  // Tagihan baru selalu tersimpan sebagai "cash/unpaid"; biarkan penyewa memilih
-  // sendiri (default transfer) sampai ada pengiriman pertama.
-  const metodeAwal = payment && payment.status !== "unpaid" ? payment.method : "transfer";
+  const nominal = payment?.amount ?? hitungTotalBiaya(biayaPerTanggal, jumlahTanggal);
+  // Pembayaran kini transfer-only: booking dikunci lewat transfer + bukti,
+  // tanpa opsi cash (keputusan pemilik, 2026-08-28).
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
@@ -196,7 +198,7 @@ export default async function BayarPage({ params }: PageProps) {
             </div>
             <p className="mt-1 text-right text-[0.8125rem] text-subtle">
               {booking.dates.length > 0
-                ? `${booking.dates.length} tanggal × ${formatRupiah(booking.slot.zone.admin_fee)}`
+                ? `${booking.dates.length} tanggal × ${formatRupiah(biayaPerTanggal)}`
                 : "Biaya admin"}
             </p>
           </CardContent>
@@ -213,7 +215,6 @@ export default async function BayarPage({ params }: PageProps) {
             <PaymentForm
               bookingId={booking.id}
               amount={nominal}
-              defaultMethod={metodeAwal}
               existingProofUrl={payment?.proof_url ?? null}
             />
           </CardContent>

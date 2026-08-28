@@ -12,6 +12,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Input } from "@/components/ui/Field";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SubmitButton } from "@/components/ui/SubmitButton";
+import { slotAdminFee } from "@/lib/domain/harga";
 import {
   BOOKING_STATUS_LABEL,
   PAYMENT_METHOD_LABEL,
@@ -131,7 +132,7 @@ function menungguVerifikasiDulu(a: BookingDetail, b: BookingDetail): number {
 function nominalBooking(booking: BookingDetail): number {
   return (
     booking.payment?.amount ??
-    booking.slot.zone.admin_fee * Math.max(1, booking.dates.length)
+    slotAdminFee(booking.slot, booking.slot.zone) * Math.max(1, booking.dates.length)
   );
 }
 

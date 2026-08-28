@@ -28,7 +28,7 @@ Keduanya berbagi entitas **Zone → Slot → Tenant**, tetapi berdiri sendiri.
 Denah "/"  →  pilih ZONA → ketuk SLOT di peta → pilih TANGGAL (≥1 tanggal weekend) di panel slot
            →  /booking/{slotId}          isi data tenant            → booking (pending_payment)
                                                                       + baris booking_dates per tanggal
-           →  /booking/{bookingId}/bayar pilih cash / transfer      → pembayaran (submitted)
+           →  /booking/{bookingId}/bayar transfer + unggah bukti    → pembayaran (submitted)
            →  /booking/{bookingId}/status pantau verifikasi panitia
                                      ↓
               Admin /admin/bookings  verifikasi                     → booking confirmed
@@ -187,7 +187,7 @@ Peran yang tersedia: `admin` (akses penuh) dan `verifikator` (fokus verifikasi p
 | `/` | Landing + denah interaktif ala tiket bioskop: pilih zona → ketuk slot → pilih tanggal di panel slot; legenda status & cek kode booking. |
 | `/booking/{slotId}` | Formulir data tenant + ringkasan slot, tanggal terpilih, dan total biaya admin (per tanggal × jumlah tanggal). |
 | `/booking/by-svg/{svgElementId}` | Jembatan denah statis → form: cari slot lewat `svg_element_id` lalu redirect ke `/booking/{slotId}`; id tak dikenal → 404. |
-| `/booking/{bookingId}/bayar` | Pilih cash/transfer, unggah bukti transfer. |
+| `/booking/{bookingId}/bayar` | Transfer bank + unggah bukti (opsi cash dihapus 2026-08-28; booking dikunci lewat pembayaran). |
 | `/booking/{bookingId}/status` | Status booking + pembayaran, tombol batal. |
 | `/beli/{slotId}` | Formulir pembeli unit: cash / transfer / credit. |
 | `/beli/{transactionId}/leasing` | Pilih mitra leasing, DP, tenor, simulasi cicilan. |
@@ -366,12 +366,9 @@ curl -s -X POST http://localhost:3000/api/bookings/7a10c2f6-…/payment \
   -F "proof=@bukti-transfer.jpg;type=image/jpeg"
 ```
 
-Cash tidak perlu bukti:
-
-```bash
-curl -s -X POST http://localhost:3000/api/bookings/7a10c2f6-…/payment \
-  -H "Content-Type: application/json" -d '{ "method": "cash" }'
-```
+Metode `cash` sudah tidak diterima (2026-08-28): booking hanya dikunci lewat
+transfer + bukti, dan booking yang tidak membayar dalam 24 jam dibatalkan
+otomatis oleh `expire_unpaid_bookings()` (pg_cron, tiap 15 menit).
 
 `200 OK`
 

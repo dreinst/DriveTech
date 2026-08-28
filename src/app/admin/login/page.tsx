@@ -6,6 +6,7 @@ import { Alert } from "@/components/ui/Alert";
 import { EVENT_INFO } from "@/lib/domain/constants";
 import { getCurrentAdmin } from "@/lib/services/auth";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { tujuanAdminAman } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -17,13 +18,6 @@ export const metadata: Metadata = {
 type PageProps = {
   searchParams: Promise<{ next?: string | string[] }>;
 };
-
-/** Hanya izinkan tujuan internal supaya tidak bisa dipakai open redirect. */
-function tujuanAman(next: string | string[] | undefined): string {
-  const nilai = Array.isArray(next) ? next[0] : next;
-  if (typeof nilai === "string" && nilai.startsWith("/") && !nilai.startsWith("//")) return nilai;
-  return "/admin";
-}
 
 export default async function AdminLoginPage({ searchParams }: PageProps) {
   const admin = await getCurrentAdmin();
@@ -49,7 +43,7 @@ export default async function AdminLoginPage({ searchParams }: PageProps) {
         {/* Kartu kecil terpusat */}
         <div className="rounded-2xl border border-line bg-card p-6 shadow-[var(--shadow-md)] sm:p-7">
           {terkonfigurasi ? (
-            <LoginForm next={tujuanAman(next)} />
+            <LoginForm next={tujuanAdminAman(next)} />
           ) : (
             <Alert tone="warning" title="Supabase belum dikonfigurasi">
               Isi kredensial Supabase di{" "}

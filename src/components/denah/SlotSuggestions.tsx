@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { buttonClass } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { slotAdminFee } from "@/lib/domain/harga";
 import { ZONE_TYPE_LABEL } from "@/lib/domain/labels";
 import type { SlotDetail } from "@/lib/types/database";
 import { cn, formatRupiah, slotDisplayName } from "@/lib/utils";
@@ -55,7 +56,7 @@ export function SlotSuggestions({ suggestions, tanggalCsv, className }: SlotSugg
               </p>
               <p className="truncate text-xs text-muted">
                 {ZONE_TYPE_LABEL[slot.zone.zone_type]} &middot; biaya admin{" "}
-                <span className="tabular">{formatRupiah(slot.zone.admin_fee)}</span>
+                <span className="tabular">{formatRupiah(slotAdminFee(slot, slot.zone))}</span>
               </p>
             </div>
             <Link href={hrefFor(slot.id)} className={buttonClass("secondary", "sm")}>

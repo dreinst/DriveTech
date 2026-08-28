@@ -55,6 +55,22 @@ export async function requireAdmin(): Promise<AdminUserRow> {
   return admin;
 }
 
+/**
+ * requireAdmin + wajib role 'admin' penuh. Role 'verifikator' hanya untuk
+ * verifikasi pembayaran (lihat README bagian peran), jadi seluruh aksi mutasi
+ * lain harus lewat gate ini — middleware/requireAdmin saja tidak memeriksa role.
+ */
+export async function requireFullAdmin(): Promise<Result<AdminUserRow>> {
+  const admin = await requireAdmin();
+  if (admin.role !== "admin") {
+    return fail<AdminUserRow>(
+      "Aksi ini khusus role admin. Akun verifikator hanya bisa memverifikasi pembayaran.",
+      "FORBIDDEN",
+    );
+  }
+  return ok(admin);
+}
+
 /** Login admin memakai Supabase Auth email/password. */
 export async function signInAdmin(
   email: string,
@@ -87,11 +103,11 @@ export async function signInAdmin(
   const admin = await ambilAdminById(data.user.id);
   if (!admin) {
     // Punya akun auth tapi bukan admin pameran: sesinya langsung dicabut.
+    // Pesan sengaja disamakan dengan kredensial salah supaya tidak bisa dipakai
+    // memastikan sepasang email+password valid (user enumeration).
     await supabase.auth.signOut();
-    return fail<AdminUserRow>(
-      "Akun ini belum terdaftar sebagai admin pameran.",
-      "NOT_ADMIN",
-    );
+    console.warn(`[auth] login ditolak: ${parsed.data.email} bukan baris admin_users.`);
+    return fail<AdminUserRow>("Email atau kata sandi salah.", "NOT_ADMIN");
   }
 
   return ok(admin);

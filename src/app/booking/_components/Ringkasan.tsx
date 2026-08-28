@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { slotAdminFee } from "@/lib/domain/harga";
 import type { SlotDetail } from "@/lib/types/database";
 import { cn, formatRupiah, formatTanggal, slotDisplayName } from "@/lib/utils";
 
@@ -72,7 +73,7 @@ export function RingkasanSlot({ slot, tampilkanStatus = true }: RingkasanSlotPro
 
       <div className="text-right">
         <p className="tabular text-2xl font-semibold tracking-[-0.01em] text-ink sm:text-3xl">
-          {formatRupiah(slot.zone.admin_fee)}
+          {formatRupiah(slotAdminFee(slot, slot.zone))}
         </p>
         <p className="mt-1 text-[0.8125rem] text-subtle">Biaya admin / tanggal</p>
       </div>

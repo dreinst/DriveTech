@@ -8,6 +8,7 @@ import { Alert } from "@/components/ui/Alert";
 import { Card } from "@/components/ui/Card";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EVENT_INFO } from "@/lib/domain/constants";
+import { slotAdminFee } from "@/lib/domain/harga";
 import { getDashboardStats, listBookings, type ZoneSlotStat } from "@/lib/services/admin";
 import { requireAdmin } from "@/lib/services/auth";
 import type { BookingDetail } from "@/lib/types/database";
@@ -273,7 +274,8 @@ export default async function AdminDashboardPage() {
                     const submitted = payment?.status === "submitted";
                     const nominal =
                       payment?.amount ??
-                      booking.slot.zone.admin_fee * Math.max(1, booking.dates.length);
+                      slotAdminFee(booking.slot, booking.slot.zone) *
+                        Math.max(1, booking.dates.length);
                     const hrefDetail = submitted
                       ? `/admin/bookings?payment=submitted&q=${encodeURIComponent(booking.booking_code)}`
                       : `/admin/bookings?q=${encodeURIComponent(booking.booking_code)}`;
