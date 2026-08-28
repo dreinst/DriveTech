@@ -67,6 +67,42 @@ var RESET_KEY = "dt-reset-c9k4x7wq21";
 var SHEET_RESETTABLE = ["Bookings", "Payments", "Purchases", "Leasing", "Katalog", "Lainnya"];
 
 /**
+ * Header kanonik per sheet untuk aksi init (?action=init&key=...): kolom persis
+ * mengikuti keys payload yang dikirim aplikasi (lihat pemanggilan syncToSheet di
+ * src/lib/services/*.ts), kolom PERTAMA = kode/id unik kunci upsert, dan
+ * updated_at selalu paling kanan. Payload dengan key baru tetap aman — kolomnya
+ * ditambahkan otomatis oleh upsertRow_.
+ */
+var INIT_HEADERS = {
+  Bookings: ["bookingCode", "status", "tanggal", "slot", "zona", "tenantName", "phone", "amount"],
+  Payments: ["bookingCode", "status", "method", "amount", "proofUrl", "submittedAt", "verifiedAt", "rejectReason"],
+  Purchases: ["transactionCode", "status", "slot", "zona", "buyerName", "buyerPhone", "paymentMethod", "unitDescription", "unitPrice"],
+  Leasing: ["leasingId", "purchaseTransactionId", "status", "dpAmount", "tenorBulan", "commissionAmount", "commissionPaid", "notes"],
+  Katalog: ["bookingCode", "vehicleName", "plate", "price", "tahun", "km", "transmisi", "warna", "slot", "zona", "tanggal", "photoUrl", "tampil"],
+};
+
+/**
+ * Buat semua sheet entity + baris header (tanpa baris data). Idempotent:
+ * sheet yang sudah punya isi tidak disentuh. Bisa dijalankan manual dari
+ * editor (Run) atau lewat GET ?action=init&key=RESET_KEY.
+ */
+function initSheets() {
+  var dibuat = [];
+  var namaSheets = Object.keys(INIT_HEADERS);
+  for (var i = 0; i < namaSheets.length; i++) {
+    var nama = namaSheets[i];
+    var sheet = getOrCreateSheet_(nama);
+    if (sheet.getLastRow() > 0) continue; // sudah ada isi — jangan diutak-atik
+    var headers = INIT_HEADERS[nama].concat([UPDATED_AT_HEADER]);
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold");
+    sheet.setFrozenRows(1);
+    dibuat.push(nama);
+  }
+  return dibuat;
+}
+
+/**
  * Hapus seluruh sheet entity supaya dibuat ulang bersih (header baru) pada
  * sinkronisasi berikutnya. Bisa dijalankan manual dari editor (Run) atau
  * lewat GET ?action=reset&key=RESET_KEY.
@@ -131,22 +167,26 @@ function doPost(e) {
 }
 
 /**
- * GET: cek hidup (tanpa parameter) atau aksi reset
- * (?action=reset&key=RESET_KEY) untuk membersihkan sheet uji dari jarak jauh.
+ * GET: cek hidup (tanpa parameter), aksi reset (?action=reset&key=RESET_KEY)
+ * untuk membersihkan sheet uji, atau aksi init (?action=init&key=RESET_KEY)
+ * untuk membuat semua sheet + header kolom tanpa baris data.
  */
 function doGet(e) {
   var action = e && e.parameter ? String(e.parameter.action || "") : "";
-  if (action === "reset") {
+  if (action === "reset" || action === "init") {
     var key = e.parameter.key ? String(e.parameter.key) : "";
     if (key !== RESET_KEY) {
-      return jsonOutput_({ ok: false, error: "Kunci reset salah." });
+      return jsonOutput_({ ok: false, error: "Kunci aksi salah." });
     }
-    return jsonOutput_({ ok: true, action: "reset", dihapus: resetSheetUji() });
+    if (action === "reset") {
+      return jsonOutput_({ ok: true, action: "reset", dihapus: resetSheetUji() });
+    }
+    return jsonOutput_({ ok: true, action: "init", dibuat: initSheets() });
   }
   return jsonOutput_({
     ok: true,
     message: "Webhook Google Sheets Drive Tech aktif. Kirim data lewat POST JSON.",
-    versi: "2026-08-28-reset",
+    versi: "2026-08-28-init",
   });
 }
 
