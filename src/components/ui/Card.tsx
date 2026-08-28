@@ -6,36 +6,44 @@ type BlockProps = {
   children?: ReactNode;
 };
 
-/** Kartu putih standar: rounded-xl, border slate-200, shadow-sm. */
+/** Kartu standar: bg-card tonal, border-line, radius 16px — tanpa bayangan besar. */
 export function Card({ className, children }: BlockProps) {
   return (
-    <div className={cn("rounded-xl border border-slate-200 bg-white shadow-sm", className)}>
+    <div
+      className={cn("rounded-[var(--radius)] border border-line bg-card", className)}
+    >
       {children}
     </div>
   );
 }
 
 export function CardHeader({ className, children }: BlockProps) {
-  return <div className={cn("space-y-1 border-b border-slate-100 px-4 py-3 sm:px-5", className)}>{children}</div>;
+  return (
+    <div className={cn("space-y-1 border-b border-line px-5 py-4 sm:px-6", className)}>
+      {children}
+    </div>
+  );
 }
 
 export function CardTitle({ className, children }: BlockProps) {
-  return <h2 className={cn("text-base font-semibold text-slate-900", className)}>{children}</h2>;
+  return (
+    <h2 className={cn("text-lg font-semibold tracking-tight text-ink", className)}>{children}</h2>
+  );
 }
 
 export function CardDescription({ className, children }: BlockProps) {
-  return <p className={cn("text-sm text-slate-500", className)}>{children}</p>;
+  return <p className={cn("text-sm text-muted", className)}>{children}</p>;
 }
 
 export function CardContent({ className, children }: BlockProps) {
-  return <div className={cn("px-4 py-4 sm:px-5", className)}>{children}</div>;
+  return <div className={cn("px-5 py-4 sm:px-6 sm:py-5", className)}>{children}</div>;
 }
 
 export function CardFooter({ className, children }: BlockProps) {
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center gap-2 border-t border-slate-100 bg-slate-50/60 px-4 py-3 sm:px-5",
+        "flex flex-wrap items-center gap-2 rounded-b-[var(--radius)] border-t border-line bg-surface-2/60 px-5 py-4 sm:px-6",
         className,
       )}
     >

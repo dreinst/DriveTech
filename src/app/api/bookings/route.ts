@@ -1,5 +1,6 @@
 import type { NextResponse } from "next/server";
 
+import { slotAdminFee } from "@/lib/domain/harga";
 import { createBooking } from "@/lib/services/booking";
 import { getFloorPlan } from "@/lib/services/slots";
 import type { SlotStatus, ZoneType } from "@/lib/types/database";
@@ -40,6 +41,10 @@ type SlotRingkas = {
   status: SlotStatus;
   svgElementId: string | null;
   bookable: boolean;
+  /** Harga admin fee per tanggal EFEKTIF slot ini (override slot > harga zona). */
+  adminFee: number;
+  /** Peruntukan khusus slot (mis. "Booth Leasing"); null = umum. */
+  peruntukan: string | null;
   zone: ZonaRingkas;
 };
 
@@ -54,9 +59,16 @@ function parseStatusFilter(nilai: string | null): SlotStatus | null | "invalid" 
 /**
  * Daftar seluruh slot beserta status terkininya.
  *
+ * MODEL PER TANGGAL: slot.status kini berarti kondisi slot itu sendiri —
+ * 'available' = normal, selain itu = DIBLOKIR PANITIA untuk semua tanggal
+ * (bukan lagi status booking). Ketersediaan per tanggal dibaca dari view
+ * slot_date_status; respons GET ini menyertakan `eventDates` (tanggal gelaran
+ * aktif mendatang) dan `occupancy` (baris view untuk tanggal-tanggal itu)
+ * supaya integrasi eksternal bisa menghitung ketersediaan per tanggal.
+ *
  * Ditujukan untuk integrasi eksternal yang ingin polling ketersediaan tanpa
  * memakai Realtime. Filter opsional lewat query string:
- *   ?status=available|pending|confirmed
+ *   ?status=available|pending|confirmed   (filter kolom slots.status mentah)
  *   ?zone=<svg_group_id>   mis. zone-umkm
  *   ?bookable=true         hanya slot yang bisa dibooking (bukan fasilitas)
  */
@@ -106,6 +118,8 @@ export async function GET(request: Request): Promise<NextResponse> {
           status: slot.status,
           svgElementId: slot.svg_element_id,
           bookable: bookableZone,
+          adminFee: slotAdminFee(slot, zone),
+          peruntukan: slot.peruntukan,
           zone: zonaRingkas,
         });
       }
@@ -113,15 +127,22 @@ export async function GET(request: Request): Promise<NextResponse> {
 
     const event = plan.data.event;
     return jsonOk({
+      // Model per tanggal: jadwal gelaran ada di eventDates, bukan rentang tanggal.
       event: event
         ? {
             id: event.id,
             name: event.name,
             location: event.location,
-            startDate: event.start_date,
-            endDate: event.end_date,
           }
         : null,
+      // Tanggal gelaran aktif mendatang (model per tanggal), urut naik.
+      eventDates: plan.data.eventDates.map((d) => ({ id: d.id, date: d.event_date })),
+      // Okupansi per (slot, tanggal) untuk tanggal-tanggal di atas.
+      occupancy: plan.data.occupancy.map((row) => ({
+        slotId: row.slot_id,
+        date: row.event_date,
+        status: row.status,
+      })),
       total: slots.length,
       fetchedAt: new Date().toISOString(),
       slots,
@@ -135,9 +156,12 @@ export async function GET(request: Request): Promise<NextResponse> {
 
 /**
  * Body JSON:
- *   { slotId, tenantName, tenantPhone, tenantEmail?, tenantType, detail?, notes? }
+ *   { slotId, eventDates, tenantName, tenantPhone, tenantEmail?, tenantType, detail?, notes? }
+ * eventDates: array string "YYYY-MM-DD" (min 1, maks 16) — tanggal weekend yang
+ * disewa; slot harus bebas di SEMUA tanggal tersebut.
  * Sukses 201: { bookingId, bookingCode }
- * Gagal: 400 (validasi), 409 (slot sudah diambil), 503 (Supabase belum dikonfigurasi).
+ * Gagal: 400 (validasi), 409 SLOT_TAKEN (slot diblokir) / DATE_TAKEN (sebagian
+ * tanggal baru saja terisi), 503 (Supabase belum dikonfigurasi).
  */
 export async function POST(request: Request): Promise<NextResponse> {
   return handleRoute("POST /api/bookings", async () => {

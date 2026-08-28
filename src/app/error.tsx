@@ -17,9 +17,9 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="mx-auto flex max-w-lg flex-col items-center rounded-xl border border-slate-200 bg-white px-6 py-12 text-center shadow-sm">
+    <div className="anim-fade-up mx-auto flex max-w-md flex-col items-center px-6 py-24 text-center">
       <span
-        className="flex h-11 w-11 items-center justify-center rounded-full bg-red-50 text-red-600"
+        className="flex h-12 w-12 items-center justify-center rounded-full bg-danger-soft text-danger"
         aria-hidden="true"
       >
         <svg
@@ -37,17 +37,18 @@ export default function Error({
           <path d="M12 16.6h.01" />
         </svg>
       </span>
-      <h1 className="mt-3 text-xl font-semibold text-slate-900">Terjadi kesalahan</h1>
-      <p className="mt-2 text-sm leading-relaxed text-slate-500">
-        Maaf, halaman ini gagal dimuat. Coba muat ulang sebentar lagi. Kalau masih bermasalah, hubungi
-        panitia pameran.
+      <h1 className="mt-4 text-2xl font-semibold tracking-[-0.01em] text-ink">
+        Terjadi kesalahan
+      </h1>
+      <p className="mt-2 text-sm leading-relaxed text-muted">
+        Halaman gagal dimuat. Coba lagi — kalau berulang, hubungi panitia.
       </p>
       {error.digest ? (
-        <p className="mt-3 rounded-md bg-slate-50 px-2.5 py-1 text-xs text-slate-400">
+        <p className="mt-4 rounded-full border border-line bg-card px-3 py-1 text-xs text-subtle">
           Kode galat: {error.digest}
         </p>
       ) : null}
-      <div className="mt-6 flex flex-wrap justify-center gap-2">
+      <div className="mt-8 flex flex-wrap justify-center gap-3">
         <Button onClick={reset}>Coba Lagi</Button>
         <Link href="/" className={buttonClass("secondary")}>
           Kembali ke Denah

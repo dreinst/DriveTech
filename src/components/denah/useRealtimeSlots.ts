@@ -1,20 +1,31 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { createBrowserSupabase } from "@/lib/supabase/client";
 import { compareSlots } from "@/lib/domain/urutan";
+import type { OccupancyRow } from "@/lib/domain/ketersediaan";
 import type { SlotRow, ZoneWithSlots } from "@/lib/types/database";
 
 export type UseRealtimeSlotsResult = {
   zones: ZoneWithSlots[];
+  /** Okupansi per (slot, tanggal) dari view slot_date_status — bahan slotStatusForDates. */
+  occupancy: OccupancyRow[];
   connected: boolean;
   lastUpdatedAt: Date | null;
 };
 
 const CHANNEL_NAME = "denah-slots";
+/** Jeda penggabung: beberapa event booking_dates beruntun -> satu refetch okupansi. */
+const OCCUPANCY_REFETCH_DEBOUNCE_MS = 250;
+
+/** Tanggal "hari ini" (YYYY-MM-DD) menurut zona waktu acara (WIB), dihitung di browser. */
+function tanggalHariIniWib(): string {
+  // en-CA menghasilkan format ISO YYYY-MM-DD.
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jakarta" }).format(new Date());
+}
 
 function isSlotRow(value: unknown): value is SlotRow {
   if (typeof value !== "object" || value === null) return false;
@@ -65,20 +76,48 @@ function removeSlot(zones: ZoneWithSlots[], slotId: string): ZoneWithSlots[] {
 }
 
 /**
- * Langganan realtime tabel `slots` (Supabase Realtime, lihat bagian 3 arsitektur).
- * Kalau env Supabase belum diisi, hook ini diam saja: denah tetap tampil statis.
+ * Langganan realtime denah (model per tanggal):
+ * - tabel `slots`   : blokir/buka slot oleh panitia + penambahan slot baru;
+ * - tabel `booking_dates`: setiap perubahan (booking baru, batal, verifikasi)
+ *   memicu REFETCH okupansi lewat select view publik `slot_date_status`
+ *   (anon boleh membaca view ini) — payload eventnya sendiri tidak dipakai,
+ *   view-lah sumber kebenaran gabungan booking_dates x status booking.
+ *
+ * Sumber data awal dari props (hasil getFloorPlan() di server). Kalau env
+ * Supabase belum diisi, hook ini diam saja: denah tetap tampil statis.
  */
-export function useRealtimeSlots(initialZones: ZoneWithSlots[]): UseRealtimeSlotsResult {
+export function useRealtimeSlots(
+  initialZones: ZoneWithSlots[],
+  initialOccupancy: OccupancyRow[] = [],
+): UseRealtimeSlotsResult {
   const [zones, setZones] = useState<ZoneWithSlots[]>(initialZones);
+  const [occupancy, setOccupancy] = useState<OccupancyRow[]>(initialOccupancy);
   const [connected, setConnected] = useState(false);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
+  const refetchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Data server bisa berubah (navigasi / revalidate) -> pakai data terbaru sebagai dasar.
   useEffect(() => {
     setZones(initialZones);
   }, [initialZones]);
 
+  useEffect(() => {
+    setOccupancy(initialOccupancy);
+  }, [initialOccupancy]);
+
   const enabled = useMemo(() => isSupabaseConfigured(), []);
+
+  const refetchOccupancy = useCallback(async () => {
+    if (!isSupabaseConfigured()) return;
+    const supabase = createBrowserSupabase();
+    const { data, error } = await supabase
+      .from("slot_date_status")
+      .select("slot_id, event_date, status")
+      .gte("event_date", tanggalHariIniWib());
+    if (error || data === null) return;
+    setOccupancy(data as OccupancyRow[]);
+    setLastUpdatedAt(new Date());
+  }, []);
 
   useEffect(() => {
     if (!enabled) {
@@ -87,6 +126,17 @@ export function useRealtimeSlots(initialZones: ZoneWithSlots[]): UseRealtimeSlot
     }
 
     const supabase = createBrowserSupabase();
+
+    // Gabungkan event booking_dates yang beruntun (satu booking = banyak baris
+    // tanggal) menjadi satu refetch okupansi.
+    const scheduleOccupancyRefetch = () => {
+      if (refetchTimer.current !== null) clearTimeout(refetchTimer.current);
+      refetchTimer.current = setTimeout(() => {
+        refetchTimer.current = null;
+        void refetchOccupancy();
+      }, OCCUPANCY_REFETCH_DEBOUNCE_MS);
+    };
+
     const channel = supabase
       .channel(CHANNEL_NAME)
       .on(
@@ -108,15 +158,26 @@ export function useRealtimeSlots(initialZones: ZoneWithSlots[]): UseRealtimeSlot
           setLastUpdatedAt(new Date());
         },
       )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "booking_dates" },
+        () => {
+          scheduleOccupancyRefetch();
+        },
+      )
       .subscribe((status) => {
         setConnected(status === "SUBSCRIBED");
       });
 
     return () => {
       setConnected(false);
+      if (refetchTimer.current !== null) {
+        clearTimeout(refetchTimer.current);
+        refetchTimer.current = null;
+      }
       void supabase.removeChannel(channel);
     };
-  }, [enabled]);
+  }, [enabled, refetchOccupancy]);
 
-  return { zones, connected, lastUpdatedAt };
+  return { zones, occupancy, connected, lastUpdatedAt };
 }

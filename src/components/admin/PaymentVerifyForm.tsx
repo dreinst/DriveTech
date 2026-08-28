@@ -21,7 +21,7 @@ export type PaymentVerifyFormProps = {
 /** Pesan hasil action, ringkas supaya muat di dalam sel tabel. */
 function Pesan({ state }: { state: ActionState }) {
   if (state.status === "idle" || !state.message) return null;
-  const nada = state.status === "success" ? "text-green-700" : "text-red-600";
+  const nada = state.status === "success" ? "text-ok" : "text-danger";
   return (
     <p role="status" className={`text-xs font-medium ${nada}`}>
       {state.message}
@@ -45,16 +45,16 @@ export function PaymentVerifyForm({
   const alasanId = useId();
 
   if (!paymentId) {
-    return <span className="text-xs text-slate-400">Belum ada data pembayaran</span>;
+    return <span className="text-xs text-subtle">Belum ada data pembayaran</span>;
   }
 
   if (bookingStatus === "cancelled") {
-    return <span className="text-xs text-slate-400">Booking dibatalkan</span>;
+    return <span className="text-xs text-subtle">Booking dibatalkan</span>;
   }
 
   // Sudah diverifikasi: aksi disembunyikan supaya tidak ada perubahan tak sengaja.
   if (paymentStatus === "verified") {
-    return <span className="text-xs font-medium text-green-700">Sudah diverifikasi</span>;
+    return <span className="text-xs font-medium text-ok">Sudah diverifikasi</span>;
   }
 
   function konfirmasiVerifikasi(event: FormEvent<HTMLFormElement>) {
@@ -75,12 +75,12 @@ export function PaymentVerifyForm({
         </form>
 
         <details>
-          <summary className="inline-flex h-8 cursor-pointer list-none items-center rounded-lg border border-red-200 bg-white px-3 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 [&::-webkit-details-marker]:hidden">
+          <summary className="inline-flex h-9 cursor-pointer list-none items-center rounded-[var(--radius-sm)] px-3 text-xs font-medium text-danger transition-[background-color,color] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-danger-soft [&::-webkit-details-marker]:hidden">
             Tolak
           </summary>
-          <form action={rejectAction} className="mt-2 w-60 space-y-2 rounded-lg border border-slate-200 bg-white p-2.5 shadow-sm">
+          <form action={rejectAction} className="anim-rise mt-2 w-60 space-y-2 rounded-[var(--radius-sm)] border border-line bg-card p-2.5 shadow-[var(--shadow-md)]">
             <input type="hidden" name="paymentId" value={paymentId} />
-            <label htmlFor={alasanId} className="block text-xs font-medium text-slate-700">
+            <label htmlFor={alasanId} className="block text-xs font-medium text-ink">
               Alasan penolakan
             </label>
             <Textarea

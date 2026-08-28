@@ -28,7 +28,7 @@ export function CancelBookingForm({ bookingId }: CancelBookingFormProps) {
         {state.status === "error" && state.message ? (
           <Alert tone="error">{state.message}</Alert>
         ) : null}
-        <Button variant="ghost" size="sm" onClick={() => setKonfirmasi(true)}>
+        <Button variant="ghost" onClick={() => setKonfirmasi(true)}>
           Batalkan booking
         </Button>
       </div>
@@ -36,21 +36,23 @@ export function CancelBookingForm({ bookingId }: CancelBookingFormProps) {
   }
 
   return (
-    <form action={formAction} className="space-y-3 rounded-xl border border-red-200 bg-red-50 p-4">
+    <form
+      action={formAction}
+      className="anim-rise w-full basis-full space-y-3 rounded-[var(--radius)] border border-danger/30 bg-danger-soft p-4"
+    >
       <input type="hidden" name="bookingId" value={bookingId} />
-      <p className="text-sm font-semibold text-red-900">Batalkan booking ini?</p>
-      <p className="text-sm text-red-800">
-        Slot akan dilepas dan bisa langsung dipesan orang lain. Tindakan ini tidak bisa
-        dibatalkan &mdash; Anda perlu memesan ulang dari denah.
+      <p className="text-sm font-semibold text-danger">Batalkan booking ini?</p>
+      <p className="text-sm text-content">
+        Slot langsung dilepas dan bisa dipesan orang lain — tindakan ini tidak bisa dibatalkan.
       </p>
       {state.status === "error" && state.message ? (
         <Alert tone="error">{state.message}</Alert>
       ) : null}
       <div className="flex flex-wrap gap-2">
-        <SubmitButton variant="danger" size="sm" pendingText="Membatalkan…">
+        <SubmitButton variant="danger" pendingText="Membatalkan…">
           Ya, batalkan booking
         </SubmitButton>
-        <Button variant="secondary" size="sm" onClick={() => setKonfirmasi(false)}>
+        <Button variant="secondary" onClick={() => setKonfirmasi(false)}>
           Tidak jadi
         </Button>
       </div>

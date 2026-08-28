@@ -59,10 +59,22 @@ const phone = z
 
 const uuid = (label: string) => z.uuid(`${label} tidak valid.`);
 
+/** Tanggal kalender polos "YYYY-MM-DD" (tanpa jam / zona waktu). */
+const TANGGAL_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+const tanggal = z
+  .string()
+  .regex(TANGGAL_PATTERN, "Format tanggal harus YYYY-MM-DD.");
+
 /* ---------- Booking (tenant sewa slot) ---------- */
 
 export const createBookingSchema = z.object({
   slotId: uuid("ID slot"),
+  /** Tanggal weekend yang disewa (model per tanggal), minimal satu. */
+  eventDates: z
+    .array(tanggal)
+    .min(1, "Pilih minimal satu tanggal.")
+    .max(16, "Maksimal 16 tanggal per booking."),
   tenantName: z.string().trim().min(2, "Nama minimal 2 karakter."),
   tenantPhone: phone,
   tenantEmail: optionalEmail,
@@ -156,6 +168,18 @@ export const updateLeasingSchema = z.object({
   notes: optionalText,
 });
 
+/** Tambah satu tanggal gelaran baru di admin. */
+export const addEventDateSchema = z.object({
+  date: tanggal,
+});
+
+export const updateZoneFeeSchema = z.object({
+  zoneId: uuid("ID zona"),
+  adminFee: z.coerce
+    .number({ error: "Biaya admin harus berupa angka." })
+    .min(0, "Biaya admin tidak boleh negatif."),
+});
+
 export const upsertPartnerSchema = z.object({
   id: z.preprocess(emptyToUndefined, z.uuid("ID partner tidak valid.").optional()),
   name: z.string().trim().min(2, "Nama partner minimal 2 karakter."),
@@ -183,6 +207,8 @@ export type OverrideSlotInput = z.infer<typeof overrideSlotSchema>;
 export type VerifyPaymentInput = z.infer<typeof verifyPaymentSchema>;
 export type RejectPaymentInput = z.infer<typeof rejectPaymentSchema>;
 export type UpdateLeasingInput = z.infer<typeof updateLeasingSchema>;
+export type AddEventDateInput = z.infer<typeof addEventDateSchema>;
+export type UpdateZoneFeeInput = z.infer<typeof updateZoneFeeSchema>;
 export type UpsertPartnerInput = z.infer<typeof upsertPartnerSchema>;
 
 /** Ambil pesan error pertama per nama field, siap dipakai ActionState.fieldErrors. */

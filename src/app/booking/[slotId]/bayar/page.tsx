@@ -4,7 +4,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { CopyButton } from "@/app/booking/_components/CopyButton";
 import { LANGKAH_BOOKING } from "@/app/booking/_components/langkah";
-import { InfoRow } from "@/app/booking/_components/Ringkasan";
+import { InfoRow, TanggalChips } from "@/app/booking/_components/Ringkasan";
 import { PaymentForm } from "@/components/forms/PaymentForm";
 import { Alert } from "@/components/ui/Alert";
 import { buttonClass } from "@/components/ui/Button";
@@ -12,8 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Stepper } from "@/components/ui/Stepper";
-import { BANK_ACCOUNT, EVENT_INFO } from "@/lib/domain/constants";
-import { ZONE_TYPE_LABEL } from "@/lib/domain/labels";
+import { hitungTotalBiaya } from "@/lib/domain/ketersediaan";
 import { getBookingDetail } from "@/lib/services/booking";
 import { formatRupiah, slotDisplayName } from "@/lib/utils";
 
@@ -47,7 +46,7 @@ export default async function BayarPage({ params }: PageProps) {
   if (!result.ok) {
     if (result.code === "NOT_FOUND" || result.code === INVALID_UUID) notFound();
     return (
-      <div className="mx-auto w-full max-w-2xl">
+      <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6">
         <PageHeader title="Pembayaran Biaya Admin" backHref="/" backLabel="Kembali ke denah" />
         <Alert tone="error" title="Data booking belum bisa dimuat">
           {result.error}
@@ -62,7 +61,7 @@ export default async function BayarPage({ params }: PageProps) {
   /* ---------- Booking sudah dibatalkan ---------- */
   if (booking.status === "cancelled") {
     return (
-      <div className="mx-auto w-full max-w-2xl">
+      <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6">
         <PageHeader
           title="Booking Dibatalkan"
           description={`Kode booking ${booking.booking_code}`}
@@ -70,10 +69,10 @@ export default async function BayarPage({ params }: PageProps) {
           backLabel="Kembali ke denah"
         />
         <Alert tone="error" title="Booking ini sudah dibatalkan">
-          Slot <strong>{slotDisplayName(booking.slot)}</strong> di {booking.slot.zone.name} sudah
-          dilepas dan bisa dipesan orang lain. Pembayaran tidak lagi diperlukan.
+          Slot <strong>{slotDisplayName(booking.slot)}</strong> sudah dilepas — pembayaran tidak
+          lagi diperlukan.
         </Alert>
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-5 flex flex-wrap gap-2">
           <Link href="/#denah" className={buttonClass("primary", "md")}>
             Pesan slot lain
           </Link>
@@ -90,146 +89,136 @@ export default async function BayarPage({ params }: PageProps) {
     redirect(`/booking/${booking.id}/status`);
   }
 
-  const nominal = payment?.amount ?? booking.slot.zone.admin_fee;
+  // Total = biaya admin per tanggal x jumlah tanggal; payment.amount sudah
+  // menyimpan hasil kalinya — fallback hanya kalau tagihan belum tercatat.
+  const jumlahTanggal = Math.max(booking.dates.length, 1);
+  const nominal =
+    payment?.amount ?? hitungTotalBiaya(booking.slot.zone.admin_fee, jumlahTanggal);
   // Tagihan baru selalu tersimpan sebagai "cash/unpaid"; biarkan penyewa memilih
   // sendiri (default transfer) sampai ada pengiriman pertama.
   const metodeAwal = payment && payment.status !== "unpaid" ? payment.method : "transfer";
 
   return (
-    <div className="mx-auto w-full max-w-2xl">
-      <PageHeader
-        title="Pembayaran Biaya Admin"
-        description="Langkah 2 dari 3. Pilih metode pembayaran lalu kirim konfirmasi."
-        backHref="/"
-        backLabel="Kembali ke denah"
-      />
+    <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
+      {/* ---------- Kepala halaman ala mockup pembayaran ---------- */}
+      <div className="anim-fade-up mx-auto max-w-2xl text-center">
+        <span
+          aria-hidden="true"
+          className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-accent text-app ring-8 ring-accent-soft"
+        >
+          <svg
+            width="26"
+            height="26"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="12" cy="12" r="9" />
+            <path d="m8.4 12.4 2.5 2.5 4.7-5.2" />
+          </svg>
+        </span>
+        <h1 className="mt-5 text-3xl font-semibold tracking-[-0.01em] text-ink sm:text-4xl">
+          Slot Berhasil Dipesan
+        </h1>
+        <p className="mt-3 text-sm leading-relaxed text-muted sm:text-base">
+          Selesaikan pembayaran biaya admin lalu tunggu verifikasi panitia — simpan kode booking
+          Anda untuk mengecek status kapan saja.
+        </p>
+      </div>
 
-      <Stepper steps={[...LANGKAH_BOOKING]} current={1} />
+      <div className="mt-8">
+        <Stepper steps={[...LANGKAH_BOOKING]} current={2} />
+      </div>
 
       {payment?.status === "rejected" ? (
-        <div className="mb-4">
+        <div className="anim-rise mb-6">
           <Alert tone="error" title="Bukti pembayaran sebelumnya ditolak">
             {payment.reject_reason
-              ? `Alasan panitia: ${payment.reject_reason}`
+              ? `Alasan panitia: ${payment.reject_reason}.`
               : "Panitia belum mencantumkan alasan penolakan."}{" "}
-            Silakan kirim ulang bukti yang benar di bawah ini.
+            Kirim ulang bukti yang benar di bawah.
           </Alert>
         </div>
       ) : payment?.status === "submitted" ? (
-        <div className="mb-4">
-          <Alert tone="info" title="Pembayaran sedang menunggu verifikasi">
-            Panitia sedang memeriksa pembayaran Anda. Anda masih bisa memperbarui metode atau
-            mengganti bukti transfer dari halaman ini.
+        <div className="mb-6">
+          <Alert tone="info" title="Menunggu verifikasi panitia">
+            Anda masih bisa mengganti metode atau bukti transfer dari halaman ini.
           </Alert>
         </div>
       ) : null}
 
-      {/* ---------- Ringkasan booking ---------- */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Ringkasan Booking</CardTitle>
-          <CardDescription>Simpan kode booking untuk mengecek status kapan saja.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-            <div className="min-w-0">
-              <p className="text-xs font-medium tracking-wide text-slate-500 uppercase">
-                Kode booking
-              </p>
-              <p className="font-mono text-2xl font-bold tracking-widest text-slate-900 tabular">
-                {booking.booking_code}
+      {/* ---------- Dua kartu: ringkasan pesanan & pembayaran ---------- */}
+      <div className="grid items-start gap-5 lg:grid-cols-2">
+        <Card className="anim-fade-up">
+          <CardHeader>
+            <CardTitle>Ringkasan Pesanan</CardTitle>
+          </CardHeader>
+
+          <CardContent className="border-b border-line">
+            <p className="text-xs font-medium uppercase tracking-[0.08em] text-subtle">
+              Kode booking
+            </p>
+            <p className="tabular mt-1 font-mono text-3xl font-bold tracking-widest text-ink">
+              {booking.booking_code}
+            </p>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <StatusBadge status={booking.status} kind="booking" />
+              <CopyButton value={booking.booking_code} />
+            </div>
+          </CardContent>
+
+          <CardContent className="border-b border-line">
+            <dl className="divide-y divide-line">
+              <InfoRow label="Slot">{slotDisplayName(booking.slot)}</InfoRow>
+              <InfoRow label="Zona">{booking.slot.zone.name}</InfoRow>
+              <InfoRow label="Tenant">{booking.tenant.name}</InfoRow>
+            </dl>
+          </CardContent>
+
+          <CardContent className="border-b border-line">
+            <p className="text-xs font-medium uppercase tracking-[0.08em] text-subtle">
+              Tanggal sewa
+            </p>
+            <div className="mt-2">
+              <TanggalChips dates={booking.dates} />
+            </div>
+          </CardContent>
+
+          <CardContent>
+            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+              <p className="text-sm text-muted">Total Tagihan</p>
+              <p className="tabular text-2xl font-bold tracking-[-0.01em] text-accent sm:text-3xl">
+                {formatRupiah(nominal)}
               </p>
             </div>
-            <CopyButton value={booking.booking_code} />
-          </div>
+            <p className="mt-1 text-right text-[0.8125rem] text-subtle">
+              {booking.dates.length > 0
+                ? `${booking.dates.length} tanggal × ${formatRupiah(booking.slot.zone.admin_fee)}`
+                : "Biaya admin"}
+            </p>
+          </CardContent>
+        </Card>
 
-          <dl className="divide-y divide-slate-100">
-            <InfoRow label="Zona">{booking.slot.zone.name}</InfoRow>
-            <InfoRow label="Slot">{slotDisplayName(booking.slot)}</InfoRow>
-            <InfoRow label="Tipe zona">{ZONE_TYPE_LABEL[booking.slot.zone.zone_type]}</InfoRow>
-            <InfoRow label="Penyewa">{booking.tenant.name}</InfoRow>
-            <InfoRow label="Kontak">{booking.tenant.phone ?? "-"}</InfoRow>
-            <InfoRow label="Status booking">
-              <StatusBadge status={booking.status} kind="booking" />
-            </InfoRow>
-            <InfoRow label="Total biaya admin">
-              <span className="text-base font-bold text-slate-900">{formatRupiah(nominal)}</span>
-            </InfoRow>
-          </dl>
-        </CardContent>
-      </Card>
-
-      {/* ---------- Form pembayaran ---------- */}
-      <Card className="mt-4">
-        <CardHeader>
-          <CardTitle>Metode Pembayaran</CardTitle>
-          <CardDescription>Pilih tunai di lokasi atau transfer bank.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <PaymentForm
-            bookingId={booking.id}
-            amount={nominal}
-            defaultMethod={metodeAwal}
-            existingProofUrl={payment?.proof_url ?? null}
-          />
-        </CardContent>
-      </Card>
-
-      {/* ---------- Panel instruksi transfer ---------- */}
-      <Card className="mt-4">
-        <CardHeader>
-          <CardTitle>Instruksi Transfer</CardTitle>
-          <CardDescription>Ikuti langkah berikut agar verifikasi cepat.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-            <dl className="space-y-2 text-sm">
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <dt className="text-slate-500">Bank</dt>
-                <dd className="font-semibold text-slate-900">{BANK_ACCOUNT.bankName}</dd>
-              </div>
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <dt className="text-slate-500">Nomor rekening</dt>
-                <dd className="flex items-center gap-2">
-                  <span className="font-mono text-base font-bold tracking-wider text-slate-900">
-                    {BANK_ACCOUNT.accountNumber}
-                  </span>
-                  <CopyButton value={BANK_ACCOUNT.accountNumber} label="Salin" />
-                </dd>
-              </div>
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <dt className="text-slate-500">Atas nama</dt>
-                <dd className="font-semibold text-slate-900">{BANK_ACCOUNT.accountName}</dd>
-              </div>
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <dt className="text-slate-500">Nominal</dt>
-                <dd className="font-semibold text-slate-900">{formatRupiah(nominal)}</dd>
-              </div>
-            </dl>
-          </div>
-
-          <ol className="list-decimal space-y-1.5 pl-5 text-sm text-slate-600">
-            <li>
-              Transfer <strong className="text-slate-900">{formatRupiah(nominal)}</strong> ke
-              rekening di atas. Nominal harus sama persis.
-            </li>
-            <li>
-              Cantumkan kode booking{" "}
-              <strong className="text-slate-900">{booking.booking_code}</strong> pada berita acara
-              atau catatan transfer kalau tersedia.
-            </li>
-            <li>Foto atau tangkap layar bukti transfer.</li>
-            <li>Unggah bukti pada formulir di atas, lalu tekan Kirim Bukti Transfer.</li>
-            <li>Panitia memverifikasi maksimal 1x24 jam. Status slot berubah jadi Terisi.</li>
-          </ol>
-
-          <Alert tone="warning" title="Hati-hati penipuan">
-            Panitia hanya menerima transfer ke rekening di atas. Jangan mengirim dana ke rekening
-            pribadi siapa pun. Konfirmasi ke {EVENT_INFO.organizer} di {EVENT_INFO.contact} bila
-            ragu.
-          </Alert>
-        </CardContent>
-      </Card>
+        <Card className="anim-fade-up">
+          <CardHeader>
+            <CardTitle>Pembayaran</CardTitle>
+            <CardDescription>
+              Pilih metode lalu kirim konfirmasi — diverifikasi manual oleh panitia.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <PaymentForm
+              bookingId={booking.id}
+              amount={nominal}
+              defaultMethod={metodeAwal}
+              existingProofUrl={payment?.proof_url ?? null}
+            />
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

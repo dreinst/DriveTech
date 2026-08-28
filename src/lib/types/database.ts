@@ -1,6 +1,9 @@
 /**
  * Tipe Database ala supabase-gen, DITULIS TANGAN agar cocok 100% dengan
- * supabase/migrations/20260826090000_init.sql. Perbarui bersamaan kalau skema berubah.
+ * supabase/migrations/20260826090000_init.sql,
+ * supabase/migrations/20260827120000_per_tanggal.sql, dan
+ * supabase/migrations/20260827150000_harga_per_slot.sql.
+ * Perbarui bersamaan kalau skema berubah.
  */
 
 export type Json =
@@ -96,6 +99,8 @@ export type Database = {
           slot_label: string | null;
           status: Database["public"]["Enums"]["slot_status"];
           svg_element_id: string | null;
+          admin_fee_override: number | null;
+          peruntukan: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -106,6 +111,8 @@ export type Database = {
           slot_label?: string | null;
           status?: Database["public"]["Enums"]["slot_status"];
           svg_element_id?: string | null;
+          admin_fee_override?: number | null;
+          peruntukan?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -116,6 +123,8 @@ export type Database = {
           slot_label?: string | null;
           status?: Database["public"]["Enums"]["slot_status"];
           svg_element_id?: string | null;
+          admin_fee_override?: number | null;
+          peruntukan?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -397,6 +406,80 @@ export type Database = {
           },
         ];
       };
+      event_dates: {
+        Row: {
+          id: string;
+          event_id: string | null;
+          event_date: string;
+          is_active: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          event_id?: string | null;
+          event_date: string;
+          is_active?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          event_id?: string | null;
+          event_date?: string;
+          is_active?: boolean;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "event_dates_event_id_fkey";
+            columns: ["event_id"];
+            isOneToOne: false;
+            referencedRelation: "events";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      booking_dates: {
+        Row: {
+          id: string;
+          booking_id: string;
+          slot_id: string;
+          event_date: string;
+          is_active: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          booking_id: string;
+          slot_id: string;
+          event_date: string;
+          is_active?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          booking_id?: string;
+          slot_id?: string;
+          event_date?: string;
+          is_active?: boolean;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "booking_dates_booking_id_fkey";
+            columns: ["booking_id"];
+            isOneToOne: false;
+            referencedRelation: "bookings";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "booking_dates_slot_id_fkey";
+            columns: ["slot_id"];
+            isOneToOne: false;
+            referencedRelation: "slots";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       admin_users: {
         Row: {
           id: string;
@@ -422,7 +505,20 @@ export type Database = {
         Relationships: [];
       };
     };
-    Views: Record<string, never>;
+    Views: {
+      /**
+       * Okupansi publik per (slot, tanggal): hanya baris booking_dates aktif
+       * milik booking berstatus pending_payment / confirmed.
+       */
+      slot_date_status: {
+        Row: {
+          slot_id: string;
+          event_date: string;
+          status: Database["public"]["Enums"]["booking_status"];
+        };
+        Relationships: [];
+      };
+    };
     Functions: Record<string, never>;
     Enums: {
       zone_type: "mobil_baru" | "mobil_bekas" | "mobil_motor_bekas" | "umkm" | "warung" | "facility";
@@ -459,6 +555,12 @@ export type LeasingPartnerRow = Tables<"leasing_partners">;
 export type PurchaseTransactionRow = Tables<"purchase_transactions">;
 export type LeasingApplicationRow = Tables<"leasing_applications">;
 export type AdminUserRow = Tables<"admin_users">;
+export type EventDateRow = Tables<"event_dates">;
+export type BookingDateRow = Tables<"booking_dates">;
+
+/** Satu baris view publik slot_date_status (okupansi per slot per tanggal). */
+export type SlotDateStatusRow =
+  Database["public"]["Views"]["slot_date_status"]["Row"];
 
 /* ---------- Alias enum ---------- */
 
@@ -484,14 +586,26 @@ export type SlotDetail = SlotRow & { zone: ZoneRow };
 /** Zona beserta seluruh slotnya (untuk denah). */
 export type ZoneWithSlots = ZoneRow & { slots: SlotRow[] };
 
-/** Payload denah publik. */
-export type FloorPlanData = { event: EventRow | null; zones: ZoneWithSlots[] };
+/**
+ * Payload denah publik.
+ * eventDates: tanggal gelaran aktif >= hari ini, urut naik.
+ * occupancy : baris view slot_date_status untuk tanggal-tanggal tersebut
+ *             (bahan slotStatusForDates di src/lib/domain/ketersediaan.ts).
+ */
+export type FloorPlanData = {
+  event: EventRow | null;
+  zones: ZoneWithSlots[];
+  eventDates: { id: string; event_date: string }[];
+  occupancy: SlotDateStatusRow[];
+};
 
-/** Booking lengkap: slot + zona, tenant, dan pembayaran admin fee (1:1). */
+/** Booking lengkap: slot + zona, tenant, pembayaran admin fee (1:1), dan tanggal sewanya. */
 export type BookingDetail = BookingRow & {
   slot: SlotDetail;
   tenant: TenantRow;
   payment: AdminFeePaymentRow | null;
+  /** Tanggal (YYYY-MM-DD) yang disewa booking ini — hanya baris aktif, urut naik. */
+  dates: string[];
 };
 
 /** Pengajuan leasing beserta partnernya. */

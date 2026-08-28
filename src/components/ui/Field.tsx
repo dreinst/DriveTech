@@ -8,7 +8,7 @@ import type {
 import { cn } from "@/lib/utils";
 
 const CONTROL_CLASS =
-  "block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm transition-colors placeholder:text-slate-400 hover:border-slate-400 focus:border-slate-900 focus:outline-none disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500 aria-[invalid=true]:border-red-400";
+  "block w-full rounded-xl border border-line bg-surface-2 px-3.5 py-2 text-sm text-ink transition-[border-color,box-shadow] duration-150 placeholder:text-subtle hover:border-line-strong focus:border-accent focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)] disabled:cursor-not-allowed disabled:bg-surface-3 disabled:text-muted aria-[invalid=true]:border-danger";
 
 export type FieldProps = {
   label: string;
@@ -23,18 +23,18 @@ export type FieldProps = {
 export function Field({ label, htmlFor, hint, error, required, children }: FieldProps) {
   return (
     <div className="space-y-1.5">
-      <label htmlFor={htmlFor} className="block text-sm font-medium text-slate-700">
+      <label htmlFor={htmlFor} className="block text-sm font-medium text-ink">
         {label}
         {required ? (
-          <span className="ml-0.5 text-red-600" aria-hidden="true">
+          <span className="ml-0.5 text-danger" aria-hidden="true">
             *
           </span>
         ) : null}
       </label>
       {children}
-      {hint && !error ? <p className="text-xs text-slate-500">{hint}</p> : null}
+      {hint && !error ? <p className="text-xs text-muted">{hint}</p> : null}
       {error ? (
-        <p className="text-xs font-medium text-red-600" role="alert">
+        <p className="text-xs font-medium text-danger" role="alert">
           {error}
         </p>
       ) : null}
@@ -44,13 +44,13 @@ export function Field({ label, htmlFor, hint, error, required, children }: Field
 
 export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(
   function Input({ className, ...props }, ref) {
-    return <input ref={ref} className={cn(CONTROL_CLASS, className)} {...props} />;
+    return <input ref={ref} className={cn(CONTROL_CLASS, "min-h-11", className)} {...props} />;
   },
 );
 
 export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSelectElement>>(
   function Select({ className, ...props }, ref) {
-    return <select ref={ref} className={cn(CONTROL_CLASS, "pr-8", className)} {...props} />;
+    return <select ref={ref} className={cn(CONTROL_CLASS, "min-h-11 pr-8", className)} {...props} />;
   },
 );
 

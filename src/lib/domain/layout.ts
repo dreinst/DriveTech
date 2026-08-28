@@ -41,7 +41,10 @@ export type LayoutZone = {
   slots: LayoutSlot[];
 };
 
-export type DecorItem = Rect & { id: string; label: string; kind: "taman" | "pagar" };
+export type DecorKind = "taman" | "pagar" | "tank";
+
+/** `rotate` = derajat searah jarum jam mengelilingi titik tengah rect (dipakai tank). */
+export type DecorItem = Rect & { id: string; label: string; kind: DecorKind; rotate?: number };
 
 /* ---------- Helper deterministik untuk zona bernomor ---------- */
 
@@ -216,13 +219,33 @@ export const FLOOR_PLAN_DECOR: DecorItem[] = [
   { id: "taman-kanan", x: 890, y: 456, width: 120, height: 674, label: "Taman", kind: "taman" },
   { id: "taman-kiri-bawah", x: 122, y: 1012, width: 440, height: 116, label: "Taman", kind: "taman" },
   { id: "taman-tengah-bawah", x: 655, y: 1012, width: 185, height: 116, label: "Taman", kind: "taman" },
+
+  // Tank display Kostrad (kendaraan hijau di gambar asli) — murni dekor, bukan slot.
+  // Rect ditulis SEBELUM rotasi; laras menghadap sumbu +x, lalu dirotasi `rotate`°.
+  { id: "tank-sekretariat", x: 285, y: 150, width: 96, height: 40, label: "Tank", kind: "tank", rotate: -45 },
+  { id: "tank-umkm", x: 125, y: 582, width: 100, height: 38, label: "Tank", kind: "tank", rotate: 0 },
+  { id: "tank-warung", x: 573, y: 938, width: 96, height: 38, label: "Tank", kind: "tank", rotate: 90 },
 ];
 
-/** Gaya dekor: taman hijau muda, pagar hijau solid tanpa garis tepi. */
+/** Gaya dekor: taman hijau muda, pagar hijau solid tanpa garis tepi.
+ *  Entri tank hanya fallback kotak (hull); gambar lengkapnya memakai TANK_STYLE. */
 export const DECOR_STYLE: Record<DecorItem["kind"], { fill: string; stroke: string | null }> = {
   taman: { fill: "#e8f5e9", stroke: "#a5d6a7" },
   pagar: { fill: "#7cb342", stroke: null },
+  tank: { fill: "#5f8f3e", stroke: "#3f6212" },
 };
+
+/** Warna tank display Kostrad, meniru kendaraan hijau di gambar asli (bukan chrome UI). */
+export const TANK_STYLE = {
+  track: "#3f6212",
+  hullFill: "#5f8f3e",
+  hullStroke: "#3f6212",
+  hullStrokeWidth: 1.5,
+  turret: "#46702e",
+  barrel: "#3f6212",
+  label: "#3f6212",
+  labelFontSize: 9,
+} as const;
 
 /** Anotasi teks bebas di denah (text-anchor middle, font 12). */
 export const FLOOR_PLAN_ANNOTATIONS: { x: number; y: number; text: string; bold?: boolean }[] = [

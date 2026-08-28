@@ -2,6 +2,7 @@
 
 import { useActionState, useId, useState } from "react";
 
+import { FadeUp } from "@/components/motion/motion";
 import { Alert } from "@/components/ui/Alert";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { SubmitButton } from "@/components/ui/SubmitButton";
@@ -15,7 +16,6 @@ import {
   hitungAngsuran,
   parseRupiahInput,
   SIMULASI_BUNGA_FLAT_TAHUNAN,
-  SIMULASI_DISCLAIMER,
 } from "@/lib/domain/simulasi";
 import type { LeasingPartnerRow } from "@/lib/types/database";
 import { formatRupiah } from "@/lib/utils";
@@ -57,55 +57,66 @@ export function LeasingForm({ purchaseId, partners, unitPrice }: LeasingFormProp
 
       <fieldset disabled={isPending} className="space-y-5">
         {state.status === "error" && state.message ? (
-          <Alert tone="error" title="Pengajuan belum bisa dikirim">
-            {state.message}
-          </Alert>
+          <FadeUp>
+            <Alert tone="error" title="Pengajuan belum bisa dikirim">
+              {state.message}
+            </Alert>
+          </FadeUp>
         ) : null}
 
-        <fieldset className="space-y-2">
-          <legend className="text-sm font-medium text-slate-700">
+        <fieldset className="space-y-2.5">
+          <legend className="text-sm font-medium text-ink">
             Pilih mitra leasing
-            <span className="ml-0.5 text-red-600" aria-hidden="true">
+            <span className="ml-0.5 text-danger" aria-hidden="true">
               *
             </span>
           </legend>
-          <div className="grid gap-2 sm:grid-cols-2">
+          {/* Kartu mitra pilih — pola "payment-card" mockup: terpilih = bingkai & latar aksen. */}
+          <div className="grid gap-2.5 sm:grid-cols-2">
             {partners.map((partner) => {
               const dipilih = partnerId === partner.id;
               return (
                 <label
                   key={partner.id}
-                  className={`flex cursor-pointer items-start gap-3 rounded-xl border px-3.5 py-3 transition-colors ${
+                  className={`flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-[var(--radius)] border px-4 py-3.5 transition-[background-color,border-color,box-shadow] duration-150 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[var(--ring)] ${
                     dipilih
-                      ? "border-slate-900 bg-slate-50"
-                      : "border-slate-200 bg-white hover:border-slate-300"
+                      ? "border-accent bg-accent-soft"
+                      : "border-line bg-surface-2 hover:border-accent"
                   }`}
                 >
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-semibold text-ink">
+                      {partner.name}
+                    </span>
+                    {partner.contact ? (
+                      <span className="mt-0.5 block truncate text-xs text-muted">
+                        {partner.contact}
+                      </span>
+                    ) : null}
+                  </span>
                   <input
                     type="radio"
                     name="leasingPartnerId"
                     value={partner.id}
                     checked={dipilih}
                     onChange={() => setPartnerId(partner.id)}
-                    className="mt-1 h-4 w-4 shrink-0 accent-slate-900"
+                    className="sr-only"
                     required
                   />
-                  <span className="min-w-0">
-                    <span className="block text-sm font-semibold text-slate-900">
-                      {partner.name}
-                    </span>
-                    {partner.contact ? (
-                      <span className="mt-0.5 block text-xs text-slate-500">
-                        Kontak: {partner.contact}
-                      </span>
-                    ) : null}
+                  <span
+                    className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-colors duration-150 ${
+                      dipilih ? "border-accent bg-accent" : "border-line-strong bg-card"
+                    }`}
+                    aria-hidden="true"
+                  >
+                    {dipilih ? <span className="h-1.5 w-1.5 rounded-full bg-app" /> : null}
                   </span>
                 </label>
               );
             })}
           </div>
           {errors.leasingPartnerId ? (
-            <p className="text-xs font-medium text-red-600" role="alert">
+            <p className="text-xs font-medium text-danger" role="alert">
               {errors.leasingPartnerId}
             </p>
           ) : null}
@@ -115,13 +126,13 @@ export function LeasingForm({ purchaseId, partners, unitPrice }: LeasingFormProp
           <Field
             label="Uang muka (DP)"
             htmlFor={`${idPrefix}-dp`}
-            hint="Anjuran awal 20% dari harga unit. Silakan sesuaikan dengan kemampuan Anda."
+            hint="Anjuran 20% dari harga unit; sesuaikan dengan kemampuan Anda."
             error={errors.dpAmount}
             required
           >
             <div className="relative">
               <span
-                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-slate-500"
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted"
                 aria-hidden="true"
               >
                 Rp
@@ -131,7 +142,7 @@ export function LeasingForm({ purchaseId, partners, unitPrice }: LeasingFormProp
                 type="text"
                 inputMode="numeric"
                 autoComplete="off"
-                className="pl-9"
+                className="tabular pl-9"
                 placeholder="30.000.000"
                 value={dpText === "" ? "" : formatRibuan(dp)}
                 onChange={(event) => setDpText(digitsOnly(event.target.value))}
@@ -164,49 +175,54 @@ export function LeasingForm({ purchaseId, partners, unitPrice }: LeasingFormProp
           </Field>
         </div>
 
-        <section className="space-y-3 rounded-xl border border-blue-200 bg-blue-50/60 p-4">
-          <h3 className="text-sm font-semibold text-slate-900">Ringkasan simulasi (estimasi)</h3>
+        <section className="space-y-3 rounded-[var(--radius)] border border-line bg-surface-2 p-4 sm:p-5">
+          <h3 className="text-xs font-semibold uppercase tracking-[0.08em] text-subtle">
+            Ringkasan Angsuran
+          </h3>
 
           {simulasi.valid ? (
-            <div className="rounded-lg border border-blue-200 bg-white p-3.5">
-              <p className="text-xs text-slate-500">Estimasi angsuran per bulan</p>
-              <p className="mt-0.5 text-2xl font-semibold tracking-tight text-slate-900">
+            <div className="rounded-[var(--radius-sm)] border border-line bg-card p-4">
+              <p className="text-xs text-muted">Estimasi angsuran per bulan</p>
+              <p className="tabular mt-1 text-2xl font-semibold tracking-tight text-accent sm:text-3xl">
                 {formatRupiah(simulasi.angsuranPerBulan)}
               </p>
-              <dl className="mt-3 grid gap-x-4 gap-y-1.5 text-xs sm:grid-cols-2">
+              <dl className="tabular mt-4 grid gap-x-4 gap-y-1.5 border-t border-line pt-3 text-xs sm:grid-cols-2">
                 <div className="flex justify-between gap-2 sm:block">
-                  <dt className="text-slate-500">Harga unit</dt>
-                  <dd className="font-medium text-slate-900">{formatRupiah(simulasi.harga)}</dd>
+                  <dt className="text-muted">Harga unit</dt>
+                  <dd className="font-medium text-ink">{formatRupiah(simulasi.harga)}</dd>
                 </div>
                 <div className="flex justify-between gap-2 sm:block">
-                  <dt className="text-slate-500">Uang muka</dt>
-                  <dd className="font-medium text-slate-900">{formatRupiah(simulasi.dp)}</dd>
+                  <dt className="text-muted">Uang muka</dt>
+                  <dd className="font-medium text-ink">{formatRupiah(simulasi.dp)}</dd>
                 </div>
                 <div className="flex justify-between gap-2 sm:block">
-                  <dt className="text-slate-500">Pokok pembiayaan</dt>
-                  <dd className="font-medium text-slate-900">{formatRupiah(simulasi.pokok)}</dd>
+                  <dt className="text-muted">Pokok pembiayaan</dt>
+                  <dd className="font-medium text-ink">{formatRupiah(simulasi.pokok)}</dd>
                 </div>
                 <div className="flex justify-between gap-2 sm:block">
-                  <dt className="text-slate-500">Total bunga ({bungaPersen}% flat/tahun)</dt>
-                  <dd className="font-medium text-slate-900">{formatRupiah(simulasi.totalBunga)}</dd>
+                  <dt className="text-muted">Total bunga ({bungaPersen}% flat/tahun)</dt>
+                  <dd className="font-medium text-ink">{formatRupiah(simulasi.totalBunga)}</dd>
                 </div>
               </dl>
             </div>
           ) : (
             <Alert tone="info">
               {simulasi.harga <= 0
-                ? "Perkiraan harga unit belum tercatat pada transaksi ini, jadi estimasi angsuran belum bisa dihitung. Pengajuan tetap bisa dikirim dan mitra leasing akan menghitungnya bersama Anda."
-                : "DP yang Anda isi sudah menutupi seluruh harga unit, jadi tidak ada sisa yang perlu dicicil."}
+                ? "Harga unit belum tercatat, jadi estimasi belum bisa dihitung. Pengajuan tetap bisa dikirim; mitra menghitungnya bersama Anda."
+                : "DP sudah menutupi seluruh harga unit — tidak ada sisa yang perlu dicicil."}
             </Alert>
           )}
 
-          <p className="text-xs leading-relaxed text-slate-500">{SIMULASI_DISCLAIMER}</p>
+          <p className="text-xs leading-relaxed text-muted">
+            Estimasi tidak mengikat — DP, tenor, bunga, dan biaya final ditentukan mitra leasing
+            setelah verifikasi.
+          </p>
         </section>
 
         <Field
           label="Catatan tambahan"
           htmlFor={`${idPrefix}-catatan`}
-          hint="Opsional. Misalnya pekerjaan, penghasilan bulanan, atau jam yang enak dihubungi."
+          hint="Opsional; misalnya pekerjaan atau jam yang enak dihubungi."
           error={errors.notes}
         >
           <Textarea
@@ -218,25 +234,24 @@ export function LeasingForm({ purchaseId, partners, unitPrice }: LeasingFormProp
           />
         </Field>
 
-        <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-white px-3.5 py-3">
+        <label className="flex cursor-pointer items-start gap-3 rounded-[var(--radius-sm)] border border-line bg-surface-2 px-4 py-3">
           <input
             type="checkbox"
             name="persetujuan"
-            className="mt-0.5 h-4 w-4 shrink-0 accent-slate-900"
+            className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--accent)]"
             required
           />
-          <span className="text-xs leading-relaxed text-slate-600">
+          <span className="text-xs leading-relaxed text-muted">
             Saya setuju data pada formulir ini (nama, nomor HP, unit yang diminati, DP, dan tenor)
-            diteruskan kepada mitra leasing yang saya pilih untuk keperluan proses pengajuan
-            pembiayaan.
+            diteruskan kepada mitra leasing yang saya pilih untuk proses pengajuan pembiayaan.
           </span>
         </label>
 
-        <div className="flex flex-wrap items-center gap-3 border-t border-slate-100 pt-4">
-          <SubmitButton pendingText="Mengirim…">Ajukan ke Leasing</SubmitButton>
-          <p className="text-xs text-slate-500">
-            Setelah dikirim, Anda bisa memantau prosesnya di halaman status transaksi.
-          </p>
+        <div className="flex flex-wrap items-center gap-3 border-t border-line pt-4">
+          <SubmitButton variant="accent" pendingText="Mengirim…">
+            Ajukan ke Leasing
+          </SubmitButton>
+          <p className="text-xs text-muted">Pantau prosesnya di halaman status transaksi.</p>
         </div>
       </fieldset>
     </form>

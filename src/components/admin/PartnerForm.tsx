@@ -80,13 +80,13 @@ export function PartnerForm({
         />
       </Field>
 
-      <label htmlFor={aktifId} className="flex items-center gap-2 text-sm font-medium text-slate-700">
+      <label htmlFor={aktifId} className="flex items-center gap-2 text-sm font-medium text-ink">
         <input
           id={aktifId}
           name="isActive"
           type="checkbox"
           defaultChecked={partner?.is_active ?? true}
-          className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+          className="h-4 w-4 rounded border-line-strong accent-accent"
         />
         Mitra aktif (tampil pada pilihan pengajuan leasing)
       </label>
@@ -99,7 +99,7 @@ export function PartnerForm({
           <p
             role="status"
             className={`text-xs font-medium ${
-              state.status === "success" ? "text-green-700" : "text-red-600"
+              state.status === "success" ? "text-ok" : "text-danger"
             }`}
           >
             {state.message}
@@ -112,10 +112,10 @@ export function PartnerForm({
   if (variant === "inline") {
     return (
       <details className="min-w-[15rem]">
-        <summary className="inline-flex h-8 cursor-pointer list-none items-center rounded-lg border border-slate-300 bg-white px-3 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50 [&::-webkit-details-marker]:hidden">
+        <summary className="inline-flex h-9 cursor-pointer list-none items-center rounded-[var(--radius-sm)] border border-line bg-card px-3 text-xs font-medium text-ink shadow-[var(--shadow-sm)] transition-[background-color,border-color] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-surface-2 [&::-webkit-details-marker]:hidden">
           {summaryLabel}
         </summary>
-        <div className="mt-2 w-64 rounded-lg border border-slate-200 bg-white p-3 shadow-sm">{isi}</div>
+        <div className="anim-rise mt-2 w-64 rounded-[var(--radius-sm)] border border-line bg-card p-3 shadow-[var(--shadow-md)]">{isi}</div>
       </details>
     );
   }

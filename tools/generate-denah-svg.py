@@ -54,18 +54,70 @@ def number_text(cx, cy, n, box_h):
             'text-anchor="middle" dominant-baseline="middle">%d</text>' % (cx, cy, fs, n))
 
 def slot(sid, x, y, w, h, number=None, label=None, vertical=False, facility=False):
+    """Satu kotak slot.
+
+    Slot BOOKABLE (bukan facility/warung) dibungkus <a href="/booking/by-svg/<sid>">
+    dan diberi data-form dengan URL yang sama, sehingga file SVG yang dibuka
+    langsung pun bisa diklik menuju form booking slot itu. Rute
+    /booking/by-svg/[svgId] menerjemahkan id elemen SVG ke uuid slot database
+    lalu redirect ke /booking/<uuid>. Slot facility/warung TANPA <a>.
+    """
     cx, cy = x + w / 2, y + h / 2
-    cls = 'slot facility' if facility else 'slot'
-    role = '' if facility else ' role="button" tabindex="0"'
     aria = esc(label or ('Slot %d' % number))
-    A('      <g id="%s" class="%s" data-status="%s" data-slot="%s"%s aria-label="%s">'
-      % (sid, cls, 'facility' if facility else 'available', sid, role, aria))
+    if facility:
+        A('      <g id="%s" class="slot facility" data-status="facility" data-slot="%s" aria-label="%s">'
+          % (sid, sid, aria))
+    else:
+        form_url = '/booking/by-svg/%s' % sid
+        A('      <a href="%s" aria-label="%s — buka form booking">' % (form_url, aria))
+        A('      <g id="%s" class="slot" data-status="available" data-slot="%s" data-form="%s">'
+          % (sid, sid, form_url))
     A('        <rect x="%g" y="%g" width="%g" height="%g" rx="4"/>' % (x, y, w, h))
     if number is not None:
         A('        ' + number_text(cx, cy, number, h))
     else:
         A('        ' + label_text(cx, cy, label, w, h, vertical))
     A('      </g>')
+    if not facility:
+        A('      </a>')
+
+def tank(x, y, w, h, rotate=0, gid=None, overhang=22, with_label=True):
+    """Tank display Kostrad, tampak atas stilasi: 2 track + hull + turret + laras.
+
+    (x, y, w, h) adalah badan SEBELUM rotasi; laras menghadap sumbu +x dan
+    memanjang ~overhang px melewati ujung depan. Rotasi mengelilingi titik
+    tengah badan. Dekor murni: bukan slot, tidak ada di database.
+    """
+    cx, cy = x + w / 2, y + h / 2
+    th = max(3, round(h * 0.24))            # tebal track
+    rx_track = min(3, th / 2)
+    barrel_h = max(2.4, h * 0.12)
+    turret_cx = x + w * 0.45
+    turret_r = max(3.5, h * 0.30)
+    hull_sw = 1.5 if h >= 24 else 1
+    A('    <g%s>' % (' id="%s"' % gid if gid else ''))
+    tf = ' transform="rotate(%g %g %g)"' % (rotate, cx, cy) if rotate else ''
+    A('      <g%s>' % tf)
+    A('        <rect x="%g" y="%g" width="%g" height="%g" rx="%g" fill="#3f6212"/>'
+      % (x, y, w, th, rx_track))
+    A('        <rect x="%g" y="%g" width="%g" height="%g" rx="%g" fill="#3f6212"/>'
+      % (x, y + h - th, w, th, rx_track))
+    A('        <rect x="%g" y="%g" width="%g" height="%g" rx="%g" fill="#5f8f3e" '
+      'stroke="#3f6212" stroke-width="%g"/>'
+      % (x + w * 0.04, y + th * 0.5, w * 0.92, h - th, h * 0.16, hull_sw))
+    A('        <rect x="%g" y="%g" width="%g" height="%g" rx="%g" fill="#3f6212"/>'
+      % (turret_cx, cy - barrel_h / 2, x + w + overhang - turret_cx, barrel_h, barrel_h / 2))
+    A('        <circle cx="%g" cy="%g" r="%g" fill="#46702e"/>' % (turret_cx, cy, turret_r))
+    A('      </g>')
+    if with_label:
+        # label tegak di bawah bounding box hasil rotasi (termasuk laras)
+        rad = math.radians(rotate)
+        pts = [(x, y), (x + w + overhang, y), (x, y + h), (x + w + overhang, y + h)]
+        max_y = max(cy + (px - cx) * math.sin(rad) + (py - cy) * math.cos(rad)
+                    for px, py in pts)
+        A('      <text x="%g" y="%g" font-size="9" font-weight="600" fill="#3f6212" '
+          'text-anchor="middle">Tank</text>' % (cx, max_y + 9))
+    A('    </g>')
 
 # ----------------------------------------------------------------- header
 A('<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="%d" viewBox="0 0 %d %d" '
@@ -73,17 +125,20 @@ A('<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="%d" viewBox="0 0 %
   'aria-labelledby="denah-title denah-desc" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif">' % (W, H, W, H))
 A('  <title id="denah-title">Denah Pameran Mobil &amp; Motor Bekas</title>')
 A('  <desc id="denah-desc">Denah lokasi pameran: tenda pameran mobil baru, area pameran mobil, '
-  'area pameran mobil dan motor, area UMKM, warung, serta fasilitas umum. '
+  'area pameran mobil dan motor, area UMKM, warung (belum dibuka untuk booking online), '
+  'fasilitas umum, serta tiga tank display Kostrad sebagai dekorasi. '
   'Setiap slot punya id yang sama dengan kolom svg_element_id di database, dan atribut '
-  'data-status yang menentukan warnanya (available, pending, confirmed, facility).</desc>')
+  'data-status yang menentukan warnanya (available, pending, confirmed, facility). '
+  'Slot yang dapat disewa online adalah tautan menuju /booking/by-svg/&lt;id&gt; '
+  '(atribut data-form berisi URL yang sama), yang meneruskan ke form booking slot itu.</desc>')
 A('''  <style>
     .slot rect { fill:#dcfce7; stroke:#16a34a; stroke-width:2; transition:fill .15s ease; }
     .slot[data-status="pending"]   rect { fill:#fef3c7; stroke:#d97706; }
     .slot[data-status="confirmed"] rect { fill:#fee2e2; stroke:#dc2626; }
     .slot[data-status="facility"]  rect { fill:#e2e8f0; stroke:#94a3b8; }
-    .slot[role="button"] { cursor:pointer; }
-    .slot[role="button"]:hover rect { stroke-width:3.5; }
-    .slot[role="button"]:focus-visible rect { stroke:#0f172a; stroke-width:3.5; outline:none; }
+    a { cursor:pointer; }
+    a:hover .slot rect { stroke-width:3.5; }
+    a:focus-visible .slot rect { stroke:#0f172a; stroke-width:3.5; outline:none; }
     .zone-box   { fill:#ffffff; stroke:#cbd5e1; stroke-width:1.5; }
     .zone-title { fill:#ffffff; font-weight:700; font-size:14px; }
     .zone-count { fill:#475569; font-size:11px; }
@@ -112,6 +167,16 @@ for did, x, y, w, h in [
     tf = ' transform="rotate(-90 %g %g)"' % (cx, cy) if vert else ''
     A('    <text class="decor-label" x="%g" y="%g"%s text-anchor="middle" '
       'dominant-baseline="middle">Taman</text>' % (cx, cy, tf))
+A('  </g>')
+
+# ------------------------------------------------ tank display Kostrad (dekor)
+A('  <g id="denah-tank" aria-hidden="true" pointer-events="none">')
+for gid, x, y, w, h, rot in [
+    ('tank-sekretariat', 285, 150, 96, 40, -45),  # samping Kantor Sekretariat, moncong kanan-atas
+    ('tank-umkm',        125, 582, 100, 38, 0),   # tepi kiri antara Warmindo & Warung 1
+    ('tank-warung',      573, 938, 96, 38, 90),   # vertikal antara Warung 10 & Warung Sate & Gule
+]:
+    tank(x, y, w, h, rotate=rot, gid=gid)
 A('  </g>')
 
 # ------------------------------------------------------------- anotasi
@@ -187,7 +252,9 @@ for col, cx0 in enumerate([240, 322, 430]):
         slot('slot-umkm-%02d' % n, cx0, 474 + row * 34.4, 34, 32, number=n)
 zone_close()
 
-# 5. Warung — 12 unit (tersebar, tanpa container)
+# 5. Warung — 12 unit (tersebar, tanpa container).
+# Kebijakan: warung BELUM dibuka untuk booking online — digambar netral abu
+# seperti fasilitas (data-status="facility", tanpa role/tabindex), label tetap.
 zone_open('zone-warung', 'WARUNG', '#bf8f00', None, total=12)
 WARUNG = [
     ('slot-warung-warmindo', 122, 440, 113, 120, 'Warmindo', False),
@@ -204,7 +271,7 @@ WARUNG = [
     ('slot-warung-sate-gule', 655, 908, 185, 96, 'Warung Sate & Gule', False),
 ]
 for sid, x, y, w, h, lbl, vert in WARUNG:
-    slot(sid, x, y, w, h, label=lbl, vertical=vert)
+    slot(sid, x, y, w, h, label=lbl, vertical=vert, facility=True)
 zone_close()
 
 # 6. Fasilitas Umum — 8 unit (tidak bisa dibooking)
@@ -231,12 +298,14 @@ for x, fill, stroke, lbl in [
     (60, '#dcfce7', '#16a34a', 'Tersedia'),
     (175, '#fef3c7', '#d97706', 'Menunggu Pembayaran'),
     (366, '#fee2e2', '#dc2626', 'Terisi'),
-    (466, '#e2e8f0', '#94a3b8', 'Fasilitas / tidak disewakan'),
+    (466, '#e2e8f0', '#94a3b8', 'Fasilitas & warung (tidak disewakan online)'),
 ]:
     A('    <rect x="%g" y="1486" width="24" height="20" rx="4" fill="%s" stroke="%s" stroke-width="2"/>'
       % (x, fill, stroke))
     A('    <text class="legend-label" x="%g" y="1496" dominant-baseline="middle">%s</text>'
       % (x + 32, esc(lbl)))
+tank(830, 1489, 26, 14, gid='legenda-tank', overhang=8, with_label=False)
+A('    <text class="legend-label" x="872" y="1496" dominant-baseline="middle">Tank display Kostrad</text>')
 for x, accent, lbl in [
     (60, '#7030a0', 'Tenda Mobil Baru'),
     (210, '#c00000', 'Area Pameran Mobil'),
@@ -249,8 +318,9 @@ for x, accent, lbl in [
     A('    <text class="legend-label" x="%g" y="1535" font-size="12" dominant-baseline="middle">%s</text>'
       % (x + 22, lbl))
 A('    <text x="1063" y="1562" text-anchor="end" font-size="11" fill="#94a3b8">'
-  'Sumber: Layout Sistem Pameran.jpeg &#183; 104 slot (96 dapat disewa) &#183; '
-  'id tiap slot = kolom svg_element_id di database</text>')
+  'Sumber: Layout Sistem Pameran.jpeg &#183; 104 slot (84 dapat disewa online) &#183; '
+  'id tiap slot = kolom svg_element_id di database &#183; '
+  'klik slot bookable = /booking/by-svg/&lt;id&gt;</text>')
 A('  </g>')
 A('</svg>')
 

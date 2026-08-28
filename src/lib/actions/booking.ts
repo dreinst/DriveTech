@@ -56,6 +56,25 @@ function ambilDetail(formData: FormData): Record<string, unknown> {
   return detail;
 }
 
+/**
+ * KONTRAK FORM (diikuti agen UI): tanggal-tanggal terpilih dikirim lewat SATU
+ * hidden input name="eventDates" berisi JSON array string "YYYY-MM-DD",
+ * mis. <input type="hidden" name="eventDates" value='["2026-08-29","2026-08-30"]' />.
+ * Pembaca ini toleran: kalau bukan JSON array yang valid, hasilnya [] dan
+ * validasi zod yang memberi pesan errornya.
+ */
+function ambilEventDates(formData: FormData): string[] {
+  const mentah = formData.get("eventDates");
+  if (typeof mentah !== "string" || mentah.trim().length === 0) return [];
+  try {
+    const parsed: unknown = JSON.parse(mentah);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((item): item is string => typeof item === "string");
+  } catch {
+    return [];
+  }
+}
+
 const JENIS_BUKTI_DIIZINKAN = ["image/jpeg", "image/png", "image/webp"];
 
 function ekstensiBukti(mime: string): string {
@@ -89,6 +108,7 @@ export async function createBookingAction(
   const detail = ambilDetail(form);
   const parsed = createBookingSchema.safeParse({
     slotId,
+    eventDates: ambilEventDates(form),
     tenantName: teks(form, "tenantName"),
     tenantPhone: teks(form, "tenantPhone"),
     tenantEmail: teks(form, "tenantEmail"),
@@ -103,7 +123,9 @@ export async function createBookingAction(
 
   const result = await createBooking(parsed.data);
   if (!result.ok) {
-    return errorState(result.error, result.code === "SLOT_TAKEN" ? { slotId: result.error } : undefined);
+    if (result.code === "SLOT_TAKEN") return errorState(result.error, { slotId: result.error });
+    if (result.code === "DATE_TAKEN") return errorState(result.error, { eventDates: result.error });
+    return errorState(result.error);
   }
 
   revalidatePath("/");

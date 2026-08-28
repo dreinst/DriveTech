@@ -1,32 +1,43 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { AutoRefresh } from "@/components/admin/AutoRefresh";
+import { ringkasTanggal } from "@/components/admin/BookingDateChips";
 import { SlotStatusForm } from "@/components/admin/SlotStatusForm";
 import { Alert } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
 import { Button, buttonClass } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Field, Select } from "@/components/ui/Field";
-import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { SLOT_STATUS_LABEL, ZONE_TYPE_LABEL } from "@/lib/domain/labels";
+import { ZONE_TYPE_LABEL } from "@/lib/domain/labels";
 import { listBookings, listSlots } from "@/lib/services/admin";
 import { requireAdmin } from "@/lib/services/auth";
-import type { BookingDetail, SlotDetail, SlotStatus, ZoneRow } from "@/lib/types/database";
+import type { BookingDetail, SlotDetail, ZoneRow } from "@/lib/types/database";
 import { slotDisplayName } from "@/lib/utils";
 
 // Selalu tampilkan status slot terbaru; jangan dirender saat build.
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Kelola Slot",
-  description: "Pantau dan override status slot pameran secara manual.",
+  title: "Inventaris Slot",
+  description: "Blokir atau buka slot untuk semua tanggal gelaran.",
 };
 
 type SearchParams = Record<string, string | string[] | undefined>;
 type PageProps = { searchParams: Promise<SearchParams> };
 
-const STATUS_TERSEDIA: readonly SlotStatus[] = ["available", "pending", "confirmed"];
+/**
+ * Model per tanggal: slots.status = 'available' berarti slot normal (mengikuti
+ * okupansi per tanggal); nilai lain berarti DIBLOKIR PANITIA untuk semua
+ * tanggal. Filter halaman ini karenanya hanya dua: tersedia vs diblokir.
+ */
+type FilterStatus = "available" | "blocked";
+
+const FILTER_STATUS: ReadonlyArray<{ value: FilterStatus; label: string }> = [
+  { value: "available", label: "Tersedia" },
+  { value: "blocked", label: "Diblokir" },
+];
 
 /** Ambil satu nilai query string (array diambil elemen pertamanya). */
 function ambilParam(sp: SearchParams, key: string): string {
@@ -35,8 +46,8 @@ function ambilParam(sp: SearchParams, key: string): string {
   return (nilai ?? "").trim();
 }
 
-function hitungStatus(rows: SlotDetail[], status: SlotStatus): number {
-  return rows.filter((slot) => slot.status === status).length;
+function terblokir(slot: SlotDetail): boolean {
+  return slot.status !== "available";
 }
 
 export default async function AdminSlotsPage({ searchParams }: PageProps) {
@@ -51,11 +62,8 @@ export default async function AdminSlotsPage({ searchParams }: PageProps) {
 
   if (!semuaResult.ok) {
     return (
-      <div className="space-y-4">
-        <PageHeader
-          title="Kelola Slot"
-          description="Override status slot secara manual bila pembayaran diterima di luar sistem."
-        />
+      <div className="space-y-6">
+        <h1 className="text-3xl font-bold tracking-[-0.02em] text-ink sm:text-4xl">Inventaris</h1>
         <Alert tone="error" title="Daftar slot belum bisa dimuat">
           {semuaResult.error}
         </Alert>
@@ -79,57 +87,71 @@ export default async function AdminSlotsPage({ searchParams }: PageProps) {
     zonaParam.length > 0
       ? (daftarZona.find((zona) => zona.id === zonaParam || zona.svg_group_id === zonaParam) ?? null)
       : null;
-  const statusTerpilih = STATUS_TERSEDIA.find((status) => status === statusParam) ?? null;
+  const statusTerpilih =
+    FILTER_STATUS.find((item) => item.value === statusParam)?.value ?? null;
   const adaFilter = zonaTerpilih !== null || statusTerpilih !== null;
   const filterTakDikenal =
     (zonaParam.length > 0 && zonaTerpilih === null) ||
     (statusParam.length > 0 && statusTerpilih === null);
 
-  const daftarResult = adaFilter
-    ? await listSlots({
-        zoneId: zonaTerpilih?.id,
-        status: statusTerpilih ?? undefined,
-      })
-    : semuaResult;
+  // "Diblokir" mencakup semua nilai enum selain 'available', jadi filternya
+  // dikerjakan di memori — bukan lewat eq() satu nilai.
+  const zonaResult = zonaTerpilih ? await listSlots({ zoneId: zonaTerpilih.id }) : semuaResult;
+  const daftar = (zonaResult.ok ? zonaResult.data : []).filter((slot) => {
+    if (statusTerpilih === "available") return !terblokir(slot);
+    if (statusTerpilih === "blocked") return terblokir(slot);
+    return true;
+  });
 
-  const daftar = daftarResult.ok ? daftarResult.data : [];
-
-  // Booking aktif per slot (pending_payment / confirmed). Terbaru menang.
+  // Booking aktif per slot (pending_payment / confirmed) — model per tanggal:
+  // satu slot bisa punya beberapa booking aktif di tanggal yang berbeda.
   const bookingResult = await listBookings();
-  const bookingPerSlot = new Map<string, BookingDetail>();
+  const bookingPerSlot = new Map<string, BookingDetail[]>();
   if (bookingResult.ok) {
     for (const booking of bookingResult.data) {
       if (booking.status === "cancelled") continue;
-      if (!bookingPerSlot.has(booking.slot_id)) bookingPerSlot.set(booking.slot_id, booking);
+      const milik = bookingPerSlot.get(booking.slot_id);
+      if (milik) milik.push(booking);
+      else bookingPerSlot.set(booking.slot_id, [booking]);
     }
   }
 
+  const jumlahDiblokir = daftar.filter(terblokir).length;
+  const jumlahFasilitas = daftar.filter((slot) => slot.zone.zone_type === "facility").length;
+
   const ringkasan = [
-    { label: "Slot ditampilkan", nilai: daftar.length, kelas: "text-slate-900" },
-    { label: SLOT_STATUS_LABEL.available, nilai: hitungStatus(daftar, "available"), kelas: "text-green-700" },
-    { label: SLOT_STATUS_LABEL.pending, nilai: hitungStatus(daftar, "pending"), kelas: "text-amber-700" },
-    { label: SLOT_STATUS_LABEL.confirmed, nilai: hitungStatus(daftar, "confirmed"), kelas: "text-red-700" },
+    { label: "Slot ditampilkan", nilai: daftar.length, kelas: "text-ink" },
+    { label: "Tersedia", nilai: daftar.length - jumlahDiblokir, kelas: "text-ok" },
+    { label: "Diblokir", nilai: jumlahDiblokir, kelas: "text-danger" },
+    { label: "Fasilitas", nilai: jumlahFasilitas, kelas: "text-muted" },
   ];
 
-  const jumlahFasilitas = daftar.filter((slot) => slot.zone.zone_type === "facility").length;
   const nilaiZonaTerpilih = zonaTerpilih ? (zonaTerpilih.svg_group_id ?? zonaTerpilih.id) : "";
 
   return (
-    <div className="space-y-4">
-      <PageHeader
-        title="Kelola Slot"
-        description="Override status slot secara manual, misalnya saat pembayaran diterima langsung di sekretariat."
-        action={
+    <div className="space-y-6">
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div className="min-w-0 space-y-2">
+          <h1 className="text-3xl font-bold tracking-[-0.02em] text-ink sm:text-4xl">
+            Inventaris
+          </h1>
+          <p className="max-w-2xl text-sm leading-relaxed text-muted sm:text-base">
+            Blokir atau buka slot untuk <strong className="font-medium">semua tanggal</strong>{" "}
+            gelaran — ketersediaan per tanggal sendiri mengikuti booking di denah.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <AutoRefresh />
           <Link href="/admin/bookings" className={buttonClass("secondary", "sm")}>
-            Ke daftar booking
+            Ke daftar pemesanan
           </Link>
-        }
-      />
+        </div>
+      </header>
 
       {/* ---------- Baris filter ---------- */}
       <form
         method="get"
-        className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end"
+        className="grid gap-3 rounded-[var(--radius)] border border-line bg-card p-4 shadow-[var(--shadow-sm)] sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end"
       >
         <Field label="Zona" htmlFor="filter-zona">
           <Select id="filter-zona" name="zona" defaultValue={nilaiZonaTerpilih}>
@@ -145,9 +167,9 @@ export default async function AdminSlotsPage({ searchParams }: PageProps) {
         <Field label="Status" htmlFor="filter-status">
           <Select id="filter-status" name="status" defaultValue={statusTerpilih ?? ""}>
             <option value="">Semua status</option>
-            {STATUS_TERSEDIA.map((status) => (
-              <option key={status} value={status}>
-                {SLOT_STATUS_LABEL[status]}
+            {FILTER_STATUS.map((item) => (
+              <option key={item.value} value={item.value}>
+                {item.label}
               </option>
             ))}
           </Select>
@@ -170,9 +192,9 @@ export default async function AdminSlotsPage({ searchParams }: PageProps) {
         </Alert>
       ) : null}
 
-      {!daftarResult.ok ? (
+      {!zonaResult.ok ? (
         <Alert tone="error" title="Daftar slot terfilter gagal dimuat">
-          {daftarResult.error}
+          {zonaResult.error}
         </Alert>
       ) : null}
 
@@ -185,14 +207,14 @@ export default async function AdminSlotsPage({ searchParams }: PageProps) {
       {/* ---------- Ringkasan hitungan ---------- */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {ringkasan.map((item) => (
-          <div key={item.label} className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-            <p className="text-xs text-slate-500">{item.label}</p>
+          <div key={item.label} className="rounded-[var(--radius)] border border-line bg-card p-3 shadow-[var(--shadow-sm)]">
+            <p className="text-xs text-muted">{item.label}</p>
             <p className={`mt-0.5 text-xl font-semibold tabular ${item.kelas}`}>{item.nilai}</p>
           </div>
         ))}
       </div>
 
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-muted">
         {adaFilter
           ? `Menampilkan ${daftar.length} dari ${semuaSlot.length} slot terdaftar.`
           : `Total ${semuaSlot.length} slot terdaftar di denah.`}
@@ -213,10 +235,10 @@ export default async function AdminSlotsPage({ searchParams }: PageProps) {
           }
         />
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="overflow-x-auto rounded-[var(--radius)] border border-line bg-card shadow-[var(--shadow-sm)]">
           <table className="w-full min-w-[860px] border-collapse text-sm">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs font-medium tracking-wide text-slate-500 uppercase">
+              <tr className="border-b border-line bg-surface-2 text-left text-xs font-medium tracking-wide text-subtle uppercase">
                 <th scope="col" className="px-3 py-2.5">Zona</th>
                 <th scope="col" className="px-3 py-2.5">Slot</th>
                 <th scope="col" className="px-3 py-2.5">Status</th>
@@ -224,25 +246,26 @@ export default async function AdminSlotsPage({ searchParams }: PageProps) {
                 <th scope="col" className="px-3 py-2.5">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-line">
               {daftar.map((slot) => {
                 const fasilitas = slot.zone.zone_type === "facility";
-                const booking = bookingPerSlot.get(slot.id) ?? null;
+                const bookings = bookingPerSlot.get(slot.id) ?? [];
+                const bookingUtama = bookings[0] ?? null;
                 const nama = slotDisplayName(slot);
 
                 return (
-                  <tr key={slot.id} className="align-top hover:bg-slate-50/70">
+                  <tr key={slot.id} className="align-top hover:bg-surface-2">
                     <td className="px-3 py-2.5">
-                      <p className="font-medium text-slate-900">{slot.zone.name}</p>
-                      <p className="mt-0.5 text-xs text-slate-500">
+                      <p className="font-medium text-ink">{slot.zone.name}</p>
+                      <p className="mt-0.5 text-xs text-muted">
                         {ZONE_TYPE_LABEL[slot.zone.zone_type]}
                       </p>
                     </td>
 
                     <td className="px-3 py-2.5">
-                      <p className="font-medium text-slate-900">{nama}</p>
+                      <p className="font-medium text-ink">{nama}</p>
                       {slot.svg_element_id ? (
-                        <p className="mt-0.5 font-mono text-[11px] text-slate-400">
+                        <p className="mt-0.5 font-mono text-[11px] text-subtle">
                           {slot.svg_element_id}
                         </p>
                       ) : null}
@@ -250,38 +273,50 @@ export default async function AdminSlotsPage({ searchParams }: PageProps) {
 
                     <td className="px-3 py-2.5">
                       <div className="flex flex-wrap items-center gap-1.5">
-                        <StatusBadge status={slot.status} kind="slot" />
+                        {terblokir(slot) ? (
+                          <Badge tone="slate" dot>Diblokir</Badge>
+                        ) : (
+                          <Badge tone="green" dot>Tersedia</Badge>
+                        )}
                         {fasilitas ? <Badge tone="slate">Fasilitas</Badge> : null}
                       </div>
                     </td>
 
                     <td className="px-3 py-2.5">
-                      {booking ? (
+                      {bookingUtama ? (
                         <div className="space-y-1">
                           <Link
-                            href={`/admin/bookings?q=${encodeURIComponent(booking.booking_code)}`}
-                            className="font-mono text-xs font-semibold text-slate-900 underline underline-offset-2 hover:text-slate-600"
+                            href={`/admin/bookings?q=${encodeURIComponent(bookingUtama.booking_code)}`}
+                            className="font-mono text-xs font-semibold text-ink underline underline-offset-2 hover:text-accent"
                           >
-                            {booking.booking_code}
+                            {bookingUtama.booking_code}
                           </Link>
-                          <p className="text-xs text-slate-600">{booking.tenant.name}</p>
-                          <StatusBadge status={booking.status} kind="booking" />
+                          <p className="text-xs text-muted">{bookingUtama.tenant.name}</p>
+                          <p className="whitespace-nowrap text-xs text-subtle">
+                            {ringkasTanggal(bookingUtama.dates, 2)}
+                          </p>
+                          <StatusBadge status={bookingUtama.status} kind="booking" />
+                          {bookings.length > 1 ? (
+                            <p className="text-xs text-subtle">
+                              +{bookings.length - 1} booking lain di tanggal berbeda
+                            </p>
+                          ) : null}
                         </div>
                       ) : (
-                        <span className="text-xs text-slate-400">&mdash;</span>
+                        <span className="text-xs text-subtle">&mdash;</span>
                       )}
                     </td>
 
                     <td className="px-3 py-2.5">
                       {fasilitas ? (
-                        <span className="text-xs text-slate-400">Tidak disewakan</span>
+                        <span className="text-xs text-subtle">Tidak disewakan</span>
                       ) : (
                         <SlotStatusForm
                           slotId={slot.id}
                           status={slot.status}
-                          hasActiveBooking={booking !== null}
+                          hasActiveBooking={bookingUtama !== null}
                           slotName={`${nama} — ${slot.zone.name}`}
-                          bookingCode={booking?.booking_code ?? null}
+                          bookingCode={bookingUtama?.booking_code ?? null}
                         />
                       )}
                     </td>
@@ -293,11 +328,10 @@ export default async function AdminSlotsPage({ searchParams }: PageProps) {
         </div>
       )}
 
-      <p className="text-xs text-slate-500">
-        Perubahan status di sini langsung memengaruhi denah publik. Status
-        &ldquo;{SLOT_STATUS_LABEL.available}&rdquo; membuat slot bisa dipesan orang lain, sedangkan
-        data booking yang sudah ada tidak ikut dibatalkan &mdash; batalkan bookingnya dari halaman
-        booking bila perlu.
+      <p className="text-xs text-muted">
+        Status di sini bukan status booking: &ldquo;Tersedia&rdquo; berarti slot normal dan bisa
+        dipesan pada tanggal yang masih kosong, sedangkan &ldquo;Diblokir&rdquo; menutup slot dari
+        pemesanan untuk semua tanggal tanpa membatalkan booking yang sudah ada.
       </p>
     </div>
   );

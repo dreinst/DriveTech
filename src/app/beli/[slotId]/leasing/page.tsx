@@ -4,9 +4,16 @@ import { notFound, redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { LeasingForm } from "@/components/forms/LeasingForm";
+import { FadeUp } from "@/components/motion/motion";
 import { Alert } from "@/components/ui/Alert";
 import { buttonClass } from "@/components/ui/Button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Stepper } from "@/components/ui/Stepper";
@@ -35,11 +42,12 @@ const LANGKAH = ["Data Pembeli", "Metode Pembayaran", "Selesai"];
 /** Postgres menolak id yang bukan uuid; perlakukan seperti 404. */
 const INVALID_UUID = "22P02";
 
+/** Baris label-nilai di dalam kartu ringkasan. */
 function Baris({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="flex items-start justify-between gap-3 py-2">
-      <dt className="text-sm text-slate-500">{label}</dt>
-      <dd className="text-right text-sm font-medium text-slate-900">{children}</dd>
+    <div className="flex items-start justify-between gap-3 py-2.5">
+      <dt className="text-sm text-muted">{label}</dt>
+      <dd className="text-right text-sm font-medium text-ink">{children}</dd>
     </div>
   );
 }
@@ -84,9 +92,8 @@ export default async function PengajuanLeasingPage({
         />
         <Alert tone="info" title="Transaksi ini bukan pembelian kredit">
           <p>
-            Metode pembayaran yang Anda pilih adalah{" "}
-            {PURCHASE_PAYMENT_METHOD_LABEL[purchase.payment_method]}, jadi tidak perlu pengajuan ke
-            mitra leasing. Pembayaran diselesaikan langsung dengan tenant di lokasi.
+            Metode pembayaran Anda {PURCHASE_PAYMENT_METHOD_LABEL[purchase.payment_method]} —
+            pembayaran diselesaikan langsung dengan tenant di lokasi, tanpa pengajuan leasing.
           </p>
         </Alert>
         <Link href={statusHref} className={buttonClass("primary", "md")}>
@@ -111,34 +118,48 @@ export default async function PengajuanLeasingPage({
         title="Pengajuan Pembiayaan"
         backHref="/"
         backLabel="Kembali ke denah"
-        description="Pilih mitra leasing, tentukan uang muka dan tenor. Data Anda diteruskan ke mitra untuk diverifikasi."
+        description="Pilih mitra leasing lalu tentukan uang muka dan tenor."
       />
 
       <Stepper steps={LANGKAH} current={1} />
 
       <div className="space-y-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Ringkasan transaksi</CardTitle>
-          </CardHeader>
-          <CardContent className="py-2">
-            <dl className="divide-y divide-slate-100">
-              <Baris label="Kode transaksi">
-                <span className="font-mono">{purchase.transaction_code}</span>
-              </Baris>
-              <Baris label="Pembeli">{purchase.buyer_name}</Baris>
-              <Baris label="Lapak penjual">
-                {namaSlot} — {purchase.slot.zone.name}
-              </Baris>
-              <Baris label="Unit diminati">
-                {purchase.unit_description ?? "Belum dirinci"}
-              </Baris>
-              <Baris label="Perkiraan harga">
-                {purchase.unit_price === null ? "Belum dicatat" : formatRupiah(purchase.unit_price)}
-              </Baris>
-            </dl>
-          </CardContent>
-        </Card>
+        {/* Kartu ringkasan transaksi: kode besar + perkiraan harga (pola kartu mockup). */}
+        <FadeUp>
+          <Card className="shadow-[var(--shadow-md)]">
+            <CardContent>
+              <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase tracking-[0.08em] text-subtle">
+                    Kode Transaksi
+                  </p>
+                  <p className="mt-1.5 font-mono text-2xl font-semibold tracking-tight text-ink">
+                    {purchase.transaction_code}
+                  </p>
+                  <p className="mt-1 text-sm text-muted">{purchase.buyer_name}</p>
+                </div>
+                <div className="min-w-0 sm:text-right">
+                  <p className="text-xs font-semibold uppercase tracking-[0.08em] text-subtle">
+                    Perkiraan Harga Unit
+                  </p>
+                  {purchase.unit_price === null ? (
+                    <p className="mt-1.5 text-sm text-muted">Belum dicatat</p>
+                  ) : (
+                    <p className="tabular mt-1.5 text-2xl font-semibold tracking-tight text-ink">
+                      {formatRupiah(purchase.unit_price)}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <dl className="mt-5 divide-y divide-line border-t border-line">
+                <Baris label="Lapak penjual">
+                  {namaSlot} — {purchase.slot.zone.name}
+                </Baris>
+                <Baris label="Unit diminati">{purchase.unit_description ?? "Belum dirinci"}</Baris>
+              </dl>
+            </CardContent>
+          </Card>
+        </FadeUp>
 
         {!partnersResult.ok ? (
           <Alert tone="error" title="Gagal memuat mitra leasing">
@@ -149,7 +170,7 @@ export default async function PengajuanLeasingPage({
         {partnersResult.ok && partners.length === 0 ? (
           <EmptyState
             title="Belum ada mitra leasing aktif"
-            description="Saat ini panitia belum mengaktifkan mitra pembiayaan. Silakan hubungi sekretariat pameran atau tanyakan langsung ke tenant penjual."
+            description="Hubungi sekretariat pameran atau tanyakan langsung ke tenant penjual."
             action={
               <Link href={statusHref} className={buttonClass("secondary", "md")}>
                 Lihat status transaksi
@@ -159,18 +180,23 @@ export default async function PengajuanLeasingPage({
         ) : null}
 
         {partners.length > 0 ? (
-          <Card>
-            <CardHeader>
-              <CardTitle>Formulir pengajuan</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <LeasingForm
-                purchaseId={purchase.id}
-                partners={partners}
-                unitPrice={purchase.unit_price}
-              />
-            </CardContent>
-          </Card>
+          <FadeUp delay={0.06}>
+            <Card>
+              <CardHeader>
+                <CardTitle>Formulir Pengajuan</CardTitle>
+                <CardDescription>
+                  Pilih mitra, lalu tentukan uang muka dan tenor sesuai kemampuan Anda.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <LeasingForm
+                  purchaseId={purchase.id}
+                  partners={partners}
+                  unitPrice={purchase.unit_price}
+                />
+              </CardContent>
+            </Card>
+          </FadeUp>
         ) : null}
       </div>
     </div>

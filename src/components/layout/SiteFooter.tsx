@@ -1,44 +1,60 @@
+import Link from "next/link";
 import { EVENT_INFO } from "@/lib/domain/constants";
-import { formatTanggal } from "@/lib/utils";
 
-/** Footer informasi event: lokasi, tanggal, dan kontak panitia. */
+const FOOTER_LINKS = [
+  { href: "/#denah", label: "Denah" },
+  { href: "/#cek-status", label: "Cek Status" },
+  { href: "/admin", label: "Admin" },
+] as const;
+
+/**
+ * Footer ekstra gelap ala referensi Stitch: wordmark uppercase, baris
+ * penyelenggara, baris link, baris hak cipta. Format identitas dari pemilik:
+ * "Mokas Festival — D'Pro Event Organizer — Dreinst".
+ */
 export function SiteFooter() {
-  const tanggal = `${formatTanggal(EVENT_INFO.startDate)} – ${formatTanggal(EVENT_INFO.endDate)}`;
+  // Model per tanggal: event berjalan terus tiap akhir pekan, jadi tahun hak cipta = tahun berjalan.
   const tahun = new Date().getFullYear();
+  const telHref = `tel:${EVENT_INFO.contact.replace(/[^0-9+]/g, "")}`;
 
   return (
-    <footer className="mt-10 border-t border-slate-200 bg-white">
-      <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-8 sm:grid-cols-3">
-        <div className="space-y-1.5">
-          <p className="text-sm font-semibold text-slate-900">{EVENT_INFO.name}</p>
-          <p className="text-sm leading-relaxed text-slate-500">{EVENT_INFO.description}</p>
+    <footer className="border-t border-line bg-[#050505]">
+      <div className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6">
+        <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-ink">
+              {EVENT_INFO.name}
+            </p>
+            <p className="mt-1.5 text-sm text-subtle">
+              Diselenggarakan oleh D&rsquo;Pro Event Organizer &middot; Dikelola Dreinst
+            </p>
+          </div>
+          <ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+            {FOOTER_LINKS.map((link) => (
+              <li key={link.href}>
+                <Link
+                  href={link.href}
+                  className="text-muted transition-colors duration-150 hover:text-ink"
+                >
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+            <li>
+              <a
+                href={telHref}
+                className="text-muted transition-colors duration-150 hover:text-ink"
+              >
+                Kontak
+              </a>
+            </li>
+          </ul>
         </div>
-
-        <div className="space-y-1.5">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Lokasi & Tanggal</p>
-          <p className="text-sm text-slate-600">{EVENT_INFO.location}</p>
-          <p className="text-sm text-slate-600">{tanggal}</p>
-        </div>
-
-        <div className="space-y-1.5">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Kontak Panitia</p>
-          <p className="text-sm text-slate-600">{EVENT_INFO.organizer}</p>
-          <p className="text-sm text-slate-600">
-            WhatsApp / Telepon:{" "}
-            <a
-              href={`tel:${EVENT_INFO.contact.replace(/[^0-9+]/g, "")}`}
-              className="font-medium text-slate-900 underline underline-offset-2"
-            >
-              {EVENT_INFO.contact}
-            </a>
+        <div className="mt-10 border-t border-line pt-6">
+          <p className="text-xs text-subtle">
+            &copy; {tahun} {EVENT_INFO.name}
           </p>
         </div>
-      </div>
-
-      <div className="border-t border-slate-100">
-        <p className="mx-auto w-full max-w-6xl px-4 py-4 text-xs text-slate-400">
-          &copy; {tahun} {EVENT_INFO.organizer}. Sistem booking slot pameran.
-        </p>
       </div>
     </footer>
   );
