@@ -23,10 +23,10 @@
  * -----------------------------------------------------------------------------
  * LANGKAH PASANG (sekali saja, +- 3 menit):
  * -----------------------------------------------------------------------------
- * 1. Buka spreadsheet tujuan:
- *    https://docs.google.com/spreadsheets/d/1Ov8JwanwXF-9lNwszkdccQTK0w2BQ2s0S0Orrx-Igz8/
- *    (skrip ini memakai SpreadsheetApp.getActiveSpreadsheet(), jadi WAJIB
- *    dipasang DI spreadsheet itu — bukan sebagai project Apps Script lepas).
+ * 1. Buka spreadsheet tujuan (skrip ini memakai
+ *    SpreadsheetApp.getActiveSpreadsheet(), jadi WAJIB dipasang DI spreadsheet
+ *    itu — bukan sebagai project Apps Script lepas). Kalau ganti spreadsheet,
+ *    pasang ulang di spreadsheet baru lalu perbarui SHEETS_WEBHOOK_URL.
  * 2. Menu Extensions -> Apps Script.
  * 3. Hapus isi editor, tempel SELURUH isi file ini, lalu simpan (Ctrl/Cmd+S).
  * 4. Klik "Deploy" -> "New deployment" -> jenis "Web app":

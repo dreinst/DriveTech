@@ -129,8 +129,8 @@ di `/admin/bookings`.
 
 Cara pasang (± 3 menit, cukup sekali):
 
-1. Buka spreadsheet tujuan:
-   <https://docs.google.com/spreadsheets/d/1Ov8JwanwXF-9lNwszkdccQTK0w2BQ2s0S0Orrx-Igz8/>.
+1. Buka spreadsheet tujuan (spreadsheet Google Sheets mana pun milik panitia;
+   kalau ganti spreadsheet, pasang ulang skrip lalu perbarui `SHEETS_WEBHOOK_URL`).
 2. Menu **Extensions → Apps Script**, hapus isi editor bawaan, lalu tempel seluruh isi
    `tools/google-sheets-webhook.gs`. Skrip memakai `SpreadsheetApp.getActiveSpreadsheet()`,
    jadi wajib dipasang **di dalam** spreadsheet itu — bukan sebagai project Apps Script lepas.
