@@ -3,11 +3,7 @@ import * as Sentry from "@sentry/nextjs";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/**
- * Endpoint DIAGNOSTIK sementara: melempar error sungguhan lalu mengirimnya ke
- * Sentry (dengan flush) untuk memverifikasi sourcemap — stack trace di Sentry
- * harus menunjuk ke berkas .ts asli. Terkunci lewat ?key=. Dihapus setelah uji.
- */
+/** Endpoint DIAGNOSTIK sementara — dihapus setelah verifikasi. Terkunci ?key=. */
 const TEST_KEY = "dt-sourcemap-check-7b2c";
 
 export async function GET(request: Request): Promise<Response> {
@@ -16,9 +12,20 @@ export async function GET(request: Request): Promise<Response> {
     return Response.json({ error: "Tidak ditemukan." }, { status: 404 });
   }
 
-  const err = new Error("Drive Tech — uji sourcemap Sentry (disengaja)");
-  const eventId = Sentry.captureException(err);
-  await Sentry.flush(3000);
+  const client = Sentry.getClient();
+  const clientDsn = client?.getOptions()?.dsn ?? null;
 
-  return Response.json({ ok: true, eventId });
+  const eventId = Sentry.captureException(
+    new Error("Drive Tech — uji sourcemap Sentry (disengaja)"),
+  );
+  const flushed = await Sentry.flush(4000);
+
+  return Response.json({
+    hasClient: Boolean(client),
+    clientDsn,
+    envSentryDsn: Boolean(process.env.SENTRY_DSN),
+    envNextRuntime: process.env.NEXT_RUNTIME ?? null,
+    eventId,
+    flushed,
+  });
 }
