@@ -167,13 +167,38 @@ function doPost(e) {
 }
 
 /**
+ * Snapshot RECAP MINGGUAN (?action=recap&key=RESET_KEY). Menyalin isi sheet
+ * "Bookings" APA ADANYA ke tab arsip bernama "Recap YYYY-MM-DD" — master TIDAK
+ * pernah dikosongkan (permintaan pemilik: recap tanpa kehilangan data). Dipicu
+ * otomatis tiap minggu oleh Vercel Cron (/api/cron/weekly-recap). Idempotent:
+ * snapshot tanggal yang sama dibuat ulang kalau dipicu dua kali.
+ */
+function recapSnapshot_() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var src = ss.getSheetByName("Bookings");
+  if (!src || src.getLastRow() === 0) {
+    return { created: null, rows: 0, note: "Sheet Bookings kosong." };
+  }
+  var tz = ss.getSpreadsheetTimeZone() || "Asia/Jakarta";
+  var nama = "Recap " + Utilities.formatDate(new Date(), tz, "yyyy-MM-dd");
+  var lama = ss.getSheetByName(nama);
+  if (lama) ss.deleteSheet(lama);
+  var snap = src.copyTo(ss).setName(nama);
+  // Taruh snapshot di paling kanan supaya master tetap tab pertama.
+  ss.setActiveSheet(snap);
+  ss.moveActiveSheet(ss.getSheets().length);
+  return { created: nama, rows: Math.max(snap.getLastRow() - 1, 0) };
+}
+
+/**
  * GET: cek hidup (tanpa parameter), aksi reset (?action=reset&key=RESET_KEY)
- * untuk membersihkan sheet uji, atau aksi init (?action=init&key=RESET_KEY)
- * untuk membuat semua sheet + header kolom tanpa baris data.
+ * untuk membersihkan sheet uji, aksi init (?action=init&key=RESET_KEY) untuk
+ * membuat semua sheet + header kolom, atau aksi recap (?action=recap&key=...)
+ * untuk snapshot arsip mingguan tanpa menghapus master.
  */
 function doGet(e) {
   var action = e && e.parameter ? String(e.parameter.action || "") : "";
-  if (action === "reset" || action === "init") {
+  if (action === "reset" || action === "init" || action === "recap") {
     var key = e.parameter.key ? String(e.parameter.key) : "";
     if (key !== RESET_KEY) {
       return jsonOutput_({ ok: false, error: "Kunci aksi salah." });
@@ -181,12 +206,15 @@ function doGet(e) {
     if (action === "reset") {
       return jsonOutput_({ ok: true, action: "reset", dihapus: resetSheetUji() });
     }
+    if (action === "recap") {
+      return jsonOutput_({ ok: true, action: "recap", recap: recapSnapshot_() });
+    }
     return jsonOutput_({ ok: true, action: "init", dibuat: initSheets() });
   }
   return jsonOutput_({
     ok: true,
     message: "Webhook Google Sheets Drive Tech aktif. Kirim data lewat POST JSON.",
-    versi: "2026-08-28-init",
+    versi: "2026-08-29-recap",
   });
 }
 
