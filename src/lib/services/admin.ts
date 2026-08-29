@@ -32,6 +32,7 @@ import {
 import {
   BOOKING_SELECT,
   createBooking,
+  getBookingDetail,
   kirimNotifikasiBooking,
   normalizeBookingRow,
 } from "./booking";
@@ -637,6 +638,100 @@ export async function adminCreateBooking(
   }
 
   return created;
+}
+
+/**
+ * Pindahkan booking ke slot lain (aksi admin). Slot tujuan wajib: bisa dipesan,
+ * tidak diblokir, TIPE ZONA SAMA (agar jenis tenant & data kendaraan tetap
+ * valid), dan BEBAS pada semua tanggal aktif booking. Memindah booking.slot_id +
+ * baris booking_dates aktif + listing kendaraan (bila ada), lalu sinkron Sheet.
+ */
+export async function adminMoveBookingSlot(
+  bookingId: string,
+  targetSlotId: string,
+): Promise<Result<null>> {
+  if (!isServiceRoleConfigured()) return fail<null>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+
+  const bookingResult = await getBookingDetail(bookingId);
+  if (!bookingResult.ok) return fail<null>(bookingResult.error, bookingResult.code);
+  const booking = bookingResult.data;
+  if (booking.status === "cancelled") {
+    return fail<null>("Booking sudah dibatalkan, tidak bisa dipindah.", "CANCELLED");
+  }
+  if (booking.slot_id === targetSlotId) {
+    return fail<null>("Booking sudah berada di slot tersebut.", "VALIDATION");
+  }
+  if (booking.dates.length === 0) {
+    return fail<null>("Booking tidak punya tanggal aktif untuk dipindah.", "VALIDATION");
+  }
+
+  const targetResult = await getSlotDetail(targetSlotId);
+  if (!targetResult.ok) return fail<null>(targetResult.error, targetResult.code);
+  const target = targetResult.data;
+  if (!isBookableZoneType(target.zone.zone_type)) {
+    return fail<null>("Slot tujuan bukan slot yang bisa dipesan.", "NOT_BOOKABLE");
+  }
+  if (target.status !== "available") {
+    return fail<null>("Slot tujuan sedang diblokir panitia.", "SLOT_TAKEN");
+  }
+  if (target.zone.zone_type !== booking.slot.zone.zone_type) {
+    return fail<null>("Slot tujuan harus di zona dengan tipe yang sama.", "ZONE_MISMATCH");
+  }
+
+  const supabase = createAdminSupabase();
+
+  // Slot tujuan harus bebas pada SEMUA tanggal aktif booking ini.
+  const bentrok = await supabase
+    .from("booking_dates")
+    .select("event_date")
+    .eq("slot_id", targetSlotId)
+    .eq("is_active", true)
+    .in("event_date", booking.dates);
+  if (bentrok.error) {
+    return dbFail<null>(bentrok.error as PgError, "Gagal memeriksa ketersediaan slot tujuan");
+  }
+  if ((bentrok.data ?? []).length > 0) {
+    return fail<null>(
+      "Slot tujuan sudah terisi pada sebagian tanggal booking ini.",
+      "DATE_TAKEN",
+    );
+  }
+
+  const now = new Date().toISOString();
+  const updBooking = await supabase
+    .from("bookings")
+    .update({ slot_id: targetSlotId, updated_at: now })
+    .eq("id", booking.id);
+  if (updBooking.error) {
+    return dbFail<null>(updBooking.error as PgError, "Gagal memindahkan booking");
+  }
+
+  const updDates = await supabase
+    .from("booking_dates")
+    .update({ slot_id: targetSlotId })
+    .eq("booking_id", booking.id)
+    .eq("is_active", true);
+  if (updDates.error) {
+    // Kompensasi: kembalikan slot_id booking ke asal.
+    await supabase.from("bookings").update({ slot_id: booking.slot_id }).eq("id", booking.id);
+    return dbFail<null>(updDates.error as PgError, "Gagal memindahkan tanggal booking");
+  }
+
+  if (booking.listing) {
+    // Listing katalog ikut pindah slot; kegagalan di sini tidak fatal.
+    await supabase
+      .from("vehicle_listings")
+      .update({ slot_id: targetSlotId })
+      .eq("booking_id", booking.id);
+  }
+
+  void syncToSheet("booking", {
+    bookingCode: booking.booking_code,
+    slot: target.svg_element_id ?? target.slot_label ?? target.id,
+    zona: target.zone.name,
+  });
+
+  return ok(null);
 }
 
 /**
