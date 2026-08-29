@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 
 import type { Result } from "@/lib/result";
@@ -175,6 +176,9 @@ export async function handleRoute(
   try {
     return await handler();
   } catch (error) {
+    // handleRoute menelan error jadi respons 500, sehingga Next tidak meneruskannya
+    // ke Sentry lewat onRequestError — jadi kita laporkan manual. No-op tanpa DSN.
+    Sentry.captureException(error, { tags: { route: konteks } });
     console.error(`[api] ${konteks}`, error);
     return jsonError(GENERIC_ERROR_MESSAGE, 500, { code: "INTERNAL" });
   }

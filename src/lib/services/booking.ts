@@ -124,6 +124,7 @@ export function normalizeBookingRow(raw: unknown): BookingDetail | null {
  */
 export async function createBooking(
   input: CreateBookingInput,
+  opts?: { skipPendingLimit?: boolean },
 ): Promise<Result<{ bookingId: string; bookingCode: string }>> {
   type Out = { bookingId: string; bookingCode: string };
   if (!isServiceRoleConfigured()) return fail<Out>(NO_CONFIG_MESSAGE, "NO_CONFIG");
@@ -202,30 +203,33 @@ export async function createBooking(
   /* --- Anti-penimbunan slot: batasi booking pending per nomor telepon ---
      Booking pending menahan tanggal sampai 24 jam (atau 72 jam bila bukti
      sudah dikirim); tanpa batas ini satu nomor bisa mengunci banyak tanggal
-     tanpa pernah membayar. */
-  const tenantSemuaTipe = await supabase
-    .from("tenants")
-    .select("id")
-    .eq("phone", data.tenantPhone);
-  if (tenantSemuaTipe.error) {
-    return dbFail<Out>(tenantSemuaTipe.error as PgError, "Gagal memeriksa data tenant");
-  }
-  const tenantIds = ((tenantSemuaTipe.data ?? []) as Array<{ id: string }>).map((t) => t.id);
-  if (tenantIds.length > 0) {
-    const pendingCount = await supabase
-      .from("bookings")
-      .select("id", { count: "exact", head: true })
-      .in("tenant_id", tenantIds)
-      .eq("status", "pending_payment");
-    if (pendingCount.error) {
-      return dbFail<Out>(pendingCount.error as PgError, "Gagal memeriksa booking berjalan");
+     tanpa pernah membayar. Booking manual oleh admin (skipPendingLimit) lewat
+     dari batas ini karena admin tepercaya. */
+  if (!opts?.skipPendingLimit) {
+    const tenantSemuaTipe = await supabase
+      .from("tenants")
+      .select("id")
+      .eq("phone", data.tenantPhone);
+    if (tenantSemuaTipe.error) {
+      return dbFail<Out>(tenantSemuaTipe.error as PgError, "Gagal memeriksa data tenant");
     }
-    if ((pendingCount.count ?? 0) >= MAX_PENDING_BOOKINGS_PER_PHONE) {
-      return fail<Out>(
-        `Nomor telepon ini masih punya ${pendingCount.count} booking menunggu pembayaran. ` +
-          "Selesaikan pembayarannya (atau batalkan) dulu sebelum membuat booking baru.",
-        "TOO_MANY_PENDING",
-      );
+    const tenantIds = ((tenantSemuaTipe.data ?? []) as Array<{ id: string }>).map((t) => t.id);
+    if (tenantIds.length > 0) {
+      const pendingCount = await supabase
+        .from("bookings")
+        .select("id", { count: "exact", head: true })
+        .in("tenant_id", tenantIds)
+        .eq("status", "pending_payment");
+      if (pendingCount.error) {
+        return dbFail<Out>(pendingCount.error as PgError, "Gagal memeriksa booking berjalan");
+      }
+      if ((pendingCount.count ?? 0) >= MAX_PENDING_BOOKINGS_PER_PHONE) {
+        return fail<Out>(
+          `Nomor telepon ini masih punya ${pendingCount.count} booking menunggu pembayaran. ` +
+            "Selesaikan pembayarannya (atau batalkan) dulu sebelum membuat booking baru.",
+          "TOO_MANY_PENDING",
+        );
+      }
     }
   }
 

@@ -215,6 +215,12 @@ export default async function AdminBookingsPage({ searchParams }: PageProps) {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
+          <Link
+            href="/admin/bookings/baru"
+            className="inline-flex h-11 items-center rounded-full bg-accent px-4 text-sm font-semibold text-[#0a0a0a] transition-[filter] duration-150 hover:brightness-95"
+          >
+            + Booking manual
+          </Link>
           <ExportCsvButton
             filename="drive-tech-bookings.csv"
             rows={susunBarisCsv(bookings)}
