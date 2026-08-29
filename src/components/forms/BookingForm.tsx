@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useId, useState } from "react";
+import { useActionState, useCallback, useEffect, useId, useRef, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 
 import { DateChips, type DateChipStatus } from "@/components/denah/DateChips";
@@ -75,6 +75,14 @@ export function BookingForm({ slot, eventDates, takenDates, initialDates }: Book
     if (dipilih.length === 0) {
       event.preventDefault();
       setGalatTanggal("Pilih minimal satu tanggal gelaran.");
+      return;
+    }
+    // Valid & akan dikirim: bersihkan draft. Kalau server menolak, effect error
+    // menyimpannya ulang dari isian yang masih ada di DOM.
+    try {
+      localStorage.removeItem(`dt-booking-draft:${slot.id}`);
+    } catch {
+      // abaikan (mode privat).
     }
   }
 
@@ -98,13 +106,100 @@ export function BookingForm({ slot, eventDates, takenDates, initialDates }: Book
   const terkunci = otomatis === null;
   const [tenantType, setTenantType] = useState<TenantType>(otomatis ?? "umkm");
 
+  /* ---------- Draft otomatis per PERANGKAT (anti-hilang saat tekan back) ----------
+     Isian disimpan sementara di localStorage browser ini (per slot) lalu
+     dipulihkan saat form dibuka lagi. Hanya di perangkat ini — tidak pernah
+     dikirim ke server sampai booking benar-benar dibuat. Foto tidak ikut
+     (berkas tak bisa disimpan). Draft dihapus saat booking berhasil dikirim. */
+  const formRef = useRef<HTMLFormElement>(null);
+  const draftKey = `dt-booking-draft:${slot.id}`;
+  const lewatiSimpanPertama = useRef(true);
+
+  const simpanDraft = useCallback(() => {
+    const form = formRef.current;
+    if (!form) return;
+    try {
+      const fields: Record<string, string> = {};
+      for (const [name, value] of new FormData(form).entries()) {
+        if (typeof value !== "string") continue; // lewati berkas (foto)
+        if (name === "eventDates" || name === "slotId" || name === "tenantType") continue;
+        if (value.trim().length === 0) continue;
+        fields[name] = value;
+      }
+      localStorage.setItem(draftKey, JSON.stringify({ fields, dates: dipilih, tenantType }));
+    } catch {
+      // Mode privat / kuota penuh: draft dilewati, form tetap berjalan normal.
+    }
+  }, [dipilih, tenantType, draftKey]);
+
+  // Pulihkan draft SEKALI saat form dibuka (mis. setelah tekan back lalu kembali).
+  useEffect(() => {
+    let draft: { fields?: Record<string, string>; dates?: unknown; tenantType?: unknown } | null =
+      null;
+    try {
+      draft = JSON.parse(localStorage.getItem(draftKey) ?? "null");
+    } catch {
+      draft = null;
+    }
+    if (!draft) return;
+    if (Array.isArray(draft.dates)) {
+      const valid = draft.dates.filter(
+        (d): d is string => typeof d === "string" && eventDates.includes(d),
+      );
+      if (valid.length > 0) setDipilih(valid);
+    }
+    if (typeof draft.tenantType === "string" && !terkunci) {
+      setTenantType(draft.tenantType as TenantType);
+    }
+    const form = formRef.current;
+    if (form && draft.fields) {
+      for (const [name, value] of Object.entries(draft.fields)) {
+        const el = form.elements.namedItem(name);
+        if (
+          el &&
+          !(el instanceof RadioNodeList) &&
+          "value" in el &&
+          (el as HTMLInputElement).type !== "file" &&
+          (el as HTMLInputElement).type !== "checkbox"
+        ) {
+          (el as HTMLInputElement).value = String(value);
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Simpan saat tanggal / jenis tenant berubah (lewati render pertama agar tidak
+  // menimpa draft sebelum pemulihan selesai).
+  useEffect(() => {
+    if (lewatiSimpanPertama.current) {
+      lewatiSimpanPertama.current = false;
+      return;
+    }
+    simpanDraft();
+  }, [dipilih, tenantType, simpanDraft]);
+
+  // Setelah error server, DOM masih berisi isian — simpan ulang agar draft konsisten.
+  useEffect(() => {
+    if (state.status === "error") simpanDraft();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.status]);
+
   const errors = state.fieldErrors ?? {};
   const pesanUmum = state.status === "error" ? state.message : undefined;
 
   const galatEventDates = galatTanggal ?? errors.eventDates;
 
   return (
-    <form action={formAction} onSubmit={cekSebelumKirim} className="space-y-4" noValidate>
+    <form
+      ref={formRef}
+      action={formAction}
+      onSubmit={cekSebelumKirim}
+      onInput={simpanDraft}
+      onChange={simpanDraft}
+      className="space-y-4"
+      noValidate
+    >
       <input type="hidden" name="slotId" value={slot.id} />
       {/* KONTRAK action: satu hidden input JSON array "YYYY-MM-DD". */}
       <input type="hidden" name="eventDates" value={JSON.stringify(dipilih)} />
@@ -254,6 +349,8 @@ export function BookingForm({ slot, eventDates, takenDates, initialDates }: Book
           idPrefix={id}
           errors={errors}
           tampilkanKm={slot.zone.zone_type !== "mobil_baru"}
+          // Mobil baru belum berplat -> field plat disembunyikan (permintaan pemilik).
+          tampilkanPlat={slot.zone.zone_type !== "mobil_baru"}
           // Jenis mengikuti zonanya: zona motor selalu motor, zona mobil selalu
           // mobil (keputusan pemilik 2026-08-29 — zona 14 slot fokus motor).
           jenis={slot.zone.zone_type === "mobil_motor_bekas" ? "motor" : "mobil"}
@@ -466,6 +563,8 @@ type VehicleFieldsProps = {
   errors: Record<string, string>;
   /** Kilometer hanya relevan untuk kendaraan bekas. */
   tampilkanKm: boolean;
+  /** Nomor plat disembunyikan untuk mobil baru (belum berplat). */
+  tampilkanPlat: boolean;
   /** Jenis kendaraan otomatis dari zona slot (mobil / motor). */
   jenis: "mobil" | "motor";
 };
@@ -474,7 +573,7 @@ type VehicleFieldsProps = {
  * Diisi penyewa slot; hasilnya tampil di /katalog untuk pengunjung umum
  * SETELAH pembayaran diverifikasi panitia. 1 slot = 1 kendaraan.
  */
-function VehicleFields({ idPrefix, errors, tampilkanKm, jenis }: VehicleFieldsProps) {
+function VehicleFields({ idPrefix, errors, tampilkanKm, tampilkanPlat, jenis }: VehicleFieldsProps) {
   return (
     <div role="group" aria-label="Data kendaraan" className="space-y-4 border-t border-line pt-4">
       <div>
@@ -490,7 +589,7 @@ function VehicleFields({ idPrefix, errors, tampilkanKm, jenis }: VehicleFieldsPr
       {/* Jenis mengikuti zona slot — tidak bisa dipilih manual. */}
       <input type="hidden" name="vehicleKind" value={jenis} />
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className={`grid gap-4 ${tampilkanPlat ? "sm:grid-cols-2" : ""}`}>
         <Field
           label="Nama kendaraan"
           htmlFor={`${idPrefix}-kendaraan`}
@@ -506,21 +605,23 @@ function VehicleFields({ idPrefix, errors, tampilkanKm, jenis }: VehicleFieldsPr
           />
         </Field>
 
-        <Field
-          label="Nomor plat"
-          htmlFor={`${idPrefix}-plat`}
-          error={errors["vehicle.plateNumber"]}
-          required
-        >
-          <Input
-            id={`${idPrefix}-plat`}
-            name="plateNumber"
-            placeholder="Contoh: N 1234 AB"
-            className="uppercase"
-            aria-invalid={errors["vehicle.plateNumber"] ? true : undefined}
+        {tampilkanPlat ? (
+          <Field
+            label="Nomor plat"
+            htmlFor={`${idPrefix}-plat`}
+            error={errors["vehicle.plateNumber"]}
             required
-          />
-        </Field>
+          >
+            <Input
+              id={`${idPrefix}-plat`}
+              name="plateNumber"
+              placeholder="Contoh: N 1234 AB"
+              className="uppercase"
+              aria-invalid={errors["vehicle.plateNumber"] ? true : undefined}
+              required
+            />
+          </Field>
+        ) : null}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
