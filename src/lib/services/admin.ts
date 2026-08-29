@@ -29,7 +29,7 @@ import {
   upsertPartnerSchema,
   type UpsertPartnerInput,
 } from "@/lib/validation/schemas";
-import { BOOKING_SELECT, normalizeBookingRow } from "./booking";
+import { BOOKING_SELECT, kirimNotifikasiBooking, normalizeBookingRow } from "./booking";
 import { normalizePurchaseRow, PURCHASE_SELECT } from "./purchase";
 import {
   compareSlots,
@@ -508,6 +508,8 @@ export async function verifyPayment(paymentId: string, adminId: string): Promise
     });
   }
 
+  void kirimNotifikasiBooking("verified", booking.id);
+
   return ok(null);
 }
 
@@ -561,6 +563,60 @@ export async function rejectPayment(
       rejectReason: alasan,
     });
   }
+
+  void kirimNotifikasiBooking("rejected", paymentResult.data.booking_id, { reason: alasan });
+
+  return ok(null);
+}
+
+/**
+ * Pembatalan booking OLEH ADMIN (butuh alasan) — berbeda dari cancelBooking
+ * mandiri tenant yang menolak status confirmed. Admin berwenang membatalkan
+ * booking apa pun, termasuk yang sudah confirmed (mis. refund disepakati di
+ * luar sistem). Trigger sync_booking_dates_active melepas tanggalnya; kalau ada
+ * pembayaran verified, statusnya tidak diubah (jejak audit) — refund di luar app.
+ */
+export async function adminCancelBooking(
+  bookingId: string,
+  reason: string,
+): Promise<Result<null>> {
+  if (!isServiceRoleConfigured()) return fail<null>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+
+  const alasan = reason.trim();
+  if (alasan.length < 3) return fail<null>("Alasan pembatalan minimal 3 karakter.", "VALIDATION");
+
+  const supabase = createAdminSupabase();
+  const current = await supabase
+    .from("bookings")
+    .select("id, booking_code, status")
+    .eq("id", bookingId)
+    .maybeSingle();
+  if (current.error) return dbFail<null>(current.error as PgError, "Gagal memuat data booking");
+
+  const booking = (current.data ?? null) as
+    | { id: string; booking_code: string; status: BookingStatus }
+    | null;
+  if (!booking) return fail<null>("Booking tidak ditemukan.", "NOT_FOUND");
+  if (booking.status === "cancelled") return ok(null); // idempoten
+
+  const now = new Date().toISOString();
+  const updated = await supabase
+    .from("bookings")
+    .update({ status: "cancelled", updated_at: now })
+    .eq("id", booking.id)
+    .neq("status", "cancelled")
+    .select("id")
+    .maybeSingle();
+
+  if (updated.error) return dbFail<null>(updated.error as PgError, "Gagal membatalkan booking");
+  if (!updated.data) return ok(null); // sudah dibatalkan proses lain — idempoten
+
+  void syncToSheet("booking", {
+    bookingCode: booking.booking_code,
+    status: "cancelled",
+    catatan: `dibatalkan panitia: ${alasan}`,
+  });
+  void kirimNotifikasiBooking("cancelled", booking.id, { reason: alasan });
 
   return ok(null);
 }

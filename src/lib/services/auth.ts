@@ -15,6 +15,22 @@ if (typeof window !== "undefined") {
 const LOGIN_PATH = "/admin/login";
 
 /**
+ * Domain internal untuk memetakan username admin -> email Supabase Auth.
+ * ".local" sengaja tidak bisa menerima email sungguhan; email ini murni
+ * identitas internal, bukan alamat yang dihubungi. Ganti di sini kalau perlu.
+ */
+const ADMIN_USERNAME_DOMAIN = "drivetech.local";
+
+/**
+ * Username admin -> email internal (lowercase, deterministik). "Administrator"
+ * menjadi "administrator@drivetech.local". Harus konsisten dengan email yang
+ * tersimpan di auth.users/admin_users.
+ */
+export function usernameToAdminEmail(username: string): string {
+  return `${username.trim().toLowerCase()}@${ADMIN_USERNAME_DOMAIN}`;
+}
+
+/**
  * Tabel admin_users tidak punya policy RLS sama sekali (lihat kontrak), jadi
  * pembacaannya WAJIB lewat service role. Sesi loginnya sendiri tetap dibaca dari
  * cookie memakai client anon (createServerSupabase).
@@ -71,12 +87,12 @@ export async function requireFullAdmin(): Promise<Result<AdminUserRow>> {
   return ok(admin);
 }
 
-/** Login admin memakai Supabase Auth email/password. */
+/** Login admin memakai USERNAME + kata sandi (dipetakan ke email Supabase Auth). */
 export async function signInAdmin(
-  email: string,
+  username: string,
   password: string,
 ): Promise<Result<AdminUserRow>> {
-  const parsed = adminLoginSchema.safeParse({ email, password });
+  const parsed = adminLoginSchema.safeParse({ username, password });
   if (!parsed.success) {
     const errors = zodFieldErrors(parsed.error);
     const first = Object.values(errors)[0] ?? "Data login tidak valid.";
@@ -90,24 +106,25 @@ export async function signInAdmin(
     );
   }
 
+  const email = usernameToAdminEmail(parsed.data.username);
   const supabase = await createServerSupabase();
   const { data, error } = await supabase.auth.signInWithPassword({
-    email: parsed.data.email,
+    email,
     password: parsed.data.password,
   });
 
   if (error || !data.user) {
-    return fail<AdminUserRow>("Email atau kata sandi salah.", "INVALID_CREDENTIALS");
+    return fail<AdminUserRow>("Username atau kata sandi salah.", "INVALID_CREDENTIALS");
   }
 
   const admin = await ambilAdminById(data.user.id);
   if (!admin) {
     // Punya akun auth tapi bukan admin pameran: sesinya langsung dicabut.
     // Pesan sengaja disamakan dengan kredensial salah supaya tidak bisa dipakai
-    // memastikan sepasang email+password valid (user enumeration).
+    // memastikan sepasang username+password valid (user enumeration).
     await supabase.auth.signOut();
-    console.warn(`[auth] login ditolak: ${parsed.data.email} bukan baris admin_users.`);
-    return fail<AdminUserRow>("Email atau kata sandi salah.", "NOT_ADMIN");
+    console.warn(`[auth] login ditolak: ${parsed.data.username} bukan baris admin_users.`);
+    return fail<AdminUserRow>("Username atau kata sandi salah.", "NOT_ADMIN");
   }
 
   return ok(admin);

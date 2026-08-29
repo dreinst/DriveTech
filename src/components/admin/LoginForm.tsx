@@ -12,7 +12,7 @@ export type LoginFormProps = {
   next?: string;
 };
 
-/** Form masuk admin: email + kata sandi Supabase Auth. */
+/** Form masuk admin: username + kata sandi (username dipetakan ke email internal). */
 export function LoginForm({ next = "/admin" }: LoginFormProps) {
   const [state, formAction] = useActionState(adminLoginAction, initialActionState);
   const fieldErrors = state.fieldErrors ?? {};
@@ -27,16 +27,17 @@ export function LoginForm({ next = "/admin" }: LoginFormProps) {
         </Alert>
       ) : null}
 
-      <Field label="Email" htmlFor="email" required error={fieldErrors.email}>
+      <Field label="Username" htmlFor="username" required error={fieldErrors.username}>
         <Input
-          id="email"
-          name="email"
-          type="email"
+          id="username"
+          name="username"
+          type="text"
           autoComplete="username"
-          inputMode="email"
-          placeholder="admin@pameran.id"
+          autoCapitalize="none"
+          spellCheck={false}
+          placeholder="Administrator"
           required
-          aria-invalid={fieldErrors.email ? true : undefined}
+          aria-invalid={fieldErrors.username ? true : undefined}
         />
       </Field>
 

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 
 import {
   addEventDate,
+  adminCancelBooking,
   overrideSlotStatus,
   rejectPayment,
   setCommissionPaid,
@@ -20,6 +21,7 @@ import { requireAdmin, requireFullAdmin, signInAdmin, signOutAdmin } from "@/lib
 import { tujuanAdminAman } from "@/lib/utils";
 import {
   addEventDateSchema,
+  adminCancelBookingSchema,
   adminLoginSchema,
   overrideSlotSchema,
   rejectPaymentSchema,
@@ -70,14 +72,14 @@ export async function adminLoginAction(
   const form = ambilFormData(prevState, formData);
 
   const parsed = adminLoginSchema.safeParse({
-    email: teks(form, "email"),
+    username: teks(form, "username"),
     password: teks(form, "password"),
   });
   if (!parsed.success) {
-    return errorState("Periksa kembali email dan kata sandi.", zodFieldErrors(parsed.error));
+    return errorState("Periksa kembali username dan kata sandi.", zodFieldErrors(parsed.error));
   }
 
-  const result = await signInAdmin(parsed.data.email, parsed.data.password);
+  const result = await signInAdmin(parsed.data.username, parsed.data.password);
   if (!result.ok) return errorState(result.error);
 
   const tujuan = tujuanAdminAman(teks(form, "next"));
@@ -186,6 +188,30 @@ export async function verifyPaymentAction(
 
   revalidateAdmin();
   return successState("Pembayaran diverifikasi, booking dikonfirmasi.");
+}
+
+/** Batalkan booking dari dashboard admin (wajib alasan; tenant diberi tahu). */
+export async function adminCancelBookingAction(
+  prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const form = ambilFormData(prevState, formData);
+  const gate = await requireFullAdmin();
+  if (!gate.ok) return errorState(gate.error);
+
+  const parsed = adminCancelBookingSchema.safeParse({
+    bookingId: teks(form, "bookingId"),
+    reason: teks(form, "reason"),
+  });
+  if (!parsed.success) {
+    return errorState("Alasan pembatalan wajib diisi.", zodFieldErrors(parsed.error));
+  }
+
+  const result = await adminCancelBooking(parsed.data.bookingId, parsed.data.reason);
+  if (!result.ok) return errorState(result.error);
+
+  revalidateAdmin();
+  return successState("Booking dibatalkan. Tanggal sewa dilepas dan tenant diberi tahu.");
 }
 
 /** Tolak bukti pembayaran beserta alasannya. */
