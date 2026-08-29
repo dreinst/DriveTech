@@ -14,6 +14,7 @@
     "denah:check": "python3 tools/generate-denah-svg.py && git diff --quiet -- public/denah.svg || echo \"public/denah.svg berubah — commit hasil regenerasi\""
   },
   "dependencies": {
+    "@sentry/nextjs": "^10.72.0",
     "@supabase/ssr": "^0.12.5",
     "@supabase/supabase-js": "^2.112.4",
     "framer-motion": "^13.1.1",

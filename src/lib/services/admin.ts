@@ -2,7 +2,7 @@ import { fail, ok, type Result } from "@/lib/result";
 import { syncToSheet } from "@/lib/sheets";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { isServiceRoleConfigured } from "@/lib/supabase/config";
-import { isBookableZoneType } from "@/lib/domain/constants";
+import { isBookableZoneType, isVehicleZoneType } from "@/lib/domain/constants";
 import type {
   AdminFeePaymentRow,
   BookingDetail,
@@ -29,11 +29,17 @@ import {
   upsertPartnerSchema,
   type UpsertPartnerInput,
 } from "@/lib/validation/schemas";
-import { BOOKING_SELECT, kirimNotifikasiBooking, normalizeBookingRow } from "./booking";
+import {
+  BOOKING_SELECT,
+  createBooking,
+  kirimNotifikasiBooking,
+  normalizeBookingRow,
+} from "./booking";
 import { normalizePurchaseRow, PURCHASE_SELECT } from "./purchase";
 import {
   compareSlots,
   dbFail,
+  getSlotDetail,
   NO_CONFIG_MESSAGE,
   normalizeSlotDetail,
   pickOne,
@@ -41,6 +47,7 @@ import {
   tanggalHariIniJakarta,
   type PgError,
 } from "./slots";
+import type { CreateBookingInput } from "@/lib/validation/schemas";
 
 // Modul KHUSUS SERVER (lihat catatan "server-only" di services/slots.ts).
 if (typeof window !== "undefined") {
@@ -567,6 +574,69 @@ export async function rejectPayment(
   void kirimNotifikasiBooking("rejected", paymentResult.data.booking_id, { reason: alasan });
 
   return ok(null);
+}
+
+/**
+ * Booking MANUAL oleh admin (mis. tenant mendaftar offline / lewat telepon).
+ * Memakai createBooking (validasi slot/tanggal sama) tapi melewati batas booking
+ * pending per telepon. Zona kendaraan ditolak: butuh foto unit untuk katalog,
+ * jadi harus lewat form publik. Bila `autoConfirm`, booking langsung dikonfirmasi
+ * (pembayaran dianggap sudah diterima panitia di luar sistem).
+ */
+export async function adminCreateBooking(
+  input: CreateBookingInput,
+  opts: { autoConfirm: boolean; adminId: string },
+): Promise<Result<{ bookingId: string; bookingCode: string }>> {
+  type Out = { bookingId: string; bookingCode: string };
+  if (!isServiceRoleConfigured()) return fail<Out>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+
+  const slotResult = await getSlotDetail(input.slotId);
+  if (!slotResult.ok) return fail<Out>(slotResult.error, slotResult.code);
+  if (isVehicleZoneType(slotResult.data.zone.zone_type)) {
+    return fail<Out>(
+      "Slot zona kendaraan harus didaftarkan lewat form publik karena wajib foto unit untuk katalog.",
+      "VEHICLE_ZONE_MANUAL",
+    );
+  }
+
+  const created = await createBooking(input, { skipPendingLimit: true });
+  if (!created.ok) return created;
+
+  if (opts.autoConfirm) {
+    const supabase = createAdminSupabase();
+    const now = new Date().toISOString();
+    // Tandai lunas: pembayaran dikumpulkan panitia di luar sistem (tanpa bukti).
+    const payQ = await supabase
+      .from("admin_fee_payments")
+      .select("id")
+      .eq("booking_id", created.data.bookingId)
+      .maybeSingle();
+    if (!payQ.error && payQ.data) {
+      await supabase
+        .from("admin_fee_payments")
+        .update({
+          status: "verified",
+          method: "transfer",
+          verified_by: opts.adminId,
+          verified_at: now,
+          reject_reason: null,
+          updated_at: now,
+        })
+        .eq("id", (payQ.data as { id: string }).id);
+    }
+    await supabase
+      .from("bookings")
+      .update({ status: "confirmed", updated_at: now })
+      .eq("id", created.data.bookingId);
+
+    void syncToSheet("booking", {
+      bookingCode: created.data.bookingCode,
+      status: "confirmed",
+    });
+    void kirimNotifikasiBooking("verified", created.data.bookingId);
+  }
+
+  return created;
 }
 
 /**

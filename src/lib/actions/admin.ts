@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import {
   addEventDate,
   adminCancelBooking,
+  adminCreateBooking,
   overrideSlotStatus,
   rejectPayment,
   setCommissionPaid,
@@ -18,11 +19,14 @@ import {
 } from "@/lib/services/admin";
 import { setVehicleVisibility } from "@/lib/services/catalog";
 import { requireAdmin, requireFullAdmin, signInAdmin, signOutAdmin } from "@/lib/services/auth";
+import { getSlotDetail } from "@/lib/services/slots";
+import { TENANT_TYPE_BY_ZONE_TYPE } from "@/lib/domain/labels";
 import { tujuanAdminAman } from "@/lib/utils";
 import {
   addEventDateSchema,
   adminCancelBookingSchema,
   adminLoginSchema,
+  createBookingSchema,
   overrideSlotSchema,
   rejectPaymentSchema,
   updateLeasingSchema,
@@ -188,6 +192,59 @@ export async function verifyPaymentAction(
 
   revalidateAdmin();
   return successState("Pembayaran diverifikasi, booking dikonfirmasi.");
+}
+
+/**
+ * Buat booking manual dari dashboard admin (tenant daftar offline/telepon).
+ * Tanggal dikirim sebagai beberapa input name="eventDates" (checkbox).
+ * Centang "autoConfirm" untuk langsung mengonfirmasi (pembayaran diterima
+ * panitia di luar sistem). tenantType diturunkan dari zona slot.
+ */
+export async function adminCreateBookingAction(
+  prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const form = ambilFormData(prevState, formData);
+  const gate = await requireFullAdmin();
+  if (!gate.ok) return errorState(gate.error);
+
+  const slotId = teks(form, "slotId");
+  let tenantType = teks(form, "tenantType");
+  if (slotId.length > 0) {
+    const slot = await getSlotDetail(slotId);
+    if (slot.ok) {
+      const otomatis = TENANT_TYPE_BY_ZONE_TYPE[slot.data.zone.zone_type];
+      if (otomatis) tenantType = otomatis;
+    }
+  }
+
+  const eventDates = form.getAll("eventDates").filter((v): v is string => typeof v === "string");
+
+  const parsed = createBookingSchema.safeParse({
+    slotId,
+    eventDates,
+    tenantName: teks(form, "tenantName"),
+    tenantPhone: teks(form, "tenantPhone"),
+    tenantEmail: teks(form, "tenantEmail"),
+    tenantType,
+    notes: teks(form, "notes"),
+  });
+  if (!parsed.success) {
+    return errorState("Periksa kembali isian booking.", zodFieldErrors(parsed.error));
+  }
+
+  const autoConfirm = ["on", "true", "1"].includes(teks(form, "autoConfirm"));
+  const result = await adminCreateBooking(parsed.data, { autoConfirm, adminId: gate.data.id });
+  if (!result.ok) {
+    if (result.code === "SLOT_TAKEN") return errorState(result.error, { slotId: result.error });
+    if (result.code === "DATE_TAKEN") return errorState(result.error, { eventDates: result.error });
+    return errorState(result.error);
+  }
+
+  revalidateAdmin();
+  // redirect() melempar NEXT_REDIRECT — jangan dibungkus try/catch.
+  redirect(`/admin/bookings?q=${result.data.bookingCode}`);
+  return { status: "success" };
 }
 
 /** Batalkan booking dari dashboard admin (wajib alasan; tenant diberi tahu). */
