@@ -195,28 +195,52 @@ export default async function BerandaPage() {
         <h2 className="text-[clamp(2rem,4vw,3rem)] font-semibold leading-tight tracking-[-0.01em] text-ink">
           Zona Pameran
         </h2>
-        <Stagger inView className="mt-6 grid gap-4 md:grid-cols-3">
-          {zonaKartu.map((zone, index) => (
-            <StaggerItem
-              key={zone.id}
-              className={cn(
-                index === 0 && "md:col-span-2 md:row-span-2",
-                zone.zone_type === "umkm" && "md:col-span-3",
-              )}
-            >
-              <KartuZona
-                zone={zone}
-                besar={index === 0}
-                tersedia={
-                  zone.slots.filter((slot) => verdictSlot(slot, zone.zone_type) === "available")
-                    .length
-                }
-                harga={zoneMinAdminFee(zone, zone.slots)}
-                hargaBeragam={zoneHasVariedFees(zone, zone.slots)}
-              />
-            </StaggerItem>
-          ))}
-        </Stagger>
+        {(() => {
+          // Baris atas (bento): zona kendaraan — kartu pertama besar (2x2).
+          // Baris bawah: UMKM & Booth Leasing/Brand Otomotif dibagi DUA SETENGAH
+          // yang setara (md:grid-cols-2), bukan lagi UMKM full-width.
+          const utama = zonaKartu.filter(
+            (zone) => zone.zone_type !== "umkm" && zone.zone_type !== "booth_khusus",
+          );
+          const pasangan = zonaKartu.filter(
+            (zone) => zone.zone_type === "umkm" || zone.zone_type === "booth_khusus",
+          );
+          const kartu = (zone: (typeof zonaKartu)[number], besar: boolean) => (
+            <KartuZona
+              zone={zone}
+              besar={besar}
+              tersedia={
+                zone.slots.filter((slot) => verdictSlot(slot, zone.zone_type) === "available").length
+              }
+              harga={zoneMinAdminFee(zone, zone.slots)}
+              hargaBeragam={zoneHasVariedFees(zone, zone.slots)}
+            />
+          );
+          return (
+            <>
+              <Stagger inView className="mt-6 grid gap-4 md:grid-cols-3">
+                {utama.map((zone, index) => (
+                  <StaggerItem
+                    key={zone.id}
+                    className={cn(index === 0 && "md:col-span-2 md:row-span-2")}
+                  >
+                    {kartu(zone, index === 0)}
+                  </StaggerItem>
+                ))}
+              </Stagger>
+              {pasangan.length > 0 ? (
+                <Stagger
+                  inView
+                  className={cn("mt-4 grid gap-4", pasangan.length === 2 && "md:grid-cols-2")}
+                >
+                  {pasangan.map((zone) => (
+                    <StaggerItem key={zone.id}>{kartu(zone, false)}</StaggerItem>
+                  ))}
+                </Stagger>
+              ) : null}
+            </>
+          );
+        })()}
       </section>
 
       {/* ================= PETA ================= */}
