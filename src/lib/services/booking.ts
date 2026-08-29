@@ -2,12 +2,15 @@ import {
   isBookableZoneType,
   isVehicleZoneType,
   MAX_PENDING_BOOKINGS_PER_PHONE,
+  PAYMENT_DEADLINE_HOURS,
 } from "@/lib/domain/constants";
 import { slotAdminFee } from "@/lib/domain/harga";
 import { hitungTotalBiaya } from "@/lib/domain/ketersediaan";
 import { TENANT_TYPE_BY_ZONE_TYPE } from "@/lib/domain/labels";
+import { notifyBooking, type BookingNotifKind } from "@/lib/notifications";
 import { fail, ok, type Result } from "@/lib/result";
 import { syncToSheet } from "@/lib/sheets";
+import { formatTanggalWaktu, slotDisplayName } from "@/lib/utils";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { isServiceRoleConfigured } from "@/lib/supabase/config";
 import type {
@@ -413,7 +416,62 @@ export async function createBooking(
     amount,
   });
 
+  // Notifikasi WA/email ke tenant (fire-and-forget). Tenggat = created + 24 jam,
+  // cermin expire_unpaid_bookings; dihitung di sini karena notif modul murni.
+  const tenggat = new Date(Date.now() + PAYMENT_DEADLINE_HOURS * 60 * 60 * 1000);
+  void notifyBooking("created", {
+    tenantName: data.tenantName,
+    tenantPhone: data.tenantPhone,
+    tenantEmail: data.tenantEmail ?? null,
+    bookingCode: booking.booking_code,
+    slotName: slotDisplayName(slot),
+    zoneName: slot.zone.name,
+    dates,
+    amount,
+    deadlineText: `${formatTanggalWaktu(tenggat)} WIB`,
+  });
+
   return ok<Out>({ bookingId: booking.id, bookingCode: booking.booking_code });
+}
+
+/**
+ * Kirim notifikasi WA/email untuk satu booking berdasarkan id (memuat detail
+ * lengkap dulu supaya nama/slot/tanggal/nominal ikut). Dipakai lapisan service
+ * (verifikasi, penolakan, pembatalan). Tidak pernah melempar; kalau detail gagal
+ * dimuat, notifikasi dilewati diam-diam — operasi utama tidak boleh terganggu.
+ */
+export async function kirimNotifikasiBooking(
+  kind: BookingNotifKind,
+  bookingId: string,
+  opts?: { reason?: string | null },
+): Promise<void> {
+  try {
+    const detail = await getBookingDetail(bookingId);
+    if (!detail.ok) return;
+    const b = detail.data;
+    const amount =
+      b.payment?.amount ??
+      hitungTotalBiaya(slotAdminFee(b.slot, b.slot.zone), Math.max(b.dates.length, 1));
+    // Bukti ditolak -> tenant punya jendela unggah ulang 24 jam sejak sekarang.
+    const deadlineText =
+      kind === "rejected"
+        ? `${formatTanggalWaktu(new Date(Date.now() + PAYMENT_DEADLINE_HOURS * 60 * 60 * 1000))} WIB`
+        : null;
+    await notifyBooking(kind, {
+      tenantName: b.tenant.name,
+      tenantPhone: b.tenant.phone,
+      tenantEmail: b.tenant.email,
+      bookingCode: b.booking_code,
+      slotName: slotDisplayName(b.slot),
+      zoneName: b.slot.zone.name,
+      dates: b.dates,
+      amount,
+      deadlineText,
+      reason: opts?.reason ?? null,
+    });
+  } catch {
+    // Notifikasi opsional: kegagalan tidak pernah menggagalkan operasi utama.
+  }
 }
 
 /** Booking lengkap berdasarkan id. */
@@ -617,6 +675,8 @@ export async function cancelBooking(bookingId: string): Promise<Result<null>> {
     bookingCode: booking.booking_code,
     status: "cancelled",
   });
+
+  void kirimNotifikasiBooking("cancelled", booking.id);
 
   return ok(null);
 }

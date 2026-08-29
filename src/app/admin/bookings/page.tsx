@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { AdminCancelBookingForm } from "@/components/admin/AdminCancelBookingForm";
 import { AutoRefresh } from "@/components/admin/AutoRefresh";
 import { BookingDateChips } from "@/components/admin/BookingDateChips";
 import { ExportCsvButton, type ExportCsvRow } from "@/components/admin/ExportCsvButton";
@@ -330,6 +331,13 @@ export default async function AdminBookingsPage({ searchParams }: PageProps) {
                     bookingCode={booking.booking_code}
                   />
                 </div>
+                <div className="mt-2">
+                  <AdminCancelBookingForm
+                    bookingId={booking.id}
+                    bookingStatus={booking.status}
+                    bookingCode={booking.booking_code}
+                  />
+                </div>
                 <KatalogToggle listing={booking.listing} className="mt-2" />
               </li>
             );
@@ -424,12 +432,19 @@ export default async function AdminBookingsPage({ searchParams }: PageProps) {
                       </td>
 
                       <td className="px-3 py-3">
-                        <PaymentVerifyForm
-                          paymentId={payment?.id ?? null}
-                          paymentStatus={payment?.status ?? null}
-                          bookingStatus={booking.status}
-                          bookingCode={booking.booking_code}
-                        />
+                        <div className="space-y-2">
+                          <PaymentVerifyForm
+                            paymentId={payment?.id ?? null}
+                            paymentStatus={payment?.status ?? null}
+                            bookingStatus={booking.status}
+                            bookingCode={booking.booking_code}
+                          />
+                          <AdminCancelBookingForm
+                            bookingId={booking.id}
+                            bookingStatus={booking.status}
+                            bookingCode={booking.booking_code}
+                          />
+                        </div>
                       </td>
                     </tr>
                   );

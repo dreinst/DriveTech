@@ -1,0 +1,246 @@
+/**
+ * Notifikasi keluar ke tenant lewat WhatsApp & email. KERANGKA SIAP-SAMBUNG:
+ * selama kredensial provider belum diisi, semua pengiriman berjalan DRY-RUN
+ * (payload dicatat ke log, tidak ada panggilan keluar) sehingga aman dijalankan
+ * di produksi maupun skrip tes. Isi env di bawah untuk mengaktifkan pengiriman
+ * sungguhan tanpa mengubah kode:
+ *
+ *   WhatsApp (default provider Fonnte — https://fonnte.com):
+ *     WA_API_TOKEN   token perangkat Fonnte (WAJIB agar WA aktif)
+ *     WA_API_URL     endpoint kirim (default https://api.fonnte.com/send)
+ *   Email (default provider Resend — https://resend.com):
+ *     RESEND_API_KEY   api key Resend (WAJIB agar email aktif)
+ *     NOTIF_EMAIL_FROM pengirim (default "Drive Tech <no-reply@drivetech.local>")
+ *   Umum:
+ *     WA_OVERRIDE_RECIPIENT  kalau diisi, SEMUA WA dialihkan ke nomor ini
+ *                            (mode uji: pakai nomor dummy dulu sebelum go-live)
+ *
+ * Modul KHUSUS SERVER, TAPI sengaja SELF-CONTAINED (tanpa import next/server,
+ * tanpa alias "@/…") supaya bisa dijalankan langsung oleh Node untuk pengetesan
+ * (scripts/test-notifikasi.ts). Penjadwalan fire-and-forget lewat next `after()`
+ * dilakukan dengan dynamic import ber-fallback agar tidak menggagalkan skrip.
+ */
+
+/** Nomor WhatsApp dummy untuk uji coba sebelum nomor asli disetel. */
+export const DUMMY_WA_RECIPIENT = "6281200000000";
+
+/** Batas tunggu panggilan provider (ms) — jangan menahan respons ke pengguna. */
+const NOTIF_TIMEOUT_MS = 5000;
+
+export type NotifChannelResult = {
+  channel: "whatsapp" | "email";
+  /** true = benar-benar terkirim ke provider; false = dry-run / gagal. */
+  delivered: boolean;
+  /** true = tidak ada kredensial, jadi hanya dicatat (bukan kegagalan). */
+  dryRun: boolean;
+  to: string;
+  info?: string;
+};
+
+/* ------------------------------------------------------------------ */
+/* Util kecil (inline supaya modul tetap tanpa dependensi)             */
+/* ------------------------------------------------------------------ */
+
+function formatRupiah(n: number | null | undefined): string {
+  const value = typeof n === "number" && Number.isFinite(n) ? n : 0;
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
+/**
+ * Ubah nomor lokal jadi format internasional tanpa "+" untuk WhatsApp API
+ * ("081234" -> "6281234"). Nomor yang sudah 62… dibiarkan; input kosong -> "".
+ */
+export function toWaNumber(phone: string | null | undefined): string {
+  if (!phone) return "";
+  const digits = phone.replace(/[^\d]/g, "");
+  if (digits.length === 0) return "";
+  if (digits.startsWith("62")) return digits;
+  if (digits.startsWith("0")) return `62${digits.slice(1)}`;
+  return digits;
+}
+
+/* ------------------------------------------------------------------ */
+/* Transport                                                           */
+/* ------------------------------------------------------------------ */
+
+/** Kirim satu pesan WhatsApp. Tidak pernah melempar. */
+export async function sendWhatsApp(
+  to: string,
+  message: string,
+): Promise<NotifChannelResult> {
+  const tujuan = process.env.WA_OVERRIDE_RECIPIENT?.trim() || to;
+  const token = process.env.WA_API_TOKEN?.trim() ?? "";
+  const url = process.env.WA_API_URL?.trim() || "https://api.fonnte.com/send";
+
+  if (tujuan.length === 0) {
+    return { channel: "whatsapp", delivered: false, dryRun: false, to, info: "nomor kosong" };
+  }
+  if (token.length === 0) {
+    console.info(`[notif][wa][dry-run] -> ${tujuan}\n${message}`);
+    return { channel: "whatsapp", delivered: false, dryRun: true, to: tujuan };
+  }
+
+  try {
+    const body = new URLSearchParams({ target: tujuan, message });
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { Authorization: token, "Content-Type": "application/x-www-form-urlencoded" },
+      body,
+      signal: AbortSignal.timeout(NOTIF_TIMEOUT_MS),
+    });
+    if (!response.ok) {
+      console.warn(`[notif][wa] provider membalas ${response.status}`);
+      return { channel: "whatsapp", delivered: false, dryRun: false, to: tujuan, info: `HTTP ${response.status}` };
+    }
+    return { channel: "whatsapp", delivered: true, dryRun: false, to: tujuan };
+  } catch (error) {
+    console.warn("[notif][wa] gagal kirim:", error);
+    return { channel: "whatsapp", delivered: false, dryRun: false, to: tujuan, info: "exception" };
+  }
+}
+
+/** Kirim satu email. Tidak pernah melempar. */
+export async function sendEmail(
+  to: string,
+  subject: string,
+  text: string,
+): Promise<NotifChannelResult> {
+  const key = process.env.RESEND_API_KEY?.trim() ?? "";
+  const from = process.env.NOTIF_EMAIL_FROM?.trim() || "Drive Tech <no-reply@drivetech.local>";
+
+  if (!to || to.trim().length === 0) {
+    return { channel: "email", delivered: false, dryRun: false, to: "", info: "email kosong" };
+  }
+  if (key.length === 0) {
+    console.info(`[notif][email][dry-run] -> ${to} | ${subject}\n${text}`);
+    return { channel: "email", delivered: false, dryRun: true, to };
+  }
+
+  try {
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ from, to, subject, text }),
+      signal: AbortSignal.timeout(NOTIF_TIMEOUT_MS),
+    });
+    if (!response.ok) {
+      console.warn(`[notif][email] provider membalas ${response.status}`);
+      return { channel: "email", delivered: false, dryRun: false, to, info: `HTTP ${response.status}` };
+    }
+    return { channel: "email", delivered: true, dryRun: false, to };
+  } catch (error) {
+    console.warn("[notif][email] gagal kirim:", error);
+    return { channel: "email", delivered: false, dryRun: false, to, info: "exception" };
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Template pesan (murni)                                              */
+/* ------------------------------------------------------------------ */
+
+/** Data minimum untuk menyusun pesan notifikasi booking. */
+export type BookingNotif = {
+  tenantName: string;
+  tenantPhone: string | null;
+  tenantEmail?: string | null;
+  bookingCode: string;
+  slotName: string;
+  zoneName: string;
+  dates: string[];
+  amount: number;
+  /** Tenggat bayar (teks siap tampil, mis. "30 Agustus 2026, 14.05 WIB"). */
+  deadlineText?: string | null;
+  /** Alasan penolakan/pembatalan bila relevan. */
+  reason?: string | null;
+};
+
+export type BookingNotifKind = "created" | "verified" | "rejected" | "cancelled";
+
+const KONTAK_PANITIA = "Panitia Drive Tech";
+
+/** Susun pesan WhatsApp untuk satu peristiwa booking. */
+export function buildBookingWa(kind: BookingNotifKind, d: BookingNotif): string {
+  const tanggal = d.dates.length > 0 ? d.dates.join(", ") : "-";
+  const kepala = `Halo ${d.tenantName},`;
+  const lapak = `Lapak ${d.slotName} (${d.zoneName})\nTanggal: ${tanggal}\nKode booking: *${d.bookingCode}*`;
+
+  switch (kind) {
+    case "created":
+      return `${kepala}\nBooking Anda kami terima. ${lapak}\nBiaya admin: *${formatRupiah(d.amount)}*.\n${
+        d.deadlineText
+          ? `Selesaikan pembayaran & unggah bukti sebelum *${d.deadlineText}* agar slot tidak dilepas otomatis.`
+          : "Selesaikan pembayaran & unggah bukti agar slot dikonfirmasi."
+      }`;
+    case "verified":
+      return `${kepala}\nPembayaran Anda TERVERIFIKASI. Booking dikonfirmasi. ${lapak}\nTunjukkan kode booking saat registrasi ulang di lokasi. Sampai jumpa di pameran!`;
+    case "rejected":
+      return `${kepala}\nMohon maaf, bukti pembayaran Anda DITOLAK.${
+        d.reason ? `\nAlasan: ${d.reason}.` : ""
+      }\n${lapak}\n${
+        d.deadlineText
+          ? `Silakan unggah ulang bukti yang benar sebelum *${d.deadlineText}*.`
+          : "Silakan unggah ulang bukti yang benar dari halaman status booking."
+      }`;
+    case "cancelled":
+      return `${kepala}\nBooking Anda DIBATALKAN.${d.reason ? `\nAlasan: ${d.reason}.` : ""}\n${lapak}\nTanggal sewa telah dilepas. Anda bisa memesan slot lain kapan saja. — ${KONTAK_PANITIA}`;
+  }
+}
+
+/** Judul + isi email untuk satu peristiwa booking. */
+export function buildBookingEmail(kind: BookingNotifKind, d: BookingNotif): { subject: string; text: string } {
+  const subjectByKind: Record<BookingNotifKind, string> = {
+    created: `Booking ${d.bookingCode} diterima — selesaikan pembayaran`,
+    verified: `Booking ${d.bookingCode} terkonfirmasi`,
+    rejected: `Bukti pembayaran ${d.bookingCode} ditolak`,
+    cancelled: `Booking ${d.bookingCode} dibatalkan`,
+  };
+  return { subject: subjectByKind[kind], text: buildBookingWa(kind, d) };
+}
+
+/* ------------------------------------------------------------------ */
+/* Orkestrasi fire-and-forget                                          */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Jadwalkan promise agar selesai setelah respons terkirim (pakai next `after()`
+ * bila tersedia). Di luar konteks Next (mis. skrip), `after` tidak ada / melempar
+ * -> promise ditunggu langsung. Tidak pernah melempar ke pemanggil.
+ */
+async function jadwalkan(promise: Promise<unknown>): Promise<void> {
+  try {
+    const mod = (await import("next/server")) as { after?: (p: Promise<unknown>) => void };
+    if (typeof mod.after === "function") {
+      mod.after(promise);
+      return;
+    }
+  } catch {
+    // next/server tidak tersedia (skrip) — jatuh ke penantian langsung.
+  }
+  try {
+    await promise;
+  } catch {
+    // sudah ditangani di transport; abaikan.
+  }
+}
+
+/**
+ * Kirim notifikasi satu peristiwa booking ke WhatsApp (dan email bila ada
+ * alamatnya). Fire-and-forget: panggil dengan `void notifyBooking(...)` SETELAH
+ * operasi utama sukses. Tidak pernah menggagalkan operasi utama.
+ */
+export async function notifyBooking(kind: BookingNotifKind, d: BookingNotif): Promise<void> {
+  const kirim = (async () => {
+    const waNumber = toWaNumber(d.tenantPhone);
+    await sendWhatsApp(waNumber, buildBookingWa(kind, d));
+    if (d.tenantEmail && d.tenantEmail.trim().length > 0) {
+      const { subject, text } = buildBookingEmail(kind, d);
+      await sendEmail(d.tenantEmail.trim(), subject, text);
+    }
+  })();
+  await jadwalkan(kirim);
+}

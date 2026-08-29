@@ -173,6 +173,12 @@ export const cancelBookingSchema = z.object({
   bookingId: uuid("ID booking"),
 });
 
+/** Pembatalan booking oleh admin — wajib alasan (tercatat & dikirim ke tenant). */
+export const adminCancelBookingSchema = z.object({
+  bookingId: uuid("ID booking"),
+  reason: z.string().trim().min(3, "Alasan pembatalan minimal 3 karakter."),
+});
+
 /* ---------- Pembelian unit & leasing ---------- */
 
 export const createPurchaseSchema = z.object({
@@ -200,8 +206,19 @@ export const submitLeasingSchema = z.object({
 
 /* ---------- Admin ---------- */
 
+/**
+ * Login admin memakai USERNAME (mis. "Administrator"), bukan email — form sengaja
+ * disederhanakan (keputusan pemilik). Username dipetakan ke email internal
+ * Supabase Auth di services/auth.ts (usernameToAdminEmail). Karakter dibatasi
+ * huruf/angka/titik/underscore/strip agar aman menjadi bagian local-part email.
+ */
 export const adminLoginSchema = z.object({
-  email: z.email("Format email tidak valid."),
+  username: z
+    .string()
+    .trim()
+    .min(3, "Username minimal 3 karakter.")
+    .max(50, "Username maksimal 50 karakter.")
+    .regex(/^[A-Za-z0-9._-]+$/, "Username hanya boleh huruf, angka, titik, underscore, atau strip."),
   password: z.string().min(6, "Kata sandi minimal 6 karakter."),
 });
 
@@ -269,6 +286,7 @@ export type CreateBookingInput = z.infer<typeof createBookingSchema>;
 export type VehicleInfoInput = z.infer<typeof vehicleInfoSchema>;
 export type SubmitPaymentInput = z.infer<typeof submitPaymentSchema>;
 export type CancelBookingInput = z.infer<typeof cancelBookingSchema>;
+export type AdminCancelBookingInput = z.infer<typeof adminCancelBookingSchema>;
 export type CreatePurchaseInput = z.infer<typeof createPurchaseSchema>;
 export type SubmitLeasingInput = z.infer<typeof submitLeasingSchema>;
 export type AdminLoginInput = z.infer<typeof adminLoginSchema>;
