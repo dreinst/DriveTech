@@ -1,11 +1,13 @@
 import type { NextResponse } from "next/server";
 
+import { checkRateLimit, clientIpFrom } from "@/lib/rate-limit";
 import { createPurchase } from "@/lib/services/purchase";
 import { createPurchaseSchema } from "@/lib/validation/schemas";
 import {
   handleRoute,
   jsonError,
   jsonOk,
+  jsonRateLimited,
   jsonValidationError,
   mapResultToResponse,
   readJsonObject,
@@ -26,6 +28,9 @@ export const dynamic = "force-dynamic";
  */
 export async function POST(request: Request): Promise<NextResponse> {
   return handleRoute("POST /api/purchases", async () => {
+    const laju = checkRateLimit(`purchases:${clientIpFrom(request)}`, 5, 60_000);
+    if (!laju.allowed) return jsonRateLimited(laju.retryAfterSeconds);
+
     const body = await readJsonObject(request);
     if (body === null) return jsonError(INVALID_JSON_MESSAGE, 400, { code: "INVALID_BODY" });
 

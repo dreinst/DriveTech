@@ -82,6 +82,12 @@ function ambilEventDates(formData: FormData): string[] {
 
 const JENIS_BUKTI_DIIZINKAN = ["image/jpeg", "image/png", "image/webp"];
 
+/**
+ * URL sementara agar skema (photoUrl wajib http/https) bisa divalidasi SEBELUM
+ * foto diunggah; tidak pernah tersimpan — diganti URL storage asli usai unggah.
+ */
+const FOTO_PLACEHOLDER_URL = "https://placeholder.invalid/foto-kendaraan.jpg";
+
 function ekstensiBukti(mime: string): string {
   if (mime === "image/png") return "png";
   if (mime === "image/webp") return "webp";
@@ -112,9 +118,11 @@ export async function createBookingAction(
     }
   }
 
-  // Zona kendaraan: unggah foto DULU supaya URL-nya ikut divalidasi skema.
-  // Kalau booking gagal setelah ini, file yatim di storage tidak berbahaya
-  // (bucket publik khusus foto) — pola yang sama dengan bukti transfer.
+  // Zona kendaraan: berkas dicek dan skema divalidasi DULU, foto baru diunggah
+  // setelah seluruh isian lolos — supaya form ini tidak bisa dipakai menumpang
+  // unggah gambar dengan isian asal-asalan (temuan audit 2026-08-29). Skema
+  // divalidasi memakai URL placeholder; URL asli dipasang setelah unggah.
+  let fotoKendaraan: File | null = null;
   let vehicle: Record<string, unknown> | undefined;
   if (zonaKendaraan) {
     const fotoMentah = form.get("vehiclePhoto");
@@ -134,24 +142,8 @@ export async function createBookingAction(
         vehiclePhoto: "Format foto harus JPG, PNG, atau WEBP.",
       });
     }
-    if (!isServiceRoleConfigured()) {
-      return errorState(
-        "Supabase belum dikonfigurasi. Salin .env.example ke .env.local dan isi kredensialnya.",
-      );
-    }
 
-    const supabase = createAdminSupabase();
-    const nama = `${crypto.randomUUID()}.${ekstensiBukti(foto.type)}`;
-    const unggah = await supabase.storage
-      .from(STORAGE_BUCKET_FOTO_KENDARAAN)
-      .upload(nama, foto, { contentType: foto.type, cacheControl: "3600" });
-    if (unggah.error) {
-      return errorState(`Gagal mengunggah foto kendaraan: ${unggah.error.message}`, {
-        vehiclePhoto: "Foto gagal diunggah, coba lagi.",
-      });
-    }
-    const { data } = supabase.storage.from(STORAGE_BUCKET_FOTO_KENDARAAN).getPublicUrl(nama);
-
+    fotoKendaraan = foto;
     vehicle = {
       vehicleName: teks(form, "vehicleName"),
       kind: teks(form, "vehicleKind"),
@@ -162,7 +154,7 @@ export async function createBookingAction(
       transmission: teks(form, "vehicleTransmission"),
       color: teks(form, "vehicleColor"),
       description: teks(form, "vehicleDescription"),
-      photoUrl: data.publicUrl,
+      photoUrl: FOTO_PLACEHOLDER_URL,
     };
   }
 
@@ -183,7 +175,30 @@ export async function createBookingAction(
     return errorState("Periksa kembali isian formulir.", zodFieldErrors(parsed.error));
   }
 
-  const result = await createBooking(parsed.data);
+  // Isian valid — sekarang baru foto diunggah dan URL aslinya dipasang.
+  let vehicleFinal = parsed.data.vehicle;
+  if (zonaKendaraan && fotoKendaraan && vehicleFinal) {
+    if (!isServiceRoleConfigured()) {
+      return errorState(
+        "Supabase belum dikonfigurasi. Salin .env.example ke .env.local dan isi kredensialnya.",
+      );
+    }
+
+    const supabase = createAdminSupabase();
+    const nama = `${crypto.randomUUID()}.${ekstensiBukti(fotoKendaraan.type)}`;
+    const unggah = await supabase.storage
+      .from(STORAGE_BUCKET_FOTO_KENDARAAN)
+      .upload(nama, fotoKendaraan, { contentType: fotoKendaraan.type, cacheControl: "3600" });
+    if (unggah.error) {
+      return errorState(`Gagal mengunggah foto kendaraan: ${unggah.error.message}`, {
+        vehiclePhoto: "Foto gagal diunggah, coba lagi.",
+      });
+    }
+    const { data } = supabase.storage.from(STORAGE_BUCKET_FOTO_KENDARAAN).getPublicUrl(nama);
+    vehicleFinal = { ...vehicleFinal, photoUrl: data.publicUrl };
+  }
+
+  const result = await createBooking({ ...parsed.data, vehicle: vehicleFinal });
   if (!result.ok) {
     if (result.code === "SLOT_TAKEN") return errorState(result.error, { slotId: result.error });
     if (result.code === "DATE_TAKEN") return errorState(result.error, { eventDates: result.error });

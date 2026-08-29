@@ -1,6 +1,7 @@
 import type { NextResponse } from "next/server";
 
 import { slotAdminFee } from "@/lib/domain/harga";
+import { checkRateLimit, clientIpFrom } from "@/lib/rate-limit";
 import { createBooking } from "@/lib/services/booking";
 import { getFloorPlan } from "@/lib/services/slots";
 import type { SlotStatus, ZoneType } from "@/lib/types/database";
@@ -9,6 +10,7 @@ import { createBookingSchema } from "@/lib/validation/schemas";
 import {
   handleRoute,
   jsonOk,
+  jsonRateLimited,
   jsonValidationError,
   mapResultToResponse,
   readJsonObject,
@@ -165,6 +167,11 @@ export async function GET(request: Request): Promise<NextResponse> {
  */
 export async function POST(request: Request): Promise<NextResponse> {
   return handleRoute("POST /api/bookings", async () => {
+    // Pengaman kasar anti-spam (per IP, per instance); batas bisnisnya ada di
+    // createBooking (MAX_PENDING_BOOKINGS_PER_PHONE).
+    const laju = checkRateLimit(`bookings:${clientIpFrom(request)}`, 5, 60_000);
+    if (!laju.allowed) return jsonRateLimited(laju.retryAfterSeconds);
+
     const body = await readJsonObject(request);
     if (body === null) return jsonError(INVALID_JSON_MESSAGE, 400, { code: "INVALID_BODY" });
 

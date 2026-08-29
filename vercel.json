@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/sync-cancelled",
+      "schedule": "0 20 * * *"
+    }
+  ]
+}

@@ -106,7 +106,12 @@ export default async function DetailKendaraanPage({ params }: PageProps) {
                 ))}
               </ul>
             ) : null}
-            <div className="mt-4">
+            <div className="mt-4 flex flex-wrap gap-2">
+              {/* Tautan ke alur /beli (temuan audit: katalog tidak tertaut ke /beli) —
+                  mencatat minat pembelian unit dari penyewa slot ini, termasuk opsi kredit. */}
+              <Link href={`/beli/${item.slot.id}`} className={buttonClass("primary", "sm")}>
+                Ajukan pembelian unit ini
+              </Link>
               <Link href="/#denah" className={buttonClass("secondary", "sm")}>
                 Lihat denah lokasi
               </Link>

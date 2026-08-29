@@ -1,4 +1,8 @@
-import { isBookableZoneType, isVehicleZoneType } from "@/lib/domain/constants";
+import {
+  isBookableZoneType,
+  isVehicleZoneType,
+  MAX_PENDING_BOOKINGS_PER_PHONE,
+} from "@/lib/domain/constants";
 import { slotAdminFee } from "@/lib/domain/harga";
 import { hitungTotalBiaya } from "@/lib/domain/ketersediaan";
 import { TENANT_TYPE_BY_ZONE_TYPE } from "@/lib/domain/labels";
@@ -192,6 +196,36 @@ export async function createBooking(
     );
   }
 
+  /* --- Anti-penimbunan slot: batasi booking pending per nomor telepon ---
+     Booking pending menahan tanggal sampai 24 jam (atau 72 jam bila bukti
+     sudah dikirim); tanpa batas ini satu nomor bisa mengunci banyak tanggal
+     tanpa pernah membayar. */
+  const tenantSemuaTipe = await supabase
+    .from("tenants")
+    .select("id")
+    .eq("phone", data.tenantPhone);
+  if (tenantSemuaTipe.error) {
+    return dbFail<Out>(tenantSemuaTipe.error as PgError, "Gagal memeriksa data tenant");
+  }
+  const tenantIds = ((tenantSemuaTipe.data ?? []) as Array<{ id: string }>).map((t) => t.id);
+  if (tenantIds.length > 0) {
+    const pendingCount = await supabase
+      .from("bookings")
+      .select("id", { count: "exact", head: true })
+      .in("tenant_id", tenantIds)
+      .eq("status", "pending_payment");
+    if (pendingCount.error) {
+      return dbFail<Out>(pendingCount.error as PgError, "Gagal memeriksa booking berjalan");
+    }
+    if ((pendingCount.count ?? 0) >= MAX_PENDING_BOOKINGS_PER_PHONE) {
+      return fail<Out>(
+        `Nomor telepon ini masih punya ${pendingCount.count} booking menunggu pembayaran. ` +
+          "Selesaikan pembayarannya (atau batalkan) dulu sebelum membuat booking baru.",
+        "TOO_MANY_PENDING",
+      );
+    }
+  }
+
   /* --- Langkah 0: temukan atau buat tenant (dikunci pada nomor telepon) --- */
   const existingTenant = await supabase
     .from("tenants")
@@ -322,11 +356,15 @@ export async function createBooking(
   /* --- Langkah 4: simpan data kendaraan untuk katalog (khusus zona kendaraan) --- */
   if (zonaKendaraan && data.vehicle) {
     const v = data.vehicle;
+    // Jenis kendaraan DITENTUKAN zona, bukan kiriman klien (keputusan pemilik
+    // 2026-08-29: zona mobil_motor_bekas khusus motor) — v.kind diabaikan agar
+    // pemanggil API tidak bisa menaruh "mobil" di zona motor.
+    const jenisDariZona = slot.zone.zone_type === "mobil_motor_bekas" ? "motor" : "mobil";
     const listingInsert = await supabase.from("vehicle_listings").insert({
       booking_id: booking.id,
       slot_id: slot.id,
       vehicle_name: v.vehicleName,
-      vehicle_kind: v.kind ?? "mobil",
+      vehicle_kind: jenisDariZona,
       plate_number: v.plateNumber,
       price: v.price,
       year: v.year ?? null,
@@ -348,7 +386,7 @@ export async function createBooking(
     void syncToSheet("vehicle", {
       bookingCode: booking.booking_code,
       vehicleName: v.vehicleName,
-      jenis: v.kind ?? "mobil",
+      jenis: jenisDariZona,
       plate: v.plateNumber,
       price: v.price,
       tahun: v.year ?? "",

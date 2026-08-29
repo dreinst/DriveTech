@@ -56,6 +56,20 @@ export function jsonError(
   return NextResponse.json(body, { status, headers: NO_STORE_HEADERS });
 }
 
+/** 429 dengan header Retry-After — dipakai bersama lib/rate-limit.ts. */
+export function jsonRateLimited(retryAfterSeconds: number): NextResponse<ApiErrorBody> {
+  return NextResponse.json(
+    {
+      error: "Terlalu banyak permintaan dari alamat Anda. Coba lagi sebentar lagi.",
+      code: "RATE_LIMITED",
+    } satisfies ApiErrorBody,
+    {
+      status: 429,
+      headers: { ...NO_STORE_HEADERS, "Retry-After": String(Math.max(1, retryAfterSeconds)) },
+    },
+  );
+}
+
 /** 400 lengkap dengan peta error per field dari zod. */
 export function jsonValidationError(
   message: string,
@@ -87,6 +101,8 @@ const STATUS_BY_CODE: Record<string, number> = {
   ZONE_CLOSED: 422,
   NOT_CREDIT: 422,
   INACTIVE_PARTNER: 422,
+  NOT_SUBMITTED: 422,
+  TOO_MANY_PENDING: 429,
   NO_CONFIG: 503,
 };
 

@@ -57,6 +57,12 @@ export function PaymentVerifyForm({
     return <span className="text-xs font-medium text-ok">Sudah diverifikasi</span>;
   }
 
+  // Belum ada bukti sama sekali: tidak ada yang bisa diverifikasi/ditolak
+  // (server juga menolak lewat guard NOT_SUBMITTED di verifyPayment).
+  if (paymentStatus === "unpaid") {
+    return <span className="text-xs text-subtle">Menunggu bukti dari tenant</span>;
+  }
+
   function konfirmasiVerifikasi(event: FormEvent<HTMLFormElement>) {
     const setuju = window.confirm(
       `Verifikasi pembayaran booking ${bookingCode}? Slot akan dikunci sebagai terisi.`,

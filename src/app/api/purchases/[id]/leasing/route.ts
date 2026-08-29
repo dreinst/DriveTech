@@ -1,10 +1,12 @@
 import type { NextResponse } from "next/server";
 
+import { checkRateLimit, clientIpFrom } from "@/lib/rate-limit";
 import { submitLeasingApplication } from "@/lib/services/leasing";
 import { submitLeasingSchema } from "@/lib/validation/schemas";
 import {
   handleRoute,
   jsonError,
+  jsonRateLimited,
   jsonValidationError,
   mapResultToResponse,
   readJsonObject,
@@ -27,6 +29,9 @@ type RouteContext = { params: Promise<{ id: string }> };
  */
 export async function POST(request: Request, { params }: RouteContext): Promise<NextResponse> {
   return handleRoute("POST /api/purchases/[id]/leasing", async () => {
+    const laju = checkRateLimit(`leasing:${clientIpFrom(request)}`, 10, 60_000);
+    if (!laju.allowed) return jsonRateLimited(laju.retryAfterSeconds);
+
     const { id: purchaseTransactionId } = await params;
 
     const body = await readJsonObject(request);

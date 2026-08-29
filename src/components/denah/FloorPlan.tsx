@@ -621,8 +621,8 @@ export function FloorPlan({
     >
       <title>Denah lokasi pameran</title>
       <desc>
-        Denah interaktif area pameran: tenda mobil baru, area pameran mobil, area pameran mobil dan
-        motor, area UMKM, deretan warung, serta fasilitas umum. Kotak hijau berarti slot tersedia
+        Denah interaktif area pameran: tenda mobil baru, area pameran mobil, area pameran motor,
+        area UMKM, booth leasing dan brand otomotif, deretan warung, serta fasilitas umum. Kotak hijau berarti slot tersedia
         pada tanggal yang dipilih, kuning menunggu pembayaran, merah sudah terisi; abu-abu adalah
         slot yang diblokir panitia serta fasilitas dan warung yang tidak disewakan online. Tiga
         tank display Kostrad digambar sebagai hiasan.

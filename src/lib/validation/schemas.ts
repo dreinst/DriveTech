@@ -50,13 +50,22 @@ const checkboxBoolean = z.preprocess(
   z.boolean(),
 );
 
-/** Nomor Indonesia: boleh diawali +62 / 62 / 0, total 8-15 digit. Spasi & tanda pisah diabaikan. */
-const PHONE_PATTERN = /^(?:\+62|62|0)[0-9]{8,15}$/;
+/**
+ * Nomor Indonesia: boleh diawali +62 / 62 / 0. Spasi & tanda pisah diabaikan,
+ * lalu DINORMALKAN ke bentuk lokal berawalan 0 ("+62812…" -> "0812…") supaya
+ * "0812…" dan "+62812…" dikenali sebagai tenant yang sama (temuan audit).
+ */
+const PHONE_PATTERN = /^0[0-9]{8,15}$/;
 
 const phone = z
   .string()
   .trim()
-  .transform((value) => value.replace(/[\s().-]/g, ""))
+  .transform((value) => {
+    const digits = value.replace(/[\s().-]/g, "");
+    const tanpaKode = digits.replace(/^(?:\+62|62)/, "");
+    if (tanpaKode === digits) return digits; // sudah format lokal (atau bukan nomor +62)
+    return tanpaKode.startsWith("0") ? tanpaKode : `0${tanpaKode}`;
+  })
   .pipe(
     z
       .string()
