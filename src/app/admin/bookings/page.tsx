@@ -6,6 +6,7 @@ import { AutoRefresh } from "@/components/admin/AutoRefresh";
 import { BookingDateChips } from "@/components/admin/BookingDateChips";
 import { ExportCsvButton, type ExportCsvRow } from "@/components/admin/ExportCsvButton";
 import { KatalogToggle } from "@/components/admin/KatalogToggle";
+import { MoveSlotForm, type MoveSlotCandidate } from "@/components/admin/MoveSlotForm";
 import { PaymentVerifyForm } from "@/components/admin/PaymentVerifyForm";
 import { ProofThumb } from "@/components/admin/ProofThumb";
 import { Alert } from "@/components/ui/Alert";
@@ -21,9 +22,9 @@ import {
   PAYMENT_STATUS_LABEL,
 } from "@/lib/domain/labels";
 import { requireAdmin } from "@/lib/services/auth";
-import { listBookings } from "@/lib/services/admin";
+import { listBookings, listSlots } from "@/lib/services/admin";
 import { resolveProofUrl } from "@/lib/storage";
-import type { BookingDetail, BookingStatus, PaymentStatus } from "@/lib/types/database";
+import type { BookingDetail, BookingStatus, PaymentStatus, SlotDetail } from "@/lib/types/database";
 import { cn, formatRupiah, formatTanggalWaktu, slotDisplayName } from "@/lib/utils";
 
 // Data booking dibaca langsung dari database, jangan dirender saat build.
@@ -204,6 +205,18 @@ export default async function AdminBookingsPage({ searchParams }: PageProps) {
     ),
   );
 
+  // Kandidat slot tujuan untuk "Pindahkan slot": slot tersedia, tipe zona sama,
+  // bukan slot sekarang. Dihitung sekali dari daftar slot yang tidak diblokir.
+  const slotsResult = await listSlots({ status: "available" });
+  const slotTersedia: SlotDetail[] = slotsResult.ok ? slotsResult.data : [];
+  const kandidatPindah = (booking: BookingDetail): MoveSlotCandidate[] =>
+    slotTersedia
+      .filter(
+        (slot) =>
+          slot.zone.zone_type === booking.slot.zone.zone_type && slot.id !== booking.slot_id,
+      )
+      .map((slot) => ({ id: slot.id, label: `${slot.zone.name} — ${slotDisplayName(slot)}` }));
+
   return (
     <div className="space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
@@ -337,7 +350,12 @@ export default async function AdminBookingsPage({ searchParams }: PageProps) {
                     bookingCode={booking.booking_code}
                   />
                 </div>
-                <div className="mt-2">
+                <div className="mt-2 flex flex-wrap items-start gap-x-2">
+                  <MoveSlotForm
+                    bookingId={booking.id}
+                    bookingStatus={booking.status}
+                    candidates={kandidatPindah(booking)}
+                  />
                   <AdminCancelBookingForm
                     bookingId={booking.id}
                     bookingStatus={booking.status}
@@ -444,6 +462,11 @@ export default async function AdminBookingsPage({ searchParams }: PageProps) {
                             paymentStatus={payment?.status ?? null}
                             bookingStatus={booking.status}
                             bookingCode={booking.booking_code}
+                          />
+                          <MoveSlotForm
+                            bookingId={booking.id}
+                            bookingStatus={booking.status}
+                            candidates={kandidatPindah(booking)}
                           />
                           <AdminCancelBookingForm
                             bookingId={booking.id}

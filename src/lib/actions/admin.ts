@@ -7,6 +7,7 @@ import {
   addEventDate,
   adminCancelBooking,
   adminCreateBooking,
+  adminMoveBookingSlot,
   overrideSlotStatus,
   rejectPayment,
   setCommissionPaid,
@@ -245,6 +246,30 @@ export async function adminCreateBookingAction(
   // redirect() melempar NEXT_REDIRECT — jangan dibungkus try/catch.
   redirect(`/admin/bookings?q=${result.data.bookingCode}`);
   return { status: "success" };
+}
+
+/** Pindahkan booking ke slot lain dari dashboard admin. */
+export async function adminMoveBookingSlotAction(
+  prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const form = ambilFormData(prevState, formData);
+  const gate = await requireFullAdmin();
+  if (!gate.ok) return errorState(gate.error);
+
+  const bookingId = teks(form, "bookingId");
+  const targetSlotId = teks(form, "targetSlotId");
+  if (bookingId.length === 0 || targetSlotId.length === 0) {
+    return errorState("Pilih slot tujuan terlebih dahulu.", {
+      targetSlotId: "Slot tujuan wajib dipilih.",
+    });
+  }
+
+  const result = await adminMoveBookingSlot(bookingId, targetSlotId);
+  if (!result.ok) return errorState(result.error);
+
+  revalidateAdmin();
+  return successState("Booking berhasil dipindahkan ke slot baru.");
 }
 
 /** Batalkan booking dari dashboard admin (wajib alasan; tenant diberi tahu). */
