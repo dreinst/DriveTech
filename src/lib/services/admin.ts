@@ -430,6 +430,14 @@ export async function verifyPayment(paymentId: string, adminId: string): Promise
   if (!paymentResult.ok) return fail<null>(paymentResult.error, paymentResult.code);
   const payment = paymentResult.data;
   if (payment.status === "verified") return ok(null); // idempoten
+  if (payment.status === "unpaid") {
+    // Belum ada bukti sama sekali — tidak ada yang bisa diperiksa; mencegah
+    // salah klik mengonfirmasi booking yang belum membayar (temuan audit).
+    return fail<null>(
+      "Belum ada bukti pembayaran yang dikirim untuk tagihan ini, jadi belum bisa diverifikasi.",
+      "NOT_SUBMITTED",
+    );
+  }
 
   const supabase = createAdminSupabase();
   const now = new Date().toISOString();

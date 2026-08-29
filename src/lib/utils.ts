@@ -43,13 +43,20 @@ function toDate(d: string | Date | null | undefined): Date | null {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
+/**
+ * timeZone WAJIB Asia/Jakarta: di Vercel server berjalan di UTC, tanpa ini
+ * jam tampil mundur 7 jam (temuan audit 2026-08-29). Tanggal polos
+ * "YYYY-MM-DD" tetap aman: diparse sebagai 00:00 lokal lalu diformat WIB.
+ */
 const tanggalFormatter = new Intl.DateTimeFormat("id-ID", {
+  timeZone: "Asia/Jakarta",
   day: "numeric",
   month: "long",
   year: "numeric",
 });
 
 const tanggalWaktuFormatter = new Intl.DateTimeFormat("id-ID", {
+  timeZone: "Asia/Jakarta",
   day: "numeric",
   month: "long",
   year: "numeric",

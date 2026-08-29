@@ -14,8 +14,9 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Stepper } from "@/components/ui/Stepper";
 import { slotAdminFee } from "@/lib/domain/harga";
 import { hitungTotalBiaya } from "@/lib/domain/ketersediaan";
+import { batasPembayaran } from "@/lib/domain/tenggat";
 import { getBookingDetail } from "@/lib/services/booking";
-import { formatRupiah, slotDisplayName } from "@/lib/utils";
+import { formatRupiah, formatTanggalWaktu, slotDisplayName } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -97,6 +98,9 @@ export default async function BayarPage({ params }: PageProps) {
   const biayaPerTanggal = slotAdminFee(booking.slot, booking.slot.zone);
   const jumlahTanggal = Math.max(booking.dates.length, 1);
   const nominal = payment?.amount ?? hitungTotalBiaya(biayaPerTanggal, jumlahTanggal);
+  // Tenggat bayar (cermin expire_unpaid_bookings di DB): tampil selama
+  // pembayaran belum submitted supaya auto-cancel tidak mengejutkan tenant.
+  const tenggat = batasPembayaran(booking, payment);
   // Pembayaran kini transfer-only: booking dikunci lewat transfer + bukti,
   // tanpa opsi cash (keputusan pemilik, 2026-08-28).
 
@@ -148,6 +152,15 @@ export default async function BayarPage({ params }: PageProps) {
         <div className="mb-6">
           <Alert tone="info" title="Menunggu verifikasi panitia">
             Anda masih bisa mengganti metode atau bukti transfer dari halaman ini.
+          </Alert>
+        </div>
+      ) : null}
+
+      {tenggat ? (
+        <div className="mb-6">
+          <Alert tone="warning" title="Batas waktu pembayaran">
+            Selesaikan sebelum <strong>{formatTanggalWaktu(tenggat)} WIB</strong> — lewat dari
+            itu booking dibatalkan otomatis dan tanggal sewanya dilepas untuk orang lain.
           </Alert>
         </div>
       ) : null}

@@ -21,6 +21,7 @@ import {
 } from "@/lib/domain/labels";
 import { requireAdmin } from "@/lib/services/auth";
 import { listBookings } from "@/lib/services/admin";
+import { resolveProofUrl } from "@/lib/storage";
 import type { BookingDetail, BookingStatus, PaymentStatus } from "@/lib/types/database";
 import { cn, formatRupiah, formatTanggalWaktu, slotDisplayName } from "@/lib/utils";
 
@@ -191,6 +192,17 @@ export default async function AdminBookingsPage({ searchParams }: PageProps) {
   const bookings = result.ok ? [...result.data].sort(menungguVerifikasiDulu) : [];
   const menungguVerifikasi = bookings.filter((row) => row.payment?.status === "submitted").length;
 
+  // Bucket bukti-transfer kini PRIVATE: URL tersimpan ditukar signed URL
+  // (berumur 1 jam) sebelum dirender — lihat lib/storage.ts.
+  const buktiUrl = new Map<string, string | null>(
+    await Promise.all(
+      bookings.map(async (row): Promise<[string, string | null]> => [
+        row.id,
+        await resolveProofUrl(row.payment?.proof_url ?? null),
+      ]),
+    ),
+  );
+
   return (
     <div className="space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
@@ -308,7 +320,7 @@ export default async function AdminBookingsPage({ searchParams }: PageProps) {
 
                 <div className="mt-3 flex flex-wrap items-start justify-between gap-2 border-t border-line/70 pt-3">
                   <ProofThumb
-                    url={payment?.proof_url ?? null}
+                    url={buktiUrl.get(booking.id) ?? null}
                     alt={`Bukti transfer ${booking.booking_code}`}
                   />
                   <PaymentVerifyForm
@@ -406,7 +418,7 @@ export default async function AdminBookingsPage({ searchParams }: PageProps) {
 
                       <td className="px-3 py-3">
                         <ProofThumb
-                          url={payment?.proof_url ?? null}
+                          url={buktiUrl.get(booking.id) ?? null}
                           alt={`Bukti transfer ${booking.booking_code}`}
                         />
                       </td>

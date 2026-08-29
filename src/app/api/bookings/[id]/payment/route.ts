@@ -1,7 +1,9 @@
 import type { NextResponse } from "next/server";
+import { z } from "zod";
 
 import { MAX_PROOF_BYTES, STORAGE_BUCKET_BUKTI } from "@/lib/domain/constants";
-import { submitPayment } from "@/lib/services/booking";
+import { checkRateLimit, clientIpFrom } from "@/lib/rate-limit";
+import { getBookingDetail, submitPayment } from "@/lib/services/booking";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { isServiceRoleConfigured } from "@/lib/supabase/config";
 import { submitPaymentSchema } from "@/lib/validation/schemas";
@@ -10,6 +12,7 @@ import {
   handleRoute,
   isMultipart,
   jsonError,
+  jsonRateLimited,
   jsonValidationError,
   mapResultToResponse,
   readJsonObject,
@@ -34,8 +37,12 @@ function ekstensiBukti(mime: string): string {
 type PayloadPembayaran = { method: string; proofUrl: string };
 
 /**
- * Unggah bukti transfer ke bucket publik `bukti-transfer` dan kembalikan URL publiknya.
- * Mengembalikan NextResponse (error siap kirim) kalau berkasnya ditolak.
+ * Unggah bukti transfer ke bucket `bukti-transfer` (PRIVATE sejak 2026-08-29;
+ * ditampilkan lewat signed URL — lihat lib/storage.ts) dan kembalikan URL
+ * identitasnya. Mengembalikan NextResponse (error siap kirim) kalau berkasnya
+ * ditolak. HANYA boleh dipanggil setelah booking terverifikasi ada — endpoint
+ * publik ini sempat bisa dipakai menumpang unggah gambar dengan nama bebas
+ * sebelum bookingId diperiksa (temuan audit 2026-08-29).
  */
 async function unggahBukti(
   bookingId: string,
@@ -55,15 +62,6 @@ async function unggahBukti(
         code: "PROOF_TYPE",
         fieldErrors: { proof: "Format bukti transfer harus JPG, PNG, atau WEBP." },
       }),
-    };
-  }
-  if (!isServiceRoleConfigured()) {
-    return {
-      response: jsonError(
-        "Supabase belum dikonfigurasi. Isi SUPABASE_SERVICE_ROLE_KEY pada .env.local.",
-        503,
-        { code: "NO_CONFIG" },
-      ),
     };
   }
 
@@ -96,11 +94,41 @@ async function unggahBukti(
  *     (opsi cash dihapus 2026-08-28 — booking hanya dikunci lewat transfer)
  *  2. multipart/form-data   -> field "method", "proof" (berkas gambar), "proofUrl" (opsional)
  *
+ * Urutan penting: bookingId divalidasi dan bookingnya dimuat DULU, baru berkas
+ * diunggah — supaya endpoint ini tidak bisa dipakai sebagai hosting gambar.
  * Sukses 200: { bookingId }
  */
 export async function POST(request: Request, { params }: RouteContext): Promise<NextResponse> {
   return handleRoute("POST /api/bookings/[id]/payment", async () => {
+    const laju = checkRateLimit(`payment:${clientIpFrom(request)}`, 10, 60_000);
+    if (!laju.allowed) return jsonRateLimited(laju.retryAfterSeconds);
+
     const { id: bookingId } = await params;
+    if (!z.uuid().safeParse(bookingId).success) {
+      return jsonError("ID booking tidak valid.", 400, {
+        code: "VALIDATION",
+        fieldErrors: { bookingId: "ID booking tidak valid." },
+      });
+    }
+    if (!isServiceRoleConfigured()) {
+      return jsonError(
+        "Supabase belum dikonfigurasi. Isi SUPABASE_SERVICE_ROLE_KEY pada .env.local.",
+        503,
+        { code: "NO_CONFIG" },
+      );
+    }
+
+    const bookingResult = await getBookingDetail(bookingId);
+    if (!bookingResult.ok) return mapResultToResponse(bookingResult);
+    const booking = bookingResult.data;
+    if (booking.status === "cancelled") {
+      return jsonError("Booking ini sudah dibatalkan.", 409, { code: "CANCELLED" });
+    }
+    if (booking.payment?.status === "verified") {
+      return jsonError("Pembayaran booking ini sudah terverifikasi.", 409, {
+        code: "ALREADY_VERIFIED",
+      });
+    }
 
     let payload: PayloadPembayaran;
 
@@ -112,7 +140,7 @@ export async function POST(request: Request, { params }: RouteContext): Promise<
       const berkas = berkasMentah instanceof File && berkasMentah.size > 0 ? berkasMentah : null;
 
       if (berkas !== null) {
-        const hasil = await unggahBukti(bookingId, berkas);
+        const hasil = await unggahBukti(booking.id, berkas);
         if ("response" in hasil) return hasil.response;
         payload.proofUrl = hasil.url;
       }
@@ -126,7 +154,7 @@ export async function POST(request: Request, { params }: RouteContext): Promise<
     }
 
     const parsed = submitPaymentSchema.safeParse({
-      bookingId,
+      bookingId: booking.id,
       method: payload.method,
       proofUrl: payload.proofUrl,
     });

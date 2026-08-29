@@ -13,11 +13,13 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Stepper } from "@/components/ui/Stepper";
-import { EVENT_INFO } from "@/lib/domain/constants";
+import { EVENT_INFO, PAYMENT_DEADLINE_HOURS } from "@/lib/domain/constants";
 import { slotAdminFee } from "@/lib/domain/harga";
 import { hitungTotalBiaya } from "@/lib/domain/ketersediaan";
 import { PAYMENT_METHOD_LABEL } from "@/lib/domain/labels";
+import { batasPembayaran } from "@/lib/domain/tenggat";
 import { getBookingDetail } from "@/lib/services/booking";
+import { resolveProofUrl } from "@/lib/storage";
 import { formatRupiah, formatTanggalWaktu, slotDisplayName } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -58,6 +60,10 @@ export default async function StatusBookingPage({ params }: PageProps) {
 
   const booking = result.data;
   const payment = booking.payment;
+  // Tenggat bayar (cermin expire_unpaid_bookings di DB) — null bila tidak relevan.
+  const tenggat = batasPembayaran(booking, payment);
+  // Bucket bukti-transfer private: tukar URL tersimpan jadi signed URL (1 jam).
+  const buktiUrl = await resolveProofUrl(payment?.proof_url ?? null);
   const dibatalkan = booking.status === "cancelled";
   const terkonfirmasi = booking.status === "confirmed";
   const ditolak = payment?.status === "rejected";
@@ -81,7 +87,8 @@ export default async function StatusBookingPage({ params }: PageProps) {
         {dibatalkan ? (
           <Alert tone="error" title="Booking dibatalkan">
             Tanggal sewa <strong>{slotDisplayName(booking.slot)}</strong> sudah dilepas dan bisa
-            dipesan orang lain.
+            dipesan orang lain. Booking yang tidak dibayar dalam {PAYMENT_DEADLINE_HOURS} jam
+            dibatalkan otomatis oleh sistem — silakan pesan ulang bila masih berminat.
           </Alert>
         ) : terkonfirmasi ? (
           <Alert tone="success" title="Booking terkonfirmasi">
@@ -93,7 +100,14 @@ export default async function StatusBookingPage({ params }: PageProps) {
             {payment?.reject_reason
               ? `Alasan panitia: ${payment.reject_reason}.`
               : "Panitia belum mencantumkan alasan penolakan."}{" "}
-            Kirim ulang bukti yang benar agar slot tidak hangus.
+            Kirim ulang bukti yang benar agar slot tidak hangus
+            {tenggat ? (
+              <>
+                {" "}
+                — paling lambat <strong>{formatTanggalWaktu(tenggat)} WIB</strong>
+              </>
+            ) : null}
+            .
           </Alert>
         ) : payment?.status === "submitted" ? (
           <Alert tone="info" title="Menunggu verifikasi panitia">
@@ -101,8 +115,14 @@ export default async function StatusBookingPage({ params }: PageProps) {
           </Alert>
         ) : (
           <Alert tone="warning" title="Pembayaran belum dikirim">
-            Selesaikan pembayaran biaya admin {formatRupiah(nominal)} agar slot tidak dilepas
-            panitia.
+            Selesaikan pembayaran biaya admin {formatRupiah(nominal)}
+            {tenggat ? (
+              <>
+                {" "}
+                sebelum <strong>{formatTanggalWaktu(tenggat)} WIB</strong>
+              </>
+            ) : null}{" "}
+            — lewat dari itu booking dibatalkan otomatis dan tanggalnya dilepas.
           </Alert>
         )}
 
@@ -150,10 +170,10 @@ export default async function StatusBookingPage({ params }: PageProps) {
               {payment ? (
                 <InfoRow label="Metode pembayaran">{PAYMENT_METHOD_LABEL[payment.method]}</InfoRow>
               ) : null}
-              {payment?.proof_url ? (
+              {buktiUrl ? (
                 <InfoRow label="Bukti transfer">
                   <a
-                    href={payment.proof_url}
+                    href={buktiUrl}
                     target="_blank"
                     rel="noreferrer noopener"
                     title="Buka bukti transfer di tab baru"
@@ -163,7 +183,7 @@ export default async function StatusBookingPage({ params }: PageProps) {
                         Supabase lokal maupun cloud, jadi tidak selalu cocok dengan remotePatterns. */}
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={payment.proof_url}
+                      src={buktiUrl}
                       alt="Bukti transfer biaya admin"
                       referrerPolicy="no-referrer"
                       loading="lazy"

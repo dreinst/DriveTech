@@ -74,6 +74,19 @@ export const STORAGE_BUCKET_FOTO_KENDARAAN = "foto-kendaraan";
 export const MAX_PROOF_BYTES = 2 * 1024 * 1024;
 
 /**
+ * Batas waktu bayar booking (jam) — HARUS sama dengan default argumen `batas`
+ * fungsi DB expire_unpaid_bookings() (pg_cron membatalkan booking pending yang
+ * lewat batas ini). Dipakai UI untuk menampilkan tenggat ke tenant.
+ */
+export const PAYMENT_DEADLINE_HOURS = 24;
+
+/**
+ * Anti-penimbunan slot: maksimal booking berstatus pending_payment yang boleh
+ * dipegang satu nomor telepon pada saat bersamaan (ditegakkan createBooking).
+ */
+export const MAX_PENDING_BOOKINGS_PER_PHONE = 3;
+
+/**
  * Zona yang slotnya memuat kendaraan untuk dijual — booking di zona ini WAJIB
  * menyertakan data kendaraan (nama, plat, harga, 1 foto) dan tampil di /katalog
  * setelah pembayarannya diverifikasi.
