@@ -487,7 +487,7 @@ export type Database = {
           slot_id: string;
           vehicle_name: string;
           vehicle_kind: "mobil" | "motor";
-          plate_number: string;
+          plate_number: string | null;
           price: number;
           year: number | null;
           mileage_km: number | null;
@@ -505,7 +505,7 @@ export type Database = {
           slot_id: string;
           vehicle_name: string;
           vehicle_kind?: "mobil" | "motor";
-          plate_number: string;
+          plate_number?: string | null;
           price: number;
           year?: number | null;
           mileage_km?: number | null;
@@ -523,7 +523,7 @@ export type Database = {
           slot_id?: string;
           vehicle_name?: string;
           vehicle_kind?: "mobil" | "motor";
-          plate_number?: string;
+          plate_number?: string | null;
           price?: number;
           year?: number | null;
           mileage_km?: number | null;

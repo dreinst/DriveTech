@@ -164,11 +164,16 @@ export async function createBooking(
   // Zona kendaraan WAJIB menyertakan data kendaraan untuk katalog publik
   // (1 slot = 1 kendaraan); zona lain mengabaikan field vehicle bila terkirim.
   const zonaKendaraan = isVehicleZoneType(slot.zone.zone_type);
+  const zonaMobilBaru = slot.zone.zone_type === "mobil_baru";
   if (zonaKendaraan && !data.vehicle) {
     return fail<Out>(
-      "Data kendaraan (nama, plat, harga, dan foto) wajib diisi untuk slot zona kendaraan.",
+      "Data kendaraan (nama, harga, dan foto) wajib diisi untuk slot zona kendaraan.",
       "VALIDATION",
     );
+  }
+  // Plat wajib untuk kendaraan BEKAS; mobil baru belum berplat (dikecualikan).
+  if (zonaKendaraan && !zonaMobilBaru && !data.vehicle?.plateNumber) {
+    return fail<Out>("Nomor plat wajib diisi untuk kendaraan bekas.", "VALIDATION");
   }
 
   const supabase = createAdminSupabase();
@@ -372,7 +377,7 @@ export async function createBooking(
       slot_id: slot.id,
       vehicle_name: v.vehicleName,
       vehicle_kind: jenisDariZona,
-      plate_number: v.plateNumber,
+      plate_number: v.plateNumber ?? null,
       price: v.price,
       year: v.year ?? null,
       mileage_km: v.mileageKm ?? null,

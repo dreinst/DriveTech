@@ -95,12 +95,21 @@ export const vehicleInfoSchema = z.object({
     emptyToUndefined,
     z.enum(["mobil", "motor"], { error: "Jenis kendaraan tidak valid." }).optional(),
   ),
-  plateNumber: z
-    .string()
-    .trim()
-    .min(3, "Nomor plat minimal 3 karakter.")
-    .max(12, "Nomor plat maksimal 12 karakter.")
-    .transform((value) => value.toUpperCase().replace(/\s+/g, " ")),
+  /**
+   * OPSIONAL: zona mobil_baru tidak memakai plat (mobil baru belum berplat).
+   * Zona kendaraan bekas tetap mewajibkannya — ditegakkan createBooking karena
+   * butuh tipe zona slot. Kalau diisi, tetap divalidasi 3-12 karakter.
+   */
+  plateNumber: z.preprocess(
+    emptyToUndefined,
+    z
+      .string()
+      .trim()
+      .min(3, "Nomor plat minimal 3 karakter.")
+      .max(12, "Nomor plat maksimal 12 karakter.")
+      .transform((value) => value.toUpperCase().replace(/\s+/g, " "))
+      .optional(),
+  ),
   price: z.coerce
     .number({ error: "Harga harus berupa angka." })
     .positive("Harga harus lebih besar dari 0."),
