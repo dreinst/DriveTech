@@ -552,10 +552,16 @@ export async function submitPayment(
 }
 
 /**
- * Batalkan booking. Cukup set status 'cancelled' — trigger
- * sync_booking_dates_active di database otomatis menonaktifkan baris
- * booking_dates sehingga pasangan (slot, tanggal) lepas kembali.
- * slots.status TIDAK disentuh (kolom itu kini berarti blokir panitia).
+ * Batalkan booking (pembatalan MANDIRI oleh tenant). Cukup set status
+ * 'cancelled' — trigger sync_booking_dates_active di database otomatis
+ * menonaktifkan baris booking_dates sehingga pasangan (slot, tanggal) lepas
+ * kembali. slots.status TIDAK disentuh (kolom itu kini berarti blokir panitia).
+ *
+ * HANYA booking berstatus 'pending_payment' yang boleh dibatalkan sendiri.
+ * Booking 'confirmed' (pembayaran sudah diverifikasi = slot resmi milik tenant)
+ * ditolak: pembatalan/refund-nya wewenang panitia, bukan tombol publik yang
+ * cukup bermodal UUID booking (temuan audit 2026-08-29, poin 2). UI status
+ * memang sudah menyembunyikan tombolnya, ini pertahanan sisi server.
  */
 export async function cancelBooking(bookingId: string): Promise<Result<null>> {
   if (!isServiceRoleConfigured()) return fail<null>(NO_CONFIG_MESSAGE, "NO_CONFIG");
@@ -574,16 +580,37 @@ export async function cancelBooking(bookingId: string): Promise<Result<null>> {
     | null;
   if (!booking) return fail<null>("Booking tidak ditemukan.", "NOT_FOUND");
   if (booking.status === "cancelled") return ok(null); // idempoten
+  if (booking.status === "confirmed") {
+    return fail<null>(
+      "Booking yang pembayarannya sudah diverifikasi tidak bisa dibatalkan sendiri. " +
+        "Hubungi panitia untuk pembatalan atau pengembalian dana.",
+      "ALREADY_CONFIRMED",
+    );
+  }
 
   const now = new Date().toISOString();
 
+  // Filter status = 'pending_payment' menutup celah balapan: kalau panitia baru
+  // saja memverifikasi (pending -> confirmed) di antara SELECT dan UPDATE ini,
+  // update tidak mengenai baris apa pun dan pembatalan ditolak, bukan diam-diam
+  // membatalkan booking yang sudah sah.
   const bookingUpdate = await supabase
     .from("bookings")
     .update({ status: "cancelled", updated_at: now })
-    .eq("id", booking.id);
+    .eq("id", booking.id)
+    .eq("status", "pending_payment")
+    .select("id")
+    .maybeSingle();
 
   if (bookingUpdate.error) {
     return dbFail<null>(bookingUpdate.error as PgError, "Gagal membatalkan booking");
+  }
+  if (!bookingUpdate.data) {
+    return fail<null>(
+      "Status booking baru saja berubah (kemungkinan pembayaran Anda sudah diverifikasi), " +
+        "jadi tidak bisa dibatalkan. Muat ulang halaman untuk melihat status terbaru.",
+      "ALREADY_CONFIRMED",
+    );
   }
 
   void syncToSheet("booking", {
