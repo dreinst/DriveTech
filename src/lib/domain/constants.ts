@@ -70,8 +70,30 @@ export const STORAGE_BUCKET_BUKTI = "bukti-transfer";
 /** Bucket publik Supabase Storage untuk foto kendaraan di katalog. */
 export const STORAGE_BUCKET_FOTO_KENDARAAN = "foto-kendaraan";
 
-/** Batas ukuran unggahan bukti transfer: 2 MB. */
+/** Batas ukuran unggahan bukti transfer: 2 MB (jaring pengaman di server). */
 export const MAX_PROOF_BYTES = 2 * 1024 * 1024;
+
+/**
+ * Preset kompresi gambar di browser (lihat src/lib/image.ts). Keluaran WebP
+ * bila browser mendukung, otomatis mundur ke JPEG bila tidak.
+ *
+ * Dua kebutuhan berbeda, jadi dua preset:
+ * - KATALOG: dilihat calon pembeli, harus tetap tajam & meyakinkan -> dimensi
+ *   besar, kualitas tinggi. ~1600px WebP q0.82 biasanya 200-350 KB.
+ * - BUKTI TRANSFER: hanya diperiksa sekilas oleh panitia -> boleh jauh lebih
+ *   kecil; yang penting nominal & tanggal terbaca.
+ */
+export const KOMPRESI_KATALOG = {
+  maxDimension: 1600,
+  quality: 0.82,
+  maxBytes: 600 * 1024,
+} as const;
+
+export const KOMPRESI_BUKTI = {
+  maxDimension: 1280,
+  quality: 0.78,
+  maxBytes: 400 * 1024,
+} as const;
 
 /**
  * Batas waktu bayar booking (jam) — HARUS sama dengan default argumen `batas`

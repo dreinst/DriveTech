@@ -1,17 +1,27 @@
 /**
  * Kompresi gambar di sisi KLIEN memakai <canvas>.
  *
- * Dipakai form bukti transfer (src/components/forms/PaymentForm.tsx) supaya
- * berkas yang dikirim ke Server Action sudah kecil (<= MAX_PROOF_BYTES).
- * Modul ini murni browser: dipanggil hanya dari komponen "use client".
- * Kalau lingkungan tidak mendukung (SSR, canvas gagal, format tidak terbaca),
- * fungsi mengembalikan File ASLI apa adanya — bukan melempar error.
+ * Dipakai form bukti transfer (src/components/forms/PaymentForm.tsx) dan foto
+ * kendaraan katalog (src/components/forms/FotoInput.tsx) supaya berkas yang
+ * dikirim ke Server Action sudah kecil. Modul ini murni browser: dipanggil
+ * hanya dari komponen "use client". Kalau lingkungan tidak mendukung (SSR,
+ * canvas gagal, format tidak terbaca), fungsi mengembalikan File ASLI apa
+ * adanya — bukan melempar error.
+ *
+ * FORMAT KELUARAN: WebP kalau browser mendukung (sekitar 25-35% lebih kecil
+ * daripada JPEG pada kualitas setara), otomatis mundur ke JPEG kalau tidak.
+ * Server menerima keduanya (lihat JENIS_BUKTI_DIIZINKAN di route/action).
+ *
+ * CATATAN: mengubah FOTO menjadi SVG (vektorisasi) SENGAJA TIDAK dilakukan —
+ * untuk citra foto hasilnya justru jauh lebih besar dan detailnya rusak. Cara
+ * yang benar untuk "ringan" adalah format modern + dimensi secukupnya, yaitu
+ * yang dikerjakan modul ini.
  */
 
 export type CompressImageOptions = {
   /** Sisi terpanjang maksimum hasil kompresi (piksel). Default 1600. */
   maxDimension?: number;
-  /** Kualitas JPEG awal, 0-1. Default 0.8. */
+  /** Kualitas encode awal, 0-1. Default 0.8. */
   quality?: number;
   /** Target ukuran berkas maksimum (byte). Default 2 MB. */
   maxBytes?: number;
@@ -27,8 +37,33 @@ const MIN_DIMENSION = 640;
 const QUALITY_STEP = 0.1;
 const DIMENSION_STEP = 0.75;
 
-const OUTPUT_TYPE = "image/jpeg";
-const OUTPUT_EXT = ".jpg";
+const TYPE_WEBP = "image/webp";
+const TYPE_JPEG = "image/jpeg";
+
+/** Hasil deteksi dukungan WebP di-cache: pemeriksaannya sinkron tapi tak gratis. */
+let dukunganWebp: boolean | null = null;
+
+/**
+ * Apakah canvas browser ini bisa meng-encode WebP? Browser yang tidak mendukung
+ * diam-diam mengembalikan PNG, jadi tipe hasilnya yang diperiksa — bukan sekadar
+ * mengasumsikan berhasil.
+ */
+function webpDidukung(): boolean {
+  if (dukunganWebp !== null) return dukunganWebp;
+  try {
+    const canvas = document.createElement("canvas");
+    canvas.width = 1;
+    canvas.height = 1;
+    dukunganWebp = canvas.toDataURL(TYPE_WEBP).startsWith(`data:${TYPE_WEBP}`);
+  } catch {
+    dukunganWebp = false;
+  }
+  return dukunganWebp;
+}
+
+function ekstensiUntuk(tipe: string): string {
+  return tipe === TYPE_WEBP ? ".webp" : ".jpg";
+}
 
 /* ------------------------------------------------------------------ */
 /* Utilitas                                                            */
@@ -44,11 +79,11 @@ export function formatBytes(bytes: number): string {
   return `${mb.toFixed(mb < 10 ? 1 : 0)} MB`;
 }
 
-/** Ganti ekstensi berkas jadi .jpg (hasil kompresi selalu JPEG). */
-function namaJpeg(nama: string): string {
+/** Ganti ekstensi berkas mengikuti format keluaran (.webp / .jpg). */
+function namaKeluaran(nama: string, tipe: string): string {
   const dasar = nama.replace(/\.[^.]+$/, "");
-  const bersih = dasar.trim().length > 0 ? dasar.trim() : "bukti-transfer";
-  return `${bersih}${OUTPUT_EXT}`;
+  const bersih = dasar.trim().length > 0 ? dasar.trim() : "gambar";
+  return `${bersih}${ekstensiUntuk(tipe)}`;
 }
 
 type SumberGambar = {
@@ -90,9 +125,13 @@ async function muatSumber(file: File): Promise<SumberGambar> {
   }
 }
 
-function canvasKeBlob(canvas: HTMLCanvasElement, quality: number): Promise<Blob | null> {
+function canvasKeBlob(
+  canvas: HTMLCanvasElement,
+  tipe: string,
+  quality: number,
+): Promise<Blob | null> {
   return new Promise((resolve) => {
-    canvas.toBlob((blob) => resolve(blob), OUTPUT_TYPE, quality);
+    canvas.toBlob((blob) => resolve(blob), tipe, quality);
   });
 }
 
@@ -122,7 +161,8 @@ function gambar(sumber: SumberGambar, batas: number): HTMLCanvasElement | null {
 /* ------------------------------------------------------------------ */
 
 /**
- * Perkecil dimensi lalu encode ulang jadi JPEG sampai ukurannya <= maxBytes.
+ * Perkecil dimensi lalu encode ulang (WebP bila didukung, selain itu JPEG)
+ * sampai ukurannya <= maxBytes.
  *
  * Strategi: turunkan quality bertahap (0.8 -> 0.4) pada satu ukuran; kalau masih
  * kebesaran, kecilkan dimensi 25% lalu ulangi, sampai batas MIN_DIMENSION.
@@ -138,6 +178,8 @@ export async function compressImage(file: File, opts?: CompressImageOptions): Pr
   if (typeof document === "undefined" || typeof URL === "undefined") return file;
   if (!file.type.startsWith("image/")) return file;
 
+  const tipeKeluaran = webpDidukung() ? TYPE_WEBP : TYPE_JPEG;
+
   let sumber: SumberGambar | null = null;
   try {
     sumber = await muatSumber(file);
@@ -150,11 +192,11 @@ export async function compressImage(file: File, opts?: CompressImageOptions): Pr
       if (!canvas) break;
 
       for (let q = qualityAwal; q >= MIN_QUALITY - 0.001; q -= QUALITY_STEP) {
-        const blob = await canvasKeBlob(canvas, Math.round(q * 100) / 100);
+        const blob = await canvasKeBlob(canvas, tipeKeluaran, Math.round(q * 100) / 100);
         if (!blob) break;
         if (terkecil === null || blob.size < terkecil.size) terkecil = blob;
         if (blob.size <= maxBytes) {
-          return jadikanFile(blob, file);
+          return jadikanFile(blob, file, tipeKeluaran);
         }
       }
 
@@ -164,7 +206,7 @@ export async function compressImage(file: File, opts?: CompressImageOptions): Pr
     }
 
     if (terkecil !== null && terkecil.size < file.size) {
-      return jadikanFile(terkecil, file);
+      return jadikanFile(terkecil, file, tipeKeluaran);
     }
     return file;
   } catch {
@@ -175,10 +217,14 @@ export async function compressImage(file: File, opts?: CompressImageOptions): Pr
   }
 }
 
-/** Bungkus Blob hasil canvas jadi File agar bisa masuk FormData Server Action. */
-function jadikanFile(blob: Blob, asal: File): File {
-  return new File([blob], namaJpeg(asal.name), {
-    type: OUTPUT_TYPE,
-    lastModified: Date.now(),
+/**
+ * Bungkus Blob hasil canvas jadi File agar bisa masuk FormData Server Action.
+ * `tipe` diambil dari blob (bukan asumsi) supaya nama & MIME selalu cocok.
+ */
+function jadikanFile(blob: Blob, asal: File, tipeDiminta: string): File {
+  const tipe = blob.type || tipeDiminta;
+  return new File([blob], namaKeluaran(asal.name, tipe), {
+    type: tipe,
+    lastModified: asal.lastModified,
   });
 }

@@ -6,6 +6,7 @@ import type { FormEvent, ReactNode } from "react";
 
 import { DateChips, type DateChipStatus } from "@/components/denah/DateChips";
 import { FotoInput } from "@/components/forms/FotoInput";
+import { useKonfirmasiKeluar } from "@/components/forms/useKonfirmasiKeluar";
 import { Alert } from "@/components/ui/Alert";
 import { buttonClass } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
@@ -77,13 +78,21 @@ export function BookingForm({ slot, eventDates, takenDates, initialDates }: Book
       setGalatTanggal("Pilih minimal satu tanggal gelaran.");
       return;
     }
-    // Valid & akan dikirim: bersihkan draft. Kalau server menolak, effect error
-    // menyimpannya ulang dari isian yang masih ada di DOM.
+    // Valid & akan dikirim: lepas penjaga keluar (supaya redirect ke halaman
+    // bayar tidak memunculkan dialog) lalu bersihkan draft. Kalau server menolak,
+    // effect error menyimpannya ulang dari isian yang masih ada di DOM.
+    setSedangKirim(true);
     try {
       localStorage.removeItem(`dt-booking-draft:${slot.id}`);
     } catch {
       // abaikan (mode privat).
     }
+  }
+
+  /** Satu titik untuk "pengguna mengubah sesuatu": tandai kotor + simpan draft. */
+  function tandaiBerubah() {
+    setAdaIsian(true);
+    simpanDraft();
   }
 
   // Harga efektif WAJIB lewat slotAdminFee (override per slot ?? harga zona) —
@@ -114,6 +123,15 @@ export function BookingForm({ slot, eventDates, takenDates, initialDates }: Book
   const formRef = useRef<HTMLFormElement>(null);
   const draftKey = `dt-booking-draft:${slot.id}`;
   const lewatiSimpanPertama = useRef(true);
+
+  /* Penjaga "jangan sampai isian hilang": aktif hanya setelah pengguna benar-benar
+     mengisi sesuatu, dan dilepas begitu formulir dikirim. */
+  const [adaIsian, setAdaIsian] = useState(false);
+  const [sedangKirim, setSedangKirim] = useState(false);
+  useKonfirmasiKeluar(
+    (adaIsian || dipilih.length > 0) && !sedangKirim,
+    "Isian Anda belum dikirim dan bisa hilang. Yakin mau keluar dari halaman ini?",
+  );
 
   const simpanDraft = useCallback(() => {
     const form = formRef.current;
@@ -179,9 +197,14 @@ export function BookingForm({ slot, eventDates, takenDates, initialDates }: Book
     simpanDraft();
   }, [dipilih, tenantType, simpanDraft]);
 
-  // Setelah error server, DOM masih berisi isian — simpan ulang agar draft konsisten.
+  // Setelah error server, DOM masih berisi isian — simpan ulang agar draft
+  // konsisten, dan pasang lagi penjaga keluar (pengiriman gagal, isian kembali
+  // berharga).
   useEffect(() => {
-    if (state.status === "error") simpanDraft();
+    if (state.status === "error") {
+      setSedangKirim(false);
+      simpanDraft();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.status]);
 
@@ -195,8 +218,8 @@ export function BookingForm({ slot, eventDates, takenDates, initialDates }: Book
       ref={formRef}
       action={formAction}
       onSubmit={cekSebelumKirim}
-      onInput={simpanDraft}
-      onChange={simpanDraft}
+      onInput={tandaiBerubah}
+      onChange={tandaiBerubah}
       className="space-y-4"
       noValidate
     >

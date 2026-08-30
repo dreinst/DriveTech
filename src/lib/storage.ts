@@ -16,6 +16,28 @@ if (typeof window !== "undefined") {
  */
 const PUBLIC_PATH_MARKER = `/storage/v1/object/public/${STORAGE_BUCKET_BUKTI}/`;
 
+/**
+ * Apakah URL ini benar-benar menunjuk berkas bukti DI STORAGE KITA?
+ *
+ * Endpoint pembayaran menerima proofUrl berupa teks (jalur JSON untuk integrasi
+ * eksternal). Tanpa pemeriksaan ini, siapa pun bisa mengirim tautan gambar acak
+ * dari internet, status pembayaran menjadi "submitted", dan slot ikut terkunci
+ * sampai 72 jam TANPA pernah membayar apa pun (temuan audit 2026-08-30).
+ * Bukti yang sah hanya bisa lahir dari unggahan lewat sistem ini sendiri.
+ */
+export function isProofUrlMilikKita(url: string): boolean {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  if (supabaseUrl.length === 0) return false;
+  try {
+    const target = new URL(url);
+    const asal = new URL(supabaseUrl);
+    if (target.host !== asal.host) return false;
+    return target.pathname.startsWith(PUBLIC_PATH_MARKER);
+  } catch {
+    return false;
+  }
+}
+
 /** Umur signed URL: cukup untuk satu sesi memeriksa bukti, tidak permanen. */
 const SIGNED_URL_TTL_SECONDS = 60 * 60;
 

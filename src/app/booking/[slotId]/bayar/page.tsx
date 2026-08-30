@@ -229,6 +229,7 @@ export default async function BayarPage({ params }: PageProps) {
               bookingId={booking.id}
               amount={nominal}
               existingProofUrl={payment?.proof_url ?? null}
+              bookingCode={booking.booking_code}
             />
           </CardContent>
         </Card>

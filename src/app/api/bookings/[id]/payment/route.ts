@@ -5,6 +5,7 @@ import { MAX_PROOF_BYTES, STORAGE_BUCKET_BUKTI } from "@/lib/domain/constants";
 import { checkRateLimit, clientIpFrom } from "@/lib/rate-limit";
 import { getBookingDetail, submitPayment } from "@/lib/services/booking";
 import { createAdminSupabase } from "@/lib/supabase/admin";
+import { isProofUrlMilikKita } from "@/lib/storage";
 import { isServiceRoleConfigured } from "@/lib/supabase/config";
 import { submitPaymentSchema } from "@/lib/validation/schemas";
 import {
@@ -151,6 +152,20 @@ export async function POST(request: Request, { params }: RouteContext): Promise<
         method: typeof body.method === "string" ? body.method : "",
         proofUrl: typeof body.proofUrl === "string" ? body.proofUrl : "",
       };
+    }
+
+    // Bukti hanya sah kalau berkasnya memang ada di storage kita. Tanpa ini,
+    // tautan gambar acak dari internet bisa dipakai mengunci slot gratis
+    // sampai 72 jam tanpa pernah membayar (temuan audit 2026-08-30).
+    if (payload.proofUrl.length > 0 && !isProofUrlMilikKita(payload.proofUrl)) {
+      return jsonError(
+        "Bukti transfer harus diunggah lewat formulir ini, bukan berupa tautan dari luar.",
+        422,
+        {
+          code: "PROOF_NOT_UPLOADED",
+          fieldErrors: { proofUrl: "Unggah berkas buktinya, jangan kirim tautan luar." },
+        },
+      );
     }
 
     const parsed = submitPaymentSchema.safeParse({

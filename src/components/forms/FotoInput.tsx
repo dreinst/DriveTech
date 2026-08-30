@@ -5,7 +5,7 @@ import type { ChangeEvent } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
-import { MAX_PROOF_BYTES } from "@/lib/domain/constants";
+import { KOMPRESI_KATALOG, MAX_PROOF_BYTES } from "@/lib/domain/constants";
 import { compressImage, formatBytes } from "@/lib/image";
 
 const JENIS_DIIZINKAN = ["image/jpeg", "image/png", "image/webp"];
@@ -68,11 +68,7 @@ export function FotoInput({ name, id, label, hint, error, required }: FotoInputP
     setUkuranAsli(dipilih.size);
     setSedangKompres(true);
     try {
-      const hasil = await compressImage(dipilih, {
-        maxDimension: 1600,
-        quality: 0.8,
-        maxBytes: MAX_PROOF_BYTES,
-      });
+      const hasil = await compressImage(dipilih, KOMPRESI_KATALOG);
 
       try {
         const dt = new DataTransfer();

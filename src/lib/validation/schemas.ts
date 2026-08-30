@@ -151,7 +151,14 @@ export const createBookingSchema = z.object({
   tenantName: z.string().trim().min(2, "Nama minimal 2 karakter."),
   tenantPhone: phone,
   tenantEmail: optionalEmail,
-  tenantType: z.enum(["dealer_mobil_baru", "individu_bekas", "umkm", "warung"], {
+  /**
+   * WAJIB memuat SEMUA nilai enum tenant_type di database. "mitra_booth" sempat
+   * tertinggal saat zona booth_khusus ditambahkan (2026-08-29) sehingga setiap
+   * booking slot Booth Leasing & Brand Otomotif selalu ditolak "Tipe tenant
+   * tidak valid" — 10 slot x Rp500.000/tanggal tidak bisa dipesan sama sekali.
+   * Kalau menambah tipe tenant baru, tambahkan di sini juga.
+   */
+  tenantType: z.enum(["dealer_mobil_baru", "individu_bekas", "umkm", "mitra_booth", "warung"], {
     error: "Tipe tenant tidak valid.",
   }),
   detail: z.record(z.string(), z.unknown()).optional(),
