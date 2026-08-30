@@ -10,7 +10,7 @@ import { Field } from "@/components/ui/Field";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 import { submitPaymentAction } from "@/lib/actions/booking";
 import { initialActionState } from "@/lib/actions/state";
-import { BANK_ACCOUNT, MAX_PROOF_BYTES } from "@/lib/domain/constants";
+import { BANK_ACCOUNT, KOMPRESI_BUKTI, MAX_PROOF_BYTES } from "@/lib/domain/constants";
 import { compressImage, formatBytes } from "@/lib/image";
 import { formatRupiah } from "@/lib/utils";
 
@@ -22,6 +22,8 @@ export type PaymentFormProps = {
   amount: number;
   /** URL bukti transfer yang sudah pernah diunggah. */
   existingProofUrl?: string | null;
+  /** Kode booking — dipakai sebagai BERITA TRANSFER agar mutasi bank bisa dicocokkan. */
+  bookingCode: string;
 };
 
 /**
@@ -41,7 +43,12 @@ export type PaymentFormProps = {
  * itu sendiri, kalau penggantian gagal (browser lama) berkas ASLI yang terkirim
  * dan pemeriksaan 2 MB di server tetap jadi jaring pengaman.
  */
-export function PaymentForm({ bookingId, amount, existingProofUrl = null }: PaymentFormProps) {
+export function PaymentForm({
+  bookingId,
+  amount,
+  existingProofUrl = null,
+  bookingCode,
+}: PaymentFormProps) {
   const [state, formAction] = useActionState(submitPaymentAction, initialActionState);
   const id = useId();
 
@@ -90,11 +97,9 @@ export function PaymentForm({ bookingId, amount, existingProofUrl = null }: Paym
     setUkuranAsli(dipilih.size);
     setSedangKompres(true);
     try {
-      const hasil = await compressImage(dipilih, {
-        maxDimension: 1600,
-        quality: 0.8,
-        maxBytes: MAX_PROOF_BYTES,
-      });
+      // Bukti transfer hanya diperiksa sekilas panitia — pakai preset yang jauh
+      // lebih ringan daripada foto katalog (lihat KOMPRESI_BUKTI).
+      const hasil = await compressImage(dipilih, KOMPRESI_BUKTI);
 
       // Ganti isi input dengan berkas terkompresi supaya FormData mengirim yang kecil.
       try {
@@ -181,11 +186,46 @@ export function PaymentForm({ bookingId, amount, existingProofUrl = null }: Paym
               </dd>
             </div>
 
+            {/* BERITA TRANSFER: ditulis penyewa di kolom berita/catatan saat transfer.
+                Inilah yang membuat panitia bisa mencocokkan baris mutasi bank dengan
+                booking yang mana — tanpa ini, dua transfer bernominal sama tidak bisa
+                dibedakan. */}
+            <div className="border-t border-line pt-3">
+              <dt className="text-xs font-medium uppercase tracking-[0.08em] text-subtle">
+                Berita / catatan transfer
+              </dt>
+              <dd className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-2">
+                <span className="tabular select-all font-mono text-xl font-bold tracking-widest text-ink">
+                  {bookingCode}
+                </span>
+                <CopyButton value={bookingCode} label="Salin" className="h-9 px-4 text-xs" />
+              </dd>
+              <p className="mt-1.5 text-xs leading-relaxed text-muted">
+                Tulis kode ini di kolom <strong className="text-ink">berita/catatan</strong> saat
+                transfer supaya pembayaran Anda cepat dikenali panitia.
+              </p>
+            </div>
+
             <div className="border-t border-line pt-3">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <dt className="text-sm text-muted">Nominal transfer</dt>
-                <dd className="tabular text-lg font-bold text-accent">{formatRupiah(amount)}</dd>
+                <dd className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                  <span className="tabular text-lg font-bold text-accent">
+                    {formatRupiah(amount)}
+                  </span>
+                  {/* Salin angka polos (tanpa "Rp"/titik) supaya bisa langsung
+                      ditempel di aplikasi m-banking. */}
+                  <CopyButton
+                    value={String(amount)}
+                    label="Salin nominal"
+                    className="h-9 px-4 text-xs"
+                  />
+                </dd>
               </div>
+              <p className="mt-1.5 text-xs leading-relaxed text-muted">
+                Transfer <strong className="text-ink">tepat sampai angka terakhir</strong> — nominal
+                yang berbeda membuat pembayaran sulit dicocokkan.
+              </p>
             </div>
           </dl>
         </div>

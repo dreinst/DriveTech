@@ -231,8 +231,13 @@ function KartuKendaraan({ item }: { item: CatalogItem }) {
           {formatRupiah(item.price)}
         </p>
         <p className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 pt-1 text-xs text-muted">
-          <span className="tabular font-mono uppercase">{item.plate_number}</span>
-          <span aria-hidden="true">•</span>
+          {/* Mobil baru belum berplat — barisnya dilewati, termasuk pemisahnya. */}
+          {item.plate_number ? (
+            <>
+              <span className="tabular font-mono uppercase">{item.plate_number}</span>
+              <span aria-hidden="true">•</span>
+            </>
+          ) : null}
           <span>
             {slotDisplayName(item.slot)} — {item.slot.zone.name}
           </span>
