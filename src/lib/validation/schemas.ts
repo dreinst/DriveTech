@@ -139,6 +139,8 @@ export const vehicleInfoSchema = z.object({
   photoUrl: z
     .url("Foto kendaraan wajib diunggah.")
     .refine((value) => /^https?:\/\//i.test(value), "Tautan foto harus diawali http(s)://."),
+  /** Versi kecil untuk kartu katalog. Opsional: kalau kosong, kartu memakai photoUrl. */
+  photoThumbUrl: z.preprocess(emptyToUndefined, httpUrl.optional()),
 });
 
 export const createBookingSchema = z.object({
@@ -185,8 +187,20 @@ export const submitPaymentSchema = z
     }
   });
 
+/**
+ * Pembatalan MANDIRI oleh penyewa. Kode booking sendiri sudah sulit ditebak
+ * (5 byte acak), tapi kode itu beredar lewat WhatsApp dan bisa terusan ke orang
+ * lain — tanpa pemeriksaan tambahan, siapa pun yang MELIHAT kodenya bisa
+ * membatalkan booking orang (temuan audit 2026-08-30). Karena itu pembatalan
+ * meminta 4 digit terakhir nomor HP pemesan sebagai bukti kepemilikan ringan
+ * yang masih ramah untuk pengguna awam.
+ */
 export const cancelBookingSchema = z.object({
   bookingId: uuid("ID booking"),
+  phoneLast4: z
+    .string()
+    .trim()
+    .regex(/^\d{4}$/, "Masukkan 4 digit terakhir nomor HP yang dipakai saat memesan."),
 });
 
 /** Pembatalan booking oleh admin — wajib alasan (tercatat & dikirim ke tenant). */

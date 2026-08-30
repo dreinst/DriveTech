@@ -495,6 +495,7 @@ export type Database = {
           color: string | null;
           description: string | null;
           photo_url: string;
+          photo_thumb_url: string | null;
           is_visible: boolean;
           created_at: string;
           updated_at: string;
@@ -513,6 +514,7 @@ export type Database = {
           color?: string | null;
           description?: string | null;
           photo_url: string;
+          photo_thumb_url?: string | null;
           is_visible?: boolean;
           created_at?: string;
           updated_at?: string;
@@ -531,6 +533,7 @@ export type Database = {
           color?: string | null;
           description?: string | null;
           photo_url?: string;
+          photo_thumb_url?: string | null;
           is_visible?: boolean;
           created_at?: string;
           updated_at?: string;

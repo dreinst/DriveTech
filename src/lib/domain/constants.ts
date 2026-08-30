@@ -96,6 +96,17 @@ export const KOMPRESI_BUKTI = {
 } as const;
 
 /**
+ * Versi KECIL foto katalog, khusus kartu di halaman daftar. Kartu di HP hanya
+ * selebar ~360px; mengirim foto 1600px ke sana memboroskan kuota penyewa
+ * (halaman katalog bisa 3-6 MB). ~640px sudah tajam termasuk di layar retina.
+ */
+export const KOMPRESI_KATALOG_KARTU = {
+  maxDimension: 640,
+  quality: 0.75,
+  maxBytes: 150 * 1024,
+} as const;
+
+/**
  * Batas waktu bayar booking (jam) — HARUS sama dengan default argumen `batas`
  * fungsi DB expire_unpaid_bookings() (pg_cron membatalkan booking pending yang
  * lewat batas ini). Dipakai UI untuk menampilkan tenggat ke tenant.

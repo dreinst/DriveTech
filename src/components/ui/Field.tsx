@@ -7,8 +7,14 @@ import type {
 } from "react";
 import { cn } from "@/lib/utils";
 
+/**
+ * PENTING (mobile): ukuran teks di HP WAJIB >= 16px (`text-base`). Kalau lebih
+ * kecil, iOS Safari otomatis MEMPERBESAR halaman begitu kolom disentuh, dan
+ * pengguna awam sering tidak tahu cara mengembalikannya. Di layar >= sm ukuran
+ * dikembalikan ke 14px agar tampilan desktop tetap seperti semula.
+ */
 const CONTROL_CLASS =
-  "block w-full rounded-xl border border-line bg-surface-2 px-3.5 py-2 text-sm text-ink transition-[border-color,box-shadow] duration-150 placeholder:text-subtle hover:border-line-strong focus:border-accent focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)] disabled:cursor-not-allowed disabled:bg-surface-3 disabled:text-muted aria-[invalid=true]:border-danger";
+  "block w-full rounded-xl border border-line bg-surface-2 px-3.5 py-2 text-base sm:text-sm text-ink transition-[border-color,box-shadow] duration-150 placeholder:text-subtle hover:border-line-strong focus:border-accent focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)] disabled:cursor-not-allowed disabled:bg-surface-3 disabled:text-muted aria-[invalid=true]:border-danger";
 
 export type FieldProps = {
   label: string;
