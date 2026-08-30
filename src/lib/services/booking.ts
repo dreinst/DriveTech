@@ -385,6 +385,7 @@ export async function createBooking(
       color: v.color ?? null,
       description: v.description ?? null,
       photo_url: v.photoUrl,
+      photo_thumb_url: v.photoThumbUrl ?? null,
     });
 
     if (listingInsert.error) {
@@ -630,22 +631,41 @@ export async function submitPayment(
  * cukup bermodal UUID booking (temuan audit 2026-08-29, poin 2). UI status
  * memang sudah menyembunyikan tombolnya, ini pertahanan sisi server.
  */
-export async function cancelBooking(bookingId: string): Promise<Result<null>> {
+export async function cancelBooking(
+  bookingId: string,
+  phoneLast4: string,
+): Promise<Result<null>> {
   if (!isServiceRoleConfigured()) return fail<null>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
   const supabase = createAdminSupabase();
   const current = await supabase
     .from("bookings")
-    .select("id, booking_code, status")
+    .select("id, booking_code, status, tenant:tenants(phone)")
     .eq("id", bookingId)
     .maybeSingle();
 
   if (current.error) return dbFail<null>(current.error as PgError, "Gagal memuat data booking");
 
   const booking = (current.data ?? null) as
-    | { id: string; booking_code: string; status: BookingRow["status"] }
+    | {
+        id: string;
+        booking_code: string;
+        status: BookingRow["status"];
+        tenant: { phone: string | null } | { phone: string | null }[] | null;
+      }
     | null;
   if (!booking) return fail<null>("Booking tidak ditemukan.", "NOT_FOUND");
+
+  // Bukti kepemilikan ringan: 4 digit terakhir nomor HP pemesan. Kode booking
+  // saja tidak cukup karena bisa terusan lewat WhatsApp ke orang lain.
+  const telepon = pickOne(booking.tenant)?.phone ?? "";
+  const empatDigit = telepon.replace(/\D/g, "").slice(-4);
+  if (empatDigit.length < 4 || empatDigit !== phoneLast4) {
+    return fail<null>(
+      "4 digit terakhir nomor HP tidak cocok dengan data pemesan booking ini.",
+      "PHONE_MISMATCH",
+    );
+  }
   if (booking.status === "cancelled") return ok(null); // idempoten
   if (booking.status === "confirmed") {
     return fail<null>(

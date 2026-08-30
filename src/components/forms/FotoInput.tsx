@@ -5,7 +5,11 @@ import type { ChangeEvent } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
-import { KOMPRESI_KATALOG, MAX_PROOF_BYTES } from "@/lib/domain/constants";
+import {
+  KOMPRESI_KATALOG,
+  KOMPRESI_KATALOG_KARTU,
+  MAX_PROOF_BYTES,
+} from "@/lib/domain/constants";
 import { compressImage, formatBytes } from "@/lib/image";
 
 const JENIS_DIIZINKAN = ["image/jpeg", "image/png", "image/webp"];
@@ -35,6 +39,8 @@ export function FotoInput({ name, id, label, hint, error, required }: FotoInputP
   const [sedangKompres, setSedangKompres] = useState(false);
   const [galatLokal, setGalatLokal] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  /** Input tersembunyi berisi versi KECIL foto (untuk kartu katalog). */
+  const inputKecilRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (!berkas) {
@@ -78,6 +84,21 @@ export function FotoInput({ name, id, label, hint, error, required }: FotoInputP
         // Browser tidak mendukung penulisan input.files — berkas asli tetap terkirim.
       }
 
+      // Versi kecil untuk kartu katalog. Murni bonus: kalau gagal dibuat atau
+      // gagal dipasang, server tetap memakai foto besar — booking tidak boleh
+      // gagal hanya karena thumbnail.
+      try {
+        const kecil = await compressImage(dipilih, KOMPRESI_KATALOG_KARTU);
+        const inputKecil = inputKecilRef.current;
+        if (inputKecil && kecil.size < hasil.size) {
+          const dtKecil = new DataTransfer();
+          dtKecil.items.add(kecil);
+          inputKecil.files = dtKecil.files;
+        }
+      } catch {
+        // Diabaikan dengan sengaja — lihat catatan di atas.
+      }
+
       setBerkas(hasil);
       if (hasil.size > MAX_PROOF_BYTES) {
         setGalatLokal(
@@ -119,6 +140,9 @@ export function FotoInput({ name, id, label, hint, error, required }: FotoInputP
           aria-invalid={galat ? true : undefined}
           className="block min-h-11 w-full cursor-pointer rounded-xl border border-line bg-surface-2 text-sm text-muted shadow-[var(--shadow-sm)] file:mr-3 file:h-11 file:cursor-pointer file:rounded-l-xl file:border-0 file:bg-surface-3 file:px-3 file:text-sm file:font-medium file:text-ink hover:border-line-strong"
         />
+        {/* Versi kecil foto yang sama, diisi otomatis setelah kompresi. Dipakai
+            kartu katalog agar pengunjung HP tidak mengunduh foto besar. */}
+        <input ref={inputKecilRef} type="file" name={`${name}Kecil`} className="hidden" tabIndex={-1} aria-hidden="true" />
       </Field>
 
       {sedangKompres ? (

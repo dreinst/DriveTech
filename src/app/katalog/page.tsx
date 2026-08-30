@@ -209,11 +209,17 @@ function KartuKendaraan({ item }: { item: CatalogItem }) {
       className="group flex h-full flex-col overflow-hidden rounded-[var(--radius)] border border-line bg-card shadow-[var(--shadow-sm)] transition-[border-color,box-shadow,transform] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:border-accent hover:shadow-[var(--shadow-md)]"
     >
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-surface-3">
+        {/* Kartu memakai foto versi KECIL (~640px) supaya pengunjung HP tidak
+            mengunduh foto 1600px untuk kotak selebar ~360px. Listing lama yang
+            belum punya versi kecil otomatis jatuh ke foto aslinya. */}
         {/* eslint-disable-next-line @next/next/no-img-element -- URL storage publik, dimensi bebas */}
         <img
-          src={item.photo_url}
+          src={item.photo_thumb_url ?? item.photo_url}
           alt={item.vehicle_name}
           loading="lazy"
+          decoding="async"
+          width={640}
+          height={480}
           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
         />
         <span className="absolute left-3 top-3 flex gap-1.5">

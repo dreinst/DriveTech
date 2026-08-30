@@ -59,10 +59,16 @@ export default async function DetailKendaraanPage({ params }: PageProps) {
       <div className="grid gap-6 lg:grid-cols-[3fr_2fr]">
         {/* ---------- Foto besar ---------- */}
         <div className="overflow-hidden rounded-[var(--radius)] border border-line bg-surface-3 shadow-[var(--shadow-sm)]">
+          {/* Halaman detail memakai foto BESAR (calon pembeli perlu melihat
+              kondisi unit), tapi tetap dimuat asinkron dengan dimensi eksplisit
+              supaya tata letak tidak melompat saat foto datang. */}
           {/* eslint-disable-next-line @next/next/no-img-element -- URL storage publik, dimensi bebas */}
           <img
             src={item.photo_url}
             alt={item.vehicle_name}
+            decoding="async"
+            width={1600}
+            height={1200}
             className="aspect-[4/3] h-auto w-full object-cover"
           />
         </div>

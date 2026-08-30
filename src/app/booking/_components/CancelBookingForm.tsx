@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useId, useState } from "react";
 
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
+import { Field, Input } from "@/components/ui/Field";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 import { cancelBookingAction } from "@/lib/actions/booking";
 import { initialActionState } from "@/lib/actions/state";
@@ -21,6 +22,7 @@ export type CancelBookingFormProps = {
 export function CancelBookingForm({ bookingId }: CancelBookingFormProps) {
   const [state, formAction] = useActionState(cancelBookingAction, initialActionState);
   const [konfirmasi, setKonfirmasi] = useState(false);
+  const id = useId();
 
   if (!konfirmasi) {
     return (
@@ -45,6 +47,29 @@ export function CancelBookingForm({ bookingId }: CancelBookingFormProps) {
       <p className="text-sm text-content">
         Slot langsung dilepas dan bisa dipesan orang lain — tindakan ini tidak bisa dibatalkan.
       </p>
+
+      {/* Bukti kepemilikan ringan: kode booking bisa terusan lewat WhatsApp ke
+          orang lain, jadi pembatalan meminta 4 digit terakhir nomor pemesan. */}
+      <Field
+        label="4 digit terakhir nomor HP pemesan"
+        htmlFor={`${id}-hp4`}
+        hint="Untuk memastikan hanya pemesan yang bisa membatalkan."
+        error={state.fieldErrors?.phoneLast4}
+        required
+      >
+        <Input
+          id={`${id}-hp4`}
+          name="phoneLast4"
+          inputMode="numeric"
+          autoComplete="off"
+          maxLength={4}
+          pattern="[0-9]{4}"
+          placeholder="Contoh: 7890"
+          className="max-w-[9rem] tracking-[0.3em]"
+          required
+        />
+      </Field>
+
       {state.status === "error" && state.message ? (
         <Alert tone="error">{state.message}</Alert>
       ) : null}

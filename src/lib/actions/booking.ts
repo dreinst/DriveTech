@@ -123,6 +123,7 @@ export async function createBookingAction(
   // unggah gambar dengan isian asal-asalan (temuan audit 2026-08-29). Skema
   // divalidasi memakai URL placeholder; URL asli dipasang setelah unggah.
   let fotoKendaraan: File | null = null;
+  let fotoKendaraanKecil: File | null = null;
   let vehicle: Record<string, unknown> | undefined;
   if (zonaKendaraan) {
     const fotoMentah = form.get("vehiclePhoto");
@@ -144,6 +145,17 @@ export async function createBookingAction(
     }
 
     fotoKendaraan = foto;
+    // Versi kecil (kartu katalog) — opsional; divalidasi seadanya, kalau tidak
+    // memenuhi syarat cukup diabaikan tanpa menggagalkan booking.
+    const kecilMentah = form.get("vehiclePhotoKecil");
+    fotoKendaraanKecil =
+      kecilMentah instanceof File &&
+      kecilMentah.size > 0 &&
+      kecilMentah.size <= MAX_PROOF_BYTES &&
+      JENIS_BUKTI_DIIZINKAN.includes(kecilMentah.type)
+        ? kecilMentah
+        : null;
+
     vehicle = {
       vehicleName: teks(form, "vehicleName"),
       kind: teks(form, "vehicleKind"),
@@ -185,7 +197,8 @@ export async function createBookingAction(
     }
 
     const supabase = createAdminSupabase();
-    const nama = `${crypto.randomUUID()}.${ekstensiBukti(fotoKendaraan.type)}`;
+    const dasar = crypto.randomUUID();
+    const nama = `${dasar}.${ekstensiBukti(fotoKendaraan.type)}`;
     const unggah = await supabase.storage
       .from(STORAGE_BUCKET_FOTO_KENDARAAN)
       .upload(nama, fotoKendaraan, { contentType: fotoKendaraan.type, cacheControl: "3600" });
@@ -196,6 +209,24 @@ export async function createBookingAction(
     }
     const { data } = supabase.storage.from(STORAGE_BUCKET_FOTO_KENDARAAN).getPublicUrl(nama);
     vehicleFinal = { ...vehicleFinal, photoUrl: data.publicUrl };
+
+    // Versi kecil: BONUS, tidak pernah menggagalkan booking. Kalau unggahannya
+    // gagal, kartu katalog tinggal memakai foto besar seperti sebelumnya.
+    if (fotoKendaraanKecil) {
+      const namaKecil = `${dasar}-kartu.${ekstensiBukti(fotoKendaraanKecil.type)}`;
+      const unggahKecil = await supabase.storage
+        .from(STORAGE_BUCKET_FOTO_KENDARAAN)
+        .upload(namaKecil, fotoKendaraanKecil, {
+          contentType: fotoKendaraanKecil.type,
+          cacheControl: "3600",
+        });
+      if (!unggahKecil.error) {
+        const kecil = supabase.storage
+          .from(STORAGE_BUCKET_FOTO_KENDARAAN)
+          .getPublicUrl(namaKecil);
+        vehicleFinal = { ...vehicleFinal, photoThumbUrl: kecil.data.publicUrl };
+      }
+    }
   }
 
   const result = await createBooking({ ...parsed.data, vehicle: vehicleFinal });
@@ -298,12 +329,15 @@ export async function cancelBookingAction(
   formData: FormData,
 ): Promise<ActionState> {
   const form = ambilFormData(prevState, formData);
-  const parsed = cancelBookingSchema.safeParse({ bookingId: teks(form, "bookingId") });
+  const parsed = cancelBookingSchema.safeParse({
+    bookingId: teks(form, "bookingId"),
+    phoneLast4: teks(form, "phoneLast4"),
+  });
   if (!parsed.success) {
-    return errorState("Data booking tidak valid.", zodFieldErrors(parsed.error));
+    return errorState("Periksa kembali isian pembatalan.", zodFieldErrors(parsed.error));
   }
 
-  const result = await cancelBooking(parsed.data.bookingId);
+  const result = await cancelBooking(parsed.data.bookingId, parsed.data.phoneLast4);
   if (!result.ok) return errorState(result.error);
 
   revalidatePath("/");
