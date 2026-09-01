@@ -16,11 +16,21 @@ const SECURITY_HEADERS = [
 
 const nextConfig = {
   poweredByHeader: false,
+  output: "standalone",
   images: {
     remotePatterns: [
       {
         protocol: "https",
         hostname: "*.supabase.co",
+        pathname: "/storage/v1/object/public/**",
+      },
+      {
+        // Self-hosted Supabase on the dreinst VPS (own Postgres, no
+        // external vendor dependency) -- storage is served from the
+        // gateway at this host, not *.supabase.co.
+        protocol: "http",
+        hostname: "187.53.129.205",
+        port: "8020",
         pathname: "/storage/v1/object/public/**",
       },
     ],
