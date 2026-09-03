@@ -66,10 +66,10 @@ values
    'Area B — area pameran mobil bekas untuk individu maupun dealer, 30 slot.',            2),
   ('11111111-1111-4111-8111-111111111111', 'Area Pameran Motor Baru',
    'motor_baru',        'zone-motor-baru',   500000,
-   'Area C — tenda dealer motor baru, 3 slot.',                                           3),
+   'Area C — tenda dealer motor baru, 4 slot.',                                           3),
   ('11111111-1111-4111-8111-111111111111', 'Area Pameran Motor Bekas',
    'mobil_motor_bekas', 'zone-mobil-motor',   25000,
-   'Area C — area pameran motor bekas, 14 slot.',                                         4),
+   'Area C — area pameran motor bekas, 8 slot.',                                         4),
   ('11111111-1111-4111-8111-111111111111', 'Tenda UMKM',
    'umkm',              'zone-umkm',         250000,
    'Area D — tenda UMKM: kolom 1-10 untuk UMKM umum dan kolom 21-30 untuk UMKM & otomotif, 20 slot.', 5),
@@ -85,7 +85,7 @@ values
 on conflict (svg_group_id) do nothing;
 
 -- -----------------------------------------------------------------------------
--- 3. Slot zona bernomor (generate_series) — 10 + 30 + 3 + 14 + 30 = 87 baris
+-- 3. Slot zona bernomor (generate_series) — 10 + 30 + 4 + 8 + 30 = 82 baris
 --    svg_element_id = 'slot-<zoneSlug>-<NN>' dengan NN dua digit mulai 01.
 -- -----------------------------------------------------------------------------
 
@@ -105,19 +105,20 @@ cross join generate_series(1, 30) as i
 where z.svg_group_id = 'zone-mobil-bekas'
 on conflict (svg_element_id) do nothing;
 
--- 3c0. zone-motor-baru : slot 1..3 -> slot-motor-baru-01 .. slot-motor-baru-03
+-- 3c0. zone-motor-baru : slot 1..4 -> slot-motor-baru-01 .. slot-motor-baru-04
+--      (4 + 8 mengikuti gambar Layout v2, keputusan pemilik 2026-09-03)
 insert into public.slots (zone_id, slot_number, slot_label, svg_element_id)
 select z.id, i, null, 'slot-motor-baru-' || lpad(i::text, 2, '0')
 from public.zones z
-cross join generate_series(1, 3) as i
+cross join generate_series(1, 4) as i
 where z.svg_group_id = 'zone-motor-baru'
 on conflict (svg_element_id) do nothing;
 
--- 3c. zone-mobil-motor : slot 1..14 -> slot-mobil-motor-01 .. slot-mobil-motor-14
+-- 3c. zone-mobil-motor : slot 1..8 -> slot-mobil-motor-01 .. slot-mobil-motor-08
 insert into public.slots (zone_id, slot_number, slot_label, svg_element_id)
 select z.id, i, null, 'slot-mobil-motor-' || lpad(i::text, 2, '0')
 from public.zones z
-cross join generate_series(1, 14) as i
+cross join generate_series(1, 8) as i
 where z.svg_group_id = 'zone-mobil-motor'
 on conflict (svg_element_id) do nothing;
 

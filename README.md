@@ -462,7 +462,7 @@ Tenor yang diterima: `12, 18, 24, 36, 48, 60`. Komisi platform dihitung otomatis
 ├── tools/                         Skrip bantu: generator SVG denah + webhook Google Sheets (.gs)
 ├── supabase/
 │   ├── migrations/                Skema: enum, tabel, index, trigger, RLS, Realtime, Storage
-│   ├── seed.sql                   1 event, 9 tanggal Musim 1 (12-13 Sep, lalu tiap Minggu s.d. 1 Nov 2026), 8 zona, 112 slot, 3 mitra leasing
+│   ├── seed.sql                   1 event, 9 tanggal Musim 1 (12-13 Sep, lalu tiap Minggu s.d. 1 Nov 2026), 8 zona, 107 slot, 3 mitra leasing
 │   └── README.md                  Panduan database (lokal, cloud, RLS, Storage)
 └── src/
     ├── middleware.ts              Refresh sesi Supabase di setiap request
@@ -592,10 +592,11 @@ Bila gambar berbeda dari rencana teknis, **gambar yang menang**. Perbedaan yang 
 | Jumlah fasilitas | **13 unit** — tambahan **Kantor Sekretariat & Rest Area Kostrad**, **Tempat Cuci Mobil & Motor**, dan dari Layout v2: **VIP Lounge, LED, Tenda VIP, Area Wahana, Toilet** | 6 (Stage, Musholah, Zumba, Kolam Pemancingan, Lapangan Tembak, Parkiran) | Ikut gambar: 13 baris slot `facility`, semuanya tidak bisa dibooking. |
 | Warung tanpa nama | 10 kotak bertuliskan "WARUNG" saja | tidak dibahas | **Keputusan kami:** diberi nomor **Warung 1–10** (`slot-warung-01` … `slot-warung-10`) supaya bisa dibooking. Dua warung bernama tetap memakai labelnya: `slot-warung-warmindo` (Warmindo) dan `slot-warung-sate-gule` (Warung Sate & Gule). |
 
-Total: **112 kotak**, **87 bisa dibooking online** (10 mobil baru + 30 mobil bekas +
-3 motor baru + 14 motor bekas + 20 UMKM + 10 otomotif & leasing); 12 warung dan 13
-fasilitas digambar tetapi tidak disewakan online. Jumlah slot Area C mengikuti teks
-Deck v4 (3 baru + 14 bekas); gambar Layout v2 hanya ilustrasi.
+Total: **107 kotak**, **82 bisa dibooking online** (10 mobil baru + 30 mobil bekas +
+4 motor baru + 8 motor bekas + 20 UMKM + 10 otomotif & leasing); 12 warung dan 13
+fasilitas digambar tetapi tidak disewakan online. Jumlah slot Area C mengikuti
+gambar Layout v2 (4 baru + 8 bekas, keputusan pemilik 2026-09-03); teks Deck v4
+menyebut 3 + 14.
 
 Sepuluh warung bernomor tetap diberi `slot_label` (`"Warung 1"` … `"Warung 10"`) di
 `supabase/seed.sql`, dan `slotDisplayName()` mendahulukan label di atas nomor — supaya

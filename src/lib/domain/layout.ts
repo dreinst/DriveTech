@@ -14,9 +14,9 @@ import type { ZoneType } from "@/lib/types/database";
  * svgElementId WAJIB identik dengan kolom slots.svg_element_id di supabase/seed.sql.
  *
  * Perubahan Layout v2 dibanding v1:
- * - Area C dipecah: Tenda Motor Baru (3 slot, zona baru zone-motor-baru) di
- *   atas Area Motor Bekas (14 slot, dua kolom). Jumlah mengikuti teks Deck v4
- *   (gambar layout hanya ilustrasi 4 + 8).
+ * - Area C dipecah: Tenda Motor Baru (4 slot, zona baru zone-motor-baru) di
+ *   atas Area Motor Bekas (8 slot, dua kolom). Jumlah mengikuti GAMBAR
+ *   (4 + 8; keputusan pemilik 2026-09-03) — teks Deck v4 menyebut 3 + 14.
  * - Area D jadi tiga kolom sama lebar: UMKM 1-10, Leasing & Otomotif 11-20,
  *   UMKM & Otomotif 21-30 — zona UMKM punya DUA container (extraContainers).
  * - Fasilitas baru: VIP Lounge, LED, Tenda VIP, Area Wahana, Toilet.
@@ -132,25 +132,25 @@ const mobilBekasSlots: LayoutSlot[] = MOBIL_BEKAS_GROUPS.flatMap((group) =>
   ),
 );
 
-/* ---------- Area C (atas): Tenda Motor Baru (3 slot, satu kolom) ---------- */
+/* ---------- Area C (atas): Tenda Motor Baru (4 slot, satu kolom) ---------- */
 
-const motorBaruSlots: LayoutSlot[] = Array.from({ length: 3 }, (_, i) =>
-  numberedSlot("motor-baru", i + 1, { x: 762, y: 470 + i * 46, width: 70, height: 38 }),
+const motorBaruSlots: LayoutSlot[] = Array.from({ length: 4 }, (_, i) =>
+  numberedSlot("motor-baru", i + 1, { x: 762, y: 468 + i * 42, width: 70, height: 34 }),
 );
 
-/* ---------- Area C (bawah): Area Pameran Motor Bekas (14 slot, 2 kolom x 7) ---------- */
-/* Gambar menunjukkan satu kolom motor serong; 14 kotak lurus tidak muat dalam
- * satu kolom setinggi ini, jadi dibagi dua kolom: kiri 1-7, kanan 8-14. */
+/* ---------- Area C (bawah): Area Pameran Motor Bekas (8 slot, 2 kolom x 4) ---------- */
+/* Gambar menunjukkan satu kolom motor serong; di denah digital dibagi dua
+ * kolom kotak lurus supaya tetap terbaca: kiri 1-4, kanan 5-8. */
 
 const MOTOR_BEKAS_COL_X = [762, 800];
 
 const mobilMotorSlots: LayoutSlot[] = MOTOR_BEKAS_COL_X.flatMap((x, col) =>
-  Array.from({ length: 7 }, (_, row) =>
-    numberedSlot("mobil-motor", col * 7 + row + 1, {
+  Array.from({ length: 4 }, (_, row) =>
+    numberedSlot("mobil-motor", col * 4 + row + 1, {
       x,
-      y: 646 + row * 27,
+      y: 674 + row * 38,
       width: 34,
-      height: 23,
+      height: 30,
     }),
   ),
 );
@@ -242,7 +242,7 @@ export const FLOOR_PLAN_ZONES: LayoutZone[] = [
     name: "Area Pameran Motor Baru",
     zoneType: "motor_baru",
     accent: "#00b050",
-    container: { x: 734, y: 440, width: 106, height: 170, labelOrientation: "vertical", title: "Motor Baru" },
+    container: { x: 734, y: 440, width: 106, height: 196, labelOrientation: "vertical", title: "Motor Baru" },
     slots: motorBaruSlots,
   },
   {
@@ -250,7 +250,7 @@ export const FLOOR_PLAN_ZONES: LayoutZone[] = [
     name: "Area Pameran Motor Bekas",
     zoneType: "mobil_motor_bekas",
     accent: "#ff00ff",
-    container: { x: 734, y: 618, width: 106, height: 226, labelOrientation: "vertical", title: "Motor Bekas" },
+    container: { x: 734, y: 644, width: 106, height: 200, labelOrientation: "vertical", title: "Motor Bekas" },
     slots: mobilMotorSlots,
   },
   {
@@ -348,7 +348,7 @@ export function findLayoutSlot(svgElementId: string): LayoutSlot | undefined {
   return SLOT_INDEX.get(svgElementId);
 }
 
-/** Total kotak slot di denah — harus 112 (87 bisa dibooking + 12 warung + 13 fasilitas). */
+/** Total kotak slot di denah — harus 107 (82 bisa dibooking + 12 warung + 13 fasilitas). */
 export function layoutSlotCount(): number {
   return SLOT_INDEX.size;
 }
