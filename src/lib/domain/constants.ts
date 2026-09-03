@@ -29,8 +29,9 @@ export const EVENT_INFO = {
    * resmi. Tautan bantuan memakai waHref() dengan kalimat WA_BANTUAN_TEXT.
    */
   contacts: [
-    { label: "Panitia 1", phone: "0822-2855-5254" },
-    { label: "Panitia 2", phone: "0888-4089-474" },
+    // Urutan = prioritas (keputusan pemilik 2026-09-03 sore): 474 dulu, 5254 terakhir.
+    { label: "Panitia 1", phone: "0888-4089-474" },
+    { label: "Panitia 2", phone: "0822-2855-5254" },
   ],
   description:
     "Pasar otomotif akhir pekan di Kota Malang: pilih tanggal, pilih zona, lalu booking lapak langsung dari denah.",
