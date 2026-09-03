@@ -70,6 +70,29 @@ export function normalizePurchaseRow(raw: unknown): PurchaseDetail | null {
 }
 
 /**
+ * Apakah slot ini MEMASARKAN unit: ada listing kendaraan yang tampil di katalog
+ * (is_visible) milik booking yang sudah TERKONFIRMASI — kriteria yang sama
+ * dengan services/catalog.ts. Dipakai halaman /beli (gerbang tampilan) dan
+ * createPurchase (validasi server). Jangan menilai dari slots.status: sejak
+ * booking per tanggal, kolom itu tetap "available" walau lapak sudah disewa.
+ */
+export async function slotHasMarketedUnit(slotId: string): Promise<Result<boolean>> {
+  if (!isServiceRoleConfigured()) return fail<boolean>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  const supabase = createAdminSupabase();
+  const listingQuery = await supabase
+    .from("vehicle_listings")
+    .select("id, booking:bookings!inner(status)")
+    .eq("slot_id", slotId)
+    .eq("is_visible", true)
+    .eq("booking.status", "confirmed")
+    .limit(1);
+  if (listingQuery.error) {
+    return dbFail<boolean>(listingQuery.error as PgError, "Gagal memeriksa unit di slot ini");
+  }
+  return ok((listingQuery.data ?? []).length > 0);
+}
+
+/**
  * Catat minat/transaksi pembelian unit dari tenant pemilik slot.
  * Tidak mengubah status slot: slot adalah lapak tenant, bukan unit yang dijual.
  */
@@ -97,22 +120,12 @@ export async function createPurchase(
 
   const supabase = createAdminSupabase();
 
-  // Prospek hanya boleh dibuat untuk slot yang memang MEMASARKAN unit: ada
-  // listing kendaraan yang tampil di katalog (is_visible) milik booking yang
-  // sudah terkonfirmasi — kriteria yang sama dengan services/catalog.ts.
-  // Tanpa ini endpoint publik bisa dipakai menumpuk prospek palsu ke slot
-  // kosong (temuan audit 2026-09-03).
-  const listingQuery = await supabase
-    .from("vehicle_listings")
-    .select("id, booking:bookings!inner(status)")
-    .eq("slot_id", slot.id)
-    .eq("is_visible", true)
-    .eq("booking.status", "confirmed")
-    .limit(1);
-  if (listingQuery.error) {
-    return dbFail<Out>(listingQuery.error as PgError, "Gagal memeriksa unit di slot ini");
-  }
-  if ((listingQuery.data ?? []).length === 0) {
+  // Prospek hanya boleh dibuat untuk slot yang memang MEMASARKAN unit
+  // (temuan audit 2026-09-03): tanpa ini endpoint publik bisa dipakai
+  // menumpuk prospek palsu ke slot kosong.
+  const unitResult = await slotHasMarketedUnit(slot.id);
+  if (!unitResult.ok) return fail<Out>(unitResult.error, unitResult.code);
+  if (!unitResult.data) {
     return fail<Out>("Slot ini belum memiliki unit yang dipasarkan.", "NO_LISTING");
   }
 
