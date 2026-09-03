@@ -445,11 +445,18 @@ export function BookingForm({
               </p>
             ) : null}
           </div>
+          {otpState.status === "success" ? (
+            <p className="mt-2 rounded-[var(--radius-sm)] border-l-2 border-warn bg-warn-soft px-3 py-2 text-xs leading-relaxed text-ink-2">
+              Belum ada di kotak masuk? Buka folder <strong>Spam</strong> atau <strong>Junk</strong>{" "}
+              (di Gmail: menu ≡ lalu Spam), cari pengirim <strong>Drive Tech</strong>, lalu tandai
+              &ldquo;Bukan spam&rdquo; supaya email berikutnya langsung masuk kotak masuk.
+            </p>
+          ) : null}
           <div className="mt-3 max-w-xs">
             <Field
               label="Kode verifikasi email"
               htmlFor={`${id}-otp`}
-              hint="Cek kotak masuk/spam. Kode berlaku 10 menit."
+              hint="Kalau tidak ada di kotak masuk, cek folder Spam/Junk. Kode berlaku 10 menit."
               error={errors.emailOtp}
               required
             >

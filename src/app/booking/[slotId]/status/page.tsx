@@ -290,7 +290,7 @@ export default async function StatusBookingPage({ params }: PageProps) {
 
         <p className="text-xs text-subtle">
           {booking.tenant.email
-            ? `Kode booking dan setiap perubahan status dikirim ke email ${booking.tenant.email}. `
+            ? `Kode booking dan setiap perubahan status dikirim ke email ${booking.tenant.email}. Belum terlihat? Periksa folder Spam/Junk dan tandai "Bukan spam". `
             : ""}
           Ada kendala atau bingung dengan kode booking? Hubungi {EVENT_INFO.organizer} lewat WhatsApp{" "}
           {EVENT_INFO.contacts.map((kontak, index) => (

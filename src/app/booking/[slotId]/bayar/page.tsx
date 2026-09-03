@@ -137,7 +137,7 @@ export default async function BayarPage({ params }: PageProps) {
         </h1>
         <p className="mt-3 text-sm leading-relaxed text-muted sm:text-base">
           Selesaikan pembayaran biaya admin lalu tunggu verifikasi panitia — kode booking
-          Anda juga sudah dikirim ke email{booking.tenant.email ? ` ${booking.tenant.email}` : ""}.
+          Anda juga sudah dikirim ke email{booking.tenant.email ? ` ${booking.tenant.email}` : ""}. Belum terlihat? Periksa folder Spam/Junk, lalu tandai &ldquo;Bukan spam&rdquo; agar email berikutnya masuk kotak masuk.
         </p>
         <p className="mt-2 text-xs text-subtle">
           Bingung dengan kode booking? Hubungi WhatsApp{" "}
