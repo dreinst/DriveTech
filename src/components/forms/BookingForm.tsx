@@ -15,9 +15,11 @@ import { createBookingAction } from "@/lib/actions/booking";
 import { initialActionState } from "@/lib/actions/state";
 import {
   EVENT_INFO,
+  isNewVehicleZoneType,
   isVehicleZoneType,
   TRANSMISSION_LABEL,
   TRANSMISSION_OPTIONS,
+  vehicleKindForZoneType,
 } from "@/lib/domain/constants";
 import { slotAdminFee } from "@/lib/domain/harga";
 import { hitungTotalBiaya } from "@/lib/domain/ketersediaan";
@@ -27,6 +29,7 @@ import { formatRupiah } from "@/lib/utils";
 
 const TENANT_TYPES: readonly TenantType[] = [
   "dealer_mobil_baru",
+  "dealer_motor_baru",
   "individu_bekas",
   "umkm",
   "mitra_booth",
@@ -371,12 +374,12 @@ export function BookingForm({ slot, eventDates, takenDates, initialDates }: Book
         <VehicleFields
           idPrefix={id}
           errors={errors}
-          tampilkanKm={slot.zone.zone_type !== "mobil_baru"}
-          // Mobil baru belum berplat -> field plat disembunyikan (permintaan pemilik).
-          tampilkanPlat={slot.zone.zone_type !== "mobil_baru"}
+          tampilkanKm={!isNewVehicleZoneType(slot.zone.zone_type)}
+          // Kendaraan baru (mobil/motor) belum berplat -> field plat & km disembunyikan.
+          tampilkanPlat={!isNewVehicleZoneType(slot.zone.zone_type)}
           // Jenis mengikuti zonanya: zona motor selalu motor, zona mobil selalu
           // mobil (keputusan pemilik 2026-08-29 — zona 14 slot fokus motor).
-          jenis={slot.zone.zone_type === "mobil_motor_bekas" ? "motor" : "mobil"}
+          jenis={vehicleKindForZoneType(slot.zone.zone_type)}
         />
       ) : null}
 
@@ -446,7 +449,8 @@ function DetailFields({ tenantType, idPrefix, errors }: DetailFieldsProps) {
     );
   }
 
-  if (tenantType === "dealer_mobil_baru") {
+  // Dealer mobil baru & dealer motor baru memakai isian yang sama.
+  if (tenantType === "dealer_mobil_baru" || tenantType === "dealer_motor_baru") {
     return (
       <DetailGroup judul="Data Dealer">
         <Field
@@ -469,7 +473,7 @@ function DetailFields({ tenantType, idPrefix, errors }: DetailFieldsProps) {
           <Input
             id={`${idPrefix}-merek`}
             name="detail.merek_dibawa"
-            placeholder="Contoh: Toyota, Daihatsu"
+            placeholder={tenantType === "dealer_motor_baru" ? "Contoh: Honda, Yamaha" : "Contoh: Toyota, Daihatsu"}
           />
         </Field>
       </DetailGroup>
@@ -586,7 +590,7 @@ type VehicleFieldsProps = {
   errors: Record<string, string>;
   /** Kilometer hanya relevan untuk kendaraan bekas. */
   tampilkanKm: boolean;
-  /** Nomor plat disembunyikan untuk mobil baru (belum berplat). */
+  /** Nomor plat disembunyikan untuk kendaraan baru (belum berplat). */
   tampilkanPlat: boolean;
   /** Jenis kendaraan otomatis dari zona slot (mobil / motor). */
   jenis: "mobil" | "motor";

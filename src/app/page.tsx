@@ -5,11 +5,19 @@ import { CekStatusForm } from "@/components/denah/CekStatusForm";
 import { FloorPlanBoard } from "@/components/denah/FloorPlanBoard";
 import { FadeUp, Stagger, StaggerItem } from "@/components/motion/motion";
 import { Alert } from "@/components/ui/Alert";
-import { EVENT_INFO, isBookableZoneType } from "@/lib/domain/constants";
+import { EVENT_INFO, isBookableZoneType, waHref } from "@/lib/domain/constants";
 import { fallbackZonesFromLayout } from "@/lib/domain/fallback";
 import { zoneHasVariedFees, zoneMinAdminFee } from "@/lib/domain/harga";
 import { slotStatusAcrossDates } from "@/lib/domain/ketersediaan";
 import { FLOOR_PLAN_ZONES } from "@/lib/domain/layout";
+import {
+  CATEGORY_EXCLUSIVITY,
+  NAMING_BUNDLE_NOTE,
+  NAMING_RIGHTS,
+  SPONSOR_INTRO,
+  SPONSOR_TIERS,
+  SPONSOR_WA_TEXT,
+} from "@/lib/domain/sponsor";
 import { listActivePartners } from "@/lib/services/leasing";
 import { getFloorPlan } from "@/lib/services/slots";
 import type { SlotRow, ZoneType, ZoneWithSlots } from "@/lib/types/database";
@@ -30,6 +38,8 @@ const ZONE_ACCENT: Partial<Record<ZoneType, string>> = Object.fromEntries(
 const ZONE_IMAGE: Partial<Record<ZoneType, string>> = {
   mobil_baru: "/gambar/zona-mobil-baru.jpg",
   mobil_bekas: "/gambar/zona-mobil-bekas.jpg",
+  // Dua zona motor (baru & bekas, Layout v2) memakai foto motor yang sama.
+  motor_baru: "/gambar/zona-mobil-motor.jpg",
   mobil_motor_bekas: "/gambar/zona-mobil-motor.jpg",
   umkm: "/gambar/zona-umkm.jpg",
 };
@@ -196,9 +206,12 @@ export default async function BerandaPage() {
           Zona Pameran
         </h2>
         {(() => {
-          // Baris atas (bento): zona kendaraan — kartu pertama besar (2x2).
-          // Baris bawah: UMKM & Booth Leasing/Brand Otomotif dibagi DUA SETENGAH
-          // yang setara (md:grid-cols-2), bukan lagi UMKM full-width.
+          // Baris atas (bento): EMPAT zona kendaraan (Layout v2: Tenda Dealer
+          // Mobil Baru, Area Pameran Mobil Bekas, Area Pameran Motor Baru, Area
+          // Pameran Motor Bekas) — kartu pertama besar menempati 2 kolom x 3
+          // baris, tiga kartu kecil menumpuk di kolom ketiga.
+          // Baris bawah: Tenda UMKM & Tenda Otomotif/Leasing dibagi DUA SETENGAH
+          // yang setara (md:grid-cols-2).
           const utama = zonaKartu.filter(
             (zone) => zone.zone_type !== "umkm" && zone.zone_type !== "booth_khusus",
           );
@@ -218,11 +231,14 @@ export default async function BerandaPage() {
           );
           return (
             <>
-              <Stagger inView className="mt-6 grid gap-4 md:grid-cols-3">
+              <Stagger inView className="mt-6 grid gap-4 md:grid-cols-3 md:auto-rows-fr">
                 {utama.map((zone, index) => (
                   <StaggerItem
                     key={zone.id}
-                    className={cn(index === 0 && "md:col-span-2 md:row-span-2")}
+                    className={cn(
+                      index === 0 && utama.length > 2 && "md:col-span-2 md:row-span-3",
+                      index === 0 && utama.length <= 2 && "md:col-span-2",
+                    )}
                   >
                     {kartu(zone, index === 0)}
                   </StaggerItem>
@@ -302,6 +318,136 @@ export default async function BerandaPage() {
         </div>
       </section>
 
+      {/* ================= SPONSOR (Deck v4 slide 12-15) ================= */}
+      <section id="sponsor" className="mx-auto w-full max-w-6xl scroll-mt-4 px-4 pt-16 sm:px-6">
+        <FadeUp>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">
+            Musim 1 &middot; 8 Minggu
+          </p>
+          <h2 className="mt-2 text-[clamp(2rem,4vw,3rem)] font-semibold leading-tight tracking-[-0.01em] text-ink">
+            {SPONSOR_INTRO.title}
+          </h2>
+          <ul className="mt-4 grid gap-2 text-sm leading-relaxed text-muted sm:grid-cols-3">
+            {SPONSOR_INTRO.points.map((poin) => (
+              <li key={poin} className="flex gap-2">
+                <span aria-hidden="true" className="mt-[0.45rem] h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+                <span>{poin}</span>
+              </li>
+            ))}
+          </ul>
+        </FadeUp>
+
+        {/* ---------- Empat tier sponsor ---------- */}
+        <Stagger inView className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {SPONSOR_TIERS.map((tier) => (
+            <StaggerItem key={tier.id} className="h-full">
+              <article
+                className={cn(
+                  "flex h-full flex-col rounded-2xl border bg-card p-6 shadow-[var(--shadow-sm)]",
+                  tier.highlighted ? "border-accent" : "border-line",
+                )}
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-subtle">
+                    {tier.slots} slot
+                  </p>
+                  {tier.tagline ? (
+                    <span className="rounded-full bg-accent-soft px-2.5 py-0.5 text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-accent">
+                      {tier.tagline}
+                    </span>
+                  ) : null}
+                </div>
+                <h3 className="mt-3 text-2xl font-semibold tracking-[-0.01em] text-ink">{tier.name}</h3>
+                <p className="mt-1">
+                  <span className="tabular text-xl font-bold text-accent">
+                    {formatRupiah(tier.pricePerWeek)}
+                  </span>
+                  <span className="text-sm text-muted">/minggu</span>
+                </p>
+                <ul className="mt-4 space-y-2 border-t border-line pt-4 text-sm text-muted">
+                  {tier.benefits.map((manfaat) => (
+                    <li key={manfaat} className="flex gap-2">
+                      <span aria-hidden="true" className="text-ok">
+                        ✓
+                      </span>
+                      <span>{manfaat}</span>
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            </StaggerItem>
+          ))}
+        </Stagger>
+
+        {/* ---------- Hak penamaan + eksklusivitas kategori ---------- */}
+        <div className="mt-6 grid gap-4 lg:grid-cols-5">
+          <FadeUp className="rounded-2xl border border-line bg-surface-2 p-6 lg:col-span-3">
+            <h3 className="text-lg font-semibold tracking-tight text-ink">
+              Hak Penamaan Titik Strategis
+            </h3>
+            <p className="mt-1 text-sm text-muted">Satu slot eksklusif per titik, harga per minggu.</p>
+            <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+              {NAMING_RIGHTS.map((titik) => (
+                <li
+                  key={titik.id}
+                  className="flex items-center justify-between gap-3 rounded-[var(--radius-sm)] border border-line bg-card px-4 py-3"
+                >
+                  <span className="text-sm font-medium text-ink">{titik.name}</span>
+                  <span className="tabular shrink-0 text-sm font-semibold text-accent">
+                    {formatRupiah(titik.pricePerWeek)}
+                    <span className="font-normal text-muted">/minggu</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-4 text-xs leading-relaxed text-muted">{NAMING_BUNDLE_NOTE}</p>
+          </FadeUp>
+
+          <FadeUp className="rounded-2xl border border-line bg-surface-2 p-6 lg:col-span-2">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-subtle">
+              Eksklusivitas kategori &middot; {CATEGORY_EXCLUSIVITY.slots} slot
+            </p>
+            <h3 className="mt-2 text-lg font-semibold tracking-tight text-ink">
+              {CATEGORY_EXCLUSIVITY.name}
+            </h3>
+            <p className="mt-1">
+              <span className="tabular text-xl font-bold text-accent">
+                {formatRupiah(CATEGORY_EXCLUSIVITY.pricePerWeek)}
+              </span>
+              <span className="text-sm text-muted">/minggu</span>
+            </p>
+            <p className="mt-3 text-sm leading-relaxed text-muted">{CATEGORY_EXCLUSIVITY.description}</p>
+            <p className="mt-3 border-t border-line pt-3 text-xs leading-relaxed text-subtle">
+              {CATEGORY_EXCLUSIVITY.futureNote}
+            </p>
+          </FadeUp>
+        </div>
+
+        {/* ---------- CTA WhatsApp (tanpa form) ---------- */}
+        <FadeUp className="mt-6 rounded-2xl border border-line bg-card p-6 sm:flex sm:items-center sm:justify-between sm:gap-6">
+          <div>
+            <p className="text-base font-semibold text-ink">Tertarik jadi sponsor?</p>
+            <p className="mt-1 text-sm text-muted">
+              Hubungi panitia lewat WhatsApp untuk proposal lengkap dan ketersediaan slot.{" "}
+              {SPONSOR_INTRO.note}
+            </p>
+          </div>
+          <div className="mt-4 flex flex-col gap-2 sm:mt-0 sm:shrink-0">
+            {EVENT_INFO.contacts.map((kontak) => (
+              <a
+                key={kontak.phone}
+                href={waHref(kontak.phone, SPONSOR_WA_TEXT)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-11 items-center justify-center rounded-full bg-accent px-5 text-sm font-semibold text-app transition-[background-color,transform] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-accent-hover active:scale-[0.98]"
+              >
+                WhatsApp {kontak.label} &middot; <span className="tabular ml-1">{kontak.phone}</span>
+              </a>
+            ))}
+          </div>
+        </FadeUp>
+      </section>
+
       {/* ================= CEK STATUS + KONTAK ================= */}
       {/* Satu panel komposit: peta mengisi kiri, cek status + kontak rapat di kanan.
           Sengaja tanpa kartu bersarang & subjudul supaya nyaris tanpa whitespace. */}
@@ -333,14 +479,19 @@ export default async function BerandaPage() {
                 <BarisKontak label="Gelaran terdekat">{formatTanggal(tanggalTerdekat)}</BarisKontak>
               ) : null}
               <BarisKontak label="Penyelenggara">{EVENT_INFO.organizer}</BarisKontak>
-              <BarisKontak label="Telepon / WhatsApp">
-                <a
-                  href={`tel:${EVENT_INFO.contact.replace(/[^0-9+]/g, "")}`}
-                  className="tabular font-semibold text-accent underline-offset-2 hover:underline"
-                >
-                  {EVENT_INFO.contact}
-                </a>
-              </BarisKontak>
+              {/* Dua nomor WhatsApp panitia (keputusan pemilik 2026-09-02). */}
+              {EVENT_INFO.contacts.map((kontak) => (
+                <BarisKontak key={kontak.phone} label={`WhatsApp ${kontak.label}`}>
+                  <a
+                    href={waHref(kontak.phone)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="tabular font-semibold text-accent underline-offset-2 hover:underline"
+                  >
+                    {kontak.phone}
+                  </a>
+                </BarisKontak>
+              ))}
             </dl>
 
             <a
@@ -398,7 +549,7 @@ function KartuZona({
       href="/#denah"
       className={cn(
         "group flex h-full flex-col justify-end rounded-2xl border border-line p-6 transition-[border-color,box-shadow,transform] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] hover:border-line-strong hover:shadow-[var(--shadow-md)] active:scale-[0.99] sm:p-7",
-        besar ? "min-h-64 md:min-h-96" : "min-h-40",
+        besar ? "min-h-64 md:min-h-[32rem]" : "min-h-40",
       )}
       style={{ backgroundColor: "var(--card)", background: zoneTint(zone.zone_type) }}
     >

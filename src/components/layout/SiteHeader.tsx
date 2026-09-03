@@ -10,11 +10,14 @@ type NavItem = { href: string; label: string };
  * lewat chips filter jenis (keputusan pemilik, 2026-08-28).
  * "Denah" menuju halaman /denah yang hanya untuk melihat tata letak lengkap;
  * alur pemesanan (peta terkunci per zona) tetap lewat CTA "Pesan Slot".
+ * "Sponsor" menuju section paket sponsor di beranda (CTA WhatsApp panitia).
  */
 const NAV_ITEMS: readonly NavItem[] = [
   { href: "/katalog", label: "Katalog" },
   { href: "/#zona", label: "Zona" },
   { href: "/denah", label: "Denah" },
+  // Paket sponsor Musim 1 (Deck v4) — section di beranda, tanpa form.
+  { href: "/#sponsor", label: "Sponsor" },
   { href: "/#cek-status", label: "Cek Status" },
 ];
 

@@ -4,10 +4,23 @@ import type { ZoneType } from "@/lib/types/database";
  * GEOMETRI DENAH — sengaja HARDCODE (keputusan di "Sistem Pameran Arsitektur.md":
  * sistem ini khusus satu event, layout boleh hardcode).
  *
- * Sumber angka: berkas "layout-venue.jpeg" di root proyek, diekstrak ke
- * satuan viewBox portrait 1123 x 1600. Kalau denah asli berubah, ubah file ini saja.
+ * Sumber angka: berkas "layout-venue-v2.jpeg" di root proyek (Layout v2,
+ * 2026-09-02; gambar asli 2941x4160 px), diekstrak ke satuan viewBox portrait
+ * 1123 x 1600 (x dikali 0,3818; y dikali 0,3846). Kotak berwarna diukur
+ * lewat segmentasi warna, kotak fasilitas bergaris hitam diukur manual.
+ * Kalau denah asli berubah, ubah file ini saja — public/denah.svg dibuat ulang
+ * dari data yang sama lewat `npm run denah` (tools/generate-denah-svg.ts).
  *
  * svgElementId WAJIB identik dengan kolom slots.svg_element_id di supabase/seed.sql.
+ *
+ * Perubahan Layout v2 dibanding v1:
+ * - Area C dipecah: Tenda Motor Baru (3 slot, zona baru zone-motor-baru) di
+ *   atas Area Motor Bekas (14 slot, dua kolom). Jumlah mengikuti teks Deck v4
+ *   (gambar layout hanya ilustrasi 4 + 8).
+ * - Area D jadi tiga kolom sama lebar: UMKM 1-10, Leasing & Otomotif 11-20,
+ *   UMKM & Otomotif 21-30 — zona UMKM punya DUA container (extraContainers).
+ * - Fasilitas baru: VIP Lounge, LED, Tenda VIP, Area Wahana, Toilet.
+ * - Label huruf area (AREA A–D) mengikuti Deck v4 slide 10.
  *
  * Catatan render:
  * - `label` adalah teks yang harus digambar di dalam kotak. Untuk zona bernomor
@@ -31,12 +44,22 @@ export type LayoutSlot = Rect & {
   labelOrientation: LabelOrientation;
 };
 
+/**
+ * Kotak container zona + pita judul. `title` (opsional) menggantikan nama zona
+ * pada pita — dipakai zona yang punya lebih dari satu kolom fisik (UMKM) atau
+ * pita yang terlalu pendek untuk nama lengkap.
+ */
+export type LayoutContainer = Rect & { labelOrientation: LabelOrientation; title?: string };
+
 export type LayoutZone = {
   svgGroupId: string;
   name: string;
   zoneType: ZoneType;
   accent: string;
-  container: (Rect & { labelOrientation: LabelOrientation }) | null;
+  /** Container utama (target zoom & pita judul). null = zona tersebar tanpa kotak. */
+  container: LayoutContainer | null;
+  /** Container tambahan untuk zona yang menempati lebih dari satu blok fisik. */
+  extraContainers?: LayoutContainer[];
   annotations?: { x: number; y: number; text: string }[];
   slots: LayoutSlot[];
 };
@@ -67,157 +90,189 @@ function numberedSlot(zoneSlug: string, slotNumber: number, rect: Rect): LayoutS
   };
 }
 
-/* ---------- Zona 1: Tenda Pameran Mobil Baru (10 slot, 2 baris x 5) ---------- */
+function namedSlot(
+  svgElementId: string,
+  label: string,
+  rect: Rect,
+  labelOrientation: LabelOrientation = "horizontal",
+  slotNumber: number | null = null,
+): LayoutSlot {
+  return { ...rect, svgElementId, label, slotNumber, labelOrientation };
+}
 
-const MOBIL_BARU_X = [512, 579, 646, 713, 780];
-const MOBIL_BARU_ROW_Y = [140, 258];
+/* ---------- Area A: Tenda Dealer Mobil Baru (10 slot, 2 baris x 5) ---------- */
+
+const MOBIL_BARU_X = [500, 563, 626, 689, 752];
+const MOBIL_BARU_ROW_Y = [184, 296];
 
 const mobilBaruSlots: LayoutSlot[] = MOBIL_BARU_ROW_Y.flatMap((y, row) =>
   MOBIL_BARU_X.map((x, col) =>
-    numberedSlot("mobil-baru", row * MOBIL_BARU_X.length + col + 1, { x, y, width: 62, height: 58 }),
+    numberedSlot("mobil-baru", row * MOBIL_BARU_X.length + col + 1, { x, y, width: 60, height: 56 }),
   ),
 );
 
-/* ---------- Zona 2: Area Pameran Mobil (30 slot, 3 kelompok x 10) ---------- */
+/* ---------- Area B: Area Pameran Mobil Bekas (30 slot, 3 kolom x 10) ---------- */
+/* Kolom 1-10 di gambar digambar miring (mobil parkir serong) dan lebih panjang
+ * dari dua kolom lain; di denah digital semuanya kotak lurus. */
 
 const MOBIL_BEKAS_GROUPS = [
-  { startNumber: 1, x: 520, width: 52, baseY: 416 },
-  { startNumber: 11, x: 632, width: 56, baseY: 410 },
-  { startNumber: 21, x: 698, width: 56, baseY: 410 },
+  { startNumber: 1, x: 498, width: 50, height: 33, baseY: 438, pitch: 40.5 },
+  { startNumber: 11, x: 620, width: 50, height: 32, baseY: 438, pitch: 36.5 },
+  { startNumber: 21, x: 674, width: 50, height: 32, baseY: 438, pitch: 36.5 },
 ];
 
 const mobilBekasSlots: LayoutSlot[] = MOBIL_BEKAS_GROUPS.flatMap((group) =>
   Array.from({ length: 10 }, (_, i) =>
     numberedSlot("mobil-bekas", group.startNumber + i, {
       x: group.x,
-      y: round1(group.baseY + i * 38.5),
+      y: round1(group.baseY + i * group.pitch),
       width: group.width,
-      height: 33,
+      height: group.height,
     }),
   ),
 );
 
-/* ---------- Zona 3: Area Pameran Mobil & Motor (14 slot, satu kolom) ---------- */
+/* ---------- Area C (atas): Tenda Motor Baru (3 slot, satu kolom) ---------- */
 
-const mobilMotorSlots: LayoutSlot[] = Array.from({ length: 14 }, (_, i) =>
-  numberedSlot("mobil-motor", i + 1, {
-    x: 800,
-    y: round1(462 + i * 27.6),
-    width: 48,
-    height: 24,
-  }),
+const motorBaruSlots: LayoutSlot[] = Array.from({ length: 3 }, (_, i) =>
+  numberedSlot("motor-baru", i + 1, { x: 762, y: 470 + i * 46, width: 70, height: 38 }),
 );
 
-/* ---------- Zona 4: Area UMKM (20 slot: dua kolom rapat 1-10 & 21-30) ---------- */
-/* Blok bekas UMKM 30 slot (x 234..466) DIBELAH DUA (permintaan pemilik
- * 2026-08-29, "potong setengah area UMKM"): separuh KIRI kartu Area UMKM
- * berisi dua kolom rapat, separuh KANAN kartu Booth Leasing & Brand Otomotif.
- * Nomor 11-20 milik zona booth; svg_element_id tetap "slot-umkm-11..20"
- * agar cocok dengan database. */
+/* ---------- Area C (bawah): Area Pameran Motor Bekas (14 slot, 2 kolom x 7) ---------- */
+/* Gambar menunjukkan satu kolom motor serong; 14 kotak lurus tidak muat dalam
+ * satu kolom setinggi ini, jadi dibagi dua kolom: kiri 1-7, kanan 8-14. */
 
-const UMKM_SLOT_RECT = { width: 34, height: 32 };
-const umkmY = (i: number): number => round1(474 + i * 34.4);
+const MOTOR_BEKAS_COL_X = [762, 800];
+
+const mobilMotorSlots: LayoutSlot[] = MOTOR_BEKAS_COL_X.flatMap((x, col) =>
+  Array.from({ length: 7 }, (_, row) =>
+    numberedSlot("mobil-motor", col * 7 + row + 1, {
+      x,
+      y: 646 + row * 27,
+      width: 34,
+      height: 23,
+    }),
+  ),
+);
+
+/* ---------- Area D: tiga kolom sama lebar (UMKM 1-10 | Leasing 11-20 | UMKM & Otomotif 21-30) ---------- */
+/* Nomor 11-20 milik zona booth; svg_element_id tetap "slot-umkm-11..20"
+ * agar cocok dengan database (keputusan 2026-08-29). */
+
+const AREA_D_SLOT_RECT = { width: 40, height: 30 };
+const areaDY = (i: number): number => round1(494 + i * 34);
+const AREA_D_COLUMN_X = { umkm1: 268, booth: 340, umkm21: 412 } as const;
 
 const umkmSlots: LayoutSlot[] = [
   ...Array.from({ length: 10 }, (_, i) =>
-    numberedSlot("umkm", i + 1, { x: 262, y: umkmY(i), ...UMKM_SLOT_RECT }),
+    numberedSlot("umkm", i + 1, { x: AREA_D_COLUMN_X.umkm1, y: areaDY(i), ...AREA_D_SLOT_RECT }),
   ),
   ...Array.from({ length: 10 }, (_, i) =>
-    numberedSlot("umkm", i + 21, { x: 304, y: umkmY(i), ...UMKM_SLOT_RECT }),
+    numberedSlot("umkm", i + 21, { x: AREA_D_COLUMN_X.umkm21, y: areaDY(i), ...AREA_D_SLOT_RECT }),
   ),
 ];
 
-/* ---------- Zona 4b: Booth Leasing & Brand Otomotif (10 booth 2 sisi) ---------- */
-/* Separuh kanan blok — booth digambar LEBIH LEBAR dari slot UMKM karena
- * bisa dilayani dari dua sisi. */
-
-const BOOTH_SLOT_RECT = { width: 72, height: 32 };
-
 const boothKhususSlots: LayoutSlot[] = Array.from({ length: 10 }, (_, i) =>
-  numberedSlot("umkm", i + 11, { x: 382, y: umkmY(i), ...BOOTH_SLOT_RECT }),
+  numberedSlot("umkm", i + 11, { x: AREA_D_COLUMN_X.booth, y: areaDY(i), ...AREA_D_SLOT_RECT }),
 );
 
-/* ---------- Zona 5: Warung (12 unit, posisi tersebar, ditulis eksplisit) ---------- */
+/* ---------- Warung (12 unit, posisi tersebar, ditulis eksplisit) ---------- */
 
 const warungSlots: LayoutSlot[] = [
-  { svgElementId: "slot-warung-warmindo", label: "Warmindo", slotNumber: null, labelOrientation: "horizontal", x: 122, y: 440, width: 113, height: 120 },
-  { svgElementId: "slot-warung-01", label: "Warung 1", slotNumber: 1, labelOrientation: "horizontal", x: 122, y: 632, width: 113, height: 108 },
-  { svgElementId: "slot-warung-02", label: "Warung 2", slotNumber: 2, labelOrientation: "horizontal", x: 122, y: 744, width: 113, height: 56 },
-  { svgElementId: "slot-warung-03", label: "Warung 3", slotNumber: 3, labelOrientation: "horizontal", x: 122, y: 804, width: 113, height: 54 },
-  { svgElementId: "slot-warung-04", label: "Warung 4", slotNumber: 4, labelOrientation: "horizontal", x: 122, y: 862, width: 113, height: 42 },
-  { svgElementId: "slot-warung-05", label: "Warung 5", slotNumber: 5, labelOrientation: "vertical", x: 122, y: 908, width: 93, height: 96 },
-  { svgElementId: "slot-warung-06", label: "Warung 6", slotNumber: 6, labelOrientation: "vertical", x: 219, y: 908, width: 64, height: 96 },
-  { svgElementId: "slot-warung-07", label: "Warung 7", slotNumber: 7, labelOrientation: "vertical", x: 287, y: 908, width: 64, height: 96 },
-  { svgElementId: "slot-warung-08", label: "Warung 8", slotNumber: 8, labelOrientation: "vertical", x: 355, y: 908, width: 64, height: 96 },
-  { svgElementId: "slot-warung-09", label: "Warung 9", slotNumber: 9, labelOrientation: "vertical", x: 423, y: 908, width: 66, height: 96 },
-  { svgElementId: "slot-warung-10", label: "Warung 10", slotNumber: 10, labelOrientation: "vertical", x: 493, y: 908, width: 66, height: 96 },
-  { svgElementId: "slot-warung-sate-gule", label: "Warung Sate & Gule", slotNumber: null, labelOrientation: "horizontal", x: 655, y: 908, width: 185, height: 96 },
+  namedSlot("slot-warung-warmindo", "Warmindo", { x: 127, y: 474, width: 111, height: 102 }),
+  namedSlot("slot-warung-01", "Warung 1", { x: 127, y: 652, width: 111, height: 96 }, "horizontal", 1),
+  namedSlot("slot-warung-02", "Warung 2", { x: 127, y: 756, width: 111, height: 48 }, "horizontal", 2),
+  namedSlot("slot-warung-03", "Warung 3", { x: 127, y: 812, width: 111, height: 48 }, "horizontal", 3),
+  namedSlot("slot-warung-04", "Warung 4", { x: 127, y: 864, width: 100, height: 40 }, "horizontal", 4),
+  namedSlot("slot-warung-05", "Warung 5", { x: 129, y: 924, width: 93, height: 85 }, "vertical", 5),
+  namedSlot("slot-warung-06", "Warung 6", { x: 240, y: 901, width: 45, height: 108 }, "vertical", 6),
+  namedSlot("slot-warung-07", "Warung 7", { x: 291, y: 901, width: 61, height: 108 }, "vertical", 7),
+  namedSlot("slot-warung-08", "Warung 8", { x: 356, y: 901, width: 63, height: 108 }, "vertical", 8),
+  namedSlot("slot-warung-09", "Warung 9", { x: 423, y: 901, width: 63, height: 108 }, "vertical", 9),
+  namedSlot("slot-warung-10", "Warung 10", { x: 490, y: 901, width: 64, height: 108 }, "vertical", 10),
+  namedSlot("slot-warung-sate-gule", "Warung Sate & Gule", { x: 640, y: 901, width: 170, height: 108 }),
 ];
 
-/* ---------- Zona 6: Fasilitas Umum (8 unit, TIDAK bisa dibooking) ---------- */
+/* ---------- Fasilitas Umum (13 unit, TIDAK bisa dibooking) ---------- */
+/* Urutan = urutan gambar: kotak besar dulu, lalu kotak kecil yang menumpang
+ * di dalamnya (Tenda VIP di dalam Area Zumba) supaya tergambar di atas. */
 
 const fasilitasSlots: LayoutSlot[] = [
-  { svgElementId: "slot-fasilitas-kantor-sekretariat", label: "Kantor Sekretariat & Rest Area Kostrad", slotNumber: null, labelOrientation: "horizontal", x: 122, y: 133, width: 168, height: 64 },
-  { svgElementId: "slot-fasilitas-stage-utama", label: "Stage Utama", slotNumber: null, labelOrientation: "horizontal", x: 385, y: 138, width: 74, height: 48 },
-  { svgElementId: "slot-fasilitas-tempat-cuci", label: "Tempat Cuci Mobil & Motor", slotNumber: null, labelOrientation: "vertical", x: 122, y: 272, width: 113, height: 164 },
-  { svgElementId: "slot-fasilitas-area-zumba", label: "Area Zumba", slotNumber: null, labelOrientation: "horizontal", x: 239, y: 272, width: 222, height: 164 },
-  { svgElementId: "slot-fasilitas-musholah", label: "Musholah", slotNumber: null, labelOrientation: "horizontal", x: 890, y: 325, width: 120, height: 126 },
-  { svgElementId: "slot-fasilitas-lapangan-tembak", label: "Lapangan Tembak", slotNumber: null, labelOrientation: "horizontal", x: 120, y: 1180, width: 570, height: 250 },
-  { svgElementId: "slot-fasilitas-parkiran", label: "Parkiran Untuk Pengunjung", slotNumber: null, labelOrientation: "vertical", x: 695, y: 1180, width: 110, height: 250 },
-  { svgElementId: "slot-fasilitas-kolam-pemancingan", label: "Kolam Pemancingan", slotNumber: null, labelOrientation: "horizontal", x: 810, y: 1180, width: 225, height: 250 },
+  namedSlot("slot-fasilitas-kantor-sekretariat", "Kantor Sekretariat & Rest Area Kostrad", { x: 129, y: 170, width: 165, height: 33 }),
+  namedSlot("slot-fasilitas-vip-lounge", "VIP Lounge", { x: 129, y: 207, width: 165, height: 41 }),
+  namedSlot("slot-fasilitas-led", "LED", { x: 379, y: 166, width: 70, height: 13 }),
+  namedSlot("slot-fasilitas-stage-utama", "Stage Utama", { x: 379, y: 183, width: 70, height: 44 }),
+  namedSlot("slot-fasilitas-tempat-cuci", "Tempat Cuci Mobil & Motor", { x: 127, y: 302, width: 109, height: 170 }, "vertical"),
+  namedSlot("slot-fasilitas-area-zumba", "Area Zumba", { x: 238, y: 302, width: 215, height: 150 }),
+  namedSlot("slot-fasilitas-tenda-vip", "Tenda VIP", { x: 383, y: 396, width: 66, height: 48 }),
+  namedSlot("slot-fasilitas-musholah", "Musholah", { x: 876, y: 368, width: 108, height: 96 }),
+  namedSlot("slot-fasilitas-area-wahana", "Area Wahana", { x: 240, y: 852, width: 586, height: 42 }),
+  namedSlot("slot-fasilitas-toilet", "Toilet", { x: 131, y: 1016, width: 28, height: 80 }, "vertical"),
+  namedSlot("slot-fasilitas-lapangan-tembak", "Lapangan Tembak", { x: 127, y: 1172, width: 556, height: 236 }),
+  namedSlot("slot-fasilitas-parkiran", "Parkiran Untuk Pengunjung", { x: 683, y: 1172, width: 108, height: 236 }, "vertical"),
+  namedSlot("slot-fasilitas-kolam-pemancingan", "Kolam Pemancingan", { x: 791, y: 1172, width: 220, height: 236 }),
 ];
 
-/* ---------- Daftar zona, urut display_order 1..6 ---------- */
+/* ---------- Daftar zona, urut display_order 1..8 ---------- */
 
 export const FLOOR_PLAN_ZONES: LayoutZone[] = [
   {
     svgGroupId: "zone-mobil-baru",
-    name: "Tenda Pameran Mobil Baru",
+    name: "Tenda Dealer Mobil Baru",
     zoneType: "mobil_baru",
     accent: "#7030a0",
-    container: { x: 505, y: 110, width: 348, height: 216, labelOrientation: "horizontal" },
+    container: { x: 492, y: 154, width: 330, height: 212, labelOrientation: "horizontal" },
     slots: mobilBaruSlots,
   },
   {
     svgGroupId: "zone-mobil-bekas",
-    name: "Area Pameran Mobil",
+    name: "Area Pameran Mobil Bekas",
     zoneType: "mobil_bekas",
     accent: "#c00000",
-    container: { x: 514, y: 366, width: 250, height: 444, labelOrientation: "horizontal" },
+    container: { x: 492, y: 392, width: 236, height: 452, labelOrientation: "horizontal" },
     // Arah lalu lintas kendaraan di dalam zona (digambar dengan segitiga panah kecil).
     annotations: [
-      { x: 556, y: 404, text: "MASUK" },
-      { x: 742, y: 404, text: "KELUAR" },
+      { x: 600, y: 428, text: "MASUK" },
+      { x: 700, y: 428, text: "KELUAR" },
     ],
     slots: mobilBekasSlots,
   },
   {
+    svgGroupId: "zone-motor-baru",
+    name: "Area Pameran Motor Baru",
+    zoneType: "motor_baru",
+    accent: "#00b050",
+    container: { x: 734, y: 440, width: 106, height: 170, labelOrientation: "vertical", title: "Motor Baru" },
+    slots: motorBaruSlots,
+  },
+  {
     svgGroupId: "zone-mobil-motor",
-    name: "Area Pameran Motor",
+    name: "Area Pameran Motor Bekas",
     zoneType: "mobil_motor_bekas",
     accent: "#ff00ff",
-    container: { x: 774, y: 430, width: 90, height: 430, labelOrientation: "vertical" },
+    container: { x: 734, y: 618, width: 106, height: 226, labelOrientation: "vertical", title: "Motor Bekas" },
     slots: mobilMotorSlots,
   },
   {
-    // Separuh kiri blok. Label pita VERTIKAL: kartu selebar 110 tidak muat
-    // menampung judul + "X/Y tersedia" mendatar tanpa saling tumpang tindih.
+    // Dua kolom fisik yang mengapit kolom booth: container utama = kolom 1-10,
+    // container tambahan = kolom 21-30. Pita VERTIKAL: kolom selebar 70 tidak
+    // muat menampung judul mendatar.
     svgGroupId: "zone-umkm",
-    name: "Area UMKM",
+    name: "Tenda UMKM",
     zoneType: "umkm",
     accent: "#0070c0",
-    container: { x: 234, y: 444, width: 110, height: 386, labelOrientation: "vertical" },
+    container: { x: 240, y: 462, width: 70, height: 386, labelOrientation: "vertical", title: "UMKM 1-10" },
+    extraContainers: [
+      { x: 384, y: 462, width: 70, height: 386, labelOrientation: "vertical", title: "UMKM & Otomotif 21-30" },
+    ],
     slots: umkmSlots,
   },
   {
-    // Separuh kanan blok: booth premium 2 sisi (bank leasing & brand
-    // otomotif) kini punya kartu container sendiri — bukan lagi kolom
-    // tanpa identitas di dalam kotak Area UMKM.
     svgGroupId: "zone-booth-khusus",
-    name: "Booth Leasing & Brand Otomotif",
+    name: "Tenda Otomotif & Leasing",
     zoneType: "booth_khusus",
     accent: "#0f766e",
-    container: { x: 352, y: 444, width: 114, height: 386, labelOrientation: "vertical" },
+    container: { x: 312, y: 462, width: 70, height: 386, labelOrientation: "vertical", title: "Leasing & Otomotif 11-20" },
     slots: boothKhususSlots,
   },
   {
@@ -241,17 +296,16 @@ export const FLOOR_PLAN_ZONES: LayoutZone[] = [
 /* ---------- Dekor: hanya visual, tidak ada di database, tidak bisa diklik ---------- */
 
 export const FLOOR_PLAN_DECOR: DecorItem[] = [
-  { id: "pagar-atas", x: 122, y: 96, width: 766, height: 10, label: "", kind: "pagar" },
-  { id: "taman-tengah", x: 464, y: 378, width: 52, height: 452, label: "Taman", kind: "taman" },
-  { id: "taman-kanan", x: 890, y: 456, width: 120, height: 674, label: "Taman", kind: "taman" },
-  { id: "taman-kiri-bawah", x: 122, y: 1012, width: 440, height: 116, label: "Taman", kind: "taman" },
-  { id: "taman-tengah-bawah", x: 655, y: 1012, width: 185, height: 116, label: "Taman", kind: "taman" },
+  { id: "pagar-atas", x: 127, y: 136, width: 740, height: 12, label: "", kind: "pagar" },
+  { id: "taman-kanan", x: 876, y: 476, width: 108, height: 644, label: "Taman", kind: "taman" },
+  { id: "taman-kiri-bawah", x: 165, y: 1016, width: 395, height: 104, label: "Taman", kind: "taman" },
+  { id: "taman-tengah-bawah", x: 648, y: 1016, width: 168, height: 104, label: "Taman", kind: "taman" },
 
   // Tank display Kostrad (kendaraan hijau di gambar asli) — murni dekor, bukan slot.
   // Rect ditulis SEBELUM rotasi; laras menghadap sumbu +x, lalu dirotasi `rotate`°.
-  { id: "tank-sekretariat", x: 285, y: 150, width: 96, height: 40, label: "Tank", kind: "tank", rotate: -45 },
-  { id: "tank-umkm", x: 125, y: 582, width: 100, height: 38, label: "Tank", kind: "tank", rotate: 0 },
-  { id: "tank-warung", x: 573, y: 938, width: 96, height: 38, label: "Tank", kind: "tank", rotate: 90 },
+  { id: "tank-sekretariat", x: 300, y: 176, width: 80, height: 36, label: "Tank", kind: "tank", rotate: -60 },
+  { id: "tank-umkm", x: 130, y: 592, width: 100, height: 38, label: "Tank", kind: "tank", rotate: 0 },
+  { id: "tank-warung", x: 553, y: 937, width: 90, height: 36, label: "Tank", kind: "tank", rotate: 90 },
 ];
 
 /** Gaya dekor: taman hijau muda, pagar hijau solid tanpa garis tepi.
@@ -274,10 +328,14 @@ export const TANK_STYLE = {
   labelFontSize: 9,
 } as const;
 
-/** Anotasi teks bebas di denah (text-anchor middle, font 12). */
+/** Anotasi teks bebas di denah (text-anchor middle, font 12). Huruf area ikut Deck v4 slide 10. */
 export const FLOOR_PLAN_ANNOTATIONS: { x: number; y: number; text: string; bold?: boolean }[] = [
-  { x: 970, y: 145, text: "PINTU MASUK & KELUAR", bold: true },
-  { x: 970, y: 168, text: "REST AREA KOSTRAD", bold: true },
+  { x: 917, y: 160, text: "PINTU MASUK & KELUAR", bold: true },
+  { x: 917, y: 182, text: "REST AREA KOSTRAD", bold: true },
+  { x: 917, y: 262, text: "AREA A", bold: true },
+  { x: 610, y: 380, text: "AREA B", bold: true },
+  { x: 787, y: 428, text: "AREA C", bold: true },
+  { x: 290, y: 432, text: "AREA D", bold: true },
 ];
 
 /* ---------- Helper pencarian & teks ---------- */
@@ -290,9 +348,57 @@ export function findLayoutSlot(svgElementId: string): LayoutSlot | undefined {
   return SLOT_INDEX.get(svgElementId);
 }
 
-/** Total kotak slot di denah — harus 104 (96 bisa dibooking + 8 fasilitas). */
+/** Total kotak slot di denah — harus 112 (87 bisa dibooking + 12 warung + 13 fasilitas). */
 export function layoutSlotCount(): number {
   return SLOT_INDEX.size;
+}
+
+/** Semua container sebuah zona (utama + tambahan), urut. */
+export function zoneContainers(zone: LayoutZone): LayoutContainer[] {
+  return [...(zone.container ? [zone.container] : []), ...(zone.extraContainers ?? [])];
+}
+
+/**
+ * Slot sebuah zona yang titik tengahnya berada di dalam `container` — dipakai
+ * pita judul untuk menampilkan statistik PER KOLOM (zona UMKM punya dua kolom).
+ */
+export function slotsInContainer(zone: LayoutZone, container: Rect): LayoutSlot[] {
+  return zone.slots.filter((slot) => {
+    const cx = slot.x + slot.width / 2;
+    const cy = slot.y + slot.height / 2;
+    return (
+      cx >= container.x &&
+      cx <= container.x + container.width &&
+      cy >= container.y &&
+      cy <= container.y + container.height
+    );
+  });
+}
+
+/** Gabungan beberapa rect jadi satu kotak pembungkus; null bila kosong. */
+export function unionRect(rects: readonly Rect[]): Rect | null {
+  if (rects.length === 0) return null;
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (const r of rects) {
+    minX = Math.min(minX, r.x);
+    minY = Math.min(minY, r.y);
+    maxX = Math.max(maxX, r.x + r.width);
+    maxY = Math.max(maxY, r.y + r.height);
+  }
+  return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+}
+
+/**
+ * Kotak target zoom sebuah zona: gabungan seluruh container-nya, atau bounding
+ * box slotnya bila zona tidak punya container.
+ */
+export function zoneBoundingRect(zone: LayoutZone): Rect | null {
+  const containers = zoneContainers(zone);
+  if (containers.length > 0) return unionRect(containers);
+  return unionRect(zone.slots);
 }
 
 /** Penggal label jadi beberapa baris <tspan> agar muat di dalam kotak. */

@@ -1,8 +1,10 @@
 import {
   isBookableZoneType,
+  isNewVehicleZoneType,
   isVehicleZoneType,
   MAX_PENDING_BOOKINGS_PER_PHONE,
   PAYMENT_DEADLINE_HOURS,
+  vehicleKindForZoneType,
 } from "@/lib/domain/constants";
 import { slotAdminFee } from "@/lib/domain/harga";
 import { hitungTotalBiaya } from "@/lib/domain/ketersediaan";
@@ -164,15 +166,16 @@ export async function createBooking(
   // Zona kendaraan WAJIB menyertakan data kendaraan untuk katalog publik
   // (1 slot = 1 kendaraan); zona lain mengabaikan field vehicle bila terkirim.
   const zonaKendaraan = isVehicleZoneType(slot.zone.zone_type);
-  const zonaMobilBaru = slot.zone.zone_type === "mobil_baru";
+  // Kendaraan BARU (mobil_baru / motor_baru) belum berplat.
+  const zonaKendaraanBaru = isNewVehicleZoneType(slot.zone.zone_type);
   if (zonaKendaraan && !data.vehicle) {
     return fail<Out>(
       "Data kendaraan (nama, harga, dan foto) wajib diisi untuk slot zona kendaraan.",
       "VALIDATION",
     );
   }
-  // Plat wajib untuk kendaraan BEKAS; mobil baru belum berplat (dikecualikan).
-  if (zonaKendaraan && !zonaMobilBaru && !data.vehicle?.plateNumber) {
+  // Plat wajib untuk kendaraan BEKAS; kendaraan baru belum berplat (dikecualikan).
+  if (zonaKendaraan && !zonaKendaraanBaru && !data.vehicle?.plateNumber) {
     return fail<Out>("Nomor plat wajib diisi untuk kendaraan bekas.", "VALIDATION");
   }
 
@@ -352,9 +355,10 @@ export async function createBooking(
   const paymentInsert = await supabase.from("admin_fee_payments").insert({
     booking_id: booking.id,
     amount,
-    // Transfer-only: tagihan langsung memakai metode transfer; booking yang
-    // tidak kunjung membayar dibatalkan otomatis expire_unpaid_bookings().
-    method: "transfer",
+    // QRIS-only (sejak 2026-09-02): tagihan langsung memakai metode qris;
+    // booking yang tidak kunjung membayar dibatalkan otomatis
+    // expire_unpaid_bookings().
+    method: "qris",
     status: "unpaid",
   });
 
@@ -369,9 +373,9 @@ export async function createBooking(
   if (zonaKendaraan && data.vehicle) {
     const v = data.vehicle;
     // Jenis kendaraan DITENTUKAN zona, bukan kiriman klien (keputusan pemilik
-    // 2026-08-29: zona mobil_motor_bekas khusus motor) — v.kind diabaikan agar
-    // pemanggil API tidak bisa menaruh "mobil" di zona motor.
-    const jenisDariZona = slot.zone.zone_type === "mobil_motor_bekas" ? "motor" : "mobil";
+    // 2026-08-29: zona motor khusus motor; 2026-09-02: ditambah zona motor_baru)
+    // — v.kind diabaikan agar pemanggil API tidak bisa menaruh "mobil" di zona motor.
+    const jenisDariZona = vehicleKindForZoneType(slot.zone.zone_type);
     const listingInsert = await supabase.from("vehicle_listings").insert({
       booking_id: booking.id,
       slot_id: slot.id,
@@ -528,8 +532,9 @@ export async function getBookingByCode(code: string): Promise<Result<BookingDeta
 }
 
 /**
- * Simpan pilihan metode pembayaran (+ bukti transfer kalau ada) lalu tandai
- * pembayaran sebagai "submitted" agar masuk antrean verifikasi admin.
+ * Simpan bukti pembayaran QRIS (metode tunggal "qris") lalu tandai pembayaran
+ * sebagai "submitted" — submitted_at inilah timestamp yang dipakai panitia
+ * untuk mencocokkan waktu pembayaran pada bukti.
  */
 export async function submitPayment(
   input: SubmitPaymentInput,

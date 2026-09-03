@@ -33,6 +33,13 @@ const nextConfig = {
         port: "8020",
         pathname: "/storage/v1/object/public/**",
       },
+      {
+        // Endpoint HTTPS publik Supabase VPS (Traefik + Let's Encrypt) — dipakai
+        // produksi Vercel; http di atas hanya untuk akses internal/staging.
+        protocol: "https",
+        hostname: "supabase.187.53.129.205.sslip.io",
+        pathname: "/storage/v1/object/public/**",
+      },
     ],
   },
   async headers() {

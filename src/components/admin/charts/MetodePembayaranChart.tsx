@@ -19,11 +19,14 @@ export type MetodePembayaranDatum = {
 };
 
 const METHOD_COLOR: Record<PaymentMethod, string> = {
-  transfer: CHART_COLOR.accent,
+  // QRIS = metode tunggal alur publik sejak 2026-09-02 -> warna aksen.
+  qris: CHART_COLOR.accent,
+  // Data lama (sebelum QRIS) & booking manual panitia.
+  transfer: CHART_COLOR.warn,
   cash: CHART_COLOR.ok,
 };
 
-/** Donat kecil: perbandingan pembayaran biaya admin tunai vs transfer. */
+/** Donat kecil: perbandingan metode pembayaran biaya admin (QRIS vs data lama transfer/tunai). */
 export function MetodePembayaranChart({ data }: { data: MetodePembayaranDatum[] }) {
   const total = data.reduce((jumlah, titik) => jumlah + titik.jumlah, 0);
 

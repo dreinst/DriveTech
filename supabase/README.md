@@ -6,7 +6,9 @@ Folder ini berisi seluruh definisi database untuk sistem booking pameran.
 | --- | --- |
 | `migrations/20260826090000_init.sql` | Skema penuh: extension, enum, tabel, index, trigger `updated_at`, RLS + policy, Realtime, bucket Storage. |
 | `migrations/20260827120000_per_tanggal.sql` | Model booking per tanggal: tabel `event_dates` + `booking_dates`, view publik `slot_date_status`, trigger sinkron status, pencabutan aturan lama satu-booking-per-slot. |
-| `seed.sql` | Data awal: 1 event (Drive Tech, Kota Malang), tanggal Sabtu & Minggu mulai 12 Sep 2026, 6 zona, 104 slot, 3 mitra leasing. |
+| `migrations/20260902100000_enum_layout_v2.sql` | Nilai enum baru: `zone_type.motor_baru`, `tenant_type.dealer_motor_baru`, `payment_method.qris`. |
+| `migrations/20260902101000_layout_v2.sql` | Revisi Layout v2 + Deck v4: nama zona ikut deck, zona `zone-motor-baru` (3 slot), 5 fasilitas baru, jadwal Musim 1 (9 tanggal). |
+| `seed.sql` | Data awal: 1 event (Drive Tech, Singosari), 9 tanggal Musim 1 (12-13 Sep 2026 lalu tiap Minggu s.d. 1 Nov 2026), 8 zona, 112 slot, 3 mitra leasing. |
 | `config.toml` | Konfigurasi Supabase CLI untuk pengembangan lokal. |
 
 ### Model booking per tanggal (migrasi `20260827120000`)
@@ -30,7 +32,7 @@ Dasar skema: bagian 3 dokumen rencana teknis internal `Sistem Pameran Arsitektur
 (tidak dipublikasikan di repo ini; rangkumannya ada di README utama).
 Kolom/objek di luar dokumen itu ditandai komentar `-- [tambahan]` di dalam file migrasi.
 
-Sumber inventaris slot: gambar **`layout-venue.jpeg`** di root proyek.
+Sumber inventaris slot: gambar **`layout-venue-v2.jpeg`** (Layout v2, 2026-09-02) di root proyek; jumlah slot Area C mengikuti teks Deck v4 (3 motor baru + 14 motor bekas).
 Bila gambar berbeda dengan dokumen, **gambar yang menang**.
 
 ---
@@ -101,7 +103,7 @@ Opsi B — buka **Dashboard > SQL Editor**, tempel isi `seed.sql`, lalu jalankan
 Seed aman diulang: insert memakai `on conflict do nothing` / `where not exists`
 (baris event memakai `on conflict do update` agar nama/lokasi terbaru ikut
 terpasang), jadi menjalankannya dua kali tidak menggandakan data. Seed juga
-mengisi `event_dates` dengan semua Sabtu & Minggu selama 12 pekan mulai 12-13 Sep 2026
+mengisi `event_dates` dengan 9 tanggal Musim 1 (12-13 Sep 2026, lalu setiap hari Minggu s.d. 1 Nov 2026)
 dari tanggal seed dijalankan (`current_date`).
 
 Setelah push, isi env project di hosting (Vercel dsb.):
@@ -232,13 +234,15 @@ migrasi `20260827120000_per_tanggal.sql`.)
 
 | Zona (`svg_group_id`) | Tipe | Jumlah slot | Admin fee |
 | --- | --- | ---: | ---: |
-| `zone-mobil-baru` | `mobil_baru` | 10 | Rp 2.500.000 |
-| `zone-mobil-bekas` | `mobil_bekas` | 30 | Rp 750.000 |
-| `zone-mobil-motor` | `mobil_motor_bekas` | 14 | Rp 600.000 |
-| `zone-umkm` | `umkm` | 30 | Rp 300.000 |
-| `zone-warung` | `warung` | 12 | Rp 500.000 |
-| `zone-fasilitas` | `facility` | 8 | Rp 0 (tidak bisa dibooking) |
-| **Total** | | **104** | 96 bisa dibooking |
+| `zone-mobil-baru` (Tenda Dealer Mobil Baru) | `mobil_baru` | 10 | Rp 1.000.000 |
+| `zone-mobil-bekas` (Area Pameran Mobil Bekas) | `mobil_bekas` | 30 | Rp 50.000 |
+| `zone-motor-baru` (Area Pameran Motor Baru) | `motor_baru` | 3 | Rp 500.000 |
+| `zone-mobil-motor` (Area Pameran Motor Bekas) | `mobil_motor_bekas` | 14 | Rp 25.000 |
+| `zone-umkm` (Tenda UMKM, slot 1-10 & 21-30) | `umkm` | 20 | Rp 250.000 |
+| `zone-booth-khusus` (Tenda Otomotif & Leasing, slot 11-20) | `booth_khusus` | 10 | Rp 500.000 |
+| `zone-warung` | `warung` | 12 | Rp 500.000 (belum dibuka online) |
+| `zone-fasilitas` | `facility` | 13 | Rp 0 (tidak bisa dibooking) |
+| **Total** | | **112** | 87 bisa dibooking online |
 
 Perbedaan gambar denah vs `Sistem Pameran Arsitektur.md`:
 

@@ -15,18 +15,79 @@ export const EVENT_INFO = {
    * Lokasi resmi: Rest Area Singosari Malang (alias Kampung Tentara).
    */
   mapsEmbedUrl: "https://www.google.com/maps?q=-7.8773823,112.6773862&z=16&output=embed",
-  scheduleText: "Setiap Sabtu & Minggu mulai 12 September 2026",
+  /**
+   * Jadwal Musim 1 (Deck v4, keputusan pemilik 2026-09-02): pembukaan dua hari
+   * Sabtu-Minggu 12-13 September 2026, selanjutnya setiap hari Minggu sampai
+   * 1 November 2026 (8 pekan). Tanggal konkretnya ada di MUSIM_1_DATES dan
+   * tabel event_dates.
+   */
+  scheduleText:
+    "Pembukaan Sabtu–Minggu 12–13 September 2026, selanjutnya setiap hari Minggu sampai 1 November 2026",
   organizer: "Panitia Drive Tech",
-  contact: "08123456789",
+  /**
+   * Kontak panitia (WhatsApp). Dua nomor resmi dari pemilik, 2026-09-02.
+   * Gunakan telHref()/waHref() untuk tautannya — jangan strip digit manual.
+   */
+  contacts: [
+    { label: "Panitia 1", phone: "0822-2855-5254" },
+    { label: "Panitia 2", phone: "0888-4089-474" },
+  ],
   description:
     "Pasar otomotif akhir pekan di Kota Malang: pilih tanggal, pilih zona, lalu booking lapak langsung dari denah.",
 } as const;
 
-/** Rekening tujuan untuk pembayaran biaya admin via transfer. */
-export const BANK_ACCOUNT = {
-  bankName: "Bank BCA",
-  accountNumber: "1234567890",
-  accountName: "Panitia Pameran Mobil & Motor",
+export type ContactInfo = (typeof EVENT_INFO.contacts)[number];
+
+/**
+ * Tanggal gelaran Musim 1 (ISO "YYYY-MM-DD") — cermin seed.sql & migrasi
+ * 20260902101000_layout_v2.sql. Dipakai HANYA untuk mode fallback denah
+ * (database belum terhubung); sumber kebenaran tetap tabel event_dates.
+ */
+export const MUSIM_1_DATES: readonly string[] = [
+  "2026-09-12",
+  "2026-09-13",
+  "2026-09-20",
+  "2026-09-27",
+  "2026-10-04",
+  "2026-10-11",
+  "2026-10-18",
+  "2026-10-25",
+  "2026-11-01",
+];
+
+/** Digit saja dari nomor telepon lokal ("0822-2855-5254" -> "082228555254"). */
+export function phoneDigits(phone: string): string {
+  return phone.replace(/[^0-9+]/g, "");
+}
+
+/** href tel: dari nomor lokal. */
+export function telHref(phone: string): string {
+  return `tel:${phoneDigits(phone)}`;
+}
+
+/**
+ * Tautan wa.me: nomor lokal berawalan 0 diubah ke 62…; teks awal (opsional)
+ * di-encode sebagai parameter ?text=.
+ */
+export function waHref(phone: string, text?: string): string {
+  const digits = phoneDigits(phone).replace(/^\+/, "");
+  const intl = digits.startsWith("0") ? `62${digits.slice(1)}` : digits;
+  const query = text ? `?text=${encodeURIComponent(text)}` : "";
+  return `https://wa.me/${intl}${query}`;
+}
+
+/**
+ * QRIS panitia untuk pembayaran biaya admin (keputusan pemilik 2026-09-02:
+ * opsi transfer bank & cash dihapus; satu-satunya metode = QRIS). Gambar
+ * di public/ diambil dari "QRIS Drive Tech.jpeg" (NMID & terminal tertera).
+ * QRIS ini statis (nominal diisi pembayar), jadi panitia mencocokkan
+ * NOMINAL + WAKTU pada bukti dengan waktu kirim di sistem (submitted_at).
+ */
+export const QRIS_INFO = {
+  imagePath: "/qris-drivetech.jpg",
+  merchantName: "DRIVE TECH",
+  nmid: "ID1026472717465",
+  terminal: "A01",
 } as const;
 
 /**
@@ -127,6 +188,7 @@ export const MAX_PENDING_BOOKINGS_PER_PHONE = 3;
 export const VEHICLE_ZONE_TYPES = [
   "mobil_baru",
   "mobil_bekas",
+  "motor_baru",
   "mobil_motor_bekas",
 ] as const satisfies readonly ZoneType[];
 
@@ -135,9 +197,27 @@ export function isVehicleZoneType(z: ZoneType): boolean {
   return (VEHICLE_ZONE_TYPES as readonly ZoneType[]).includes(z);
 }
 
+/**
+ * Zona kendaraan BARU (dealer resmi): unit belum berplat -> field plat & km
+ * disembunyikan di form dan plat tidak diwajibkan server.
+ */
+export const NEW_VEHICLE_ZONE_TYPES = ["mobil_baru", "motor_baru"] as const satisfies readonly ZoneType[];
+
+export function isNewVehicleZoneType(z: ZoneType): boolean {
+  return (NEW_VEHICLE_ZONE_TYPES as readonly ZoneType[]).includes(z);
+}
+
 /** Jenis kendaraan di katalog — filter navbar "Katalog Mobil" / "Katalog Motor". */
 export const VEHICLE_KIND_LABEL = { mobil: "Mobil", motor: "Motor" } as const;
 export type VehicleKind = keyof typeof VEHICLE_KIND_LABEL;
+
+/**
+ * Jenis kendaraan DITENTUKAN zona (bukan kiriman klien): zona motor -> "motor",
+ * zona lain -> "mobil". Dipakai form booking, createBooking, dan katalog.
+ */
+export function vehicleKindForZoneType(z: ZoneType): VehicleKind {
+  return z === "motor_baru" || z === "mobil_motor_bekas" ? "motor" : "mobil";
+}
 
 /** Pilihan transmisi kendaraan di form booking & katalog. */
 export const TRANSMISSION_OPTIONS = ["manual", "matic"] as const;
@@ -162,6 +242,7 @@ export const TENOR_OPTIONS: readonly number[] = [12, 18, 24, 36, 48, 60];
 export const ZONE_TYPE_FALLBACK: Record<ZoneType, readonly ZoneType[]> = {
   // Dealer resmi tidak dicampur ke area kendaraan bekas.
   mobil_baru: [],
+  motor_baru: [],
   mobil_bekas: ["mobil_motor_bekas"],
   mobil_motor_bekas: ["mobil_bekas"],
   // UMKM non-kuliner, booth mitra, dan warung kuliner beda peruntukan

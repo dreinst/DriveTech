@@ -1,20 +1,20 @@
 import Link from "next/link";
 
 export type ProofThumbProps = {
-  /** URL publik bukti transfer di Supabase Storage. */
+  /** URL (signed) bukti pembayaran QRIS di Supabase Storage. */
   url: string | null;
   /** Teks alternatif gambar. */
   alt?: string;
 };
 
 /**
- * Pratinjau kecil bukti transfer beserta tautan ke ukuran penuh.
+ * Pratinjau kecil bukti pembayaran beserta tautan ke ukuran penuh.
  *
  * Server-safe (tanpa "use client"). Sengaja memakai <img> biasa, bukan
- * next/image: host bukti transfer berasal dari Supabase Storage yang belum
+ * next/image: host bukti pembayaran berasal dari Supabase Storage yang belum
  * tentu terdaftar di images.remotePatterns, dan ukurannya memang kecil.
  */
-export function ProofThumb({ url, alt = "Bukti transfer" }: ProofThumbProps) {
+export function ProofThumb({ url, alt = "Bukti pembayaran" }: ProofThumbProps) {
   if (!url) {
     return <span className="text-xs text-subtle">Belum ada bukti</span>;
   }
@@ -25,7 +25,7 @@ export function ProofThumb({ url, alt = "Bukti transfer" }: ProofThumbProps) {
       target="_blank"
       rel="noreferrer"
       className="inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-sm)] border border-line bg-card p-1 pr-2 transition-[border-color,background-color] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] hover:border-line-strong"
-      title="Buka bukti transfer di tab baru"
+      title="Buka bukti pembayaran di tab baru"
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img

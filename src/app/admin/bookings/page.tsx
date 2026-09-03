@@ -119,7 +119,7 @@ const KOLOM = [
   "Nominal",
   "Status Bayar",
   "Status Booking",
-  "Bukti",
+  "Bukti QRIS",
   "Aksi",
 ];
 
@@ -155,6 +155,34 @@ function susunBarisCsv(bookings: BookingDetail[]): ExportCsvRow[] {
     status_booking: BOOKING_STATUS_LABEL[booking.status],
     created_at: booking.created_at,
   }));
+}
+
+/**
+ * Waktu kirim bukti & waktu verifikasi — inilah timestamp yang dicocokkan
+ * panitia dengan waktu pembayaran pada tangkapan layar QRIS.
+ */
+function WaktuPembayaran({
+  payment,
+  className,
+}: {
+  payment: BookingDetail["payment"];
+  className?: string;
+}) {
+  if (!payment || (!payment.submitted_at && !payment.verified_at)) return null;
+  return (
+    <p className={cn("space-x-0 text-[11px] leading-snug text-subtle", className)}>
+      {payment.submitted_at ? (
+        <span className="block whitespace-nowrap">
+          Dikirim {formatTanggalWaktu(payment.submitted_at)}
+        </span>
+      ) : null}
+      {payment.verified_at ? (
+        <span className="block whitespace-nowrap">
+          Diverifikasi {formatTanggalWaktu(payment.verified_at)}
+        </span>
+      ) : null}
+    </p>
+  );
 }
 
 export default async function AdminBookingsPage({ searchParams }: PageProps) {
@@ -193,6 +221,12 @@ export default async function AdminBookingsPage({ searchParams }: PageProps) {
 
   const bookings = result.ok ? [...result.data].sort(menungguVerifikasiDulu) : [];
   const menungguVerifikasi = bookings.filter((row) => row.payment?.status === "submitted").length;
+  // Hasil pindaian QR verifikasi (status booking penyewa memuat
+  // /admin/bookings?q=<kode>): q persis sama dengan kode salah satu baris.
+  const hasilPindaian =
+    qParam.length > 0
+      ? bookings.find((row) => row.booking_code === qParam.toUpperCase()) ?? null
+      : null;
 
   // Bucket bukti-transfer kini PRIVATE: URL tersimpan ditukar signed URL
   // (berumur 1 jam) sebelum dirender — lihat lib/storage.ts.
@@ -223,8 +257,9 @@ export default async function AdminBookingsPage({ searchParams }: PageProps) {
         <div className="min-w-0 space-y-2">
           <h1 className="text-3xl font-bold tracking-[-0.02em] text-ink sm:text-4xl">Pemesanan</h1>
           <p className="max-w-2xl text-sm leading-relaxed text-muted sm:text-base">
-            Kelola booking slot per tanggal dan verifikasi bukti pembayaran — bukti yang menunggu
-            selalu tampil paling atas.
+            Kelola booking slot per tanggal dan verifikasi bukti pembayaran QRIS — cocokkan nominal
+            dan waktu pada bukti dengan waktu kirim di sistem. Bukti yang menunggu selalu tampil
+            paling atas.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -246,6 +281,12 @@ export default async function AdminBookingsPage({ searchParams }: PageProps) {
       {!result.ok ? (
         <Alert tone="error" title="Data booking belum bisa dimuat">
           {result.error}
+        </Alert>
+      ) : null}
+
+      {hasilPindaian ? (
+        <Alert tone="info" title={`Hasil pindaian QR: booking ${hasilPindaian.booking_code}`}>
+          Cocokkan nominal &amp; waktu pada bukti dengan waktu kirim di bawah.
         </Alert>
       ) : null}
 
@@ -320,6 +361,7 @@ export default async function AdminBookingsPage({ searchParams }: PageProps) {
                     <span className="text-xs text-subtle">Belum ada pembayaran</span>
                   )}
                 </div>
+                <WaktuPembayaran payment={payment} className="mt-1 text-right" />
 
                 <p className="mt-2 text-sm font-medium text-ink">{booking.tenant.name}</p>
                 <p className="text-xs text-muted">
@@ -341,7 +383,7 @@ export default async function AdminBookingsPage({ searchParams }: PageProps) {
                 <div className="mt-3 flex flex-wrap items-start justify-between gap-2 border-t border-line/70 pt-3">
                   <ProofThumb
                     url={buktiUrl.get(booking.id) ?? null}
-                    alt={`Bukti transfer ${booking.booking_code}`}
+                    alt={`Bukti pembayaran ${booking.booking_code}`}
                   />
                   <PaymentVerifyForm
                     paymentId={payment?.id ?? null}
@@ -437,6 +479,7 @@ export default async function AdminBookingsPage({ searchParams }: PageProps) {
                         ) : (
                           <span className="text-xs text-subtle">—</span>
                         )}
+                        <WaktuPembayaran payment={payment} className="mt-1" />
                         {payment?.status === "rejected" && payment.reject_reason ? (
                           <p className="mt-1 max-w-[14rem] text-xs text-danger">
                             {payment.reject_reason}
@@ -451,7 +494,7 @@ export default async function AdminBookingsPage({ searchParams }: PageProps) {
                       <td className="px-3 py-3">
                         <ProofThumb
                           url={buktiUrl.get(booking.id) ?? null}
-                          alt={`Bukti transfer ${booking.booking_code}`}
+                          alt={`Bukti pembayaran ${booking.booking_code}`}
                         />
                       </td>
 

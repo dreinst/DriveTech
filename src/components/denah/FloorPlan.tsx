@@ -14,9 +14,12 @@ import {
   FLOOR_PLAN_ZONES,
   slotFontSize,
   TANK_STYLE,
+  slotsInContainer,
   wrapLabel,
+  zoneContainers,
   type DecorItem,
   type LabelOrientation,
+  type LayoutContainer,
   type LayoutSlot,
   type LayoutZone,
   type Rect,
@@ -252,19 +255,30 @@ function TankDecor({ item }: { item: DecorItem }) {
 
 type ZoneContainerProps = {
   zone: LayoutZone;
+  /** Kotak yang digambar — container utama atau salah satu extraContainers. */
+  container: LayoutContainer;
   available: number;
   total: number;
   /** True = bukan zona aktif saat peta terkunci per zona -> digambar redup. */
   dimmed?: boolean;
 };
 
-function ZoneContainer({ zone, available, total, dimmed = false }: ZoneContainerProps) {
-  const container = zone.container;
-  if (!container) return null;
+/** Perkiraan lebar teks pita (font 12 tebal / 10 sedang) untuk memutuskan muat/tidak. */
+function bandTextWidth(text: string, fontSize: number): number {
+  return text.length * fontSize * CHAR_WIDTH_RATIO;
+}
 
+function ZoneContainer({ zone, container, available, total, dimmed = false }: ZoneContainerProps) {
   const bandSize = 24;
   const isVertical = container.labelOrientation === "vertical";
+  const title = container.title ?? zone.name;
   const stat = `${available}/${total} tersedia`;
+
+  // Pita pendek (mis. Motor Baru 170 px): judul di tengah dan statistik di
+  // ujung akan saling tindih -> statistik disembunyikan (angkanya tetap ada di
+  // kartu zona & panel statistik).
+  const along = isVertical ? container.height : container.width;
+  const showStat = bandTextWidth(title, 12) / 2 + bandTextWidth(stat, 10) + 20 < along / 2;
 
   return (
     <g aria-hidden="true" opacity={dimmed ? 0.4 : undefined} style={{ pointerEvents: "none" }}>
@@ -311,21 +325,23 @@ function ZoneContainer({ zone, available, total, dimmed = false }: ZoneContainer
             dominantBaseline="middle"
             transform={`rotate(-90 ${container.x + bandSize / 2} ${container.y + container.height / 2})`}
           >
-            {zone.name}
+            {title}
           </text>
-          <text
-            x={container.x + bandSize / 2 - (container.height / 2 - 8)}
-            y={container.y + container.height / 2}
-            fill="#ffffff"
-            fontSize={10}
-            fontWeight={600}
-            textAnchor="start"
-            dominantBaseline="middle"
-            opacity={0.9}
-            transform={`rotate(-90 ${container.x + bandSize / 2} ${container.y + container.height / 2})`}
-          >
-            {stat}
-          </text>
+          {showStat ? (
+            <text
+              x={container.x + bandSize / 2 - (container.height / 2 - 8)}
+              y={container.y + container.height / 2}
+              fill="#ffffff"
+              fontSize={10}
+              fontWeight={600}
+              textAnchor="start"
+              dominantBaseline="middle"
+              opacity={0.9}
+              transform={`rotate(-90 ${container.x + bandSize / 2} ${container.y + container.height / 2})`}
+            >
+              {stat}
+            </text>
+          ) : null}
         </>
       ) : (
         <>
@@ -353,20 +369,22 @@ function ZoneContainer({ zone, available, total, dimmed = false }: ZoneContainer
             textAnchor="start"
             dominantBaseline="middle"
           >
-            {zone.name}
+            {title}
           </text>
-          <text
-            x={container.x + container.width - 10}
-            y={container.y + bandSize / 2 + 1}
-            fill="#ffffff"
-            fontSize={10}
-            fontWeight={600}
-            textAnchor="end"
-            dominantBaseline="middle"
-            opacity={0.9}
-          >
-            {stat}
-          </text>
+          {showStat ? (
+            <text
+              x={container.x + container.width - 10}
+              y={container.y + bandSize / 2 + 1}
+              fill="#ffffff"
+              fontSize={10}
+              fontWeight={600}
+              textAnchor="end"
+              dominantBaseline="middle"
+              opacity={0.9}
+            >
+              {stat}
+            </text>
+          ) : null}
         </>
       )}
     </g>
@@ -574,7 +592,7 @@ export function FloorPlan({
   activeZone,
 }: FloorPlanProps) {
   const strokeScale = Math.max(interactionScale ?? 1, 1);
-  // Satu Map untuk semua slot: lookup O(1) saat menggambar 104 kotak.
+  // Satu Map untuk semua slot: lookup O(1) saat menggambar 112 kotak.
   const slotIndex = useMemo(() => {
     const map = new Map<string, SelectedSlotPayload>();
     for (const zone of zones) {
@@ -590,24 +608,28 @@ export function FloorPlan({
     return map;
   }, [zones]);
 
-  // "X/Y tersedia" di pita zona: pakai verdict per tanggal kalau tersedia,
-  // supaya angkanya konsisten dengan warna slot & panel statistik.
-  const zoneStats = useMemo(() => {
+  // "X/Y tersedia" di pita container: dihitung PER CONTAINER (zona UMKM punya
+  // dua kolom terpisah) memakai verdict per tanggal kalau tersedia, supaya
+  // angkanya konsisten dengan warna slot & panel statistik.
+  const containerStats = useMemo(() => {
     const stats = new Map<string, { available: number; total: number }>();
     for (const zone of FLOOR_PLAN_ZONES) {
-      let available = 0;
-      for (const slot of zone.slots) {
-        const row = slotIndex.get(slot.svgElementId);
-        if (!row) {
-          available += 1;
-          continue;
+      zoneContainers(zone).forEach((container, index) => {
+        const slots = slotsInContainer(zone, container);
+        let available = 0;
+        for (const slot of slots) {
+          const row = slotIndex.get(slot.svgElementId);
+          if (!row) {
+            available += 1;
+            continue;
+          }
+          const free = verdicts
+            ? (verdicts.get(row.id) ?? "available") === "available"
+            : row.status === "available";
+          if (free) available += 1;
         }
-        const free = verdicts
-          ? (verdicts.get(row.id) ?? "available") === "available"
-          : row.status === "available";
-        if (free) available += 1;
-      }
-      stats.set(zone.svgGroupId, { available, total: zone.slots.length });
+        stats.set(`${zone.svgGroupId}-${index}`, { available, total: slots.length });
+      });
     }
     return stats;
   }, [slotIndex, verdicts]);
@@ -621,11 +643,13 @@ export function FloorPlan({
     >
       <title>Denah lokasi pameran</title>
       <desc>
-        Denah interaktif area pameran: tenda mobil baru, area pameran mobil, area pameran motor,
-        area UMKM, booth leasing dan brand otomotif, deretan warung, serta fasilitas umum. Kotak hijau berarti slot tersedia
-        pada tanggal yang dipilih, kuning menunggu pembayaran, merah sudah terisi; abu-abu adalah
-        slot yang diblokir panitia serta fasilitas dan warung yang tidak disewakan online. Tiga
-        tank display Kostrad digambar sebagai hiasan.
+        Denah interaktif area pameran (Layout v2): Area A tenda dealer mobil baru, Area B area
+        pameran mobil bekas, Area C tenda motor baru dan area motor bekas, Area D tenda UMKM serta
+        tenda otomotif dan leasing, deretan warung, dan fasilitas umum termasuk VIP lounge, tenda
+        VIP, area wahana, dan toilet. Kotak hijau berarti slot tersedia pada tanggal yang dipilih,
+        kuning menunggu pembayaran, merah sudah terisi; abu-abu adalah slot yang diblokir panitia
+        serta fasilitas dan warung yang tidak disewakan online. Tiga tank display Kostrad digambar
+        sebagai hiasan.
       </desc>
 
       {/* (a) Bingkai lokasi */}
@@ -649,19 +673,25 @@ export function FloorPlan({
         ),
       )}
 
-      {/* (c) Container zona + pita judul */}
-      {FLOOR_PLAN_ZONES.map((zone) => {
-        const stat = zoneStats.get(zone.svgGroupId) ?? { available: 0, total: zone.slots.length };
-        return (
-          <ZoneContainer
-            key={`container-${zone.svgGroupId}`}
-            zone={zone}
-            available={stat.available}
-            total={stat.total}
-            dimmed={activeZone ? zone.svgGroupId !== activeZone.svgGroupId : false}
-          />
-        );
-      })}
+      {/* (c) Container zona + pita judul (zona UMKM punya dua kolom -> dua container) */}
+      {FLOOR_PLAN_ZONES.flatMap((zone) =>
+        zoneContainers(zone).map((container, index) => {
+          const stat = containerStats.get(`${zone.svgGroupId}-${index}`) ?? {
+            available: 0,
+            total: zone.slots.length,
+          };
+          return (
+            <ZoneContainer
+              key={`container-${zone.svgGroupId}-${index}`}
+              zone={zone}
+              container={container}
+              available={stat.available}
+              total={stat.total}
+              dimmed={activeZone ? zone.svgGroupId !== activeZone.svgGroupId : false}
+            />
+          );
+        }),
+      )}
 
       {/* (d) Slot */}
       {FLOOR_PLAN_ZONES.map((zone) => (

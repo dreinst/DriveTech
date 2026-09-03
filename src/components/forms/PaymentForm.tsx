@@ -10,7 +10,7 @@ import { Field } from "@/components/ui/Field";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 import { submitPaymentAction } from "@/lib/actions/booking";
 import { initialActionState } from "@/lib/actions/state";
-import { BANK_ACCOUNT, KOMPRESI_BUKTI, MAX_PROOF_BYTES } from "@/lib/domain/constants";
+import { KOMPRESI_BUKTI, MAX_PROOF_BYTES, QRIS_INFO } from "@/lib/domain/constants";
 import { compressImage, formatBytes } from "@/lib/image";
 import { formatRupiah } from "@/lib/utils";
 
@@ -20,16 +20,19 @@ export type PaymentFormProps = {
   bookingId: string;
   /** Nominal biaya admin yang harus dibayar. */
   amount: number;
-  /** URL bukti transfer yang sudah pernah diunggah. */
+  /** URL bukti pembayaran yang sudah pernah diunggah. */
   existingProofUrl?: string | null;
-  /** Kode booking — dipakai sebagai BERITA TRANSFER agar mutasi bank bisa dicocokkan. */
+  /** Kode booking — ditampilkan agar penyewa bisa menuliskannya di catatan pembayaran. */
   bookingCode: string;
 };
 
 /**
- * Pembayaran biaya admin (langkah "Pembayaran") — TRANSFER SAJA.
- * Opsi cash dihapus (keputusan pemilik, 2026-08-28): booking hanya dikunci
- * lewat pembayaran, jadi setiap booking wajib transfer + unggah bukti.
+ * Pembayaran biaya admin (langkah "Pembayaran") — QRIS SAJA.
+ * Opsi cash dihapus 2026-08-28 dan transfer bank dihapus 2026-09-02 (keputusan
+ * pemilik): booking hanya dikunci lewat pembayaran QRIS + unggah tangkapan
+ * layar "transaksi berhasil". QRIS panitia bersifat statis (nominal diisi
+ * pembayar), jadi panitia mencocokkan NOMINAL + WAKTU pada bukti dengan waktu
+ * kirim yang tercatat di sistem (admin_fee_payments.submitted_at).
  * Booking yang tidak kunjung membayar dibatalkan otomatis oleh
  * expire_unpaid_bookings() (pg_cron) agar slotnya lepas kembali.
  *
@@ -87,7 +90,7 @@ export function PaymentForm({
     }
 
     if (!JENIS_DIIZINKAN.includes(dipilih.type)) {
-      setGalatLokal("Format bukti transfer harus JPG, PNG, atau WEBP.");
+      setGalatLokal("Format bukti pembayaran harus JPG, PNG, atau WEBP.");
       setBerkas(null);
       setUkuranAsli(null);
       input.value = "";
@@ -97,7 +100,7 @@ export function PaymentForm({
     setUkuranAsli(dipilih.size);
     setSedangKompres(true);
     try {
-      // Bukti transfer hanya diperiksa sekilas panitia — pakai preset yang jauh
+      // Bukti pembayaran hanya diperiksa sekilas panitia — pakai preset yang jauh
       // lebih ringan daripada foto katalog (lihat KOMPRESI_BUKTI).
       const hasil = await compressImage(dipilih, KOMPRESI_BUKTI);
 
@@ -134,7 +137,7 @@ export function PaymentForm({
     <form action={formAction} className="space-y-5" noValidate>
       <input type="hidden" name="bookingId" value={bookingId} />
       {/* Satu-satunya metode yang diterima server (submitPaymentSchema). */}
-      <input type="hidden" name="method" value="transfer" />
+      <input type="hidden" name="method" value="qris" />
 
       {pesanUmum ? (
         <div className="anim-rise">
@@ -145,93 +148,122 @@ export function PaymentForm({
       ) : null}
 
       <div className="space-y-4">
-        {/* ---------- Kartu "Instruksi Transfer Bank" ---------- */}
+        {/* ---------- Kartu QRIS ---------- */}
         <div className="rounded-[var(--radius)] border border-line bg-surface-2 p-4 sm:p-5">
-          <p className="text-sm font-semibold text-ink">Instruksi Transfer Bank</p>
+          <p className="text-sm font-semibold text-ink">Bayar lewat QRIS</p>
           <p className="mt-1 text-xs leading-relaxed text-muted">
-            Transfer tepat sesuai nominal ke rekening di bawah ini, lalu unggah bukti
-            transfernya. Booking dikunci setelah pembayaran diverifikasi.
+            Pindai kode QRIS di bawah dengan aplikasi bank atau e-wallet apa pun yang berlogo
+            QRIS, bayar tepat sesuai nominal, lalu unggah tangkapan layar transaksi berhasil.
           </p>
 
-          <dl className="mt-4 space-y-3.5">
-            <div>
-              <dt className="text-xs font-medium uppercase tracking-[0.08em] text-subtle">
-                Bank
-              </dt>
-              <dd className="mt-0.5 text-sm font-semibold text-ink">{BANK_ACCOUNT.bankName}</dd>
-            </div>
+          <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start">
+            {/* Gambar QRIS dibiarkan besar & tajam supaya bisa dipindai langsung dari layar. */}
+            <a
+              href={QRIS_INFO.imagePath}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Buka gambar QRIS ukuran penuh"
+              className="shrink-0 self-center sm:self-start"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element -- gambar statis di public/, harus tetap tajam untuk dipindai */}
+              <img
+                src={QRIS_INFO.imagePath}
+                alt={`Kode QRIS ${QRIS_INFO.merchantName}, NMID ${QRIS_INFO.nmid}, terminal ${QRIS_INFO.terminal}`}
+                width={224}
+                height={316}
+                className="h-auto w-56 rounded-[var(--radius-sm)] border border-line bg-white"
+              />
+            </a>
 
-            <div>
-              <dt className="text-xs font-medium uppercase tracking-[0.08em] text-subtle">
-                Nomor rekening
-              </dt>
-              <dd className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-2">
-                <span className="tabular select-all font-mono text-2xl font-bold tracking-wider text-accent">
-                  {BANK_ACCOUNT.accountNumber}
-                </span>
-                <CopyButton
-                  value={BANK_ACCOUNT.accountNumber}
-                  label="Salin"
-                  className="h-9 px-4 text-xs"
-                />
-              </dd>
-            </div>
+            <dl className="min-w-0 flex-1 space-y-3.5">
+              <div>
+                <dt className="text-xs font-medium uppercase tracking-[0.08em] text-subtle">
+                  Nama merchant
+                </dt>
+                <dd className="mt-0.5 text-sm font-semibold text-ink">{QRIS_INFO.merchantName}</dd>
+              </div>
 
-            <div>
-              <dt className="text-xs font-medium uppercase tracking-[0.08em] text-subtle">
-                Atas nama
-              </dt>
-              <dd className="mt-0.5 text-sm font-semibold text-ink">
-                {BANK_ACCOUNT.accountName}
-              </dd>
-            </div>
-
-            {/* BERITA TRANSFER: ditulis penyewa di kolom berita/catatan saat transfer.
-                Inilah yang membuat panitia bisa mencocokkan baris mutasi bank dengan
-                booking yang mana — tanpa ini, dua transfer bernominal sama tidak bisa
-                dibedakan. */}
-            <div className="border-t border-line pt-3">
-              <dt className="text-xs font-medium uppercase tracking-[0.08em] text-subtle">
-                Berita / catatan transfer
-              </dt>
-              <dd className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-2">
-                <span className="tabular select-all font-mono text-xl font-bold tracking-widest text-ink">
-                  {bookingCode}
-                </span>
-                <CopyButton value={bookingCode} label="Salin" className="h-9 px-4 text-xs" />
-              </dd>
-              <p className="mt-1.5 text-xs leading-relaxed text-muted">
-                Tulis kode ini di kolom <strong className="text-ink">berita/catatan</strong> saat
-                transfer supaya pembayaran Anda cepat dikenali panitia.
-              </p>
-            </div>
-
-            <div className="border-t border-line pt-3">
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <dt className="text-sm text-muted">Nominal transfer</dt>
-                <dd className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                  <span className="tabular text-lg font-bold text-accent">
-                    {formatRupiah(amount)}
-                  </span>
-                  {/* Salin angka polos (tanpa "Rp"/titik) supaya bisa langsung
-                      ditempel di aplikasi m-banking. */}
-                  <CopyButton
-                    value={String(amount)}
-                    label="Salin nominal"
-                    className="h-9 px-4 text-xs"
-                  />
+              <div>
+                <dt className="text-xs font-medium uppercase tracking-[0.08em] text-subtle">
+                  NMID &middot; Terminal
+                </dt>
+                <dd className="tabular mt-0.5 font-mono text-sm font-semibold text-ink">
+                  {QRIS_INFO.nmid} &middot; {QRIS_INFO.terminal}
                 </dd>
               </div>
-              <p className="mt-1.5 text-xs leading-relaxed text-muted">
-                Transfer <strong className="text-ink">tepat sampai angka terakhir</strong> — nominal
-                yang berbeda membuat pembayaran sulit dicocokkan.
-              </p>
-            </div>
-          </dl>
+
+              <div className="border-t border-line pt-3">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <dt className="text-sm text-muted">Nominal bayar</dt>
+                  <dd className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                    <span className="tabular text-lg font-bold text-accent">
+                      {formatRupiah(amount)}
+                    </span>
+                    {/* Salin angka polos (tanpa "Rp"/titik) supaya bisa langsung
+                        ditempel di kolom nominal aplikasi pembayaran. */}
+                    <CopyButton
+                      value={String(amount)}
+                      label="Salin nominal"
+                      className="h-9 px-4 text-xs"
+                    />
+                  </dd>
+                </div>
+                <p className="mt-1.5 text-xs leading-relaxed text-muted">
+                  Masukkan nominal <strong className="text-ink">tepat sampai angka terakhir</strong>{" "}
+                  &mdash; QRIS ini statis, nominalnya Anda isi sendiri di aplikasi.
+                </p>
+              </div>
+
+              <div className="border-t border-line pt-3">
+                <dt className="text-xs font-medium uppercase tracking-[0.08em] text-subtle">
+                  Kode booking
+                </dt>
+                <dd className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-2">
+                  <span className="tabular select-all font-mono text-xl font-bold tracking-widest text-ink">
+                    {bookingCode}
+                  </span>
+                  <CopyButton value={bookingCode} label="Salin" className="h-9 px-4 text-xs" />
+                </dd>
+                <p className="mt-1.5 text-xs leading-relaxed text-muted">
+                  Kalau aplikasi Anda menyediakan kolom catatan, tulis kode ini di sana supaya
+                  pembayaran lebih cepat dikenali panitia.
+                </p>
+              </div>
+            </dl>
+          </div>
+
+          <ol className="mt-4 space-y-1.5 border-t border-line pt-3 text-xs leading-relaxed text-muted">
+            <li>
+              <strong className="text-ink">1.</strong> Buka aplikasi bank / e-wallet berlogo QRIS.
+            </li>
+            <li>
+              <strong className="text-ink">2.</strong> Pindai kode QRIS di atas (atau unggah gambarnya
+              dari galeri lewat menu &ldquo;scan dari galeri&rdquo;).
+            </li>
+            <li>
+              <strong className="text-ink">3.</strong> Masukkan nominal tepat{" "}
+              <span className="tabular font-semibold text-ink">{formatRupiah(amount)}</span> lalu bayar.
+            </li>
+            <li>
+              <strong className="text-ink">4.</strong> Simpan tangkapan layar halaman &ldquo;transaksi
+              berhasil&rdquo; — pastikan nominal dan waktu pembayaran terlihat.
+            </li>
+            <li>
+              <strong className="text-ink">5.</strong> Unggah tangkapan layar itu di bawah, lalu tekan
+              Konfirmasi Pembayaran.
+            </li>
+          </ol>
+
+          <p className="mt-3 rounded-[var(--radius-sm)] border-l-2 border-accent bg-accent-soft px-3 py-2 text-xs leading-relaxed text-ink-2">
+            Setelah bukti terkirim, kode booking Anda masuk antrean verifikasi. Panitia mencocokkan{" "}
+            <strong className="text-ink">nominal</strong> dan{" "}
+            <strong className="text-ink">waktu pembayaran</strong> pada bukti dengan waktu pengiriman
+            yang tercatat di sistem; booking dikunci setelah diverifikasi.
+          </p>
         </div>
 
         <Field
-          label="Bukti transfer"
+          label="Bukti pembayaran QRIS (tangkapan layar berhasil)"
           htmlFor={`${id}-bukti`}
           hint={`JPG, PNG, atau WEBP — otomatis dikompresi maksimal ${formatBytes(MAX_PROOF_BYTES)}.`}
           error={galatBukti}
@@ -260,7 +292,7 @@ export function PaymentForm({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={pratinjau}
-              alt="Pratinjau bukti transfer"
+              alt="Pratinjau bukti pembayaran"
               className="h-24 w-24 shrink-0 rounded-[var(--radius-sm)] border border-line object-cover"
             />
             <div className="min-w-0 flex-1 text-xs text-muted">
@@ -282,7 +314,7 @@ export function PaymentForm({
           </div>
         ) : existingProofUrl ? (
           <Alert tone="info">
-            Bukti transfer sebelumnya masih tersimpan — pilih gambar baru hanya kalau ingin
+            Bukti pembayaran sebelumnya masih tersimpan — pilih gambar baru hanya kalau ingin
             menggantinya.
           </Alert>
         ) : null}

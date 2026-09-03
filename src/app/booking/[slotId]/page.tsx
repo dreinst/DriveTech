@@ -13,7 +13,7 @@ import { buttonClass } from "@/components/ui/Button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Stepper } from "@/components/ui/Stepper";
-import { EVENT_INFO, isBookableZoneType } from "@/lib/domain/constants";
+import { EVENT_INFO, isBookableZoneType, waHref } from "@/lib/domain/constants";
 import { slotAdminFee } from "@/lib/domain/harga";
 import { ZONE_TYPE_LABEL } from "@/lib/domain/labels";
 import {
@@ -125,7 +125,7 @@ export default async function BookingSlotPage({ params, searchParams }: PageProp
         {isWarung ? (
           <Alert tone="info" title="Belum bisa dibooking online">
             Zona warung belum dibuka untuk booking online. Hubungi panitia langsung di{" "}
-            <a href={`tel:${EVENT_INFO.contact.replace(/[^0-9+]/g, "")}`}>{EVENT_INFO.contact}</a>.
+            <KontakPanitia />.
           </Alert>
         ) : (
           <Alert tone="warning" title="Slot ini tidak disewakan">
@@ -156,7 +156,7 @@ export default async function BookingSlotPage({ params, searchParams }: PageProp
 
         <Alert tone="error" title="Slot ini sedang diblokir panitia">
           <strong>{slotDisplayName(slot)}</strong> tidak bisa dibooking untuk semua tanggal
-          gelaran. Silakan pilih slot lain atau hubungi panitia di {EVENT_INFO.contact}.
+          gelaran. Silakan pilih slot lain atau hubungi panitia di <KontakPanitia />.
         </Alert>
 
         <BlokSaran slotId={slotId} />
@@ -205,7 +205,7 @@ export default async function BookingSlotPage({ params, searchParams }: PageProp
         />
         <Alert tone="info" title="Belum ada tanggal gelaran yang dibuka">
           Panitia belum membuka tanggal gelaran berikutnya (jadwal: {EVENT_INFO.scheduleText}).
-          Silakan cek kembali nanti atau hubungi panitia di {EVENT_INFO.contact}.
+          Silakan cek kembali nanti atau hubungi panitia di <KontakPanitia />.
         </Alert>
         <div className="mt-5">
           <Link href="/#denah" className={buttonClass("secondary", "md")}>
@@ -311,5 +311,26 @@ export default async function BookingSlotPage({ params, searchParams }: PageProp
         {formatRupiah(hargaSlot)} / tanggal) diverifikasi panitia.
       </p>
     </div>
+  );
+}
+
+/** Dua nomor WhatsApp panitia sebagai tautan, dipisah " / " (keputusan pemilik 2026-09-02). */
+function KontakPanitia() {
+  return (
+    <>
+      {EVENT_INFO.contacts.map((kontak, index) => (
+        <span key={kontak.phone}>
+          {index > 0 ? " / " : null}
+          <a
+            href={waHref(kontak.phone)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="tabular font-semibold underline-offset-2 hover:underline"
+          >
+            {kontak.phone}
+          </a>
+        </span>
+      ))}
+    </>
   );
 }

@@ -17,7 +17,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Denah Lokasi",
-  description: `Denah lengkap area ${EVENT_INFO.name}: semua zona, urutan slot, warung, dan fasilitas umum. Hanya untuk dilihat — pemesanan slot lewat alur per zona di beranda.`,
+  description: `Denah lengkap area ${EVENT_INFO.name} (Layout v2): Area A tenda dealer mobil baru, Area B area pameran mobil bekas, Area C tenda motor baru & area motor bekas, Area D tenda UMKM serta tenda otomotif & leasing, deretan warung, dan fasilitas umum. Hanya untuk dilihat — pemesanan slot lewat alur per zona di beranda.`,
 };
 
 /**
@@ -59,7 +59,7 @@ export default async function DenahPage() {
     <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6">
       <PageHeader
         title="Denah Lokasi"
-        description={`Tata letak lengkap ${EVENT_INFO.name}, ${EVENT_INFO.location}: semua zona, urutan slot, warung, dan fasilitas umum. Gulir untuk zoom, seret untuk menggeser. Halaman ini hanya untuk melihat — pemesanan dilakukan per zona lewat tombol Pesan Slot.`}
+        description={`Tata letak lengkap ${EVENT_INFO.name}, ${EVENT_INFO.location}: Area A tenda dealer mobil baru, Area B area pameran mobil bekas, Area C tenda motor baru & area motor bekas, Area D tenda UMKM serta tenda otomotif & leasing, deretan warung, dan fasilitas umum (VIP lounge, tenda VIP, area wahana, toilet, musholah, dll). Gulir untuk zoom, seret untuk menggeser. Halaman ini hanya untuk melihat — pemesanan dilakukan per zona lewat tombol Pesan Slot.`}
         backHref="/"
         backLabel="Beranda"
         action={

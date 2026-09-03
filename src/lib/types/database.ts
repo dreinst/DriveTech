@@ -599,15 +599,22 @@ export type Database = {
       zone_type:
         | "mobil_baru"
         | "mobil_bekas"
+        | "motor_baru"
         | "mobil_motor_bekas"
         | "umkm"
         | "booth_khusus"
         | "warung"
         | "facility";
       slot_status: "available" | "pending" | "confirmed";
-      tenant_type: "dealer_mobil_baru" | "individu_bekas" | "umkm" | "mitra_booth" | "warung";
+      tenant_type:
+        | "dealer_mobil_baru"
+        | "dealer_motor_baru"
+        | "individu_bekas"
+        | "umkm"
+        | "mitra_booth"
+        | "warung";
       booking_status: "pending_payment" | "confirmed" | "cancelled";
-      payment_method: "cash" | "transfer";
+      payment_method: "cash" | "transfer" | "qris";
       payment_status: "unpaid" | "submitted" | "verified" | "rejected";
       purchase_payment_method: "cash" | "transfer" | "credit";
       purchase_status: "new" | "contacted" | "deal" | "cancelled";
