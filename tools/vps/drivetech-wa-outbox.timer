@@ -1,0 +1,10 @@
+[Unit]
+Description=Tiap menit: kirim pesan WhatsApp penyewa yang menunggu di notification_outbox
+
+[Timer]
+OnCalendar=*-*-* *:*:00
+AccuracySec=10s
+Persistent=false
+
+[Install]
+WantedBy=timers.target

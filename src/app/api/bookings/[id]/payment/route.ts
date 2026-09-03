@@ -2,7 +2,7 @@ import type { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { MAX_PROOF_BYTES, STORAGE_BUCKET_BUKTI } from "@/lib/domain/constants";
-import { checkRateLimit, clientIpFrom } from "@/lib/rate-limit";
+import { checkRateLimit, clientIpFrom, rateLimitShared } from "@/lib/rate-limit";
 import { getBookingDetail, submitPayment } from "@/lib/services/booking";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { isProofUrlMilikKita } from "@/lib/storage";
@@ -118,6 +118,11 @@ export async function POST(request: Request, { params }: RouteContext): Promise<
         503,
         { code: "NO_CONFIG" },
       );
+    }
+    // Pembatas bersama per booking: bukti tidak perlu dikirim ulang puluhan kali
+    // per jam; juga menahan pemakaian endpoint ini sebagai penulis storage.
+    if (!(await rateLimitShared(`payment:booking:${bookingId}`, 10, 3600))) {
+      return jsonRateLimited(600);
     }
 
     const bookingResult = await getBookingDetail(bookingId);

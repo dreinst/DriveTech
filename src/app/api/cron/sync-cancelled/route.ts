@@ -18,14 +18,23 @@ const LOOKBACK_MS = 25 * 60 * 60 * 1000;
  * barisnya membeku di "pending_payment").
  *
  * Dipicu Vercel Cron (lihat vercel.json) sekali sehari. Aman dipanggil ulang:
- * Apps Script meng-upsert per bookingCode. Kalau env CRON_SECRET diisi,
- * permintaan wajib membawa "Authorization: Bearer <CRON_SECRET>" (header ini
- * dikirim otomatis oleh Vercel Cron saat env tersebut ada).
+ * Apps Script meng-upsert per bookingCode.
+ *
+ * Penjagaan (temuan audit 2026-09-03, FAIL-CLOSED): di produksi CRON_SECRET
+ * WAJIB diisi — tanpa itu endpoint menolak 503, bukan terbuka untuk siapa pun.
+ * Vercel Cron mengirim "Authorization: Bearer <CRON_SECRET>" otomatis saat env
+ * itu ada. Di development boleh tanpa secret.
  */
 export async function GET(request: Request): Promise<NextResponse> {
   return handleRoute("GET /api/cron/sync-cancelled", async () => {
-    const secret = process.env.CRON_SECRET ?? "";
-    if (secret.length > 0 && request.headers.get("authorization") !== `Bearer ${secret}`) {
+    const secret = process.env.CRON_SECRET?.trim() ?? "";
+    if (secret.length === 0) {
+      if (process.env.NODE_ENV === "production") {
+        return jsonError("CRON_SECRET belum dikonfigurasi; endpoint cron ditutup.", 503, {
+          code: "NO_CONFIG",
+        });
+      }
+    } else if (request.headers.get("authorization") !== `Bearer ${secret}`) {
       return jsonError("Tidak diizinkan.", 401, { code: "UNAUTHORIZED" });
     }
     if (!isServiceRoleConfigured()) {

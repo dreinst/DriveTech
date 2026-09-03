@@ -674,11 +674,22 @@ Hal-hal yang perlu diketahui sebelum dipakai sungguhan.
 * **Bucket `bukti-transfer` bersifat publik.** Siapa pun yang memegang URL bisa membuka
   bukti transfer tanpa autentikasi (disengaja agar admin cepat memeriksa). Untuk
   produksi, ubah bucket jadi privat dan ganti URL publik dengan **signed URL** berumur pendek.
-* **Belum ada rate limiting di API.** Keempat endpoint POST bisa dipanggil sebanyak
-  apa pun. Tambahkan pembatasan per IP (middleware, Upstash Ratelimit, atau WAF hosting)
-  sebelum dibuka ke publik; endpoint booking sangat mungkin jadi sasaran spam.
+* **Rate limiting dua lapis (sejak 2026-09-03).** `src/lib/rate-limit.ts`: lapis
+  in-memory per instance, plus pembatas **bersama** lintas instance lewat fungsi
+  `public.rate_limit_hit` (tabel `rate_limit_events`, migrasi
+  `20260903121000_rate_limit_bersama.sql`). Dipakai form booking dan `POST /api/bookings`
+  (5/menit per IP tiap kiriman, 20/24 jam per IP untuk kiriman valid — satu Wi-Fi
+  lokasi = satu IP, angkanya konstanta di `actions/booking.ts`), pembatalan mandiri
+  (5/jam per booking, 20/jam per IP), login admin (10/10 menit per IP, 5/10 menit
+  per username), pembayaran (10/jam per booking), dan pembelian. Fail-open bila DB
+  bermasalah.
+* **Endpoint cron fail-closed.** `/api/cron/*` menolak 503 di produksi bila
+  `CRON_SECRET` kosong; recap mingguan juga butuh `SHEETS_ACTION_KEY` (= `RECAP_KEY`
+  di Apps Script, terpisah dari `RESET_KEY` yang hanya ada di editor Apps Script).
 * **Belum ada CAPTCHA / verifikasi nomor telepon.** Tenant dikenali dari nomor telepon
-  saja, sehingga booking iseng memakai nomor palsu tidak tersaring otomatis.
+  saja; pembatas laju di atas menahan penimbunan massal dari satu jaringan, tetapi
+  booking iseng memakai nomor palsu satuan belum tersaring otomatis (OTP WhatsApp
+  adalah langkah berikutnya).
 * **Tidak ada kedaluwarsa booking otomatis.** Booking `pending_payment` mengunci
   tanggal-tanggal sewanya sampai admin memverifikasi atau membatalkannya. Pertimbangkan
   cron (`pg_cron`) yang membatalkan booking `pending_payment` yang lewat N jam.
@@ -689,9 +700,15 @@ Hal-hal yang perlu diketahui sebelum dipakai sungguhan.
 
 Jujur, ini yang belum ada di versi sekarang:
 
-* **Notifikasi.** Tidak ada email/WhatsApp otomatis saat booking dibuat, pembayaran
-  diverifikasi, atau pengajuan leasing berubah status. Kode booking harus dicatat sendiri
-  oleh tenant (halaman status menyediakan tombol salin).
+* **Notifikasi** — WhatsApp ke penyewa (booking dibuat + tenggat, terverifikasi, ditolak,
+  dibatalkan) SUDAH ADA (`src/lib/notifications.ts`), tetapi bergantung pada env:
+  `WA_PROVIDER` = `outbox` (bawaan: pesan diantrekan ke tabel `notification_outbox`
+  dan dikirim worker VPS `tools/vps/drivetech-wa-outbox.py` lewat bot Hermes di nomor
+  kantor 6282232999900), `fonnte` (langsung ke API Fonnte, butuh `WA_API_TOKEN`), atau
+  `off`. Tanpa kredensial mode yang aktif, notifikasi hanya dicatat (dry-run).
+  `WA_OVERRIDE_RECIPIENT` mengalihkan SEMUA pesan ke satu nomor untuk uji coba.
+  Email (Resend, `RESEND_API_KEY`) tetap opsional. Pengajuan leasing belum punya
+  notifikasi.
 * **Pembayaran otomatis.** Belum ada payment gateway maupun rekonsiliasi mutasi bank —
   verifikasi transfer sepenuhnya manual oleh panitia.
 * **Multi-event.** Skema sudah punya tabel `events`, tetapi UI dan seed mengasumsikan

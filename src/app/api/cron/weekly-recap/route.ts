@@ -11,19 +11,26 @@ export const dynamic = "force-dynamic";
  * Memanggil webhook Apps Script (?action=recap&key=...) yang menyalin sheet
  * "Bookings" ke tab arsip "Recap YYYY-MM-DD" TANPA menghapus master (keputusan
  * pemilik: recap tanpa kehilangan data). Dipicu Vercel Cron sekali seminggu
- * (lihat vercel.json). Kalau CRON_SECRET diisi, request wajib membawa
- * "Authorization: Bearer <CRON_SECRET>" (dikirim otomatis oleh Vercel Cron).
+ * (lihat vercel.json).
  *
- * Butuh SHEETS_WEBHOOK_URL. Kunci aksi diambil dari env SHEETS_ACTION_KEY
- * (samakan dengan RESET_KEY di tools/google-sheets-webhook.gs); default memakai
- * kunci bawaan skrip agar tetap jalan tanpa env tambahan.
+ * Penjagaan (temuan audit 2026-09-03, FAIL-CLOSED):
+ * - Di produksi CRON_SECRET WAJIB diisi; tanpa itu endpoint menolak 503, bukan
+ *   terbuka untuk siapa pun. Vercel Cron mengirim "Authorization: Bearer
+ *   <CRON_SECRET>" otomatis saat env itu ada. Di development boleh tanpa secret.
+ * - Kunci aksi recap WAJIB dari env SHEETS_ACTION_KEY (= RECAP_KEY di
+ *   tools/google-sheets-webhook.gs). Tidak ada lagi kunci bawaan di kode:
+ *   kunci yang tertulis di repo dulu sama dengan kunci reset sheet.
  */
-const DEFAULT_ACTION_KEY = "dt-reset-c9k4x7wq21";
-
 export async function GET(request: Request): Promise<NextResponse> {
   return handleRoute("GET /api/cron/weekly-recap", async () => {
-    const secret = process.env.CRON_SECRET ?? "";
-    if (secret.length > 0 && request.headers.get("authorization") !== `Bearer ${secret}`) {
+    const secret = process.env.CRON_SECRET?.trim() ?? "";
+    if (secret.length === 0) {
+      if (process.env.NODE_ENV === "production") {
+        return jsonError("CRON_SECRET belum dikonfigurasi; endpoint cron ditutup.", 503, {
+          code: "NO_CONFIG",
+        });
+      }
+    } else if (request.headers.get("authorization") !== `Bearer ${secret}`) {
       return jsonError("Tidak diizinkan.", 401, { code: "UNAUTHORIZED" });
     }
 
@@ -31,7 +38,12 @@ export async function GET(request: Request): Promise<NextResponse> {
     if (!url) {
       return jsonError("SHEETS_WEBHOOK_URL belum dikonfigurasi.", 503, { code: "NO_CONFIG" });
     }
-    const key = process.env.SHEETS_ACTION_KEY?.trim() || DEFAULT_ACTION_KEY;
+    const key = process.env.SHEETS_ACTION_KEY?.trim() ?? "";
+    if (key.length === 0) {
+      return jsonError("SHEETS_ACTION_KEY belum dikonfigurasi; recap tidak dipicu.", 503, {
+        code: "NO_CONFIG",
+      });
+    }
     const target = `${url}${url.includes("?") ? "&" : "?"}action=recap&key=${encodeURIComponent(key)}`;
 
     try {

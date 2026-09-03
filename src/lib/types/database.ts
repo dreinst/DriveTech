@@ -579,6 +579,54 @@ export type Database = {
         };
         Relationships: [];
       };
+      notification_outbox: {
+        Row: {
+          id: string;
+          channel: string;
+          recipient: string;
+          body: string;
+          kind: string;
+          booking_code: string | null;
+          status: string;
+          attempts: number;
+          last_error: string | null;
+          created_at: string;
+          sent_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          channel?: string;
+          recipient: string;
+          body: string;
+          kind?: string;
+          booking_code?: string | null;
+          status?: string;
+          attempts?: number;
+          last_error?: string | null;
+          created_at?: string;
+          sent_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          channel?: string;
+          recipient?: string;
+          body?: string;
+          kind?: string;
+          booking_code?: string | null;
+          status?: string;
+          attempts?: number;
+          last_error?: string | null;
+          created_at?: string;
+          sent_at?: string | null;
+        };
+        Relationships: [];
+      };
+      rate_limit_events: {
+        Row: { id: number; key: string; created_at: string };
+        Insert: { id?: number; key: string; created_at?: string };
+        Update: { id?: number; key?: string; created_at?: string };
+        Relationships: [];
+      };
     };
     Views: {
       /**
@@ -594,7 +642,13 @@ export type Database = {
         Relationships: [];
       };
     };
-    Functions: Record<string, never>;
+    Functions: {
+      /** Pembatas laju bersama lintas instance (lihat migrasi 20260903121000). true = masih boleh. */
+      rate_limit_hit: {
+        Args: { p_key: string; p_limit: number; p_window_seconds: number };
+        Returns: boolean;
+      };
+    };
     Enums: {
       zone_type:
         | "mobil_baru"
