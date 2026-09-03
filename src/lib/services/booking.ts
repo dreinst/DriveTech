@@ -41,7 +41,7 @@ import {
   tanggalHariIniJakarta,
   type PgError,
 } from "./slots";
-import { verifyEmailCode } from "./otp";
+import { consumeEmailCode, verifyEmailCode } from "./otp";
 
 // Modul KHUSUS SERVER (lihat catatan "server-only" di services/slots.ts).
 if (typeof window !== "undefined") {
@@ -252,6 +252,7 @@ export async function createBooking(
      tidak mungkin sampai, jadi dilewati (email tetap wajib di skema publik).
      Booking manual admin (skipEmailOtp) tidak pernah diminta kode. Diletakkan
      SETELAH validasi tanggal supaya kode tidak hangus untuk isian yang salah. */
+  let otpRowId: string | null = null;
   if (!opts?.skipEmailOtp) {
     if (isEmailConfigured()) {
       if (!data.tenantEmail || !data.emailOtp) {
@@ -260,8 +261,13 @@ export async function createBooking(
           "OTP_REQUIRED",
         );
       }
-      if (!(await verifyEmailCode(data.tenantEmail, data.emailOtp))) {
-        return fail<Out>("Kode verifikasi email salah atau kedaluwarsa.", "OTP_INVALID");
+      otpRowId = await verifyEmailCode(data.tenantEmail, data.emailOtp);
+      if (!otpRowId) {
+        return fail<Out>(
+          "Kode verifikasi email salah atau kedaluwarsa. Pakai kode dari email TERBARU " +
+            "(berlaku 10 menit); bila sudah lewat, minta kode baru lalu kirim lagi formulirnya.",
+          "OTP_INVALID",
+        );
       }
     } else if (!otpDilewatiTercatat) {
       otpDilewatiTercatat = true;
@@ -474,6 +480,8 @@ export async function createBooking(
     statusUrl: `${getSiteUrl()}/booking/${booking.id}/status`,
   });
 
+  // Kode OTP baru dianggap terpakai SETELAH booking tersimpan (lihat services/otp.ts).
+  if (otpRowId) await consumeEmailCode(otpRowId);
   return ok<Out>({ bookingId: booking.id, bookingCode: booking.booking_code });
 }
 

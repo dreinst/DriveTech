@@ -2,8 +2,9 @@
  * Notifikasi keluar ke tenant: EMAIL (jalur utama) dan WhatsApp (opsional).
  *
  * Keputusan pemilik 2026-09-03: nomor WhatsApp kantor diblokir, jadi SEMUA kode
- * booking & notifikasi penyewa dikirim lewat EMAIL. WhatsApp 0822-2855-5254
- * hanya untuk bantuan bila penyewa bingung (disebut di badan email).
+ * booking & notifikasi penyewa dikirim lewat EMAIL. WhatsApp panitia
+ * (0888-4089-474 lalu 0822-2855-5254) hanya untuk bantuan bila penyewa bingung
+ * — disebut di kaki email sebagai tautan wa.me berpesan otomatis.
  *
  *   Email — urutan pemilihan transport:
  *     1. SMTP generik (nodemailer): SMTP_HOST, SMTP_PORT (465 = TLS langsung,
@@ -36,10 +37,55 @@ export const DUMMY_WA_RECIPIENT = "6281200000000";
 const NOTIF_TIMEOUT_MS = 5000;
 /** Batas tunggu pengiriman email (ms): OTP menunggu hasil ini, jadi tetap singkat. */
 const EMAIL_TIMEOUT_MS = 8000;
-/** Nomor bantuan panitia yang disebut di setiap email (keputusan pemilik 2026-09-03). */
-const WA_BANTUAN = "0888-4089-474 atau 0822-2855-5254";
-/** Tautan bantuan standar (keputusan pemilik 2026-09-03), tanpa import @/ agar modul tetap mandiri. */
-const WA_BANTUAN_LINK = `https://wa.me/628884089474?text=${encodeURIComponent("Halo, saya mengalami kendala saat pemesanan slot")}`;
+/**
+ * Kontak bantuan panitia yang disebut di setiap email (keputusan pemilik
+ * 2026-09-03; urutan 474 dulu, 5254 terakhir). Tanpa import @/ agar modul tetap
+ * mandiri. Teks pesan otomatis sama dengan WA_BANTUAN_TEXT di domain/constants.
+ */
+const WA_BANTUAN_TEXT = "Halo, saya mengalami kendala saat pemesanan slot";
+const KONTAK_BANTUAN = [
+  { label: "Panitia 1", tampil: "0888-4089-474", digits: "628884089474" },
+  { label: "Panitia 2", tampil: "0822-2855-5254", digits: "6282228555254" },
+] as const;
+const waLink = (digits: string): string =>
+  `https://wa.me/${digits}?text=${encodeURIComponent(WA_BANTUAN_TEXT)}`;
+
+/**
+ * Blok bantuan di kaki email (versi teks). URL ditulis utuh supaya klien email
+ * yang hanya membaca teks tetap bisa mengetuknya; versi HTML (emailHtmlDariTeks)
+ * mengubahnya jadi tautan berlabel.
+ */
+export function bantuanEmailText(judul = "Butuh bantuan?"): string[] {
+  return [
+    `${judul} Chat WhatsApp panitia — pesannya sudah terisi otomatis:`,
+    ...KONTAK_BANTUAN.map((k) => `• ${k.label} (${k.tampil}): ${waLink(k.digits)}`),
+    "— Panitia Drive Tech",
+  ];
+}
+
+function escapeHtml(teks: string): string {
+  return teks.replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c,
+  );
+}
+
+/**
+ * Bangun bagian HTML email dari teks polos: escape, URL → <a> (tautan wa.me
+ * diberi label "Buka chat WhatsApp"), baris baru → <br>. Dikirim sebagai
+ * alternatif di samping teks, sehingga tautan bantuan benar-benar bisa diklik
+ * di Gmail/Outlook (temuan pemilik 2026-09-03: link belum ter-embed).
+ */
+export function emailHtmlDariTeks(text: string): string {
+  const bertautan = escapeHtml(text).replace(/https?:\/\/[^\s<]+/g, (url) => {
+    const label = url.startsWith("https://wa.me/") ? "Buka chat WhatsApp" : url;
+    return `<a href="${url}" style="color:#c2410c;font-weight:600">${label}</a>`;
+  });
+  return (
+    `<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#111827">` +
+    bertautan.replace(/\n/g, "<br>") +
+    "</div>"
+  );
+}
 
 export type NotifChannelResult = {
   channel: "whatsapp" | "email";
@@ -237,7 +283,13 @@ function smtpConfig(): SmtpConfig | null {
 }
 
 /** Kirim lewat SMTP (nodemailer). Dipanggil sendEmail; tidak pernah melempar. */
-async function kirimSmtp(cfg: SmtpConfig, to: string, subject: string, text: string): Promise<NotifChannelResult> {
+async function kirimSmtp(
+  cfg: SmtpConfig,
+  to: string,
+  subject: string,
+  text: string,
+  html: string,
+): Promise<NotifChannelResult> {
   try {
     const transport = nodemailer.createTransport({
       host: cfg.host,
@@ -248,7 +300,7 @@ async function kirimSmtp(cfg: SmtpConfig, to: string, subject: string, text: str
       greetingTimeout: EMAIL_TIMEOUT_MS,
       socketTimeout: EMAIL_TIMEOUT_MS,
     });
-    await transport.sendMail({ from: cfg.from, to, subject, text });
+    await transport.sendMail({ from: cfg.from, to, subject, text, html });
     return { channel: "email", delivered: true, dryRun: false, to };
   } catch (error) {
     console.warn("[notif][email][smtp] gagal kirim:", error instanceof Error ? error.message : error);
@@ -257,13 +309,19 @@ async function kirimSmtp(cfg: SmtpConfig, to: string, subject: string, text: str
 }
 
 /** Kirim lewat Resend. Dipanggil sendEmail; tidak pernah melempar. */
-async function kirimResend(key: string, to: string, subject: string, text: string): Promise<NotifChannelResult> {
+async function kirimResend(
+  key: string,
+  to: string,
+  subject: string,
+  text: string,
+  html: string,
+): Promise<NotifChannelResult> {
   const from = process.env.NOTIF_EMAIL_FROM?.trim() || "Drive Tech <no-reply@drivetech.local>";
   try {
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from, to, subject, text }),
+      body: JSON.stringify({ from, to, subject, text, html }),
       signal: AbortSignal.timeout(EMAIL_TIMEOUT_MS),
     });
     if (!response.ok) {
@@ -285,17 +343,20 @@ export async function sendEmail(
   to: string,
   subject: string,
   text: string,
+  html?: string,
 ): Promise<NotifChannelResult> {
   const tujuan = (to ?? "").trim();
   if (tujuan.length === 0) {
     return { channel: "email", delivered: false, dryRun: false, to: "", info: "email kosong" };
   }
+  // Selalu sertakan alternatif HTML supaya tautan (wa.me, status booking) bisa diklik.
+  const badanHtml = html ?? emailHtmlDariTeks(text);
 
   const smtp = smtpConfig();
-  if (smtp) return kirimSmtp(smtp, tujuan, subject, text);
+  if (smtp) return kirimSmtp(smtp, tujuan, subject, text, badanHtml);
 
   const key = process.env.RESEND_API_KEY?.trim() ?? "";
-  if (key.length > 0) return kirimResend(key, tujuan, subject, text);
+  if (key.length > 0) return kirimResend(key, tujuan, subject, text, badanHtml);
 
   console.info(`[notif][email][dry-run] -> ${tujuan} | ${subject}\n${text}`);
   return { channel: "email", delivered: false, dryRun: true, to: tujuan };
@@ -310,8 +371,9 @@ export async function sendEmailNow(
   to: string,
   subject: string,
   text: string,
+  html?: string,
 ): Promise<NotifChannelResult> {
-  return sendEmail(to, subject, text);
+  return sendEmail(to, subject, text, html);
 }
 
 /* ------------------------------------------------------------------ */
@@ -405,9 +467,7 @@ export function buildBookingEmail(kind: BookingNotifKind, d: BookingNotif): { su
     badan[kind],
     d.statusUrl ? `\nCek status booking: ${d.statusUrl}` : "",
     "",
-    `Butuh bantuan verifikasi kode booking? WhatsApp ${WA_BANTUAN}`,
-    `Klik untuk chat langsung: ${WA_BANTUAN_LINK}`,
-    `— ${KONTAK_PANITIA}`,
+    ...bantuanEmailText("Butuh bantuan verifikasi kode booking?"),
   ]
     .filter((baris) => baris !== "")
     .join("\n")
