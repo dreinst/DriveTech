@@ -1,0 +1,10 @@
+[Unit]
+Description=Jadwal mingguan backup database Drive Tech ke NAS (Minggu 22:00 WIB)
+
+[Timer]
+OnCalendar=Sun 22:00 Asia/Jakarta
+Persistent=true
+RandomizedDelaySec=5min
+
+[Install]
+WantedBy=timers.target

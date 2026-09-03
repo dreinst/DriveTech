@@ -42,6 +42,8 @@ const ZONE_IMAGE: Partial<Record<ZoneType, string>> = {
   motor_baru: "/gambar/zona-mobil-motor.jpg",
   mobil_motor_bekas: "/gambar/zona-mobil-motor.jpg",
   umkm: "/gambar/zona-umkm.jpg",
+  // Foto dari pemilik (2026-09-03): tenda pembiayaan & otomotif dua sisi.
+  booth_khusus: "/gambar/zona-otomotif-leasing.jpg",
 };
 
 function zoneTint(zoneType: ZoneType): string {

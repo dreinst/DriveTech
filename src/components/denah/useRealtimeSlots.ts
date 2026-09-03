@@ -20,6 +20,12 @@ export type UseRealtimeSlotsResult = {
 const CHANNEL_NAME = "denah-slots";
 /** Jeda penggabung: beberapa event booking_dates beruntun -> satu refetch okupansi. */
 const OCCUPANCY_REFETCH_DEBOUNCE_MS = 250;
+/**
+ * Jaring pengaman: refetch okupansi berkala saat tab terlihat, plus saat tab
+ * kembali aktif. Menutup kasus event realtime yang terlewat (koneksi putus
+ * sesaat, policy, dsb.) tanpa membebani server — satu select ringan per menit.
+ */
+const OCCUPANCY_POLL_MS = 60_000;
 
 /** Tanggal "hari ini" (YYYY-MM-DD) menurut zona waktu acara (WIB), dihitung di browser. */
 function tanggalHariIniWib(): string {
@@ -169,12 +175,25 @@ export function useRealtimeSlots(
         setConnected(status === "SUBSCRIBED");
       });
 
+    // Jaring pengaman di luar realtime: poll tiap menit saat tab terlihat dan
+    // refetch begitu tab kembali aktif (pengunjung sering meninggalkan tab
+    // denah lalu kembali beberapa menit kemudian).
+    const pollTimer = setInterval(() => {
+      if (document.visibilityState === "visible") void refetchOccupancy();
+    }, OCCUPANCY_POLL_MS);
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") void refetchOccupancy();
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+
     return () => {
       setConnected(false);
       if (refetchTimer.current !== null) {
         clearTimeout(refetchTimer.current);
         refetchTimer.current = null;
       }
+      clearInterval(pollTimer);
+      document.removeEventListener("visibilitychange", handleVisibility);
       void supabase.removeChannel(channel);
     };
   }, [enabled, refetchOccupancy]);

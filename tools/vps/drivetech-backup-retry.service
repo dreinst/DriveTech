@@ -1,0 +1,8 @@
+[Unit]
+Description=Pengulangan kirim backup Drive Tech ke NAS (bila sebelumnya gagal)
+After=network-online.target tailscaled.service
+
+[Service]
+Type=oneshot
+Environment=HOME=/root
+ExecStart=/usr/local/bin/drivetech-backup-nas.sh --retry

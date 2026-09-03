@@ -31,7 +31,7 @@ LOG = "/var/log/drivetech-wa-outbox.log"
 LOCK = "/run/lock/drivetech-wa-outbox.lock"
 
 BATCH = 15            # maksimal baris per run
-MAX_ATTEMPTS = 5      # setelah ini status 'failed'
+MAX_ATTEMPTS = 240    # percobaan nyata (bukan saat bridge putus); worker jalan tiap menit
 RUN_BUDGET_S = 50     # hentikan run sebelum timer berikutnya (tiap 60 detik)
 SEND_TIMEOUT_S = 60
 PAUSE_MIN_S, PAUSE_MAX_S = 4.0, 9.0   # jeda acak antar pesan (anti-blokir)
@@ -97,6 +97,15 @@ def tandai_gagal(row_id: str, error: str, final: bool = False) -> None:
     )
 
 
+BRIDGE_PUTUS_RE = re.compile(r"Not connected to WhatsApp|Cannot connect to host|bridge error \(503\)|Connection refused", re.I)
+
+
+def catat_error_saja(row_id: str, error: str) -> None:
+    """Simpan keterangan galat tanpa menaikkan attempts (gangguan bridge, bukan pesan)."""
+    pesan = esc(error.strip()[:300])
+    psql(f"update public.notification_outbox set last_error='{pesan}' where id='{row_id}';")
+
+
 def kirim(recipient: str, body: str) -> subprocess.CompletedProcess:
     env = {**os.environ, "HOME": "/root",
            "PATH": os.environ.get("PATH", "/usr/local/bin:/usr/bin:/bin")}
@@ -104,6 +113,30 @@ def kirim(recipient: str, body: str) -> subprocess.CompletedProcess:
         [HERMES, "send", "-q", "--to", f"whatsapp:{recipient}", "--file", "-"],
         input=body, text=True, capture_output=True, timeout=SEND_TIMEOUT_S, env=env,
     )
+
+
+ALERT = "/usr/local/bin/drivetech-alert.sh"
+ALERT_MARK = "/run/drivetech-wa-outbox.alert"
+ALERT_EVERY_S = 3600  # alert diulang paling cepat tiap 1 jam
+
+
+def bridge_hidup() -> bool:
+    """True bila proses bridge WhatsApp Hermes (Baileys) sedang berjalan."""
+    hasil = subprocess.run(["pgrep", "-f", "whatsapp-bridge/bridge.js"], capture_output=True)
+    return hasil.returncode == 0
+
+
+def alert_pemilik(text: str) -> None:
+    """Alert ke pemilik lewat Telegram (jalur WA sedang diragukan), maks sekali per jam."""
+    try:
+        if os.path.exists(ALERT_MARK) and time.time() - os.path.getmtime(ALERT_MARK) < ALERT_EVERY_S:
+            return
+        subprocess.run([ALERT, "--telegram", text], capture_output=True, timeout=60)
+        with open(ALERT_MARK, "w") as fh:
+            fh.write(str(int(time.time())))
+        log("alert Telegram dikirim ke pemilik")
+    except Exception as exc:  # noqa: BLE001
+        log(f"alert Telegram gagal: {exc}")
 
 
 def main() -> int:
@@ -126,6 +159,7 @@ def main() -> int:
 
     log(f"{len(rows)} pesan pending")
     terkirim = gagal = 0
+    bridge_putus = False
     for i, row in enumerate(rows):
         if time.monotonic() - mulai > RUN_BUDGET_S:
             log("batas waktu run tercapai, sisanya menunggu run berikutnya")
@@ -168,12 +202,30 @@ def main() -> int:
             log(f"[{kind} {kode}] {row_id[:8]} -> {mask(recipient)} terkirim")
         else:
             err = (hasil.stderr or hasil.stdout or f"exit {hasil.returncode}").strip()
+            if BRIDGE_PUTUS_RE.search(err):
+                # Bridge WhatsApp sedang putus/tidak terhubung: bukan salah pesan.
+                # Jangan hitung sebagai percobaan, hentikan run ini, dan beri tahu pemilik.
+                catat_error_saja(row_id, err)
+                bridge_putus = True
+                log(f"[{kind} {kode}] {row_id[:8]} -> bridge WhatsApp tidak terhubung; antrean ditunda: {err[:120]}")
+                break
             tandai_gagal(row_id, err)
             gagal += 1
             attempt = int(row.get("attempts", 0)) + 1
             log(f"[{kind} {kode}] {row_id[:8]} -> {mask(recipient)} GAGAL (percobaan {attempt}/{MAX_ATTEMPTS}): {err[:120]}")
 
-    log(f"selesai: {terkirim} terkirim, {gagal} gagal")
+    log(f"selesai: {terkirim} terkirim, {gagal} gagal" + (", bridge putus" if bridge_putus else ""))
+    if gagal > 0 or bridge_putus or not bridge_hidup():
+        sebab = (
+            "bridge WhatsApp tidak berjalan" if not bridge_hidup()
+            else "bridge WhatsApp tidak terhubung ke WhatsApp (pesan penyewa tertunda)" if bridge_putus
+            else f"{gagal} pesan gagal terkirim"
+        )
+        alert_pemilik(
+            f"⚠️ Notifikasi WhatsApp Drive Tech bermasalah: {sebab}. "
+            "Kemungkinan nomor kantor terputus/diblokir WhatsApp. Cek: journalctl --user -u hermes-gateway, "
+            "`hermes whatsapp` untuk pairing ulang, dan tabel notification_outbox (status failed bisa diantre ulang)."
+        )
     return 0
 
 

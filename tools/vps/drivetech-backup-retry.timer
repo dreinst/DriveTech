@@ -1,0 +1,9 @@
+[Unit]
+Description=Cek tiap jam: kirim ulang backup Drive Tech yang tertunda ke NAS
+
+[Timer]
+OnCalendar=*-*-* *:17:00
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target
