@@ -7,6 +7,7 @@ import { CancelBookingForm } from "@/app/booking/_components/CancelBookingForm";
 import { CopyButton } from "@/app/booking/_components/CopyButton";
 import { LANGKAH_BOOKING } from "@/app/booking/_components/langkah";
 import { InfoRow, TanggalChips } from "@/app/booking/_components/Ringkasan";
+import { StatusAutoRefresh } from "@/app/booking/_components/StatusAutoRefresh";
 import { VerifikasiQr } from "@/app/booking/_components/VerifikasiQr";
 import { Alert } from "@/components/ui/Alert";
 import { buttonClass } from "@/components/ui/Button";
@@ -89,6 +90,7 @@ export default async function StatusBookingPage({ params }: PageProps) {
   return (
     <div className={WRAP}>
       <PageHeader title="Konfirmasi Booking" backHref="/" backLabel="Kembali ke denah" />
+      <StatusAutoRefresh aktif={!dibatalkan && !terkonfirmasi} />
 
       <Stepper steps={[...LANGKAH_BOOKING]} current={3} />
 
