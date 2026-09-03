@@ -28,6 +28,7 @@ import {
   TRANSMISSION_LABEL,
   TRANSMISSION_OPTIONS,
   vehicleKindForZoneType,
+  WA_BANTUAN_TEXT,
   waHref,
 } from "@/lib/domain/constants";
 import { slotAdminFee } from "@/lib/domain/harga";
@@ -502,7 +503,7 @@ export function BookingForm({
           <span className="whitespace-nowrap">
             Butuh bantuan?{" "}
             <a
-              href={waHref(kontakBantuan.phone, "Halo Panitia Drive Tech, saya butuh bantuan booking lapak")}
+              href={waHref(kontakBantuan.phone, WA_BANTUAN_TEXT)}
               target="_blank"
               rel="noopener noreferrer"
               className="font-medium text-accent underline-offset-2 hover:underline"

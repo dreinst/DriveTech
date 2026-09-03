@@ -91,6 +91,7 @@ export async function requestEmailCode(
       "Kalau Anda tidak merasa memesan lapak Drive Tech, abaikan email ini.",
       "",
       "Butuh bantuan? WhatsApp 0822-2855-5254 — Panitia Drive Tech",
+      `Klik untuk chat langsung: https://wa.me/6282228555254?text=${encodeURIComponent("Halo, saya mengalami kendala saat pemesanan slot")}`,
     ].join("\n"),
   );
 

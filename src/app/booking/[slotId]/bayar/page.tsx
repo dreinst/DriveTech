@@ -12,7 +12,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Stepper } from "@/components/ui/Stepper";
-import { EVENT_INFO, waHref } from "@/lib/domain/constants";
+import {
+  EVENT_INFO,
+  WA_BANTUAN_TEXT,
+  waHref,
+} from "@/lib/domain/constants";
 import { slotAdminFee } from "@/lib/domain/harga";
 import { hitungTotalBiaya } from "@/lib/domain/ketersediaan";
 import { batasPembayaran } from "@/lib/domain/tenggat";
@@ -142,7 +146,7 @@ export default async function BayarPage({ params }: PageProps) {
               key={kontak.phone}
               href={waHref(
                 kontak.phone,
-                `Halo Panitia Drive Tech, saya butuh bantuan verifikasi kode booking ${booking.booking_code}`,
+                `${WA_BANTUAN_TEXT} (kode booking ${booking.booking_code})`,
               )}
               target="_blank"
               rel="noopener noreferrer"

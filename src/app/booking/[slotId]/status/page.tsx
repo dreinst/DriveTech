@@ -14,7 +14,12 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Stepper } from "@/components/ui/Stepper";
-import { EVENT_INFO, PAYMENT_DEADLINE_HOURS, waHref } from "@/lib/domain/constants";
+import {
+  EVENT_INFO,
+  PAYMENT_DEADLINE_HOURS,
+  WA_BANTUAN_TEXT,
+  waHref,
+} from "@/lib/domain/constants";
 import { slotAdminFee } from "@/lib/domain/harga";
 import { hitungTotalBiaya } from "@/lib/domain/ketersediaan";
 import { PAYMENT_METHOD_LABEL } from "@/lib/domain/labels";
@@ -294,7 +299,7 @@ export default async function StatusBookingPage({ params }: PageProps) {
               <a
                 href={waHref(
                   kontak.phone,
-                  `Halo Panitia Drive Tech, saya butuh bantuan untuk booking ${booking.booking_code}`,
+                  `${WA_BANTUAN_TEXT} (kode booking ${booking.booking_code})`,
                 )}
                 target="_blank"
                 rel="noopener noreferrer"

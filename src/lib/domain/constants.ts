@@ -65,10 +65,16 @@ export function telHref(phone: string): string {
 }
 
 /**
- * Tautan wa.me: nomor lokal berawalan 0 diubah ke 62…; teks awal (opsional)
- * di-encode sebagai parameter ?text=.
+ * Kalimat pembuka standar tautan bantuan WhatsApp (keputusan pemilik
+ * 2026-09-03): dipakai di semua tautan "hubungi panitia" halaman & email.
  */
-export function waHref(phone: string, text?: string): string {
+export const WA_BANTUAN_TEXT = "Halo, saya mengalami kendala saat pemesanan slot";
+
+/**
+ * Tautan wa.me: nomor lokal berawalan 0 diubah ke 62…; teks awal di-encode
+ * sebagai parameter ?text= (bawaan: WA_BANTUAN_TEXT; kirim "" untuk tanpa teks).
+ */
+export function waHref(phone: string, text: string = WA_BANTUAN_TEXT): string {
   const digits = phoneDigits(phone).replace(/^\+/, "");
   const intl = digits.startsWith("0") ? `62${digits.slice(1)}` : digits;
   const query = text ? `?text=${encodeURIComponent(text)}` : "";
