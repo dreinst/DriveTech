@@ -592,7 +592,7 @@ export function FloorPlan({
   activeZone,
 }: FloorPlanProps) {
   const strokeScale = Math.max(interactionScale ?? 1, 1);
-  // Satu Map untuk semua slot: lookup O(1) saat menggambar 112 kotak.
+  // Satu Map untuk semua slot: lookup O(1) saat menggambar 107 kotak.
   const slotIndex = useMemo(() => {
     const map = new Map<string, SelectedSlotPayload>();
     for (const zone of zones) {
