@@ -302,7 +302,18 @@ eksternal (papan info, bot WhatsApp, dsb.) yang lebih mudah melakukan polling.
 
 ### 7.2 `POST /api/bookings` — buat booking
 
+Sejak 2026-09-03 **email wajib** (kode booking dan semua notifikasi dikirim ke email),
+dan bila pengiriman email aktif (SMTP/Resend terkonfigurasi, lihat `isEmailConfigured()`)
+booking juga wajib menyertakan **kode verifikasi email** (`emailOtp`, 6 digit) yang
+diminta lebih dulu lewat `POST /api/bookings/email-code` — pengaman anti-penimbunan slot.
+Tanpa transport email, `emailOtp` tidak diminta.
+
 ```bash
+# 1) minta kode (3 kode / 10 menit per email, 10 / 10 menit per IP)
+curl -s -X POST http://localhost:3000/api/bookings/email-code \
+  -H "Content-Type: application/json" -d '{ "email": "busri@example.com" }'
+
+# 2) buat booking dengan kode yang diterima di email
 curl -s -X POST http://localhost:3000/api/bookings \
   -H "Content-Type: application/json" \
   -d '{
@@ -311,11 +322,15 @@ curl -s -X POST http://localhost:3000/api/bookings \
     "tenantName": "Warung Bu Sri",
     "tenantPhone": "081234567890",
     "tenantEmail": "busri@example.com",
+    "emailOtp": "123456",
     "tenantType": "umkm",
     "detail": { "kategori": "Kerajinan" },
     "notes": "Butuh colokan listrik"
   }'
 ```
+
+Kode salah/kedaluwarsa — `400` `OTP_INVALID`; kode belum disertakan padahal email aktif —
+`400` `OTP_REQUIRED`; terlalu sering minta kode — `429` `RATE_LIMITED`.
 
 `201 Created`
 
@@ -700,15 +715,17 @@ Hal-hal yang perlu diketahui sebelum dipakai sungguhan.
 
 Jujur, ini yang belum ada di versi sekarang:
 
-* **Notifikasi** — WhatsApp ke penyewa (booking dibuat + tenggat, terverifikasi, ditolak,
-  dibatalkan) SUDAH ADA (`src/lib/notifications.ts`), tetapi bergantung pada env:
-  `WA_PROVIDER` = `outbox` (bawaan: pesan diantrekan ke tabel `notification_outbox`
-  dan dikirim worker VPS `tools/vps/drivetech-wa-outbox.py` lewat bot Hermes di nomor
-  kantor 6282232999900), `fonnte` (langsung ke API Fonnte, butuh `WA_API_TOKEN`), atau
-  `off`. Tanpa kredensial mode yang aktif, notifikasi hanya dicatat (dry-run).
-  `WA_OVERRIDE_RECIPIENT` mengalihkan SEMUA pesan ke satu nomor untuk uji coba.
-  Email (Resend, `RESEND_API_KEY`) tetap opsional. Pengajuan leasing belum punya
-  notifikasi.
+* **Notifikasi** — sejak 2026-09-03 jalur UTAMA adalah **EMAIL** (`src/lib/notifications.ts`):
+  kode booking, tenggat bayar, terverifikasi, ditolak, dan dibatalkan dikirim ke email
+  penyewa (wajib diisi), memuat tautan status dan nomor bantuan WhatsApp 0822-2855-5254.
+  Transport: SMTP generik (`SMTP_HOST/PORT/USER/PASS/FROM`, nodemailer) atau Resend
+  (`RESEND_API_KEY`); tanpa keduanya hanya dicatat (dry-run). **Verifikasi email (OTP)**
+  sebelum booking dikunci — tabel `email_verifications`, kode 6 digit di-hash, berlaku
+  10 menit, maks 5 percobaan — hanya diwajibkan bila transport email aktif; tanpa
+  transport, langkah kode disembunyikan di form dan dilewati server (email tetap wajib).
+  WhatsApp (`WA_PROVIDER`: `off` bawaan, `outbox`, `fonnte`) kini opsional karena nomor
+  kantor diblokir. `WA_OVERRIDE_RECIPIENT` mengalihkan SEMUA WA ke satu nomor untuk uji.
+  Pengajuan leasing belum punya notifikasi.
 * **Pembayaran otomatis.** Belum ada payment gateway maupun rekonsiliasi mutasi bank —
   verifikasi transfer sepenuhnya manual oleh panitia.
 * **Multi-event.** Skema sudah punya tabel `events`, tetapi UI dan seed mengasumsikan

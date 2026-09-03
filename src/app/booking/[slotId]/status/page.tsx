@@ -284,7 +284,10 @@ export default async function StatusBookingPage({ params }: PageProps) {
         </div>
 
         <p className="text-xs text-subtle">
-          Ada kendala? Hubungi {EVENT_INFO.organizer} lewat WhatsApp{" "}
+          {booking.tenant.email
+            ? `Kode booking dan setiap perubahan status dikirim ke email ${booking.tenant.email}. `
+            : ""}
+          Ada kendala atau bingung dengan kode booking? Hubungi {EVENT_INFO.organizer} lewat WhatsApp{" "}
           {EVENT_INFO.contacts.map((kontak, index) => (
             <span key={kontak.phone}>
               {index > 0 ? " / " : ""}

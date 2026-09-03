@@ -610,7 +610,9 @@ export async function adminCreateBooking(
     );
   }
 
-  const created = await createBooking(input, { skipPendingLimit: true });
+  // Admin tepercaya: lewati batas pending per telepon dan verifikasi kode email
+  // (penyewa mendaftar langsung ke panitia, email boleh kosong).
+  const created = await createBooking(input, { skipPendingLimit: true, skipEmailOtp: true });
   if (!created.ok) return created;
 
   if (opts.autoConfirm) {

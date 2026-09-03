@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Stepper } from "@/components/ui/Stepper";
+import { EVENT_INFO, waHref } from "@/lib/domain/constants";
 import { slotAdminFee } from "@/lib/domain/harga";
 import { hitungTotalBiaya } from "@/lib/domain/ketersediaan";
 import { batasPembayaran } from "@/lib/domain/tenggat";
@@ -131,8 +132,26 @@ export default async function BayarPage({ params }: PageProps) {
           Slot Berhasil Dipesan
         </h1>
         <p className="mt-3 text-sm leading-relaxed text-muted sm:text-base">
-          Selesaikan pembayaran biaya admin lalu tunggu verifikasi panitia — simpan kode booking
-          Anda untuk mengecek status kapan saja.
+          Selesaikan pembayaran biaya admin lalu tunggu verifikasi panitia — kode booking
+          Anda juga sudah dikirim ke email{booking.tenant.email ? ` ${booking.tenant.email}` : ""}.
+        </p>
+        <p className="mt-2 text-xs text-subtle">
+          Bingung dengan kode booking? Hubungi WhatsApp{" "}
+          {EVENT_INFO.contacts.map((kontak) => (
+            <a
+              key={kontak.phone}
+              href={waHref(
+                kontak.phone,
+                `Halo Panitia Drive Tech, saya butuh bantuan verifikasi kode booking ${booking.booking_code}`,
+              )}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-accent underline-offset-2 hover:underline"
+            >
+              {kontak.phone}
+            </a>
+          ))}
+          .
         </p>
       </div>
 

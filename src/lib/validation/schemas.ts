@@ -24,6 +24,24 @@ const optionalEmail = z.preprocess(
 );
 
 /**
+ * Email WAJIB (jalur publik): kode booking & semua notifikasi penyewa dikirim ke
+ * email ini (keputusan pemilik 2026-09-03). Dinormalkan huruf kecil agar
+ * pencocokan kode verifikasi konsisten.
+ */
+const requiredEmail = z
+  .string({ error: "Email wajib diisi, kode booking dikirim ke email ini." })
+  .trim()
+  .toLowerCase()
+  .min(1, "Email wajib diisi, kode booking dikirim ke email ini.")
+  .pipe(z.email("Format email tidak valid."));
+
+/** Kode verifikasi email 6 digit (OTP). */
+const emailOtpCode = z
+  .string({ error: "Kode verifikasi 6 digit." })
+  .trim()
+  .regex(/^\d{6}$/, "Kode verifikasi 6 digit.");
+
+/**
  * URL http/https saja. z.url() polos menerima skema apa pun — termasuk
  * `javascript:` — dan proof_url dirender sebagai tautan di panel admin
  * (temuan audit: stored XSS via POST /api/bookings/[id]/payment).
@@ -168,6 +186,29 @@ export const createBookingSchema = z.object({
   notes: optionalText,
   /** Wajib untuk zona kendaraan — ditegakkan createBooking (butuh tipe zona). */
   vehicle: vehicleInfoSchema.optional(),
+  /**
+   * Kode verifikasi email (OTP). Di jalur publik WAJIB (lihat publicBookingSchema
+   * dan pemeriksaan di createBooking); booking manual admin melewatinya
+   * (skipEmailOtp) karena penyewa mendaftar langsung ke panitia.
+   */
+  emailOtp: z.preprocess(emptyToUndefined, emailOtpCode.optional()),
+});
+
+/**
+ * Skema jalur PUBLIK (form web & POST /api/bookings): email WAJIB; kode
+ * verifikasi email wajib bila pengiriman email aktif — pengaman anti-penimbunan
+ * slot: satu booking butuh satu alamat email sungguhan yang menerima kode.
+ */
+export const publicBookingSchema = createBookingSchema.extend({
+  tenantEmail: requiredEmail,
+  // Kode dicek WAJIB oleh createBooking hanya bila transport email terkonfigurasi
+  // (isEmailConfigured); tanpa transport, kode tidak mungkin sampai ke penyewa.
+  emailOtp: z.preprocess(emptyToUndefined, emailOtpCode.optional()),
+});
+
+/** Permintaan kirim kode verifikasi ke email (sebelum booking). */
+export const requestEmailCodeSchema = z.object({
+  email: requiredEmail,
 });
 
 export const submitPaymentSchema = z
@@ -316,6 +357,8 @@ export const upsertPartnerSchema = z.object({
 /* ---------- Tipe input ---------- */
 
 export type CreateBookingInput = z.infer<typeof createBookingSchema>;
+export type PublicBookingInput = z.infer<typeof publicBookingSchema>;
+export type RequestEmailCodeInput = z.infer<typeof requestEmailCodeSchema>;
 export type VehicleInfoInput = z.infer<typeof vehicleInfoSchema>;
 export type SubmitPaymentInput = z.infer<typeof submitPaymentSchema>;
 export type CancelBookingInput = z.infer<typeof cancelBookingSchema>;

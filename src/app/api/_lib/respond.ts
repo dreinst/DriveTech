@@ -105,6 +105,12 @@ const STATUS_BY_CODE: Record<string, number> = {
   INACTIVE_PARTNER: 422,
   NOT_SUBMITTED: 422,
   TOO_MANY_PENDING: 429,
+  RATE_LIMITED: 429,
+  // Verifikasi email (OTP) sebelum booking dikunci.
+  OTP_REQUIRED: 400,
+  OTP_INVALID: 400,
+  EMAIL_FAILED: 502,
+  EMAIL_NOT_CONFIGURED: 503,
   NO_CONFIG: 503,
 };
 

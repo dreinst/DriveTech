@@ -9,9 +9,10 @@ import {
 import { slotAdminFee } from "@/lib/domain/harga";
 import { hitungTotalBiaya } from "@/lib/domain/ketersediaan";
 import { TENANT_TYPE_BY_ZONE_TYPE } from "@/lib/domain/labels";
-import { notifyBooking, type BookingNotifKind } from "@/lib/notifications";
+import { isEmailConfigured, notifyBooking, type BookingNotifKind } from "@/lib/notifications";
 import { fail, ok, type Result } from "@/lib/result";
 import { syncToSheet } from "@/lib/sheets";
+import { getSiteUrl } from "@/lib/site-url";
 import { formatTanggalWaktu, slotDisplayName } from "@/lib/utils";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { isServiceRoleConfigured } from "@/lib/supabase/config";
@@ -40,6 +41,7 @@ import {
   tanggalHariIniJakarta,
   type PgError,
 } from "./slots";
+import { verifyEmailCode } from "./otp";
 
 // Modul KHUSUS SERVER (lihat catatan "server-only" di services/slots.ts).
 if (typeof window !== "undefined") {
@@ -124,9 +126,12 @@ export function normalizeBookingRow(raw: unknown): BookingDetail | null {
  * SARAN PRODUKSI: pindahkan langkah-langkah ini ke satu Postgres function (rpc)
  * agar benar-benar atomik.
  */
+/** Peringatan "OTP dilewati" cukup sekali per instance supaya log tidak banjir. */
+let otpDilewatiTercatat = false;
+
 export async function createBooking(
   input: CreateBookingInput,
-  opts?: { skipPendingLimit?: boolean },
+  opts?: { skipPendingLimit?: boolean; skipEmailOtp?: boolean },
 ): Promise<Result<{ bookingId: string; bookingCode: string }>> {
   type Out = { bookingId: string; bookingCode: string };
   if (!isServiceRoleConfigured()) return fail<Out>(NO_CONFIG_MESSAGE, "NO_CONFIG");
@@ -238,6 +243,29 @@ export async function createBooking(
           "TOO_MANY_PENDING",
         );
       }
+    }
+  }
+
+  /* --- Verifikasi email (OTP) — pengaman anti-penimbunan slot ---
+     Jalur publik: bila transport email aktif, penyewa WAJIB memasukkan kode
+     yang dikirim ke emailnya (sekali pakai, 10 menit). Tanpa transport, kode
+     tidak mungkin sampai, jadi dilewati (email tetap wajib di skema publik).
+     Booking manual admin (skipEmailOtp) tidak pernah diminta kode. Diletakkan
+     SETELAH validasi tanggal supaya kode tidak hangus untuk isian yang salah. */
+  if (!opts?.skipEmailOtp) {
+    if (isEmailConfigured()) {
+      if (!data.tenantEmail || !data.emailOtp) {
+        return fail<Out>(
+          "Masukkan kode verifikasi yang dikirim ke email Anda.",
+          "OTP_REQUIRED",
+        );
+      }
+      if (!(await verifyEmailCode(data.tenantEmail, data.emailOtp))) {
+        return fail<Out>("Kode verifikasi email salah atau kedaluwarsa.", "OTP_INVALID");
+      }
+    } else if (!otpDilewatiTercatat) {
+      otpDilewatiTercatat = true;
+      console.warn("[booking] OTP email dilewati: SMTP belum dikonfigurasi");
     }
   }
 
@@ -430,7 +458,7 @@ export async function createBooking(
     amount,
   });
 
-  // Notifikasi WA/email ke tenant (fire-and-forget). Tenggat = created + 24 jam,
+  // Notifikasi email (utama) + WA bila aktif ke tenant (fire-and-forget). Tenggat = created + 24 jam,
   // cermin expire_unpaid_bookings; dihitung di sini karena notif modul murni.
   const tenggat = new Date(Date.now() + PAYMENT_DEADLINE_HOURS * 60 * 60 * 1000);
   void notifyBooking("created", {
@@ -443,6 +471,7 @@ export async function createBooking(
     dates,
     amount,
     deadlineText: `${formatTanggalWaktu(tenggat)} WIB`,
+    statusUrl: `${getSiteUrl()}/booking/${booking.id}/status`,
   });
 
   return ok<Out>({ bookingId: booking.id, bookingCode: booking.booking_code });
@@ -482,6 +511,7 @@ export async function kirimNotifikasiBooking(
       amount,
       deadlineText,
       reason: opts?.reason ?? null,
+      statusUrl: `${getSiteUrl()}/booking/${b.id}/status`,
     });
   } catch {
     // Notifikasi opsional: kegagalan tidak pernah menggagalkan operasi utama.
