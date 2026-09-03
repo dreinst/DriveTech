@@ -25,12 +25,13 @@ export const EVENT_INFO = {
     "Pembukaan Sabtu–Minggu 12–13 September 2026, selanjutnya setiap hari Minggu sampai 1 November 2026",
   organizer: "Panitia Drive Tech",
   /**
-   * Kontak panitia (WhatsApp). Keputusan pemilik 2026-09-03: SATU nomor saja
-   * (0822-2855-5254); nomor kedua dihapus. Tetap berbentuk daftar supaya UI
-   * (beranda, footer, status booking, admin) tidak perlu diubah bila nanti
-   * ditambah lagi. Gunakan telHref()/waHref() untuk tautannya.
+   * Kontak panitia (WhatsApp). Keputusan pemilik 2026-09-03 (sore): DUA nomor
+   * resmi. Tautan bantuan memakai waHref() dengan kalimat WA_BANTUAN_TEXT.
    */
-  contacts: [{ label: "Panitia", phone: "0822-2855-5254" }],
+  contacts: [
+    { label: "Panitia 1", phone: "0822-2855-5254" },
+    { label: "Panitia 2", phone: "0888-4089-474" },
+  ],
   description:
     "Pasar otomotif akhir pekan di Kota Malang: pilih tanggal, pilih zona, lalu booking lapak langsung dari denah.",
 } as const;
