@@ -68,6 +68,21 @@ export async function requestEmailCode(
   if (!(await rateLimitShared(`otp:ip:${ip}`, 10, 600))) {
     return fail<RequestEmailCodeOut>("Terlalu banyak permintaan kode. Coba lagi 10 menit lagi.", "RATE_LIMITED");
   }
+  // Audit 2026-09-03: cegah endpoint ini dipakai "mengganggu" kotak masuk orang
+  // lain dan menguras kuota harian Gmail pengirim — batas harian per alamat dan
+  // batas global pengiriman kode per hari.
+  if (!(await rateLimitShared(`otp:email:${alamat}:24h`, 6, 86_400))) {
+    return fail<RequestEmailCodeOut>(
+      "Batas permintaan kode harian untuk email ini tercapai. Hubungi panitia lewat WhatsApp bila perlu bantuan.",
+      "RATE_LIMITED",
+    );
+  }
+  if (!(await rateLimitShared("otp:global:24h", 300, 86_400))) {
+    return fail<RequestEmailCodeOut>(
+      "Pengiriman kode verifikasi sedang penuh. Coba lagi beberapa saat lagi atau hubungi panitia lewat WhatsApp.",
+      "RATE_LIMITED",
+    );
+  }
 
   const kode = buatKode();
   const supabase = createAdminSupabase();
@@ -83,7 +98,9 @@ export async function requestEmailCode(
 
   const hasil = await sendEmailNow(
     alamat,
-    `Kode verifikasi Drive Tech: ${kode}`,
+    // Kode sengaja TIDAK di subjek (audit 2026-09-03): pratinjau notifikasi HP
+    // jangan menampilkan kode tanpa membuka email.
+    "Kode verifikasi Drive Tech",
     [
       `Kode verifikasi Drive Tech Anda: ${kode}`,
       "",
