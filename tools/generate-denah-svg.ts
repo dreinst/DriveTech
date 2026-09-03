@@ -126,7 +126,8 @@ function slot(zone: LayoutZone, s: LayoutSlot): void {
     const keterangan = zone.zoneType === "warung" ? "belum dibuka untuk booking online" : "fasilitas umum, tidak disewakan";
     A(`      <g id="${s.svgElementId}" class="slot facility" data-status="facility" data-slot="${s.svgElementId}" aria-label="${aria} — ${keterangan}">`);
   }
-  A(`        <rect x="${g(s.x)}" y="${g(s.y)}" width="${g(s.width)}" height="${g(s.height)}" rx="4"/>`);
+  const tf = s.rotate ? ` transform="rotate(${s.rotate} ${g(s.x + s.width / 2)} ${g(s.y + s.height / 2)})"` : "";
+  A(`        <rect x="${g(s.x)}" y="${g(s.y)}" width="${g(s.width)}" height="${g(s.height)}" rx="4"${tf}/>`);
   A(`        ${isNumber ? numberLabel(s, s.label, style.text) : boxLabel(s, s.label, s.labelOrientation, style.text)}`);
   A("      </g>");
   if (bookable) A("      </a>");
@@ -256,9 +257,9 @@ A(
 );
 A(`  <text x="${W / 2}" y="64" text-anchor="middle" font-size="21" font-weight="800" fill="#0f172a">DENAH DRIVE TECH — KAMPUNG TENTARA, SINGOSARI</text>`);
 
-// dekor
+// dekor lapisan bawah
 A('  <g id="denah-dekor" aria-hidden="true" pointer-events="none">');
-for (const item of FLOOR_PLAN_DECOR) {
+for (const item of FLOOR_PLAN_DECOR.filter((d) => !d.above)) {
   if (item.kind === "tank") tank(item);
   else taman(item);
 }
@@ -269,6 +270,11 @@ A('  <g id="denah-container" aria-hidden="true" pointer-events="none">');
 for (const zone of FLOOR_PLAN_ZONES) {
   for (const c of zoneContainers(zone)) zoneContainer(zone, c, slotsInContainer(zone, c).length);
 }
+A("  </g>");
+
+// dekor lapisan atas (di atas container, di bawah slot)
+A('  <g id="denah-dekor-atas" aria-hidden="true" pointer-events="none">');
+for (const item of FLOOR_PLAN_DECOR.filter((d) => d.above)) taman(item);
 A("  </g>");
 
 // slot per zona

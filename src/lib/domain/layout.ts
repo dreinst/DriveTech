@@ -42,6 +42,12 @@ export type LayoutSlot = Rect & {
   label: string;
   slotNumber: number | null;
   labelOrientation: LabelOrientation;
+  /**
+   * Derajat rotasi KOTAK (searah jarum jam) mengelilingi titik tengahnya —
+   * dipakai slot parkir serong (Area B kolom 1-10 di Layout v2). Teks nomor
+   * tetap tegak.
+   */
+  rotate?: number;
 };
 
 /**
@@ -66,8 +72,12 @@ export type LayoutZone = {
 
 export type DecorKind = "taman" | "pagar" | "tank";
 
-/** `rotate` = derajat searah jarum jam mengelilingi titik tengah rect (dipakai tank). */
-export type DecorItem = Rect & { id: string; label: string; kind: DecorKind; rotate?: number };
+/**
+ * `rotate` = derajat searah jarum jam mengelilingi titik tengah rect (dipakai tank).
+ * `above` = digambar SETELAH container zona (di atas latar putihnya, di bawah
+ * slot) — untuk strip pohon di dalam Area B seperti gambar asli.
+ */
+export type DecorItem = Rect & { id: string; label: string; kind: DecorKind; rotate?: number; above?: boolean };
 
 /* ---------- Helper deterministik untuk zona bernomor ---------- */
 
@@ -112,25 +122,40 @@ const mobilBaruSlots: LayoutSlot[] = MOBIL_BARU_ROW_Y.flatMap((y, row) =>
 );
 
 /* ---------- Area B: Area Pameran Mobil Bekas (30 slot, 3 kolom x 10) ---------- */
-/* Kolom 1-10 di gambar digambar miring (mobil parkir serong) dan lebih panjang
- * dari dua kolom lain; di denah digital semuanya kotak lurus. */
+/* Sesuai gambar Layout v2: kolom 1-10 = mobil PARKIR SERONG satu kolom di kiri
+ * (digambar kotak miring -48°), lalu strip pohon, lalu pasangan kolom 11-20 &
+ * 21-30 yang berhadapan di tengah. */
+
+const MOBIL_BEKAS_SERONG = { cx: 526, width: 60, height: 28, baseCy: 452, pitch: 41.8, rotate: -48 };
+
+const mobilBekasSerong: LayoutSlot[] = Array.from({ length: 10 }, (_, i) => ({
+  ...numberedSlot("mobil-bekas", i + 1, {
+    x: MOBIL_BEKAS_SERONG.cx - MOBIL_BEKAS_SERONG.width / 2,
+    y: round1(MOBIL_BEKAS_SERONG.baseCy + i * MOBIL_BEKAS_SERONG.pitch - MOBIL_BEKAS_SERONG.height / 2),
+    width: MOBIL_BEKAS_SERONG.width,
+    height: MOBIL_BEKAS_SERONG.height,
+  }),
+  rotate: MOBIL_BEKAS_SERONG.rotate,
+}));
 
 const MOBIL_BEKAS_GROUPS = [
-  { startNumber: 1, x: 498, width: 50, height: 33, baseY: 438, pitch: 40.5 },
   { startNumber: 11, x: 620, width: 50, height: 32, baseY: 438, pitch: 36.5 },
   { startNumber: 21, x: 674, width: 50, height: 32, baseY: 438, pitch: 36.5 },
 ];
 
-const mobilBekasSlots: LayoutSlot[] = MOBIL_BEKAS_GROUPS.flatMap((group) =>
-  Array.from({ length: 10 }, (_, i) =>
-    numberedSlot("mobil-bekas", group.startNumber + i, {
-      x: group.x,
-      y: round1(group.baseY + i * group.pitch),
-      width: group.width,
-      height: group.height,
-    }),
+const mobilBekasSlots: LayoutSlot[] = [
+  ...mobilBekasSerong,
+  ...MOBIL_BEKAS_GROUPS.flatMap((group) =>
+    Array.from({ length: 10 }, (_, i) =>
+      numberedSlot("mobil-bekas", group.startNumber + i, {
+        x: group.x,
+        y: round1(group.baseY + i * group.pitch),
+        width: group.width,
+        height: group.height,
+      }),
+    ),
   ),
-);
+];
 
 /* ---------- Area C (atas): Tenda Motor Baru (4 slot, satu kolom) ---------- */
 
@@ -297,6 +322,11 @@ export const FLOOR_PLAN_ZONES: LayoutZone[] = [
 
 export const FLOOR_PLAN_DECOR: DecorItem[] = [
   { id: "pagar-atas", x: 127, y: 136, width: 740, height: 12, label: "", kind: "pagar" },
+  // Strip pohon di dalam Area B (gambar asli): dua ruas di antara kolom 1-10 dan 11-30,
+  // plus deretan pohon kecil di bawah kolom 11-30. Digambar di atas container.
+  { id: "taman-b-atas", x: 568, y: 428, width: 34, height: 160, label: "", kind: "taman", above: true },
+  { id: "taman-b-bawah", x: 568, y: 640, width: 34, height: 200, label: "", kind: "taman", above: true },
+  { id: "taman-b-kolom", x: 620, y: 808, width: 104, height: 30, label: "", kind: "taman", above: true },
   { id: "taman-kanan", x: 876, y: 476, width: 108, height: 644, label: "Taman", kind: "taman" },
   { id: "taman-kiri-bawah", x: 165, y: 1016, width: 395, height: 104, label: "Taman", kind: "taman" },
   { id: "taman-tengah-bawah", x: 648, y: 1016, width: 168, height: 104, label: "Taman", kind: "taman" },
