@@ -57,11 +57,19 @@ var SHEET_BY_ENTITY = {
 var UPDATED_AT_HEADER = "updated_at";
 
 /**
- * Kunci aksi reset via GET (?action=reset&key=...). Sheet hanyalah cermin
- * sinkronisasi (sumber kebenaran tetap Supabase), jadi risiko terburuk
- * penyalahgunaan kunci ini hanyalah sheet dibuat ulang kosong.
+ * DUA kunci aksi GET yang sengaja DIPISAH (temuan audit 2026-09-03: dulu satu
+ * kunci untuk recap sekaligus reset, dan kunci itu tertulis di repo):
+ *
+ * - RECAP_KEY : aksi ?action=recap (snapshot arsip mingguan, tidak menghapus
+ *               apa pun). Nilainya SAMA dengan env SHEETS_ACTION_KEY di Vercel
+ *               (dipakai /api/cron/weekly-recap).
+ * - RESET_KEY : aksi ?action=reset (menghapus sheet) dan ?action=init. TIDAK
+ *               disimpan di repo — isi sendiri di editor Apps Script dengan
+ *               nilai acak panjang, lalu buat deployment baru. Selama masih
+ *               berisi placeholder, aksi reset/init DITOLAK.
  */
-var RESET_KEY = "dt-reset-c9k4x7wq21";
+var RECAP_KEY = "dt-recap-1a2a3f2952dadb63ee35";
+var RESET_KEY = "GANTI-SAYA-DI-APPS-SCRIPT";
 
 /** Sheet yang boleh dihapus oleh aksi reset (dibuat ulang otomatis saat sync). */
 var SHEET_RESETTABLE = ["Bookings", "Payments", "Purchases", "Leasing", "Katalog", "Lainnya"];
@@ -84,7 +92,7 @@ var INIT_HEADERS = {
 /**
  * Buat semua sheet entity + baris header (tanpa baris data). Idempotent:
  * sheet yang sudah punya isi tidak disentuh. Bisa dijalankan manual dari
- * editor (Run) atau lewat GET ?action=init&key=RESET_KEY.
+ * editor (Run) atau lewat GET ?action=init&key=RESET_KEY (kunci reset, bukan recap).
  */
 function initSheets() {
   var dibuat = [];
@@ -105,7 +113,7 @@ function initSheets() {
 /**
  * Hapus seluruh sheet entity supaya dibuat ulang bersih (header baru) pada
  * sinkronisasi berikutnya. Bisa dijalankan manual dari editor (Run) atau
- * lewat GET ?action=reset&key=RESET_KEY.
+ * lewat GET ?action=reset&key=RESET_KEY (kunci reset, bukan recap).
  */
 function resetSheetUji() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -167,7 +175,7 @@ function doPost(e) {
 }
 
 /**
- * Snapshot RECAP MINGGUAN (?action=recap&key=RESET_KEY). Menyalin isi sheet
+ * Snapshot RECAP MINGGUAN (?action=recap&key=RECAP_KEY). Menyalin isi sheet
  * "Bookings" APA ADANYA ke tab arsip bernama "Recap YYYY-MM-DD" — master TIDAK
  * pernah dikosongkan (permintaan pemilik: recap tanpa kehilangan data). Dipicu
  * otomatis tiap minggu oleh Vercel Cron (/api/cron/weekly-recap). Idempotent:
@@ -191,30 +199,37 @@ function recapSnapshot_() {
 }
 
 /**
- * GET: cek hidup (tanpa parameter), aksi reset (?action=reset&key=RESET_KEY)
- * untuk membersihkan sheet uji, aksi init (?action=init&key=RESET_KEY) untuk
- * membuat semua sheet + header kolom, atau aksi recap (?action=recap&key=...)
- * untuk snapshot arsip mingguan tanpa menghapus master.
+ * GET: cek hidup (tanpa parameter), aksi recap (?action=recap&key=RECAP_KEY)
+ * untuk snapshot arsip mingguan tanpa menghapus master, aksi reset
+ * (?action=reset&key=RESET_KEY) untuk membersihkan sheet uji, dan aksi init
+ * (?action=init&key=RESET_KEY) untuk membuat semua sheet + header kolom.
+ * Kunci recap dan kunci reset SENGAJA berbeda.
  */
 function doGet(e) {
   var action = e && e.parameter ? String(e.parameter.action || "") : "";
-  if (action === "reset" || action === "init" || action === "recap") {
-    var key = e.parameter.key ? String(e.parameter.key) : "";
+  var key = e && e.parameter && e.parameter.key ? String(e.parameter.key) : "";
+  if (action === "recap") {
+    if (!RECAP_KEY || key !== RECAP_KEY) {
+      return jsonOutput_({ ok: false, error: "Kunci aksi salah." });
+    }
+    return jsonOutput_({ ok: true, action: "recap", recap: recapSnapshot_() });
+  }
+  if (action === "reset" || action === "init") {
+    if (RESET_KEY === "GANTI-SAYA-DI-APPS-SCRIPT") {
+      return jsonOutput_({ ok: false, error: "RESET_KEY belum diisi di Apps Script; aksi ditolak." });
+    }
     if (key !== RESET_KEY) {
       return jsonOutput_({ ok: false, error: "Kunci aksi salah." });
     }
     if (action === "reset") {
       return jsonOutput_({ ok: true, action: "reset", dihapus: resetSheetUji() });
     }
-    if (action === "recap") {
-      return jsonOutput_({ ok: true, action: "recap", recap: recapSnapshot_() });
-    }
     return jsonOutput_({ ok: true, action: "init", dibuat: initSheets() });
   }
   return jsonOutput_({
     ok: true,
     message: "Webhook Google Sheets Drive Tech aktif. Kirim data lewat POST JSON.",
-    versi: "2026-08-29-recap",
+    versi: "2026-09-03-kunci-terpisah",
   });
 }
 

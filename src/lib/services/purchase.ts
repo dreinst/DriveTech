@@ -96,6 +96,26 @@ export async function createPurchase(
   }
 
   const supabase = createAdminSupabase();
+
+  // Prospek hanya boleh dibuat untuk slot yang memang MEMASARKAN unit: ada
+  // listing kendaraan yang tampil di katalog (is_visible) milik booking yang
+  // sudah terkonfirmasi — kriteria yang sama dengan services/catalog.ts.
+  // Tanpa ini endpoint publik bisa dipakai menumpuk prospek palsu ke slot
+  // kosong (temuan audit 2026-09-03).
+  const listingQuery = await supabase
+    .from("vehicle_listings")
+    .select("id, booking:bookings!inner(status)")
+    .eq("slot_id", slot.id)
+    .eq("is_visible", true)
+    .eq("booking.status", "confirmed")
+    .limit(1);
+  if (listingQuery.error) {
+    return dbFail<Out>(listingQuery.error as PgError, "Gagal memeriksa unit di slot ini");
+  }
+  if ((listingQuery.data ?? []).length === 0) {
+    return fail<Out>("Slot ini belum memiliki unit yang dipasarkan.", "NO_LISTING");
+  }
+
   const inserted = await supabase
     .from("purchase_transactions")
     .insert({

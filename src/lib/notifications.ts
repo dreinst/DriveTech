@@ -1,13 +1,25 @@
 /**
- * Notifikasi keluar ke tenant lewat WhatsApp & email. KERANGKA SIAP-SAMBUNG:
- * selama kredensial provider belum diisi, semua pengiriman berjalan DRY-RUN
- * (payload dicatat ke log, tidak ada panggilan keluar) sehingga aman dijalankan
- * di produksi maupun skrip tes. Isi env di bawah untuk mengaktifkan pengiriman
- * sungguhan tanpa mengubah kode:
+ * Notifikasi keluar ke tenant lewat WhatsApp & email.
  *
- *   WhatsApp (default provider Fonnte — https://fonnte.com):
+ * WhatsApp punya TIGA mode, dipilih lewat env WA_PROVIDER:
+ *
+ *   outbox  (DEFAULT, keputusan pemilik 2026-09-03) — pesan TIDAK dikirim dari
+ *           Vercel. Aplikasi menulis satu baris ke tabel public.notification_outbox
+ *           (PostgREST + service_role), lalu worker di VPS
+ *           (tools/vps/drivetech-wa-outbox.py, timer tiap menit) mengirimnya lewat
+ *           `hermes send` = bot WhatsApp Hermes di NOMOR KANTOR 6282232999900.
+ *           Jadi penyewa menerima kode booking dari nomor kantor. Butuh
+ *           NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY (sudah ada untuk
+ *           aplikasi); tanpa keduanya jatuh ke dry-run.
+ *   fonnte  — kirim langsung ke API Fonnte (https://fonnte.com):
  *     WA_API_TOKEN   token perangkat Fonnte (WAJIB agar WA aktif)
  *     WA_API_URL     endpoint kirim (default https://api.fonnte.com/send)
+ *   off     — WhatsApp dimatikan (dicatat ke log saja).
+ *
+ * Selama kredensial mode yang dipilih belum ada, pengiriman berjalan DRY-RUN
+ * (payload dicatat ke log, tidak ada panggilan keluar) sehingga aman dijalankan
+ * di produksi maupun skrip tes.
+ *
  *   Email (default provider Resend — https://resend.com):
  *     RESEND_API_KEY   api key Resend (WAJIB agar email aktif)
  *     NOTIF_EMAIL_FROM pengirim (default "Drive Tech <no-reply@drivetech.local>")
@@ -29,13 +41,34 @@ const NOTIF_TIMEOUT_MS = 5000;
 
 export type NotifChannelResult = {
   channel: "whatsapp" | "email";
-  /** true = benar-benar terkirim ke provider; false = dry-run / gagal. */
+  /** true = benar-benar terkirim ke provider; false = dry-run / gagal / antre. */
   delivered: boolean;
   /** true = tidak ada kredensial, jadi hanya dicatat (bukan kegagalan). */
   dryRun: boolean;
+  /**
+   * true = pesan masuk antrean notification_outbox (mode outbox); pengiriman
+   * sesungguhnya dilakukan worker VPS beberapa detik-menit kemudian.
+   */
+  queued?: boolean;
   to: string;
   info?: string;
 };
+
+/** Metadata opsional yang ikut disimpan di antrean (untuk penelusuran panitia). */
+export type WaMeta = {
+  /** created | verified | rejected | cancelled | other */
+  kind?: string;
+  bookingCode?: string | null;
+};
+
+type WaProvider = "outbox" | "fonnte" | "off";
+
+/** Mode WhatsApp dari env; nilai tak dikenal/kosong = outbox (bawaan). */
+function waProvider(): WaProvider {
+  const raw = (process.env.WA_PROVIDER ?? "").trim().toLowerCase();
+  if (raw === "fonnte" || raw === "off" || raw === "outbox") return raw;
+  return "outbox";
+}
 
 /* ------------------------------------------------------------------ */
 /* Util kecil (inline supaya modul tetap tanpa dependensi)             */
@@ -68,18 +101,79 @@ export function toWaNumber(phone: string | null | undefined): string {
 /* Transport                                                           */
 /* ------------------------------------------------------------------ */
 
-/** Kirim satu pesan WhatsApp. Tidak pernah melempar. */
+/**
+ * Antrekan satu pesan WhatsApp ke tabel notification_outbox (mode outbox).
+ * Dipanggil hanya dari sendWhatsApp; tidak pernah melempar.
+ */
+async function antrekanWhatsApp(
+  tujuan: string,
+  message: string,
+  meta: WaMeta,
+): Promise<NotifChannelResult> {
+  const baseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").trim().replace(/\/+$/, "");
+  const serviceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY ?? "").trim();
+
+  if (baseUrl.length === 0 || serviceKey.length === 0) {
+    console.info(`[notif][wa][outbox][dry-run] -> ${tujuan}\n${message}`);
+    return { channel: "whatsapp", delivered: false, dryRun: true, to: tujuan, info: "outbox: Supabase belum dikonfigurasi" };
+  }
+
+  try {
+    const response = await fetch(`${baseUrl}/rest/v1/notification_outbox`, {
+      method: "POST",
+      headers: {
+        apikey: serviceKey,
+        Authorization: `Bearer ${serviceKey}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify({
+        recipient: tujuan,
+        body: message,
+        kind: meta.kind ?? "other",
+        booking_code: meta.bookingCode ?? null,
+      }),
+      signal: AbortSignal.timeout(NOTIF_TIMEOUT_MS),
+    });
+    if (!response.ok) {
+      console.warn(`[notif][wa][outbox] Supabase membalas ${response.status}`);
+      return { channel: "whatsapp", delivered: false, dryRun: false, queued: false, to: tujuan, info: `HTTP ${response.status}` };
+    }
+    return { channel: "whatsapp", delivered: false, dryRun: false, queued: true, to: tujuan };
+  } catch (error) {
+    console.warn("[notif][wa][outbox] gagal antre:", error);
+    return { channel: "whatsapp", delivered: false, dryRun: false, queued: false, to: tujuan, info: "exception" };
+  }
+}
+
+/**
+ * Kirim satu pesan WhatsApp lewat mode yang aktif (lihat WA_PROVIDER di kepala
+ * file). Mode outbox = antre ke database, dikirim worker VPS dari nomor kantor.
+ * `meta` (jenis peristiwa + kode booking) ikut disimpan di antrean. Tidak pernah
+ * melempar.
+ */
 export async function sendWhatsApp(
   to: string,
   message: string,
+  meta: WaMeta = {},
 ): Promise<NotifChannelResult> {
   const tujuan = process.env.WA_OVERRIDE_RECIPIENT?.trim() || to;
-  const token = process.env.WA_API_TOKEN?.trim() ?? "";
-  const url = process.env.WA_API_URL?.trim() || "https://api.fonnte.com/send";
+  const provider = waProvider();
 
   if (tujuan.length === 0) {
     return { channel: "whatsapp", delivered: false, dryRun: false, to, info: "nomor kosong" };
   }
+  if (provider === "off") {
+    console.info(`[notif][wa][off] -> ${tujuan} (WA_PROVIDER=off, tidak dikirim)`);
+    return { channel: "whatsapp", delivered: false, dryRun: true, to: tujuan, info: "WA_PROVIDER=off" };
+  }
+  if (provider === "outbox") {
+    return antrekanWhatsApp(tujuan, message, meta);
+  }
+
+  // Mode fonnte: kirim langsung ke API provider.
+  const token = process.env.WA_API_TOKEN?.trim() ?? "";
+  const url = process.env.WA_API_URL?.trim() || "https://api.fonnte.com/send";
   if (token.length === 0) {
     console.info(`[notif][wa][dry-run] -> ${tujuan}\n${message}`);
     return { channel: "whatsapp", delivered: false, dryRun: true, to: tujuan };
@@ -236,7 +330,7 @@ async function jadwalkan(promise: Promise<unknown>): Promise<void> {
 export async function notifyBooking(kind: BookingNotifKind, d: BookingNotif): Promise<void> {
   const kirim = (async () => {
     const waNumber = toWaNumber(d.tenantPhone);
-    await sendWhatsApp(waNumber, buildBookingWa(kind, d));
+    await sendWhatsApp(waNumber, buildBookingWa(kind, d), { kind, bookingCode: d.bookingCode });
     if (d.tenantEmail && d.tenantEmail.trim().length > 0) {
       const { subject, text } = buildBookingEmail(kind, d);
       await sendEmail(d.tenantEmail.trim(), subject, text);

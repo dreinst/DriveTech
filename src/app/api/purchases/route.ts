@@ -1,6 +1,6 @@
 import type { NextResponse } from "next/server";
 
-import { checkRateLimit, clientIpFrom } from "@/lib/rate-limit";
+import { checkRateLimit, clientIpFrom, rateLimitShared } from "@/lib/rate-limit";
 import { createPurchase } from "@/lib/services/purchase";
 import { createPurchaseSchema } from "@/lib/validation/schemas";
 import {
@@ -28,8 +28,12 @@ export const dynamic = "force-dynamic";
  */
 export async function POST(request: Request): Promise<NextResponse> {
   return handleRoute("POST /api/purchases", async () => {
-    const laju = checkRateLimit(`purchases:${clientIpFrom(request)}`, 5, 60_000);
+    // Lapis in-memory per instance + pembatas bersama lintas instance
+    // (per menit tiap permintaan, per 24 jam hanya permintaan valid).
+    const ip = clientIpFrom(request);
+    const laju = checkRateLimit(`purchases:${ip}`, 5, 60_000);
     if (!laju.allowed) return jsonRateLimited(laju.retryAfterSeconds);
+    if (!(await rateLimitShared(`purchase:ip:${ip}:1m`, 5, 60))) return jsonRateLimited(60);
 
     const body = await readJsonObject(request);
     if (body === null) return jsonError(INVALID_JSON_MESSAGE, 400, { code: "INVALID_BODY" });
@@ -38,6 +42,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     if (!parsed.success) {
       return jsonValidationError("Data pembelian tidak valid.", parsed.error);
     }
+    if (!(await rateLimitShared(`purchase:ip:${ip}:24h`, 20, 86_400))) return jsonRateLimited(3600);
 
     const result = await createPurchase(parsed.data);
     if (!result.ok) return mapResultToResponse(result);

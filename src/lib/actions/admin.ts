@@ -22,6 +22,7 @@ import { setVehicleVisibility } from "@/lib/services/catalog";
 import { requireAdmin, requireFullAdmin, signInAdmin, signOutAdmin } from "@/lib/services/auth";
 import { getSlotDetail } from "@/lib/services/slots";
 import { TENANT_TYPE_BY_ZONE_TYPE } from "@/lib/domain/labels";
+import { clientIpFromHeaders, rateLimitShared } from "@/lib/rate-limit";
 import { tujuanAdminAman } from "@/lib/utils";
 import {
   addEventDateSchema,
@@ -82,6 +83,16 @@ export async function adminLoginAction(
   });
   if (!parsed.success) {
     return errorState("Periksa kembali username dan kata sandi.", zodFieldErrors(parsed.error));
+  }
+
+  // Pembatas laju bersama (temuan audit 2026-09-03): per IP dan per username,
+  // dicek SEBELUM GoTrue dipanggil. Pesannya sengaja generik (anti enumerasi).
+  const ipKlien = await clientIpFromHeaders();
+  const bolehIp = await rateLimitShared(`login:ip:${ipKlien}`, 10, 600);
+  const bolehUser =
+    bolehIp && (await rateLimitShared(`login:user:${parsed.data.username.toLowerCase()}`, 5, 600));
+  if (!bolehIp || !bolehUser) {
+    return errorState("Terlalu banyak percobaan masuk. Coba lagi dalam 10 menit.");
   }
 
   const result = await signInAdmin(parsed.data.username, parsed.data.password);

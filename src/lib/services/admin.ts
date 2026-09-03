@@ -446,6 +446,16 @@ export async function verifyPayment(paymentId: string, adminId: string): Promise
       "NOT_SUBMITTED",
     );
   }
+  if (payment.status === "rejected") {
+    // Bukti terakhir sudah DITOLAK; verifikasi hanya boleh atas bukti BARU
+    // (status kembali 'submitted' setelah penyewa mengunggah ulang). Tanpa
+    // penjaga ini, salah klik bisa mengonfirmasi booking dengan bukti yang
+    // tadi dinyatakan tidak sah (temuan audit 2026-09-03).
+    return fail<null>(
+      "Bukti pembayaran terakhir sudah ditolak. Tunggu penyewa mengunggah bukti baru sebelum diverifikasi.",
+      "NOT_SUBMITTED",
+    );
+  }
 
   const supabase = createAdminSupabase();
   const now = new Date().toISOString();

@@ -3,11 +3,16 @@
  *
  * Jalankan: `node scripts/test-notifikasi.ts`
  *
- * Tanpa kredensial provider (WA_API_TOKEN / RESEND_API_KEY), semua channel
- * berjalan DRY-RUN: payload dicetak, tidak ada panggilan keluar. Ini sengaja —
- * membuktikan format pesan & alur benar sebelum nomor/provider sungguhan
- * dipasang. Untuk uji kirim sungguhan ke satu nomor, set:
- *   WA_API_TOKEN=xxxx WA_OVERRIDE_RECIPIENT=628xxxx node scripts/test-notifikasi.ts
+ * Tanpa kredensial mode yang aktif, semua channel berjalan DRY-RUN: payload
+ * dicetak, tidak ada panggilan keluar. Ini sengaja — membuktikan format pesan
+ * & alur benar sebelum nomor/provider sungguhan dipasang.
+ *
+ * Mode WhatsApp bawaan = outbox (antre ke notification_outbox, dikirim worker
+ * VPS dari nomor kantor). Untuk mengantre sungguhan ke satu nomor uji:
+ *   NEXT_PUBLIC_SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… WA_OVERRIDE_RECIPIENT=628xxxx \
+ *     node scripts/test-notifikasi.ts
+ * Untuk mode Fonnte langsung:
+ *   WA_PROVIDER=fonnte WA_API_TOKEN=xxxx WA_OVERRIDE_RECIPIENT=628xxxx node scripts/test-notifikasi.ts
  */
 import {
   DUMMY_WA_RECIPIENT,

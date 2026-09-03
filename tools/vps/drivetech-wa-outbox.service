@@ -1,0 +1,9 @@
+[Unit]
+Description=Kirim antrean WhatsApp Drive Tech (notification_outbox) lewat bot Hermes
+After=docker.service
+Wants=docker.service
+
+[Service]
+Type=oneshot
+Environment=HOME=/root
+ExecStart=/usr/bin/python3 /usr/local/bin/drivetech-wa-outbox.py

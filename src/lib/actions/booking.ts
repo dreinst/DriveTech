@@ -10,6 +10,7 @@ import {
   STORAGE_BUCKET_FOTO_KENDARAAN,
 } from "@/lib/domain/constants";
 import { TENANT_TYPE_BY_ZONE_TYPE } from "@/lib/domain/labels";
+import { clientIpFromHeaders, rateLimitShared } from "@/lib/rate-limit";
 import {
   cancelBooking,
   createBooking,
@@ -83,6 +84,20 @@ function ambilEventDates(formData: FormData): string[] {
 const JENIS_BUKTI_DIIZINKAN = ["image/jpeg", "image/png", "image/webp"];
 
 /**
+ * Batas laju BERSAMA form booking (temuan audit 2026-09-03: penimbunan slot
+ * lewat booking palsu massal). Kunci `booking:ip:*` sama dengan yang dipakai
+ * POST /api/bookings supaya jatahnya tidak bisa digandakan lewat jalur lain.
+ * - per menit: setiap kiriman form dihitung (anti-spam);
+ * - per 24 jam: hanya kiriman yang LOLOS validasi (penyewa yang memperbaiki
+ *   isian tidak menghabiskan jatah). Catatan: satu Wi-Fi lokasi = satu IP,
+ *   jadi angka harian sengaja dibuat mudah diubah di sini.
+ */
+const BOOKING_LIMIT_PER_MENIT = 5;
+const BOOKING_LIMIT_PER_HARI = 20;
+const PESAN_BATAS_BOOKING =
+  "Terlalu banyak percobaan booking dari jaringan Anda. Coba lagi beberapa saat lagi, atau hubungi panitia lewat WhatsApp.";
+
+/**
  * URL sementara agar skema (photoUrl wajib http/https) bisa divalidasi SEBELUM
  * foto diunggah; tidak pernah tersimpan — diganti URL storage asli usai unggah.
  */
@@ -105,6 +120,12 @@ export async function createBookingAction(
 ): Promise<ActionState> {
   const form = ambilFormData(prevState, formData);
   const slotId = teks(form, "slotId");
+
+  // Lapis pertama pembatas bersama: per IP per menit, dihitung tiap kiriman.
+  const ipKlien = await clientIpFromHeaders();
+  if (!(await rateLimitShared(`booking:ip:${ipKlien}:1m`, BOOKING_LIMIT_PER_MENIT, 60))) {
+    return errorState(PESAN_BATAS_BOOKING);
+  }
 
   // Tipe tenant ditentukan tipe zona slot; nilai dari form hanya cadangan.
   let tenantType = teks(form, "tenantType");
@@ -185,6 +206,11 @@ export async function createBookingAction(
 
   if (!parsed.success) {
     return errorState("Periksa kembali isian formulir.", zodFieldErrors(parsed.error));
+  }
+
+  // Lapis kedua: jatah harian per IP, hanya untuk kiriman yang valid.
+  if (!(await rateLimitShared(`booking:ip:${ipKlien}:24h`, BOOKING_LIMIT_PER_HARI, 86_400))) {
+    return errorState(PESAN_BATAS_BOOKING);
   }
 
   // Isian valid — sekarang baru foto diunggah dan URL aslinya dipasang.
@@ -335,6 +361,19 @@ export async function cancelBookingAction(
   });
   if (!parsed.success) {
     return errorState("Periksa kembali isian pembatalan.", zodFieldErrors(parsed.error));
+  }
+
+  // Anti tebak 4 digit HP (temuan audit 2026-09-03): 10.000 kombinasi hanya
+  // berbahaya kalau boleh dicoba tanpa batas. Dibatasi per booking DAN per IP.
+  const ipKlien = await clientIpFromHeaders();
+  const bolehPerBooking = await rateLimitShared(
+    `cancel:booking:${parsed.data.bookingId}`,
+    5,
+    3600,
+  );
+  const bolehPerIp = bolehPerBooking && (await rateLimitShared(`cancel:ip:${ipKlien}`, 20, 3600));
+  if (!bolehPerBooking || !bolehPerIp) {
+    return errorState("Terlalu banyak percobaan pembatalan, coba lagi nanti.");
   }
 
   const result = await cancelBooking(parsed.data.bookingId, parsed.data.phoneLast4);
