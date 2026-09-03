@@ -1,6 +1,6 @@
 import { createHash, randomInt } from "node:crypto";
 
-import { sendEmailNow } from "@/lib/notifications";
+import { bantuanEmailText, sendEmailNow } from "@/lib/notifications";
 import { rateLimitShared } from "@/lib/rate-limit";
 import { fail, ok, type Result } from "@/lib/result";
 import { createAdminSupabase } from "@/lib/supabase/admin";
@@ -107,8 +107,7 @@ export async function requestEmailCode(
       `Masukkan kode ini di formulir booking. Berlaku ${MASA_BERLAKU_MENIT} menit.`,
       "Kalau Anda tidak merasa memesan lapak Drive Tech, abaikan email ini.",
       "",
-      "Butuh bantuan? WhatsApp 0888-4089-474 atau 0822-2855-5254 — Panitia Drive Tech",
-      `Klik untuk chat langsung: https://wa.me/628884089474?text=${encodeURIComponent("Halo, saya mengalami kendala saat pemesanan slot")}`,
+      ...bantuanEmailText(),
     ].join("\n"),
   );
 
@@ -130,51 +129,77 @@ export async function requestEmailCode(
   return ok<RequestEmailCodeOut>({});
 }
 
+/** Berapa kode terakhir (belum dipakai, belum kedaluwarsa) yang masih diterima. */
+const KODE_AKTIF_DIPERIKSA = 3;
+
 /**
- * Cocokkan kode dengan record TERBARU yang belum dipakai & belum kedaluwarsa.
- * Sukses → verified_at & used_at diisi (kode sekali pakai); gagal → attempts+1.
- * Mengembalikan true hanya bila cocok. Tidak pernah melempar.
+ * Cocokkan kode dengan kode-kode AKTIF terbaru milik email (belum dipakai &
+ * belum kedaluwarsa; hingga 3 kode terakhir, supaya penyewa yang menekan
+ * "kirim kode" dua kali tidak ditolak hanya karena membaca email pertama).
+ * Cocok → verified_at diisi dan id record dikembalikan; TIDAK langsung
+ * dianggap terpakai — pemanggil memanggil consumeEmailCode() setelah booking
+ * benar-benar tersimpan, sehingga kode tidak hangus bila booking gagal karena
+ * hal lain (tanggal baru terisi, dsb). Gagal → attempts+1 pada kode terbaru.
+ * Mengembalikan null bila tidak cocok. Tidak pernah melempar.
  */
-export async function verifyEmailCode(email: string, code: string): Promise<boolean> {
-  if (!isServiceRoleConfigured()) return false;
+export async function verifyEmailCode(email: string, code: string): Promise<string | null> {
+  if (!isServiceRoleConfigured()) return null;
   const alamat = normalisasiEmail(email);
   const kode = code.trim();
-  if (!/^\d{6}$/.test(kode)) return false;
+  if (!/^\d{6}$/.test(kode)) return null;
 
   try {
     const supabase = createAdminSupabase();
     const now = new Date().toISOString();
-    const terbaru = await supabase
+    const aktif = await supabase
       .from("email_verifications")
       .select("id, code_hash, attempts, expires_at")
       .eq("email", alamat)
       .is("used_at", null)
       .gt("expires_at", now)
       .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (terbaru.error || !terbaru.data) return false;
+      .limit(KODE_AKTIF_DIPERIKSA);
+    if (aktif.error || !aktif.data || aktif.data.length === 0) return null;
 
-    const row = terbaru.data as { id: string; code_hash: string; attempts: number; expires_at: string };
-    if (row.attempts >= MAKS_PERCOBAAN) return false;
+    const rows = aktif.data as { id: string; code_hash: string; attempts: number; expires_at: string }[];
+    const hash = hashKode(alamat, kode);
+    const cocok = rows.find((r) => r.attempts < MAKS_PERCOBAAN && r.code_hash === hash);
 
-    if (row.code_hash !== hashKode(alamat, kode)) {
+    if (!cocok) {
+      const terbaru = rows[0];
       await supabase
         .from("email_verifications")
-        .update({ attempts: row.attempts + 1 })
-        .eq("id", row.id);
-      return false;
+        .update({ attempts: terbaru.attempts + 1 })
+        .eq("id", terbaru.id);
+      return null;
     }
 
-    const dipakai = await supabase
+    await supabase
       .from("email_verifications")
-      .update({ verified_at: now, used_at: now })
-      .eq("id", row.id)
-      .is("used_at", null) // sekali pakai: tolak balapan dua submit dengan kode sama
-      .select("id")
-      .maybeSingle();
-    return Boolean(dipakai.data) && !dipakai.error;
+      .update({ verified_at: now })
+      .eq("id", cocok.id)
+      .is("verified_at", null);
+    return cocok.id;
   } catch {
-    return false;
+    return null;
+  }
+}
+
+/**
+ * Tandai kode sebagai TERPAKAI (sekali pakai) — dipanggil setelah booking
+ * tersimpan. Tidak pernah melempar; kegagalan hanya berarti kode itu masih
+ * bisa dipakai sampai kedaluwarsa (10 menit).
+ */
+export async function consumeEmailCode(id: string): Promise<void> {
+  if (!isServiceRoleConfigured()) return;
+  try {
+    const supabase = createAdminSupabase();
+    await supabase
+      .from("email_verifications")
+      .update({ used_at: new Date().toISOString() })
+      .eq("id", id)
+      .is("used_at", null);
+  } catch {
+    /* diabaikan, lihat catatan di atas */
   }
 }
