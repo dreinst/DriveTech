@@ -18,16 +18,18 @@ import {
   getBookingDetail,
   submitPayment,
 } from "@/lib/services/booking";
+import { requestEmailCode } from "@/lib/services/otp";
 import { getSlotDetail } from "@/lib/services/slots";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { isServiceRoleConfigured } from "@/lib/supabase/config";
 import {
   cancelBookingSchema,
-  createBookingSchema,
+  publicBookingSchema,
+  requestEmailCodeSchema,
   submitPaymentSchema,
   zodFieldErrors,
 } from "@/lib/validation/schemas";
-import { errorState, type ActionState } from "./state";
+import { errorState, successState, type ActionState } from "./state";
 
 /* ------------------------------------------------------------------ */
 /* Utilitas internal                                                   */
@@ -192,12 +194,14 @@ export async function createBookingAction(
   }
 
   const detail = ambilDetail(form);
-  const parsed = createBookingSchema.safeParse({
+  // Jalur publik: email wajib + kode verifikasi email (bila pengiriman email aktif).
+  const parsed = publicBookingSchema.safeParse({
     slotId,
     eventDates: ambilEventDates(form),
     tenantName: teks(form, "tenantName"),
     tenantPhone: teks(form, "tenantPhone"),
     tenantEmail: teks(form, "tenantEmail"),
+    emailOtp: teks(form, "emailOtp"),
     tenantType,
     detail: Object.keys(detail).length > 0 ? detail : undefined,
     notes: teks(form, "notes"),
@@ -259,6 +263,9 @@ export async function createBookingAction(
   if (!result.ok) {
     if (result.code === "SLOT_TAKEN") return errorState(result.error, { slotId: result.error });
     if (result.code === "DATE_TAKEN") return errorState(result.error, { eventDates: result.error });
+    if (result.code === "OTP_REQUIRED" || result.code === "OTP_INVALID") {
+      return errorState(result.error, { emailOtp: result.error });
+    }
     return errorState(result.error);
   }
 
@@ -270,6 +277,32 @@ export async function createBookingAction(
   redirect(`/booking/${result.data.bookingId}/bayar`);
   // Tidak pernah tercapai: redirect() melempar NEXT_REDIRECT.
   return { status: "success" };
+}
+
+/**
+ * Kirim kode verifikasi ke email penyewa (langkah sebelum booking dikunci).
+ * Dipanggil dari BookingForm lewat startTransition (bukan submit form utama),
+ * hanya membawa field "email". Pembatas laju ada di requestEmailCode.
+ */
+export async function requestEmailCodeAction(
+  prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const form = ambilFormData(prevState, formData);
+  const parsed = requestEmailCodeSchema.safeParse({ email: teks(form, "email") });
+  if (!parsed.success) {
+    const errors = zodFieldErrors(parsed.error);
+    const pesan = errors.email ?? "Email tidak valid.";
+    return errorState(pesan, { email: pesan });
+  }
+
+  const ipKlien = await clientIpFromHeaders();
+  const result = await requestEmailCode(parsed.data.email, ipKlien);
+  if (!result.ok) return errorState(result.error, { email: result.error });
+
+  const pesan = `Kode terkirim ke ${parsed.data.email}. Cek kotak masuk/spam, berlaku 10 menit.`;
+  // devCode hanya muncul di luar produksi saat email dry-run (uji lokal tanpa SMTP).
+  return successState(result.data.devCode ? `${pesan} [DEV: kode ${result.data.devCode}]` : pesan);
 }
 
 /** Unggah bukti pembayaran QRIS di /booking/[bookingId]/bayar (metode tunggal: qris). */

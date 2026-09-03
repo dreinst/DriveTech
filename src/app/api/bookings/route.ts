@@ -6,7 +6,7 @@ import { createBooking } from "@/lib/services/booking";
 import { getFloorPlan } from "@/lib/services/slots";
 import type { SlotStatus, ZoneType } from "@/lib/types/database";
 import { slotDisplayName } from "@/lib/utils";
-import { createBookingSchema } from "@/lib/validation/schemas";
+import { publicBookingSchema } from "@/lib/validation/schemas";
 import {
   handleRoute,
   jsonOk,
@@ -158,12 +158,16 @@ export async function GET(request: Request): Promise<NextResponse> {
 
 /**
  * Body JSON:
- *   { slotId, eventDates, tenantName, tenantPhone, tenantEmail?, tenantType, detail?, notes? }
+ *   { slotId, eventDates, tenantName, tenantPhone, tenantEmail, tenantType, detail?, notes?, emailOtp? }
+ * tenantEmail WAJIB (kode booking dikirim ke email). emailOtp = kode 6 digit dari
+ * POST /api/bookings/email-code — WAJIB bila pengiriman email aktif (SMTP/Resend
+ * terkonfigurasi, lihat isEmailConfigured); tanpa transport email kode tidak diminta.
  * eventDates: array string "YYYY-MM-DD" (min 1, maks 16) — tanggal weekend yang
  * disewa; slot harus bebas di SEMUA tanggal tersebut.
  * Sukses 201: { bookingId, bookingCode }
- * Gagal: 400 (validasi), 409 SLOT_TAKEN (slot diblokir) / DATE_TAKEN (sebagian
- * tanggal baru saja terisi), 503 (Supabase belum dikonfigurasi).
+ * Gagal: 400 (validasi / OTP_REQUIRED / OTP_INVALID), 409 SLOT_TAKEN (slot
+ * diblokir) / DATE_TAKEN (sebagian tanggal baru saja terisi), 503 (Supabase
+ * belum dikonfigurasi).
  */
 export async function POST(request: Request): Promise<NextResponse> {
   return handleRoute("POST /api/bookings", async () => {
@@ -179,7 +183,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     const body = await readJsonObject(request);
     if (body === null) return jsonError(INVALID_JSON_MESSAGE, 400, { code: "INVALID_BODY" });
 
-    const parsed = createBookingSchema.safeParse(body);
+    const parsed = publicBookingSchema.safeParse(body);
     if (!parsed.success) {
       return jsonValidationError("Data booking tidak valid.", parsed.error);
     }

@@ -1,7 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useCallback, useEffect, useId, useRef, useState } from "react";
+import {
+  startTransition,
+  useActionState,
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from "react";
 import type { FormEvent, ReactNode } from "react";
 
 import { DateChips, type DateChipStatus } from "@/components/denah/DateChips";
@@ -11,7 +19,7 @@ import { Alert } from "@/components/ui/Alert";
 import { buttonClass } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { SubmitButton } from "@/components/ui/SubmitButton";
-import { createBookingAction } from "@/lib/actions/booking";
+import { createBookingAction, requestEmailCodeAction } from "@/lib/actions/booking";
 import { initialActionState } from "@/lib/actions/state";
 import {
   EVENT_INFO,
@@ -20,6 +28,7 @@ import {
   TRANSMISSION_LABEL,
   TRANSMISSION_OPTIONS,
   vehicleKindForZoneType,
+  waHref,
 } from "@/lib/domain/constants";
 import { slotAdminFee } from "@/lib/domain/harga";
 import { hitungTotalBiaya } from "@/lib/domain/ketersediaan";
@@ -44,6 +53,12 @@ export type BookingFormProps = {
   takenDates: Record<string, BookingStatus>;
   /** Pilihan awal (dari ?tanggal= di URL, sudah disaring halaman). */
   initialDates: string[];
+  /**
+   * True bila pengiriman email aktif di server (isEmailConfigured): form
+   * menampilkan tombol "Kirim kode verifikasi" + input kode, dan server
+   * mewajibkannya. False = langkah kode disembunyikan (email tetap wajib).
+   */
+  emailOtpAktif: boolean;
 };
 
 /**
@@ -57,9 +72,32 @@ export type BookingFormProps = {
  * dikumpulkan server action jadi kolom jsonb tenants.detail — sesuai
  * createBookingSchema yang menerima `detail: Record<string, unknown>`.
  */
-export function BookingForm({ slot, eventDates, takenDates, initialDates }: BookingFormProps) {
+export function BookingForm({
+  slot,
+  eventDates,
+  takenDates,
+  initialDates,
+  emailOtpAktif,
+}: BookingFormProps) {
   const [state, formAction] = useActionState(createBookingAction, initialActionState);
   const id = useId();
+
+  /* ---------- Kode verifikasi email (OTP) ----------
+     Action terpisah dari submit form utama: dipanggil lewat startTransition
+     dengan FormData berisi field "email" saja, jadi tidak memicu onSubmit /
+     validasi tanggal. Kode dikirim ke email penyewa dan dimasukkan di input
+     emailOtp; server mewajibkannya bila pengiriman email aktif. */
+  const [otpState, otpAction, otpPending] = useActionState(
+    requestEmailCodeAction,
+    initialActionState,
+  );
+  const emailRef = useRef<HTMLInputElement>(null);
+  function kirimKodeVerifikasi() {
+    const fd = new FormData();
+    fd.set("email", emailRef.current?.value ?? "");
+    startTransition(() => otpAction(fd));
+  }
+  const kontakBantuan = EVENT_INFO.contacts[0];
 
   /* ---------- Tanggal sewa (>= 1, hanya tanggal yang masih bebas) ---------- */
   const [dipilih, setDipilih] = useState<string[]>(initialDates);
@@ -144,6 +182,7 @@ export function BookingForm({ slot, eventDates, takenDates, initialDates }: Book
       for (const [name, value] of new FormData(form).entries()) {
         if (typeof value !== "string") continue; // lewati berkas (foto)
         if (name === "eventDates" || name === "slotId" || name === "tenantType") continue;
+        if (name === "emailOtp") continue; // kode sekali pakai, jangan dipulihkan
         if (value.trim().length === 0) continue;
         fields[name] = value;
       }
@@ -330,14 +369,22 @@ export function BookingForm({ slot, eventDates, takenDates, initialDates }: Book
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Email (opsional)" htmlFor={`${id}-email`} error={errors.tenantEmail}>
+        <Field
+          label="Email (kode booking dikirim ke sini)"
+          htmlFor={`${id}-email`}
+          hint="Pastikan benar — kode booking dan semua pemberitahuan dikirim ke email ini."
+          error={errors.tenantEmail ?? otpState.fieldErrors?.email}
+          required
+        >
           <Input
+            ref={emailRef}
             id={`${id}-email`}
             name="tenantEmail"
             type="email"
             autoComplete="email"
             placeholder="nama@email.com"
             aria-invalid={errors.tenantEmail ? true : undefined}
+            required
           />
         </Field>
 
@@ -368,6 +415,60 @@ export function BookingForm({ slot, eventDates, takenDates, initialDates }: Book
       {/* Select yang disabled tidak ikut terkirim — kirim nilainya lewat hidden input. */}
       {terkunci ? <input type="hidden" name="tenantType" value={tenantType} /> : null}
 
+      {emailOtpAktif ? (
+        <div
+          role="group"
+          aria-label="Verifikasi email"
+          className="rounded-[var(--radius)] border border-line bg-surface-2 p-4 sm:p-5"
+        >
+          <p className="text-sm font-medium text-ink">Verifikasi email</p>
+          <p className="mt-1 text-xs leading-relaxed text-muted">
+            Kami kirim kode 6 digit ke email di atas untuk memastikan alamatnya benar. Slot
+            baru dikunci setelah kodenya cocok.
+          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={kirimKodeVerifikasi}
+              disabled={otpPending}
+              className={buttonClass("secondary", "sm")}
+            >
+              {otpPending ? "Mengirim kode…" : "Kirim kode verifikasi"}
+            </button>
+            {otpState.status !== "idle" && otpState.message ? (
+              <p
+                role="status"
+                className={`text-xs font-medium ${otpState.status === "success" ? "text-ok" : "text-danger"}`}
+              >
+                {otpState.message}
+              </p>
+            ) : null}
+          </div>
+          <div className="mt-3 max-w-xs">
+            <Field
+              label="Kode verifikasi email"
+              htmlFor={`${id}-otp`}
+              hint="Cek kotak masuk/spam. Kode berlaku 10 menit."
+              error={errors.emailOtp}
+              required
+            >
+              <Input
+                id={`${id}-otp`}
+                name="emailOtp"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                pattern="[0-9]{6}"
+                maxLength={6}
+                placeholder="123456"
+                className="tabular tracking-[0.3em]"
+                aria-invalid={errors.emailOtp ? true : undefined}
+                required
+              />
+            </Field>
+          </div>
+        </div>
+      ) : null}
+
       <DetailFields tenantType={tenantType} idPrefix={id} errors={errors} />
 
       {isVehicleZoneType(slot.zone.zone_type) ? (
@@ -396,7 +497,19 @@ export function BookingForm({ slot, eventDates, takenDates, initialDates }: Book
       {/* Footer aksi: ghost "Batal" kiri, submit pil hitam kanan. */}
       <div className="space-y-3 border-t border-line pt-4">
         <p className="text-xs text-muted">
-          Slot langsung dikunci untuk tanggal terpilih begitu formulir dikirim.
+          Slot langsung dikunci untuk tanggal terpilih begitu formulir dikirim. Kode booking
+          dikirim ke email Anda.{" "}
+          <span className="whitespace-nowrap">
+            Butuh bantuan?{" "}
+            <a
+              href={waHref(kontakBantuan.phone, "Halo Panitia Drive Tech, saya butuh bantuan booking lapak")}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-accent underline-offset-2 hover:underline"
+            >
+              WhatsApp {kontakBantuan.phone}
+            </a>
+          </span>
         </p>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Link href="/" className={buttonClass("ghost", "md")}>

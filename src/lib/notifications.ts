@@ -1,43 +1,43 @@
 /**
- * Notifikasi keluar ke tenant lewat WhatsApp & email.
+ * Notifikasi keluar ke tenant: EMAIL (jalur utama) dan WhatsApp (opsional).
  *
- * WhatsApp punya TIGA mode, dipilih lewat env WA_PROVIDER:
+ * Keputusan pemilik 2026-09-03: nomor WhatsApp kantor diblokir, jadi SEMUA kode
+ * booking & notifikasi penyewa dikirim lewat EMAIL. WhatsApp 0822-2855-5254
+ * hanya untuk bantuan bila penyewa bingung (disebut di badan email).
  *
- *   outbox  (DEFAULT, keputusan pemilik 2026-09-03) — pesan TIDAK dikirim dari
- *           Vercel. Aplikasi menulis satu baris ke tabel public.notification_outbox
- *           (PostgREST + service_role), lalu worker di VPS
- *           (tools/vps/drivetech-wa-outbox.py, timer tiap menit) mengirimnya lewat
- *           `hermes send` = bot WhatsApp Hermes di NOMOR KANTOR 6282232999900.
- *           Jadi penyewa menerima kode booking dari nomor kantor. Butuh
- *           NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY (sudah ada untuk
- *           aplikasi); tanpa keduanya jatuh ke dry-run.
- *   fonnte  — kirim langsung ke API Fonnte (https://fonnte.com):
- *     WA_API_TOKEN   token perangkat Fonnte (WAJIB agar WA aktif)
- *     WA_API_URL     endpoint kirim (default https://api.fonnte.com/send)
- *   off     — WhatsApp dimatikan (dicatat ke log saja).
+ *   Email — urutan pemilihan transport:
+ *     1. SMTP generik (nodemailer): SMTP_HOST, SMTP_PORT (465 = TLS langsung,
+ *        selain itu STARTTLS), SMTP_USER, SMTP_PASS, SMTP_FROM
+ *        (mis. "Drive Tech <alamat@gmail.com>"; fallback NOTIF_EMAIL_FROM).
+ *     2. Resend (https://resend.com): RESEND_API_KEY (+ NOTIF_EMAIL_FROM).
+ *     3. Tanpa keduanya → DRY-RUN (dicatat ke log, tidak ada panggilan keluar).
+ *     Batas tunggu 8 detik. `sendEmailNow()` dipakai alur OTP (menunggu hasil);
+ *     `notifyBooking()` fire-and-forget.
  *
- * Selama kredensial mode yang dipilih belum ada, pengiriman berjalan DRY-RUN
- * (payload dicatat ke log, tidak ada panggilan keluar) sehingga aman dijalankan
- * di produksi maupun skrip tes.
- *
- *   Email (default provider Resend — https://resend.com):
- *     RESEND_API_KEY   api key Resend (WAJIB agar email aktif)
- *     NOTIF_EMAIL_FROM pengirim (default "Drive Tech <no-reply@drivetech.local>")
- *   Umum:
- *     WA_OVERRIDE_RECIPIENT  kalau diisi, SEMUA WA dialihkan ke nomor ini
- *                            (mode uji: pakai nomor dummy dulu sebelum go-live)
+ *   WhatsApp punya TIGA mode lewat env WA_PROVIDER (DEFAULT kini `off`):
+ *     off     — tidak dikirim (dicatat ke log saja).
+ *     outbox  — pesan ditulis ke tabel public.notification_outbox (PostgREST +
+ *               service_role) lalu dikirim worker VPS (tools/vps/
+ *               drivetech-wa-outbox.py) lewat `hermes send` bila ada nomor bot.
+ *     fonnte  — kirim langsung ke API Fonnte: WA_API_TOKEN (wajib), WA_API_URL.
+ *     WA_OVERRIDE_RECIPIENT mengalihkan SEMUA WA ke satu nomor (mode uji).
  *
  * Modul KHUSUS SERVER, TAPI sengaja SELF-CONTAINED (tanpa import next/server,
  * tanpa alias "@/…") supaya bisa dijalankan langsung oleh Node untuk pengetesan
  * (scripts/test-notifikasi.ts). Penjadwalan fire-and-forget lewat next `after()`
  * dilakukan dengan dynamic import ber-fallback agar tidak menggagalkan skrip.
  */
+import nodemailer from "nodemailer";
 
 /** Nomor WhatsApp dummy untuk uji coba sebelum nomor asli disetel. */
 export const DUMMY_WA_RECIPIENT = "6281200000000";
 
-/** Batas tunggu panggilan provider (ms) — jangan menahan respons ke pengguna. */
+/** Batas tunggu panggilan provider WhatsApp (ms) — jangan menahan respons ke pengguna. */
 const NOTIF_TIMEOUT_MS = 5000;
+/** Batas tunggu pengiriman email (ms): OTP menunggu hasil ini, jadi tetap singkat. */
+const EMAIL_TIMEOUT_MS = 8000;
+/** Nomor bantuan panitia yang disebut di setiap email (keputusan pemilik 2026-09-03). */
+const WA_BANTUAN = "0822-2855-5254";
 
 export type NotifChannelResult = {
   channel: "whatsapp" | "email";
@@ -63,11 +63,11 @@ export type WaMeta = {
 
 type WaProvider = "outbox" | "fonnte" | "off";
 
-/** Mode WhatsApp dari env; nilai tak dikenal/kosong = outbox (bawaan). */
+/** Mode WhatsApp dari env; nilai tak dikenal/kosong = off (bawaan sejak 2026-09-03). */
 function waProvider(): WaProvider {
   const raw = (process.env.WA_PROVIDER ?? "").trim().toLowerCase();
   if (raw === "fonnte" || raw === "off" || raw === "outbox") return raw;
-  return "outbox";
+  return "off";
 }
 
 /* ------------------------------------------------------------------ */
@@ -198,39 +198,118 @@ export async function sendWhatsApp(
   }
 }
 
-/** Kirim satu email. Tidak pernah melempar. */
-export async function sendEmail(
-  to: string,
-  subject: string,
-  text: string,
-): Promise<NotifChannelResult> {
-  const key = process.env.RESEND_API_KEY?.trim() ?? "";
+/**
+ * True bila ada transport email sungguhan (SMTP lengkap atau Resend). Dipakai
+ * alur booking untuk memutuskan apakah OTP email DIWAJIBKAN: tanpa transport,
+ * kode tidak mungkin sampai ke penyewa, jadi verifikasi dilewati (email tetap
+ * wajib diisi) — keputusan pemilik 2026-09-03 agar rilis tidak tertahan
+ * kredensial SMTP.
+ */
+export function isEmailConfigured(): boolean {
+  const smtpLengkap =
+    (process.env.SMTP_HOST ?? "").trim().length > 0 &&
+    (process.env.SMTP_USER ?? "").trim().length > 0 &&
+    (process.env.SMTP_PASS ?? "").length > 0;
+  const resend = (process.env.RESEND_API_KEY ?? "").trim().length > 0;
+  return smtpLengkap || resend;
+}
+
+type SmtpConfig = { host: string; port: number; user: string; pass: string; from: string };
+
+/** Konfigurasi SMTP dari env; null bila SMTP_HOST kosong. */
+function smtpConfig(): SmtpConfig | null {
+  const host = (process.env.SMTP_HOST ?? "").trim();
+  if (host.length === 0) return null;
+  const port = Number.parseInt((process.env.SMTP_PORT ?? "465").trim(), 10) || 465;
+  const from =
+    (process.env.SMTP_FROM ?? "").trim() ||
+    (process.env.NOTIF_EMAIL_FROM ?? "").trim() ||
+    "Drive Tech <no-reply@drivetech.local>";
+  return {
+    host,
+    port,
+    user: (process.env.SMTP_USER ?? "").trim(),
+    pass: process.env.SMTP_PASS ?? "",
+    from,
+  };
+}
+
+/** Kirim lewat SMTP (nodemailer). Dipanggil sendEmail; tidak pernah melempar. */
+async function kirimSmtp(cfg: SmtpConfig, to: string, subject: string, text: string): Promise<NotifChannelResult> {
+  try {
+    const transport = nodemailer.createTransport({
+      host: cfg.host,
+      port: cfg.port,
+      secure: cfg.port === 465,
+      auth: cfg.user.length > 0 ? { user: cfg.user, pass: cfg.pass } : undefined,
+      connectionTimeout: EMAIL_TIMEOUT_MS,
+      greetingTimeout: EMAIL_TIMEOUT_MS,
+      socketTimeout: EMAIL_TIMEOUT_MS,
+    });
+    await transport.sendMail({ from: cfg.from, to, subject, text });
+    return { channel: "email", delivered: true, dryRun: false, to };
+  } catch (error) {
+    console.warn("[notif][email][smtp] gagal kirim:", error instanceof Error ? error.message : error);
+    return { channel: "email", delivered: false, dryRun: false, to, info: "smtp" };
+  }
+}
+
+/** Kirim lewat Resend. Dipanggil sendEmail; tidak pernah melempar. */
+async function kirimResend(key: string, to: string, subject: string, text: string): Promise<NotifChannelResult> {
   const from = process.env.NOTIF_EMAIL_FROM?.trim() || "Drive Tech <no-reply@drivetech.local>";
-
-  if (!to || to.trim().length === 0) {
-    return { channel: "email", delivered: false, dryRun: false, to: "", info: "email kosong" };
-  }
-  if (key.length === 0) {
-    console.info(`[notif][email][dry-run] -> ${to} | ${subject}\n${text}`);
-    return { channel: "email", delivered: false, dryRun: true, to };
-  }
-
   try {
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
       body: JSON.stringify({ from, to, subject, text }),
-      signal: AbortSignal.timeout(NOTIF_TIMEOUT_MS),
+      signal: AbortSignal.timeout(EMAIL_TIMEOUT_MS),
     });
     if (!response.ok) {
-      console.warn(`[notif][email] provider membalas ${response.status}`);
+      console.warn(`[notif][email][resend] provider membalas ${response.status}`);
       return { channel: "email", delivered: false, dryRun: false, to, info: `HTTP ${response.status}` };
     }
     return { channel: "email", delivered: true, dryRun: false, to };
   } catch (error) {
-    console.warn("[notif][email] gagal kirim:", error);
+    console.warn("[notif][email][resend] gagal kirim:", error);
     return { channel: "email", delivered: false, dryRun: false, to, info: "exception" };
   }
+}
+
+/**
+ * Kirim satu email: SMTP bila SMTP_HOST ada, lalu Resend bila RESEND_API_KEY
+ * ada, selain itu dry-run. Tidak pernah melempar.
+ */
+export async function sendEmail(
+  to: string,
+  subject: string,
+  text: string,
+): Promise<NotifChannelResult> {
+  const tujuan = (to ?? "").trim();
+  if (tujuan.length === 0) {
+    return { channel: "email", delivered: false, dryRun: false, to: "", info: "email kosong" };
+  }
+
+  const smtp = smtpConfig();
+  if (smtp) return kirimSmtp(smtp, tujuan, subject, text);
+
+  const key = process.env.RESEND_API_KEY?.trim() ?? "";
+  if (key.length > 0) return kirimResend(key, tujuan, subject, text);
+
+  console.info(`[notif][email][dry-run] -> ${tujuan} | ${subject}\n${text}`);
+  return { channel: "email", delivered: false, dryRun: true, to: tujuan };
+}
+
+/**
+ * Varian SINKRON untuk alur yang harus tahu hasilnya sebelum membalas pengguna
+ * (mis. kode verifikasi OTP). Sama dengan sendEmail — dinamai eksplisit supaya
+ * pemanggil tidak keliru memakai jalur fire-and-forget.
+ */
+export async function sendEmailNow(
+  to: string,
+  subject: string,
+  text: string,
+): Promise<NotifChannelResult> {
+  return sendEmail(to, subject, text);
 }
 
 /* ------------------------------------------------------------------ */
@@ -251,6 +330,8 @@ export type BookingNotif = {
   deadlineText?: string | null;
   /** Alasan penolakan/pembatalan bila relevan. */
   reason?: string | null;
+  /** Tautan halaman status booking (absolut), disertakan di email. */
+  statusUrl?: string | null;
 };
 
 export type BookingNotifKind = "created" | "verified" | "rejected" | "cancelled";
@@ -285,15 +366,50 @@ export function buildBookingWa(kind: BookingNotifKind, d: BookingNotif): string 
   }
 }
 
-/** Judul + isi email untuk satu peristiwa booking. */
+/**
+ * Judul + isi email untuk satu peristiwa booking. Email adalah jalur UTAMA kode
+ * booking, jadi kodenya ditulis tegas, disertai tautan status dan nomor bantuan.
+ */
 export function buildBookingEmail(kind: BookingNotifKind, d: BookingNotif): { subject: string; text: string } {
   const subjectByKind: Record<BookingNotifKind, string> = {
-    created: `Booking ${d.bookingCode} diterima — selesaikan pembayaran`,
+    created: `Kode booking ${d.bookingCode} — selesaikan pembayaran`,
     verified: `Booking ${d.bookingCode} terkonfirmasi`,
     rejected: `Bukti pembayaran ${d.bookingCode} ditolak`,
     cancelled: `Booking ${d.bookingCode} dibatalkan`,
   };
-  return { subject: subjectByKind[kind], text: buildBookingWa(kind, d) };
+  const tanggal = d.dates.length > 0 ? d.dates.join(", ") : "-";
+  const badan: Record<BookingNotifKind, string> = {
+    created: `Booking Anda kami terima.\nBiaya admin: ${formatRupiah(d.amount)}.\n${
+      d.deadlineText
+        ? `Bayar lewat QRIS lalu unggah bukti sebelum ${d.deadlineText} agar slot tidak dilepas otomatis.`
+        : "Bayar lewat QRIS lalu unggah bukti agar slot dikonfirmasi."
+    }`,
+    verified:
+      "Pembayaran Anda TERVERIFIKASI dan booking dikonfirmasi. Tunjukkan kode booking (atau QR di halaman status) saat registrasi ulang di lokasi. Sampai jumpa di pameran!",
+    rejected: `Mohon maaf, bukti pembayaran Anda DITOLAK.${d.reason ? `\nAlasan: ${d.reason}.` : ""}\n${
+      d.deadlineText
+        ? `Silakan unggah ulang bukti yang benar sebelum ${d.deadlineText}.`
+        : "Silakan unggah ulang bukti yang benar dari halaman status booking."
+    }`,
+    cancelled: `Booking Anda DIBATALKAN.${d.reason ? `\nAlasan: ${d.reason}.` : ""}\nTanggal sewa telah dilepas. Anda bisa memesan slot lain kapan saja.`,
+  };
+  const text = [
+    `Halo ${d.tenantName},`,
+    "",
+    `KODE BOOKING ANDA: ${d.bookingCode}`,
+    `Lapak: ${d.slotName} (${d.zoneName})`,
+    `Tanggal: ${tanggal}`,
+    "",
+    badan[kind],
+    d.statusUrl ? `\nCek status booking: ${d.statusUrl}` : "",
+    "",
+    `Butuh bantuan verifikasi kode booking? WhatsApp ${WA_BANTUAN}`,
+    `— ${KONTAK_PANITIA}`,
+  ]
+    .filter((baris) => baris !== "")
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n");
+  return { subject: subjectByKind[kind], text };
 }
 
 /* ------------------------------------------------------------------ */
@@ -323,17 +439,22 @@ async function jadwalkan(promise: Promise<unknown>): Promise<void> {
 }
 
 /**
- * Kirim notifikasi satu peristiwa booking ke WhatsApp (dan email bila ada
- * alamatnya). Fire-and-forget: panggil dengan `void notifyBooking(...)` SETELAH
- * operasi utama sukses. Tidak pernah menggagalkan operasi utama.
+ * Kirim notifikasi satu peristiwa booking: EMAIL (jalur utama, wajib ada
+ * alamatnya) lalu WhatsApp bila WA_PROVIDER aktif. Fire-and-forget: panggil
+ * dengan `void notifyBooking(...)` SETELAH operasi utama sukses. Tidak pernah
+ * menggagalkan operasi utama.
  */
 export async function notifyBooking(kind: BookingNotifKind, d: BookingNotif): Promise<void> {
   const kirim = (async () => {
-    const waNumber = toWaNumber(d.tenantPhone);
-    await sendWhatsApp(waNumber, buildBookingWa(kind, d), { kind, bookingCode: d.bookingCode });
     if (d.tenantEmail && d.tenantEmail.trim().length > 0) {
       const { subject, text } = buildBookingEmail(kind, d);
       await sendEmail(d.tenantEmail.trim(), subject, text);
+    } else {
+      console.warn(`[notif][email] booking ${d.bookingCode} tanpa alamat email — kode booking tidak terkirim`);
+    }
+    if (waProvider() !== "off") {
+      const waNumber = toWaNumber(d.tenantPhone);
+      await sendWhatsApp(waNumber, buildBookingWa(kind, d), { kind, bookingCode: d.bookingCode });
     }
   })();
   await jadwalkan(kirim);

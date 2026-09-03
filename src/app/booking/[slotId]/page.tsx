@@ -16,6 +16,7 @@ import { Stepper } from "@/components/ui/Stepper";
 import { EVENT_INFO, isBookableZoneType, waHref } from "@/lib/domain/constants";
 import { slotAdminFee } from "@/lib/domain/harga";
 import { ZONE_TYPE_LABEL } from "@/lib/domain/labels";
+import { isEmailConfigured } from "@/lib/notifications";
 import {
   getActiveEventDates,
   getSlotDetail,
@@ -302,6 +303,9 @@ export default async function BookingSlotPage({ params, searchParams }: PageProp
             eventDates={eventDates}
             takenDates={takenDates}
             initialDates={initialDates}
+            // OTP email hanya diminta bila transport email aktif (SMTP/Resend);
+            // tanpa itu kode tak mungkin sampai, form menyembunyikan langkahnya.
+            emailOtpAktif={isEmailConfigured()}
           />
         </CardContent>
       </Card>

@@ -7,8 +7,10 @@
  * dicetak, tidak ada panggilan keluar. Ini sengaja — membuktikan format pesan
  * & alur benar sebelum nomor/provider sungguhan dipasang.
  *
- * Mode WhatsApp bawaan = outbox (antre ke notification_outbox, dikirim worker
- * VPS dari nomor kantor). Untuk mengantre sungguhan ke satu nomor uji:
+ * Email = jalur utama sejak 2026-09-03. Uji SMTP sungguhan:
+ *   SMTP_HOST=smtp.gmail.com SMTP_PORT=465 SMTP_USER=… SMTP_PASS=… SMTP_FROM="Drive Tech <…>" \
+ *     node scripts/test-notifikasi.ts
+ * Mode WhatsApp bawaan = off. Untuk mengantre sungguhan ke satu nomor uji:
  *   NEXT_PUBLIC_SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… WA_OVERRIDE_RECIPIENT=628xxxx \
  *     node scripts/test-notifikasi.ts
  * Untuk mode Fonnte langsung:
