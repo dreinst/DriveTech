@@ -90,8 +90,8 @@ export async function requestEmailCode(
       `Masukkan kode ini di formulir booking. Berlaku ${MASA_BERLAKU_MENIT} menit.`,
       "Kalau Anda tidak merasa memesan lapak Drive Tech, abaikan email ini.",
       "",
-      "Butuh bantuan? WhatsApp 0822-2855-5254 atau 0888-4089-474 — Panitia Drive Tech",
-      `Klik untuk chat langsung: https://wa.me/6282228555254?text=${encodeURIComponent("Halo, saya mengalami kendala saat pemesanan slot")}`,
+      "Butuh bantuan? WhatsApp 0888-4089-474 atau 0822-2855-5254 — Panitia Drive Tech",
+      `Klik untuk chat langsung: https://wa.me/628884089474?text=${encodeURIComponent("Halo, saya mengalami kendala saat pemesanan slot")}`,
     ].join("\n"),
   );
 
@@ -100,13 +100,13 @@ export async function requestEmailCode(
     // di produksi jangan pernah bocorkan kode.
     if (process.env.NODE_ENV !== "production") return ok<RequestEmailCodeOut>({ devCode: kode });
     return fail<RequestEmailCodeOut>(
-      "Pengiriman email belum dikonfigurasi. Hubungi panitia lewat WhatsApp 0822-2855-5254.",
+      "Pengiriman email belum dikonfigurasi. Hubungi panitia lewat WhatsApp 0888-4089-474.",
       "EMAIL_NOT_CONFIGURED",
     );
   }
   if (!hasil.delivered) {
     return fail<RequestEmailCodeOut>(
-      "Email verifikasi gagal dikirim. Periksa alamatnya lalu coba lagi, atau hubungi WhatsApp 0822-2855-5254.",
+      "Email verifikasi gagal dikirim. Periksa alamatnya lalu coba lagi, atau hubungi WhatsApp 0888-4089-474.",
       "EMAIL_FAILED",
     );
   }

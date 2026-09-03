@@ -37,9 +37,9 @@ const NOTIF_TIMEOUT_MS = 5000;
 /** Batas tunggu pengiriman email (ms): OTP menunggu hasil ini, jadi tetap singkat. */
 const EMAIL_TIMEOUT_MS = 8000;
 /** Nomor bantuan panitia yang disebut di setiap email (keputusan pemilik 2026-09-03). */
-const WA_BANTUAN = "0822-2855-5254 atau 0888-4089-474";
+const WA_BANTUAN = "0888-4089-474 atau 0822-2855-5254";
 /** Tautan bantuan standar (keputusan pemilik 2026-09-03), tanpa import @/ agar modul tetap mandiri. */
-const WA_BANTUAN_LINK = `https://wa.me/6282228555254?text=${encodeURIComponent("Halo, saya mengalami kendala saat pemesanan slot")}`;
+const WA_BANTUAN_LINK = `https://wa.me/628884089474?text=${encodeURIComponent("Halo, saya mengalami kendala saat pemesanan slot")}`;
 
 export type NotifChannelResult = {
   channel: "whatsapp" | "email";
