@@ -14,10 +14,10 @@ import {
   CardTitle,
 } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Stepper } from "@/components/ui/Stepper";
 import { EVENT_INFO } from "@/lib/domain/constants";
 import { TENANT_TYPE_LABEL } from "@/lib/domain/labels";
+import { slotHasMarketedUnit } from "@/lib/services/purchase";
 import { getSlotDetail, getSlotTenant } from "@/lib/services/slots";
 import { slotDisplayName } from "@/lib/utils";
 
@@ -125,7 +125,15 @@ export default async function BeliUnitPage({
     );
   }
 
-  if (slot.status === "available") {
+  // Sejak booking per tanggal (Layout v2), slots.status tetap "available" walau
+  // lapaknya sudah disewa — jadi jangan menilai dari status slot. Yang menentukan
+  // adalah: ada unit kendaraan yang dipasarkan dari booking TERKONFIRMASI di slot ini
+  // (aturan yang sama dengan validasi server di createPurchase). Gagal memeriksa
+  // dianggap ada, karena server tetap memvalidasi saat pengajuan dikirim.
+  const unitResult = await slotHasMarketedUnit(slot.id);
+  const adaUnitDipasarkan = unitResult.ok ? unitResult.data : true;
+
+  if (!adaUnitDipasarkan) {
     return (
       <div className="mx-auto w-full max-w-3xl space-y-4">
         <PageHeader
@@ -170,7 +178,9 @@ export default async function BeliUnitPage({
             <CardContent>
               <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
                 <div className="min-w-0">
-                  <StatusBadge status={slot.status} kind="slot" />
+                  <p className="text-xs font-semibold uppercase tracking-[0.08em] text-subtle">
+                    Lapak terisi · unit dipamerkan
+                  </p>
                   <p className="mt-2.5 text-2xl font-semibold tracking-[-0.01em] text-ink sm:text-3xl">
                     {namaSlot}
                   </p>
