@@ -606,7 +606,8 @@ export async function adminCreateBooking(
   if (opts.autoConfirm) {
     const supabase = createAdminSupabase();
     const now = new Date().toISOString();
-    // Tandai lunas: pembayaran dikumpulkan panitia di luar sistem (tanpa bukti).
+    // Tandai lunas: pembayaran dikumpulkan panitia di luar sistem (tanpa bukti),
+    // jadi dicatat sebagai 'cash' — bukan 'qris' yang khusus alur publik.
     const payQ = await supabase
       .from("admin_fee_payments")
       .select("id")
@@ -617,7 +618,7 @@ export async function adminCreateBooking(
         .from("admin_fee_payments")
         .update({
           status: "verified",
-          method: "transfer",
+          method: "cash",
           verified_by: opts.adminId,
           verified_at: now,
           reject_reason: null,
@@ -1274,13 +1275,14 @@ export async function getAnalyticsData(): Promise<Result<AnalyticsData>> {
           jumlah: leasingRows.filter((row) => row.status === status).length,
         }));
 
-  // (d) Metode pembayaran biaya admin (cash vs transfer).
+  // (d) Metode pembayaran biaya admin: qris (alur publik sejak 2026-09-02),
+  //     plus data lama transfer/cash.
   const paymentsQuery = await supabase.from("admin_fee_payments").select("method");
   if (paymentsQuery.error) {
     return dbFail<AnalyticsData>(paymentsQuery.error as PgError, "Gagal memuat pembayaran");
   }
   const paymentRows = (paymentsQuery.data ?? []) as Array<{ method: PaymentMethod }>;
-  const metodePembayaran: PaymentMethodPoint[] = (["transfer", "cash"] as const)
+  const metodePembayaran: PaymentMethodPoint[] = (["qris", "transfer", "cash"] as const)
     .map((metode) => ({
       metode,
       jumlah: paymentRows.filter((row) => row.method === metode).length,

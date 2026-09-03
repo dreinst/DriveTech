@@ -14,6 +14,7 @@ import { FLOOR_PLAN_ZONES } from "@/lib/domain/layout";
 export const ADMIN_FEE_BY_ZONE_TYPE: Record<ZoneType, number> = {
   mobil_baru: 1_000_000,
   mobil_bekas: 50_000,
+  motor_baru: 500_000,
   mobil_motor_bekas: 25_000,
   umkm: 250_000,
   booth_khusus: 500_000,

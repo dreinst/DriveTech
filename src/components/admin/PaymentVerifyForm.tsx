@@ -95,7 +95,7 @@ export function PaymentVerifyForm({
               rows={2}
               required
               minLength={3}
-              placeholder="Contoh: nominal transfer tidak sesuai."
+              placeholder="Contoh: nominal pembayaran tidak sesuai."
               className="text-xs"
             />
             <SubmitButton size="sm" variant="danger" pendingText="Menolak…">

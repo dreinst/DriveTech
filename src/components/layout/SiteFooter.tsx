@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { EVENT_INFO } from "@/lib/domain/constants";
+import { EVENT_INFO, waHref } from "@/lib/domain/constants";
 
 const FOOTER_LINKS = [
   { href: "/#denah", label: "Denah" },
+  { href: "/#sponsor", label: "Sponsor" },
   { href: "/#cek-status", label: "Cek Status" },
   { href: "/admin", label: "Admin" },
 ] as const;
@@ -15,7 +16,8 @@ const FOOTER_LINKS = [
 export function SiteFooter() {
   // Model per tanggal: event berjalan terus tiap akhir pekan, jadi tahun hak cipta = tahun berjalan.
   const tahun = new Date().getFullYear();
-  const telHref = `tel:${EVENT_INFO.contact.replace(/[^0-9+]/g, "")}`;
+  // "Kontak" membuka WhatsApp nomor panitia pertama (dua nomor lengkap ada di beranda).
+  const kontakUtama = EVENT_INFO.contacts[0];
 
   return (
     <footer className="border-t border-line bg-[#050505]">
@@ -42,7 +44,9 @@ export function SiteFooter() {
             ))}
             <li>
               <a
-                href={telHref}
+                href={waHref(kontakUtama.phone)}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-muted transition-colors duration-150 hover:text-ink"
               >
                 Kontak

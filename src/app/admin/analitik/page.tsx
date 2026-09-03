@@ -144,7 +144,7 @@ export default async function AdminAnalitikPage() {
 
         <KartuChart
           judul="Metode Pembayaran"
-          deskripsi="Perbandingan pembayaran biaya admin tunai dan transfer."
+          deskripsi="Perbandingan metode pembayaran biaya admin (QRIS, dan data lama transfer/tunai)."
         >
           {metodePembayaran.length === 0 ? (
             <BelumAdaData pesan="Belum ada pembayaran biaya admin yang tercatat." />

@@ -20,7 +20,7 @@ set search_path = public, extensions;
 -- -----------------------------------------------------------------------------
 -- 1. Event (satu event saja, id di-hardcode agar seed idempotent)
 --    Model per tanggal: start_date/end_date tidak dipakai lagi (null); jadwal
---    sesungguhnya ada di tabel event_dates (setiap hari Minggu, mulai September 2026).
+--    sesungguhnya ada di tabel event_dates (pembukaan 12-13 September 2026, lalu setiap hari Minggu s.d. 1 November 2026).
 -- -----------------------------------------------------------------------------
 insert into public.events (id, name, location, start_date, end_date, is_active)
 values (
@@ -39,52 +39,53 @@ on conflict (id) do update
       is_active  = excluded.is_active;
 
 -- -----------------------------------------------------------------------------
--- 1b. Tanggal gelaran — SEMUA Sabtu & Minggu mulai weekend terdekat,
---     sejauh 8 minggu ke depan, berbasis current_date saat seed dijalankan.
---     dow: 0 = Minggu, 6 = Sabtu.
+-- 1b. Tanggal gelaran Musim 1 (Deck v4, keputusan pemilik 2026-09-02):
+--     pembukaan Sabtu-Minggu 12-13 September 2026, selanjutnya setiap hari
+--     Minggu sampai 1 November 2026 (8 pekan, 9 tanggal).
 -- -----------------------------------------------------------------------------
--- Setiap Sabtu & Minggu selama 12 pekan, mulai akhir pekan 12-13 September 2026
--- (atau sejak hari ini bila seed dijalankan setelah tanggal itu lewat).
 insert into public.event_dates (event_id, event_date, is_active)
-select '11111111-1111-4111-8111-111111111111', d::date, true
-from generate_series(
-       greatest(current_date, date '2026-09-12'),
-       greatest(current_date, date '2026-09-12') + interval '12 weeks',
-       interval '1 day'
-     ) as d
-where extract(dow from d) in (0, 6)
+select '11111111-1111-4111-8111-111111111111', v.d, true
+from (values
+  (date '2026-09-12'), (date '2026-09-13'),
+  (date '2026-09-20'), (date '2026-09-27'),
+  (date '2026-10-04'), (date '2026-10-11'), (date '2026-10-18'), (date '2026-10-25'),
+  (date '2026-11-01')
+) as v(d)
 on conflict (event_date) do nothing;
 
 -- -----------------------------------------------------------------------------
--- 2. Zona (7 zona) — admin_fee flat per zona, dalam rupiah
+-- 2. Zona (8 zona) — nama sesuai Deck v4 slide 7, admin_fee flat per zona (rupiah)
 -- -----------------------------------------------------------------------------
 insert into public.zones (event_id, name, zone_type, svg_group_id, admin_fee, description, display_order)
 values
-  ('11111111-1111-4111-8111-111111111111', 'Tenda Pameran Mobil Baru',
+  ('11111111-1111-4111-8111-111111111111', 'Tenda Dealer Mobil Baru',
    'mobil_baru',        'zone-mobil-baru',  1000000,
-   'Tenda khusus dealer resmi mobil baru, 10 slot.',                        1),
-  ('11111111-1111-4111-8111-111111111111', 'Area Pameran Mobil',
-   'mobil_bekas',       'zone-mobil-bekas',    50000,
-   'Area pameran mobil bekas untuk individu maupun dealer, 30 slot.',       2),
-  ('11111111-1111-4111-8111-111111111111', 'Area Pameran Motor',
-   'mobil_motor_bekas', 'zone-mobil-motor',    25000,
-   'Area pameran motor bekas, 14 slot (fokus motor, keputusan 2026-08-29).', 3),
-  ('11111111-1111-4111-8111-111111111111', 'Area UMKM',
-   'umkm',              'zone-umkm',          250000,
-   'Area UMKM non-kuliner, 20 slot (kolom kiri 1-10 dan kanan 21-30).',     4),
-  ('11111111-1111-4111-8111-111111111111', 'Booth Leasing & Brand Otomotif',
-   'booth_khusus',      'zone-booth-khusus',  500000,
-   'Booth premium 2 sisi: 5 bank/leasing (11-15) + 5 brand otomotif (16-20).', 5),
+   'Area A — tenda dealer resmi mobil baru, 10 slot.',                                    1),
+  ('11111111-1111-4111-8111-111111111111', 'Area Pameran Mobil Bekas',
+   'mobil_bekas',       'zone-mobil-bekas',   50000,
+   'Area B — area pameran mobil bekas untuk individu maupun dealer, 30 slot.',            2),
+  ('11111111-1111-4111-8111-111111111111', 'Area Pameran Motor Baru',
+   'motor_baru',        'zone-motor-baru',   500000,
+   'Area C — tenda dealer motor baru, 3 slot.',                                           3),
+  ('11111111-1111-4111-8111-111111111111', 'Area Pameran Motor Bekas',
+   'mobil_motor_bekas', 'zone-mobil-motor',   25000,
+   'Area C — area pameran motor bekas, 14 slot.',                                         4),
+  ('11111111-1111-4111-8111-111111111111', 'Tenda UMKM',
+   'umkm',              'zone-umkm',         250000,
+   'Area D — tenda UMKM: kolom 1-10 untuk UMKM umum dan kolom 21-30 untuk UMKM & otomotif, 20 slot.', 5),
+  ('11111111-1111-4111-8111-111111111111', 'Tenda Otomotif & Leasing',
+   'booth_khusus',      'zone-booth-khusus', 500000,
+   'Area D kolom 11-20 — tenda premium 2 sisi: 5 booth bank/leasing dan 5 booth brand otomotif, 10 slot.', 6),
   ('11111111-1111-4111-8111-111111111111', 'Warung',
    'warung',            'zone-warung',       500000,
-   'Unit warung/kuliner, 12 unit termasuk unit bernama.',                   6),
+   'Unit warung/kuliner, 12 unit termasuk unit bernama.',                                 7),
   ('11111111-1111-4111-8111-111111111111', 'Fasilitas Umum',
    'facility',          'zone-fasilitas',          0,
-   'Fasilitas non-sewa: tampil di denah tetapi tidak bisa dibooking.',      7)
+   'Fasilitas non-sewa: tampil di denah tetapi tidak bisa dibooking.',                    8)
 on conflict (svg_group_id) do nothing;
 
 -- -----------------------------------------------------------------------------
--- 3. Slot zona bernomor (generate_series) — 10 + 30 + 14 + 30 = 84 baris
+-- 3. Slot zona bernomor (generate_series) — 10 + 30 + 3 + 14 + 30 = 87 baris
 --    svg_element_id = 'slot-<zoneSlug>-<NN>' dengan NN dua digit mulai 01.
 -- -----------------------------------------------------------------------------
 
@@ -102,6 +103,14 @@ select z.id, i, null, 'slot-mobil-bekas-' || lpad(i::text, 2, '0')
 from public.zones z
 cross join generate_series(1, 30) as i
 where z.svg_group_id = 'zone-mobil-bekas'
+on conflict (svg_element_id) do nothing;
+
+-- 3c0. zone-motor-baru : slot 1..3 -> slot-motor-baru-01 .. slot-motor-baru-03
+insert into public.slots (zone_id, slot_number, slot_label, svg_element_id)
+select z.id, i, null, 'slot-motor-baru-' || lpad(i::text, 2, '0')
+from public.zones z
+cross join generate_series(1, 3) as i
+where z.svg_group_id = 'zone-motor-baru'
 on conflict (svg_element_id) do nothing;
 
 -- 3c. zone-mobil-motor : slot 1..14 -> slot-mobil-motor-01 .. slot-mobil-motor-14
@@ -158,7 +167,7 @@ where z.svg_group_id = 'zone-warung'
 on conflict (svg_element_id) do nothing;
 
 -- -----------------------------------------------------------------------------
--- 5. Fasilitas umum — 8 unit, slot_number NULL, TIDAK BISA DIBOOKING.
+-- 5. Fasilitas umum — 13 unit, slot_number NULL, TIDAK BISA DIBOOKING.
 --    Ditulis eksplisit sesuai urutan pada denah.
 -- -----------------------------------------------------------------------------
 insert into public.slots (zone_id, slot_number, slot_label, svg_element_id)
@@ -172,7 +181,13 @@ cross join (values
   ('Musholah',                                     'slot-fasilitas-musholah'),
   ('Lapangan Tembak',                              'slot-fasilitas-lapangan-tembak'),
   ('Parkiran Untuk Pengunjung',                    'slot-fasilitas-parkiran'),
-  ('Kolam Pemancingan',                            'slot-fasilitas-kolam-pemancingan')
+  ('Kolam Pemancingan',                            'slot-fasilitas-kolam-pemancingan'),
+  -- Layout v2 (2026-09-02): hanya gambar di denah, tidak bisa dibooking
+  ('VIP Lounge',                                   'slot-fasilitas-vip-lounge'),
+  ('LED',                                          'slot-fasilitas-led'),
+  ('Tenda VIP',                                    'slot-fasilitas-tenda-vip'),
+  ('Area Wahana',                                  'slot-fasilitas-area-wahana'),
+  ('Toilet',                                       'slot-fasilitas-toilet')
 ) as v(slot_label, svg_element_id)
 where z.svg_group_id = 'zone-fasilitas'
 on conflict (svg_element_id) do nothing;

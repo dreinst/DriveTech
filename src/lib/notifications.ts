@@ -173,8 +173,8 @@ export function buildBookingWa(kind: BookingNotifKind, d: BookingNotif): string 
     case "created":
       return `${kepala}\nBooking Anda kami terima. ${lapak}\nBiaya admin: *${formatRupiah(d.amount)}*.\n${
         d.deadlineText
-          ? `Selesaikan pembayaran & unggah bukti sebelum *${d.deadlineText}* agar slot tidak dilepas otomatis.`
-          : "Selesaikan pembayaran & unggah bukti agar slot dikonfirmasi."
+          ? `Bayar lewat QRIS lalu unggah bukti sebelum *${d.deadlineText}* agar slot tidak dilepas otomatis.`
+          : "Bayar lewat QRIS lalu unggah bukti agar slot dikonfirmasi."
       }`;
     case "verified":
       return `${kepala}\nPembayaran Anda TERVERIFIKASI. Booking dikonfirmasi. ${lapak}\nTunjukkan kode booking saat registrasi ulang di lokasi. Sampai jumpa di pameran!`;

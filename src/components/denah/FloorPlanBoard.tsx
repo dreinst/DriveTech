@@ -18,7 +18,12 @@ import { Badge } from "@/components/ui/Badge";
 import { Button, buttonClass } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Stepper } from "@/components/ui/Stepper";
-import { EVENT_INFO, isBookableZoneType } from "@/lib/domain/constants";
+import {
+  EVENT_INFO,
+  isBookableZoneType,
+  isVehicleZoneType,
+  MUSIM_1_DATES,
+} from "@/lib/domain/constants";
 import { slotAdminFee, zoneHasVariedFees, zoneMinAdminFee } from "@/lib/domain/harga";
 import {
   dateStatusForSlot,
@@ -28,7 +33,12 @@ import {
   type OccupancyRow,
   type SlotDateVerdict,
 } from "@/lib/domain/ketersediaan";
-import { FLOOR_PLAN_ZONES, type LayoutZone, type Rect } from "@/lib/domain/layout";
+import {
+  FLOOR_PLAN_ZONES,
+  zoneBoundingRect,
+  type LayoutZone,
+  type Rect,
+} from "@/lib/domain/layout";
 import { suggestAlternatives } from "@/lib/domain/suggestions";
 import type { SlotDetail, SlotStatus, ZoneType, ZoneWithSlots } from "@/lib/types/database";
 import { cn, formatRupiah, slotDisplayName } from "@/lib/utils";
@@ -49,9 +59,6 @@ export type FloorPlanBoardProps = {
 
 const SUGGESTION_LIMIT = 5;
 
-/** Zona kendaraan: hanya di sini tombol "Beli Unit" relevan bagi pembeli. */
-const VEHICLE_ZONE_TYPES: readonly ZoneType[] = ["mobil_baru", "mobil_bekas", "mobil_motor_bekas"];
-
 /** Label kecil uppercase ala mockup ("TOTAL SLOT", "LEGENDA STATUS"). */
 const PANEL_LABEL_CLASS = "text-xs font-semibold uppercase tracking-[0.08em] text-subtle";
 
@@ -67,27 +74,19 @@ const STEP_LABELS: readonly string[] = ["Pilih Zona", "Pilih Slot", "Pilih Tangg
 /* ---------- Helper tanggal (murni, di luar komponen) ---------- */
 
 /**
- * Sabtu & Minggu 12 pekan ke depan (mulai 12-13 September 2026) — HANYA untuk mode fallback
- * saat database belum terhubung. Logikanya sama dengan seed event_dates
- * (generate_series + dow in (0,6)); ini bukan data karangan melainkan jadwal
- * produk "Setiap Sabtu & Minggu". Dipanggil dari useEffect (client-only)
- * supaya tidak menimbulkan hydration mismatch.
+ * Jadwal Musim 1 (MUSIM_1_DATES: pembukaan 12-13 September 2026, lalu tiap hari
+ * Minggu s.d. 1 November 2026) yang belum lewat — HANYA untuk mode fallback saat
+ * database belum terhubung. Ini bukan data karangan melainkan cermin seed
+ * event_dates. Dipanggil dari useEffect (client-only) supaya tidak menimbulkan
+ * hydration mismatch.
  */
-function weekendFallbackDates(weeks = 12): EventDateItem[] {
-  const out: EventDateItem[] = [];
-  const cursor = new Date();
-  cursor.setHours(0, 0, 0, 0);
-  const mulaiSeptember = new Date(2026, 8, 12); // jadwal resmi mulai akhir pekan 12-13 September 2026
-  if (cursor < mulaiSeptember) cursor.setTime(mulaiSeptember.getTime());
-  for (let i = 0; i < weeks * 7; i += 1) {
-    const day = cursor.getDay();
-    if (day === 0 || day === 6) {
-      const iso = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, "0")}-${String(cursor.getDate()).padStart(2, "0")}`;
-      out.push({ id: `fallback-${iso}`, event_date: iso });
-    }
-    cursor.setDate(cursor.getDate() + 1);
-  }
-  return out;
+function musim1FallbackDates(): EventDateItem[] {
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  return MUSIM_1_DATES.filter((iso) => iso >= today).map((iso) => ({
+    id: `fallback-${iso}`,
+    event_date: iso,
+  }));
 }
 
 /* ---------- Helper zona: geometri & aksen dari domain/layout.ts ---------- */
@@ -106,23 +105,13 @@ function layoutZoneFor(zone: ZoneWithSlots): LayoutZone | undefined {
   );
 }
 
-/** Kotak target zoom sebuah zona: container-nya, atau bounding box slotnya. */
+/**
+ * Kotak target zoom sebuah zona: gabungan seluruh container-nya (zona UMKM
+ * punya dua kolom terpisah), atau bounding box slotnya.
+ */
 function zoneRectFor(zone: ZoneWithSlots): Rect | null {
   const layout = layoutZoneFor(zone);
-  if (!layout) return null;
-  if (layout.container) return layout.container;
-  if (layout.slots.length === 0) return null;
-  let minX = Infinity;
-  let minY = Infinity;
-  let maxX = -Infinity;
-  let maxY = -Infinity;
-  for (const slot of layout.slots) {
-    minX = Math.min(minX, slot.x);
-    minY = Math.min(minY, slot.y);
-    maxX = Math.max(maxX, slot.x + slot.width);
-    maxY = Math.max(maxY, slot.y + slot.height);
-  }
-  return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+  return layout ? zoneBoundingRect(layout) : null;
 }
 
 function zoneAccentFor(zone: ZoneWithSlots): string {
@@ -504,11 +493,11 @@ export function FloorPlanBoard({
     locked: true,
   });
 
-  // Mode fallback tanpa event_dates: bangkitkan hari Minggu 12 minggu ke depan
-  // (client-only, lihat weekendFallbackDates) supaya alurnya tetap bisa dicoba.
+  // Mode fallback tanpa event_dates: pakai jadwal Musim 1 yang belum lewat
+  // (client-only, lihat musim1FallbackDates) supaya alurnya tetap bisa dicoba.
   useEffect(() => {
     if (!isFallback || eventDates.length > 0) return;
-    setFallbackDates(weekendFallbackDates());
+    setFallbackDates(musim1FallbackDates());
   }, [isFallback, eventDates.length]);
 
   const dateList = eventDates.length > 0 ? eventDates : fallbackDates;
@@ -714,7 +703,7 @@ export function FloorPlanBoard({
     });
   }, [selected, selectedVerdict, allSlotsForSuggestion]);
 
-  const isVehicleZone = selected !== null && VEHICLE_ZONE_TYPES.includes(selected.zone.zone_type);
+  const isVehicleZone = selected !== null && isVehicleZoneType(selected.zone.zone_type);
 
   // Stepper: langkah "Pilih Tanggal" aktif begitu ada slot terbuka di panel.
   const stepIndex = step === "zona" ? 0 : selected === null ? 1 : 2;
@@ -792,7 +781,7 @@ export function FloorPlanBoard({
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/denah.svg"
-                alt="Denah lokasi pameran: tenda mobil baru, area pameran mobil, area mobil & motor, area UMKM, warung, dan fasilitas umum."
+                alt="Denah lokasi pameran: tenda dealer mobil baru, area pameran mobil bekas, tenda motor baru, area motor bekas, tenda UMKM, tenda otomotif & leasing, warung, dan fasilitas umum."
                 className="mx-auto block w-full max-w-3xl"
               />
               {/* Teks gelap: paragraf ini tampil di atas kanvas peta yang terang. */}

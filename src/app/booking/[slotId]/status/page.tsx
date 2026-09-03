@@ -7,13 +7,14 @@ import { CancelBookingForm } from "@/app/booking/_components/CancelBookingForm";
 import { CopyButton } from "@/app/booking/_components/CopyButton";
 import { LANGKAH_BOOKING } from "@/app/booking/_components/langkah";
 import { InfoRow, TanggalChips } from "@/app/booking/_components/Ringkasan";
+import { VerifikasiQr } from "@/app/booking/_components/VerifikasiQr";
 import { Alert } from "@/components/ui/Alert";
 import { buttonClass } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Stepper } from "@/components/ui/Stepper";
-import { EVENT_INFO, PAYMENT_DEADLINE_HOURS } from "@/lib/domain/constants";
+import { EVENT_INFO, PAYMENT_DEADLINE_HOURS, waHref } from "@/lib/domain/constants";
 import { slotAdminFee } from "@/lib/domain/harga";
 import { hitungTotalBiaya } from "@/lib/domain/ketersediaan";
 import { PAYMENT_METHOD_LABEL } from "@/lib/domain/labels";
@@ -65,6 +66,10 @@ export default async function StatusBookingPage({ params }: PageProps) {
   // Bucket bukti-transfer private: tukar URL tersimpan jadi signed URL (1 jam).
   const buktiUrl = await resolveProofUrl(payment?.proof_url ?? null);
   const dibatalkan = booking.status === "cancelled";
+  // QR verifikasi panitia baru berguna setelah ada bukti yang dikirim
+  // (submitted) atau sudah sah (verified); booking batal tidak perlu.
+  const tampilkanQr =
+    !dibatalkan && (payment?.status === "submitted" || payment?.status === "verified");
   const terkonfirmasi = booking.status === "confirmed";
   const ditolak = payment?.status === "rejected";
   const bisaBayar = (ditolak || payment?.status === "unpaid" || !payment) && !dibatalkan;
@@ -170,13 +175,16 @@ export default async function StatusBookingPage({ params }: PageProps) {
               {payment ? (
                 <InfoRow label="Metode pembayaran">{PAYMENT_METHOD_LABEL[payment.method]}</InfoRow>
               ) : null}
+              {payment?.submitted_at ? (
+                <InfoRow label="Bukti dikirim">{formatTanggalWaktu(payment.submitted_at)} WIB</InfoRow>
+              ) : null}
               {buktiUrl ? (
-                <InfoRow label="Bukti transfer">
+                <InfoRow label="Bukti pembayaran">
                   <a
                     href={buktiUrl}
                     target="_blank"
                     rel="noreferrer noopener"
-                    title="Buka bukti transfer di tab baru"
+                    title="Buka bukti pembayaran di tab baru"
                     className="group inline-flex items-center gap-2"
                   >
                     {/* <img> biasa (bukan next/image): URL Storage bisa berasal dari host
@@ -184,7 +192,7 @@ export default async function StatusBookingPage({ params }: PageProps) {
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={buktiUrl}
-                      alt="Bukti transfer biaya admin"
+                      alt="Bukti pembayaran biaya admin"
                       referrerPolicy="no-referrer"
                       loading="lazy"
                       className="h-12 w-12 rounded-[var(--radius-sm)] border border-line bg-surface-2 object-cover"
@@ -203,6 +211,11 @@ export default async function StatusBookingPage({ params }: PageProps) {
             </dl>
           </CardContent>
         </Card>
+
+        {/* ---------- QR verifikasi untuk panitia (setelah bukti dikirim) ---------- */}
+        {tampilkanQr ? (
+          <VerifikasiQr bookingCode={booking.booking_code} bookingId={booking.id} />
+        ) : null}
 
         {/* ---------- Linimasa ---------- */}
         <Card>
@@ -271,8 +284,24 @@ export default async function StatusBookingPage({ params }: PageProps) {
         </div>
 
         <p className="text-xs text-subtle">
-          Ada kendala? Hubungi {EVENT_INFO.organizer} di {EVENT_INFO.contact} sambil menyebut kode{" "}
-          {booking.booking_code}.
+          Ada kendala? Hubungi {EVENT_INFO.organizer} lewat WhatsApp{" "}
+          {EVENT_INFO.contacts.map((kontak, index) => (
+            <span key={kontak.phone}>
+              {index > 0 ? " / " : ""}
+              <a
+                href={waHref(
+                  kontak.phone,
+                  `Halo Panitia Drive Tech, saya butuh bantuan untuk booking ${booking.booking_code}`,
+                )}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-accent underline-offset-2 hover:underline"
+              >
+                {kontak.phone}
+              </a>
+            </span>
+          ))}{" "}
+          sambil menyebut kode {booking.booking_code}.
         </p>
       </div>
     </div>

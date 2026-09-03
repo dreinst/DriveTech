@@ -5,7 +5,7 @@ import { ZoneFeeForm } from "@/components/admin/ZoneFeeForm";
 import { Alert } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
-import { BANK_ACCOUNT, EVENT_INFO, isBookableZoneType } from "@/lib/domain/constants";
+import { EVENT_INFO, isBookableZoneType, QRIS_INFO } from "@/lib/domain/constants";
 import { ADMIN_ROLE_LABEL, ZONE_TYPE_LABEL } from "@/lib/domain/labels";
 import { listEventDates, listZonesAdmin } from "@/lib/services/admin";
 import { requireAdmin } from "@/lib/services/auth";
@@ -208,24 +208,50 @@ export default async function AdminPengaturanPage() {
             <BarisInfo label="Lokasi" value={EVENT_INFO.location} />
             <BarisInfo label="Jadwal" value={EVENT_INFO.scheduleText} />
             <BarisInfo label="Penyelenggara" value={EVENT_INFO.organizer} />
-            <BarisInfo label="Kontak" value={EVENT_INFO.contact} />
+            {EVENT_INFO.contacts.map((kontak) => (
+              <BarisInfo key={kontak.phone} label={`Kontak ${kontak.label}`} value={kontak.phone} />
+            ))}
           </dl>
         </Card>
 
         <Card className="p-6">
-          <h2 className="text-lg font-semibold tracking-tight text-ink">Rekening Panitia</h2>
-          <dl className="mt-3 divide-y divide-line">
-            <BarisInfo label="Bank" value={BANK_ACCOUNT.bankName} />
-            <BarisInfo label="Nomor Rekening" value={BANK_ACCOUNT.accountNumber} />
-            <BarisInfo label="Atas Nama" value={BANK_ACCOUNT.accountName} />
-          </dl>
+          <h2 className="text-lg font-semibold tracking-tight text-ink">QRIS Panitia</h2>
+          <p className="mt-1 text-xs text-muted">
+            Satu-satunya metode bayar biaya admin. QRIS statis: nominal diisi penyewa, jadi
+            cocokkan nominal &amp; waktu pada bukti dengan waktu kirim di halaman Pemesanan.
+          </p>
+          <div className="mt-3 flex items-start gap-4">
+            <a
+              href={QRIS_INFO.imagePath}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Buka gambar QRIS ukuran penuh"
+              className="shrink-0"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element -- gambar statis di public/ */}
+              <img
+                src={QRIS_INFO.imagePath}
+                alt={`Kode QRIS ${QRIS_INFO.merchantName}`}
+                width={96}
+                height={135}
+                className="h-auto w-24 rounded-[var(--radius-sm)] border border-line bg-white"
+              />
+            </a>
+            <dl className="min-w-0 flex-1 divide-y divide-line">
+              <BarisInfo label="Merchant" value={QRIS_INFO.merchantName} />
+              <BarisInfo label="NMID" value={QRIS_INFO.nmid} />
+              <BarisInfo label="Terminal" value={QRIS_INFO.terminal} />
+            </dl>
+          </div>
         </Card>
       </div>
 
       <p className="text-xs text-subtle">
-        Info event dan rekening panitia diubah di{" "}
+        Info event, kontak, dan QRIS panitia diubah di{" "}
         <code className="rounded bg-surface-3 px-1 py-0.5 font-mono">src/lib/domain/constants.ts</code>{" "}
-        (tahap berikutnya: dipindah ke database).
+        (gambar QRIS di{" "}
+        <code className="rounded bg-surface-3 px-1 py-0.5 font-mono">public/qris-drivetech.jpg</code>
+        ; tahap berikutnya: dipindah ke database).
       </p>
 
       {/* ---------- (d) Akun admin ---------- */}

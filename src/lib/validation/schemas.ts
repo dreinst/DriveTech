@@ -85,7 +85,7 @@ const tanggal = z
 
 /**
  * Data kendaraan untuk katalog publik — WAJIB saat booking slot zona kendaraan
- * (mobil_baru / mobil_bekas / mobil_motor_bekas); service yang menegakkannya
+ * (mobil_baru / mobil_bekas / motor_baru / mobil_motor_bekas); service yang menegakkannya
  * karena butuh tipe zona slot. photoUrl diisi action setelah unggah foto.
  */
 export const vehicleInfoSchema = z.object({
@@ -96,7 +96,7 @@ export const vehicleInfoSchema = z.object({
     z.enum(["mobil", "motor"], { error: "Jenis kendaraan tidak valid." }).optional(),
   ),
   /**
-   * OPSIONAL: zona mobil_baru tidak memakai plat (mobil baru belum berplat).
+   * OPSIONAL: zona kendaraan BARU (mobil_baru / motor_baru) tidak memakai plat.
    * Zona kendaraan bekas tetap mewajibkannya — ditegakkan createBooking karena
    * butuh tipe zona slot. Kalau diisi, tetap divalidasi 3-12 karakter.
    */
@@ -160,9 +160,10 @@ export const createBookingSchema = z.object({
    * tidak valid" — 10 slot x Rp500.000/tanggal tidak bisa dipesan sama sekali.
    * Kalau menambah tipe tenant baru, tambahkan di sini juga.
    */
-  tenantType: z.enum(["dealer_mobil_baru", "individu_bekas", "umkm", "mitra_booth", "warung"], {
-    error: "Tipe tenant tidak valid.",
-  }),
+  tenantType: z.enum(
+    ["dealer_mobil_baru", "dealer_motor_baru", "individu_bekas", "umkm", "mitra_booth", "warung"],
+    { error: "Tipe tenant tidak valid." },
+  ),
   detail: z.record(z.string(), z.unknown()).optional(),
   notes: optionalText,
   /** Wajib untuk zona kendaraan — ditegakkan createBooking (butuh tipe zona). */
@@ -172,17 +173,19 @@ export const createBookingSchema = z.object({
 export const submitPaymentSchema = z
   .object({
     bookingId: uuid("ID booking"),
-    // Opsi cash dihapus (keputusan pemilik, 2026-08-28): booking hanya dikunci
-    // lewat transfer + bukti. Enum DB masih menyimpan 'cash' untuk data lama.
-    method: z.literal("transfer", { error: "Pembayaran hanya menerima transfer bank." }),
+    // QRIS SAJA (keputusan pemilik, 2026-09-02): opsi transfer bank dihapus
+    // menyusul cash (2026-08-28). Booking dikunci lewat pembayaran QRIS +
+    // unggah tangkapan layar bukti berhasil. Enum DB masih menyimpan
+    // 'cash'/'transfer' untuk data lama.
+    method: z.literal("qris", { error: "Pembayaran hanya menerima QRIS." }),
     proofUrl: optionalUrl,
   })
   .superRefine((value, ctx) => {
-    if (value.method === "transfer" && !value.proofUrl) {
+    if (value.method === "qris" && !value.proofUrl) {
       ctx.addIssue({
         code: "custom",
         path: ["proofUrl"],
-        message: "Bukti transfer wajib diunggah untuk metode transfer.",
+        message: "Bukti pembayaran QRIS wajib diunggah.",
       });
     }
   });

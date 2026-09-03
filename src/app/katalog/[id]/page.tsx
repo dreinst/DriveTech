@@ -6,7 +6,12 @@ import { Alert } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
 import { buttonClass } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { EVENT_INFO, TRANSMISSION_LABEL, type TransmissionOption } from "@/lib/domain/constants";
+import {
+  EVENT_INFO,
+  TRANSMISSION_LABEL,
+  waHref,
+  type TransmissionOption,
+} from "@/lib/domain/constants";
 import { ZONE_TYPE_LABEL } from "@/lib/domain/labels";
 import { getCatalogItem } from "@/lib/services/catalog";
 import { formatRupiah, formatTanggal, slotDisplayName } from "@/lib/utils";
@@ -126,7 +131,21 @@ export default async function DetailKendaraanPage({ params }: PageProps) {
 
           <Alert tone="info" title="Pembelian dilakukan di lokasi">
             Transaksi dan negosiasi berlangsung langsung dengan penjual di slotnya —
-            datang pada tanggal di atas, atau hubungi panitia di {EVENT_INFO.contact}.
+            datang pada tanggal di atas, atau hubungi panitia di{" "}
+            {EVENT_INFO.contacts.map((kontak, index) => (
+              <span key={kontak.phone}>
+                {index > 0 ? " / " : null}
+                <a
+                  href={waHref(kontak.phone)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="tabular font-semibold underline-offset-2 hover:underline"
+                >
+                  {kontak.phone}
+                </a>
+              </span>
+            ))}
+            .
           </Alert>
         </div>
       </div>

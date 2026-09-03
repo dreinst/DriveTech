@@ -1,7 +1,8 @@
 # Drive Tech — Booking Lapak Per Tanggal & Modul Leasing
 
 Aplikasi web untuk **Drive Tech** — pasar otomotif akhir pekan di **Kampung Tentara, Singosari, Malang**,
-digelar **setiap Sabtu & Minggu, mulai 12-13 September 2026**, untuk mobil baru, mobil & motor bekas, UMKM, dan kuliner.
+Musim 1 dibuka **Sabtu–Minggu 12–13 September 2026**, lalu digelar **setiap hari Minggu sampai 1 November 2026** (8 pekan),
+untuk mobil & motor baru, mobil & motor bekas, UMKM, otomotif & leasing, dan kuliner.
 Pengunjung dan calon tenant melihat **denah interaktif** yang sinkron *realtime* dengan
 database, lalu memesan lapak sendiri **per tanggal**: pilih satu atau beberapa tanggal
 weekend, dan slot yang sama bisa disewa orang berbeda di tanggal yang berbeda.
@@ -9,7 +10,7 @@ weekend, dan slot yang sama bisa disewa orang berbeda di tanggal yang berbeda.
 Sumber kebenaran fungsionalnya adalah dokumen rencana teknis internal
 `Sistem Pameran Arsitektur.md` — dokumen itu **tidak ikut dipublikasikan di repo ini**,
 tetapi seluruh keputusannya sudah dirangkum di README ini (§9 Keputusan yang Diambil dan
-§10 Denah). Tata letak denah diekstrak dari gambar **`layout-venue.jpeg`** di root,
+§10 Denah). Tata letak denah diekstrak dari gambar **`layout-venue-v2.jpeg`** (Layout v2, 2026-09-02) di root,
 yang ikut disertakan.
 
 **Stack:** Next.js 15 (App Router) · React 19 · TypeScript strict · Tailwind CSS v4 ·
@@ -28,7 +29,7 @@ Keduanya berbagi entitas **Zone → Slot → Tenant**, tetapi berdiri sendiri.
 Denah "/"  →  pilih ZONA → ketuk SLOT di peta → pilih TANGGAL (≥1 tanggal weekend) di panel slot
            →  /booking/{slotId}          isi data tenant            → booking (pending_payment)
                                                                       + baris booking_dates per tanggal
-           →  /booking/{bookingId}/bayar transfer + unggah bukti    → pembayaran (submitted)
+           →  /booking/{bookingId}/bayar bayar QRIS + unggah bukti  → pembayaran (submitted)
            →  /booking/{bookingId}/status pantau verifikasi panitia
                                      ↓
               Admin /admin/bookings  verifikasi                     → booking confirmed
@@ -189,8 +190,8 @@ Peran yang tersedia: `admin` (akses penuh) dan `verifikator` (fokus verifikasi p
 | `/katalog` | Katalog kendaraan publik per tanggal gelaran: unit milik booking terkonfirmasi di zona kendaraan (foto, harga, plat, lokasi slot). Filter zona + chips tanggal. |
 | `/katalog/{listingId}` | Detail satu kendaraan: foto besar, spesifikasi, tanggal hadir, lokasi slot. Pembelian offline di lokasi. |
 | `/booking/by-svg/{svgElementId}` | Jembatan denah statis → form: cari slot lewat `svg_element_id` lalu redirect ke `/booking/{slotId}`; id tak dikenal → 404. |
-| `/booking/{bookingId}/bayar` | Transfer bank + unggah bukti (opsi cash dihapus 2026-08-28; booking dikunci lewat pembayaran). |
-| `/booking/{bookingId}/status` | Status booking + pembayaran, tombol batal. |
+| `/booking/{bookingId}/bayar` | Bayar lewat **QRIS panitia** (gambar QRIS statis, nominal diisi pembayar) + unggah tangkapan layar bukti berhasil. Opsi cash dihapus 2026-08-28, transfer bank dihapus 2026-09-02; booking dikunci lewat pembayaran yang diverifikasi. |
+| `/booking/{bookingId}/status` | Status booking + pembayaran, tombol batal, dan **QR verifikasi panitia** (memuat `/admin/bookings?q=<kode>` agar panitia bisa mencocokkan bukti, nominal, dan waktu kirim dengan waktu pada bukti). |
 | `/beli/{slotId}` | Formulir pembeli unit: cash / transfer / credit. |
 | `/beli/{transactionId}/leasing` | Pilih mitra leasing, DP, tenor, simulasi cicilan. |
 | `/beli/{transactionId}/status` | Status pengajuan leasing. |
@@ -357,20 +358,21 @@ Menerima **dua bentuk body**, dideteksi lewat header `Content-Type`.
 ```bash
 curl -s -X POST http://localhost:3000/api/bookings/7a10c2f6-…/payment \
   -H "Content-Type: application/json" \
-  -d '{ "method": "transfer", "proofUrl": "https://xyz.supabase.co/storage/v1/object/public/bukti-transfer/bukti.jpg" }'
+  -d '{ "method": "qris", "proofUrl": "https://supabase.187.53.129.205.sslip.io/storage/v1/object/public/bukti-transfer/bukti.jpg" }'
 ```
 
 **multipart/form-data** (unggah berkas langsung; disimpan ke bucket `bukti-transfer`):
 
 ```bash
 curl -s -X POST http://localhost:3000/api/bookings/7a10c2f6-…/payment \
-  -F "method=transfer" \
-  -F "proof=@bukti-transfer.jpg;type=image/jpeg"
+  -F "method=qris" \
+  -F "proof=@bukti-qris.jpg;type=image/jpeg"
 ```
 
-Metode `cash` sudah tidak diterima (2026-08-28): booking hanya dikunci lewat
-transfer + bukti, dan booking yang tidak membayar dalam 24 jam dibatalkan
-otomatis oleh `expire_unpaid_bookings()` (pg_cron, tiap 15 menit).
+Metode `cash` (2026-08-28) dan `transfer` (2026-09-02) sudah tidak diterima: satu-satunya
+metode adalah `qris` + bukti, dan booking yang tidak membayar dalam 24 jam dibatalkan
+otomatis oleh `expire_unpaid_bookings()` (pg_cron, tiap 15 menit). Nilai enum lama tetap
+ada di database untuk data historis.
 
 `200 OK`
 
@@ -378,13 +380,13 @@ otomatis oleh `expire_unpaid_bookings()` (pg_cron, tiap 15 menit).
 { "bookingId": "7a10c2f6-…" }
 ```
 
-Transfer tanpa bukti — `400`
+QRIS tanpa bukti — `400`
 
 ```json
 {
   "error": "Data pembayaran tidak valid.",
   "code": "VALIDATION",
-  "fieldErrors": { "proofUrl": "Bukti transfer wajib diunggah untuk metode transfer." }
+  "fieldErrors": { "proofUrl": "Bukti pembayaran QRIS wajib diunggah." }
 }
 ```
 
@@ -455,12 +457,12 @@ Tenor yang diterima: `12, 18, 24, 36, 48, 60`. Komisi platform dihitung otomatis
 
 ```
 .
-├── layout-venue.jpeg     Denah asli event — sumber kebenaran tata letak
+├── layout-venue-v2.jpeg  Denah asli event (Layout v2, 2026-09-02) — sumber kebenaran tata letak
 ├── public/denah.svg               Denah statis hasil generator (fallback & pratinjau)
 ├── tools/                         Skrip bantu: generator SVG denah + webhook Google Sheets (.gs)
 ├── supabase/
 │   ├── migrations/                Skema: enum, tabel, index, trigger, RLS, Realtime, Storage
-│   ├── seed.sql                   1 event, 12 hari Minggu mulai Sep 2026, 6 zona, 104 slot, 3 mitra leasing
+│   ├── seed.sql                   1 event, 9 tanggal Musim 1 (12-13 Sep, lalu tiap Minggu s.d. 1 Nov 2026), 8 zona, 112 slot, 3 mitra leasing
 │   └── README.md                  Panduan database (lokal, cloud, RLS, Storage)
 └── src/
     ├── middleware.ts              Refresh sesi Supabase di setiap request
@@ -517,11 +519,13 @@ ulang. Nilai default di `supabase/seed.sql`:
 
 | Zona | `zone_type` | Biaya admin |
 | --- | --- | ---: |
-| Tenda Pameran Mobil Baru | `mobil_baru` | Rp 2.500.000 |
-| Area Pameran Mobil | `mobil_bekas` | Rp 750.000 |
-| Area Pameran Mobil & Motor | `mobil_motor_bekas` | Rp 600.000 |
-| Area UMKM | `umkm` | Rp 300.000 |
-| Warung | `warung` | Rp 500.000 |
+| Tenda Dealer Mobil Baru (Area A) | `mobil_baru` | Rp 1.000.000 |
+| Area Pameran Mobil Bekas (Area B) | `mobil_bekas` | Rp 50.000 |
+| Area Pameran Motor Baru (Area C) | `motor_baru` | Rp 500.000 |
+| Area Pameran Motor Bekas (Area C) | `mobil_motor_bekas` | Rp 25.000 |
+| Tenda UMKM (Area D, kolom 1-10 & 21-30) | `umkm` | Rp 250.000 |
+| Tenda Otomotif & Leasing (Area D, kolom 11-20) | `booth_khusus` | Rp 500.000 |
+| Warung | `warung` | Rp 500.000 (belum dibuka online) |
 | Fasilitas Umum | `facility` | Rp 0 (tidak bisa dibooking) |
 
 Model per tanggal: tagihan booking = `admin_fee × jumlah tanggal terpilih`. Hasil kalinya
@@ -585,11 +589,13 @@ Bila gambar berbeda dari rencana teknis, **gambar yang menang**. Perbedaan yang 
 | Hal | Gambar (dipakai) | `Sistem Pameran Arsitektur.md` | Tindakan |
 | --- | --- | --- | --- |
 | Jumlah warung | **12 unit** | "~9" | Ikut gambar: 12 baris slot di zona `warung`. |
-| Jumlah fasilitas | **8 unit** — tambahan **Kantor Sekretariat & Rest Area Kostrad** dan **Tempat Cuci Mobil & Motor** | 6 (Stage, Musholah, Zumba, Kolam Pemancingan, Lapangan Tembak, Parkiran) | Ikut gambar: 8 baris slot `facility`, semuanya tidak bisa dibooking. |
+| Jumlah fasilitas | **13 unit** — tambahan **Kantor Sekretariat & Rest Area Kostrad**, **Tempat Cuci Mobil & Motor**, dan dari Layout v2: **VIP Lounge, LED, Tenda VIP, Area Wahana, Toilet** | 6 (Stage, Musholah, Zumba, Kolam Pemancingan, Lapangan Tembak, Parkiran) | Ikut gambar: 13 baris slot `facility`, semuanya tidak bisa dibooking. |
 | Warung tanpa nama | 10 kotak bertuliskan "WARUNG" saja | tidak dibahas | **Keputusan kami:** diberi nomor **Warung 1–10** (`slot-warung-01` … `slot-warung-10`) supaya bisa dibooking. Dua warung bernama tetap memakai labelnya: `slot-warung-warmindo` (Warmindo) dan `slot-warung-sate-gule` (Warung Sate & Gule). |
 
-Total: **104 slot**, **96 di antaranya bisa dibooking** (10 mobil baru + 30 mobil bekas +
-14 mobil & motor + 30 UMKM + 12 warung).
+Total: **112 kotak**, **87 bisa dibooking online** (10 mobil baru + 30 mobil bekas +
+3 motor baru + 14 motor bekas + 20 UMKM + 10 otomotif & leasing); 12 warung dan 13
+fasilitas digambar tetapi tidak disewakan online. Jumlah slot Area C mengikuti teks
+Deck v4 (3 baru + 14 bekas); gambar Layout v2 hanya ilustrasi.
 
 Sepuluh warung bernomor tetap diberi `slot_label` (`"Warung 1"` … `"Warung 10"`) di
 `supabase/seed.sql`, dan `slotDisplayName()` mendahulukan label di atas nomor — supaya
@@ -601,7 +607,7 @@ lain (`slot_label` NULL) tetap tampil sebagai `"Slot 07"`.
 | | Dipakai untuk | Sumber |
 | --- | --- | --- |
 | `src/components/denah/FloorPlan.tsx` | denah **interaktif** di aplikasi: klik slot, warna ikut status, langganan Supabase Realtime | `FLOOR_PLAN_ZONES` di `layout.ts` |
-| `public/denah.svg` | denah **statis**: cetak, PDF, embed, dan fallback `<noscript>` di `FloorPlanBoard.tsx` | `tools/generate-denah-svg.py` |
+| `public/denah.svg` | denah **statis**: cetak, PDF, embed, dan fallback `<noscript>` di `FloorPlanBoard.tsx` | `tools/generate-denah-svg.ts` — mengimpor `layout.ts` langsung, tidak ada koordinat ganda |
 
 Berkas statisnya berdiri sendiri (tanpa aset eksternal) dan setiap kotak punya
 `id` yang sama dengan `slots.svg_element_id` plus atribut `data-status`, jadi bisa
@@ -634,9 +640,10 @@ Id elemen adalah perekat antara gambar, kode, dan database — **ketiganya harus
 
 1. `src/lib/domain/layout.ts` — koordinat, ukuran kotak, warna aksen zona, dekor, anotasi.
 2. `supabase/seed.sql` — baris `zones.svg_group_id` dan `slots.svg_element_id`.
-3. `tools/generate-denah-svg.py` → `public/denah.svg` — denah statis (jalankan
-   `npm run denah` setelah mengubah koordinat; `npm run denah:check` memberitahu kalau
-   berkas hasilnya berubah dan belum di-commit).
+3. `tools/generate-denah-svg.ts` → `public/denah.svg` — denah statis yang dibangun
+   langsung dari `layout.ts` (jalankan `npm run denah` setelah mengubah koordinat —
+   butuh Node ≥ 22.6, skrip memakai `--experimental-strip-types`; `npm run denah:check`
+   memberitahu kalau berkas hasilnya berubah dan belum di-commit).
 
 Aturannya: `slots.svg_element_id` di database **wajib** sama persis dengan id kotak di
 `layout.ts` (`slot-<zoneSlug>-<NN>`, dua digit mulai `01`). Slot yang idnya tidak cocok

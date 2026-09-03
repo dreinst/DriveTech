@@ -38,7 +38,7 @@ function ekstensiBukti(mime: string): string {
 type PayloadPembayaran = { method: string; proofUrl: string };
 
 /**
- * Unggah bukti transfer ke bucket `bukti-transfer` (PRIVATE sejak 2026-08-29;
+ * Unggah bukti pembayaran QRIS ke bucket `bukti-transfer` (PRIVATE sejak 2026-08-29;
  * ditampilkan lewat signed URL — lihat lib/storage.ts) dan kembalikan URL
  * identitasnya. Mengembalikan NextResponse (error siap kirim) kalau berkasnya
  * ditolak. HANYA boleh dipanggil setelah booking terverifikasi ada — endpoint
@@ -51,17 +51,17 @@ async function unggahBukti(
 ): Promise<{ url: string } | { response: NextResponse }> {
   if (berkas.size > MAX_PROOF_BYTES) {
     return {
-      response: jsonError("Ukuran bukti transfer maksimal 2 MB.", 413, {
+      response: jsonError("Ukuran bukti pembayaran maksimal 2 MB.", 413, {
         code: "PROOF_TOO_LARGE",
-        fieldErrors: { proof: "Ukuran bukti transfer maksimal 2 MB." },
+        fieldErrors: { proof: "Ukuran bukti pembayaran maksimal 2 MB." },
       }),
     };
   }
   if (!JENIS_BUKTI_DIIZINKAN.includes(berkas.type)) {
     return {
-      response: jsonError("Format bukti transfer harus JPG, PNG, atau WEBP.", 415, {
+      response: jsonError("Format bukti pembayaran harus JPG, PNG, atau WEBP.", 415, {
         code: "PROOF_TYPE",
-        fieldErrors: { proof: "Format bukti transfer harus JPG, PNG, atau WEBP." },
+        fieldErrors: { proof: "Format bukti pembayaran harus JPG, PNG, atau WEBP." },
       }),
     };
   }
@@ -76,9 +76,9 @@ async function unggahBukti(
 
   if (unggah.error) {
     return {
-      response: jsonError("Bukti transfer gagal diunggah, coba lagi.", 502, {
+      response: jsonError("Bukti pembayaran gagal diunggah, coba lagi.", 502, {
         code: "UPLOAD_FAILED",
-        fieldErrors: { proof: "Bukti transfer gagal diunggah, coba lagi." },
+        fieldErrors: { proof: "Bukti pembayaran gagal diunggah, coba lagi." },
       }),
     };
   }
@@ -91,8 +91,9 @@ async function unggahBukti(
  * POST /api/bookings/{bookingId}/payment
  *
  * Menerima DUA bentuk body (dideteksi lewat header Content-Type):
- *  1. application/json      -> { method: "transfer", proofUrl?: string }
- *     (opsi cash dihapus 2026-08-28 — booking hanya dikunci lewat transfer)
+ *  1. application/json      -> { method: "qris", proofUrl?: string }
+ *     (cash dihapus 2026-08-28, transfer bank dihapus 2026-09-02 — booking
+ *      hanya dikunci lewat pembayaran QRIS + bukti)
  *  2. multipart/form-data   -> field "method", "proof" (berkas gambar), "proofUrl" (opsional)
  *
  * Urutan penting: bookingId divalidasi dan bookingnya dimuat DULU, baru berkas
@@ -159,7 +160,7 @@ export async function POST(request: Request, { params }: RouteContext): Promise<
     // sampai 72 jam tanpa pernah membayar (temuan audit 2026-08-30).
     if (payload.proofUrl.length > 0 && !isProofUrlMilikKita(payload.proofUrl)) {
       return jsonError(
-        "Bukti transfer harus diunggah lewat formulir ini, bukan berupa tautan dari luar.",
+        "Bukti pembayaran harus diunggah lewat formulir ini, bukan berupa tautan dari luar.",
         422,
         {
           code: "PROOF_NOT_UPLOADED",

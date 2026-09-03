@@ -246,7 +246,7 @@ export async function createBookingAction(
   return { status: "success" };
 }
 
-/** Pilih metode pembayaran + unggah bukti transfer di /booking/[bookingId]/bayar. */
+/** Unggah bukti pembayaran QRIS di /booking/[bookingId]/bayar (metode tunggal: qris). */
 export async function submitPaymentAction(
   prevState: ActionState,
   formData: FormData,
@@ -267,15 +267,15 @@ export async function submitPaymentAction(
   const berkas =
     berkasMentah instanceof File && berkasMentah.size > 0 ? berkasMentah : null;
 
-  if (method === "transfer" && berkas !== null) {
+  if (method === "qris" && berkas !== null) {
     if (berkas.size > MAX_PROOF_BYTES) {
-      return errorState("Ukuran bukti transfer maksimal 2 MB.", {
-        proof: "Ukuran bukti transfer maksimal 2 MB.",
+      return errorState("Ukuran bukti pembayaran maksimal 2 MB.", {
+        proof: "Ukuran bukti pembayaran maksimal 2 MB.",
       });
     }
     if (!JENIS_BUKTI_DIIZINKAN.includes(berkas.type)) {
-      return errorState("Format bukti transfer harus JPG, PNG, atau WEBP.", {
-        proof: "Format bukti transfer harus JPG, PNG, atau WEBP.",
+      return errorState("Format bukti pembayaran harus JPG, PNG, atau WEBP.", {
+        proof: "Format bukti pembayaran harus JPG, PNG, atau WEBP.",
       });
     }
     if (!isServiceRoleConfigured()) {
@@ -293,8 +293,8 @@ export async function submitPaymentAction(
     });
 
     if (unggah.error) {
-      return errorState(`Gagal mengunggah bukti transfer: ${unggah.error.message}`, {
-        proof: "Bukti transfer gagal diunggah, coba lagi.",
+      return errorState(`Gagal mengunggah bukti pembayaran: ${unggah.error.message}`, {
+        proof: "Bukti pembayaran gagal diunggah, coba lagi.",
       });
     }
 

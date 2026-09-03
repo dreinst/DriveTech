@@ -101,8 +101,9 @@ export default async function BayarPage({ params }: PageProps) {
   // Tenggat bayar (cermin expire_unpaid_bookings di DB): tampil selama
   // pembayaran belum submitted supaya auto-cancel tidak mengejutkan tenant.
   const tenggat = batasPembayaran(booking, payment);
-  // Pembayaran kini transfer-only: booking dikunci lewat transfer + bukti,
-  // tanpa opsi cash (keputusan pemilik, 2026-08-28).
+  // Pembayaran kini QRIS-only (keputusan pemilik 2026-09-02; cash dihapus
+  // 2026-08-28, transfer bank dihapus 2026-09-02): booking dikunci lewat
+  // pembayaran QRIS + bukti tangkapan layar.
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
@@ -151,7 +152,7 @@ export default async function BayarPage({ params }: PageProps) {
       ) : payment?.status === "submitted" ? (
         <div className="mb-6">
           <Alert tone="info" title="Menunggu verifikasi panitia">
-            Anda masih bisa mengganti metode atau bukti transfer dari halaman ini.
+            Anda masih bisa mengganti bukti pembayaran dari halaman ini.
           </Alert>
         </div>
       ) : null}
@@ -221,7 +222,7 @@ export default async function BayarPage({ params }: PageProps) {
           <CardHeader>
             <CardTitle>Pembayaran</CardTitle>
             <CardDescription>
-              Pilih metode lalu kirim konfirmasi — diverifikasi manual oleh panitia.
+              Bayar lewat QRIS lalu unggah bukti — diverifikasi manual oleh panitia.
             </CardDescription>
           </CardHeader>
           <CardContent>
