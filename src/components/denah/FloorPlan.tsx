@@ -500,6 +500,11 @@ function SlotShape({
       : nonInteractiveLabel ?? undefined;
 
   const fitted = isNumberOnly ? null : fitLabel(text, layoutSlot, layoutSlot.labelOrientation);
+  // Slot parkir serong (Area B 1-10): kotaknya diputar mengelilingi titik tengah,
+  // teks nomor tetap tegak supaya terbaca.
+  const slotTransform = layoutSlot.rotate
+    ? `rotate(${layoutSlot.rotate} ${layoutSlot.x + layoutSlot.width / 2} ${layoutSlot.y + layoutSlot.height / 2})`
+    : undefined;
 
   return (
     <g
@@ -526,6 +531,7 @@ function SlotShape({
         width={layoutSlot.width}
         height={layoutSlot.height}
         rx={4}
+        transform={slotTransform}
         fill={style.fill}
         stroke={style.stroke}
         strokeWidth={(selected ? 2.25 : 1) / strokeScale}
@@ -547,6 +553,7 @@ function SlotShape({
           width={layoutSlot.width + 6}
           height={layoutSlot.height + 6}
           rx={7}
+          transform={slotTransform}
           fill="none"
           stroke={SLOT_SELECTED_STYLE.stroke}
           strokeWidth={2 / strokeScale}
@@ -664,8 +671,8 @@ export function FloorPlan({
         strokeWidth={2}
       />
 
-      {/* (b) Dekor: taman, pagar, dan tank display Kostrad */}
-      {FLOOR_PLAN_DECOR.map((item) =>
+      {/* (b) Dekor lapisan bawah: taman, pagar, dan tank display Kostrad */}
+      {FLOOR_PLAN_DECOR.filter((item) => !item.above).map((item) =>
         item.kind === "tank" ? (
           <TankDecor key={item.id} item={item} />
         ) : (
@@ -692,6 +699,11 @@ export function FloorPlan({
           );
         }),
       )}
+
+      {/* (c2) Dekor lapisan atas: strip pohon di dalam container zona (Area B) */}
+      {FLOOR_PLAN_DECOR.filter((item) => item.above).map((item) => (
+        <Decor key={item.id} item={item} />
+      ))}
 
       {/* (d) Slot */}
       {FLOOR_PLAN_ZONES.map((zone) => (
