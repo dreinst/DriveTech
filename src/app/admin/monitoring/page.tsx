@@ -108,7 +108,8 @@ export default async function AdminMonitoringPage() {
       {data.sampleCount24h === 0 ? (
         <Alert tone="warning" title="Belum ada sampel monitoring">
           Klik &quot;Jalankan sekarang&quot; untuk sondir pertama, atau tunggu Vercel Cron berjalan
-          (lihat vercel.json — dijadwalkan tiap 5 menit setelah branch ini di-deploy).
+          (lihat vercel.json — dijadwalkan sekali sehari karena paket Vercel Hobby membatasi
+            cron job maksimal 1x/hari; upgrade ke Pro untuk jadwal lebih sering).
         </Alert>
       ) : null}
 
