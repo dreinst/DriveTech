@@ -105,6 +105,13 @@ export const QRIS_INFO = {
 export const QRIS_TRANSFER_CODE = 212;
 
 /**
+ * Alamat produksi TETAP — basis URL kode QR promosi (lihat lib/qr-brand.ts).
+ * Kalau nanti pindah ke domain sendiri: ubah di sini DAN pastikan alamat lama
+ * tetap dialihkan (redirect), supaya QR yang sudah terlanjur dicetak tidak mati.
+ */
+export const SITE_URL_PRODUKSI = "https://drive-tech.vercel.app";
+
+/**
  * SUMBER KEBENARAN TUNGGAL zona yang tidak bisa dibooking online.
  * facility memang tidak disewakan; warung SEMENTARA ditutup untuk booking online
  * (keputusan produk) — denah, saran slot, dan service booking semua merujuk ke sini.
