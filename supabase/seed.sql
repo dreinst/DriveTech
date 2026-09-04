@@ -197,8 +197,11 @@ on conflict (svg_element_id) do nothing;
 -- 6. Leasing partner (3 mitra, semua aktif)
 --    Tabel tidak punya unique pada name, jadi pakai "where not exists".
 -- -----------------------------------------------------------------------------
+-- Mitra leasing contoh di-seed NONAKTIF (keputusan pemilik 2026-09-04): nama
+-- mitra sungguhan + kredensialnya dimasukkan panitia lewat /admin/leasing,
+-- bukan data contoh. Baris nonaktif tidak tampil di beranda/form kredit.
 insert into public.leasing_partners (name, contact, commission_rate, is_active)
-select v.name, v.contact, v.commission_rate, true
+select v.name, v.contact, v.commission_rate, false
 from (values
   ('Adira Finance'::text,          '0800-1-500-989'::text, 2.5::numeric),
   ('BAF Finance',                  '0804-1-800-888',       2.0),
