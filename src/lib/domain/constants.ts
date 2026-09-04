@@ -109,7 +109,7 @@ export const QRIS_TRANSFER_CODE = 212;
  * Kalau nanti pindah ke domain sendiri: ubah di sini DAN pastikan alamat lama
  * tetap dialihkan (redirect), supaya QR yang sudah terlanjur dicetak tidak mati.
  */
-export const SITE_URL_PRODUKSI = "https://drive-tech.vercel.app";
+export const SITE_URL_PRODUKSI = "https://drive-tech-sigma.vercel.app";
 
 /**
  * SUMBER KEBENARAN TUNGGAL zona yang tidak bisa dibooking online.
