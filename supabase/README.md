@@ -9,6 +9,7 @@ Folder ini berisi seluruh definisi database untuk sistem booking pameran.
 | `migrations/20260902100000_enum_layout_v2.sql` | Nilai enum baru: `zone_type.motor_baru`, `tenant_type.dealer_motor_baru`, `payment_method.qris`. |
 | `migrations/20260902101000_layout_v2.sql` | Revisi Layout v2 + Deck v4: nama zona ikut deck, zona `zone-motor-baru`, 5 fasilitas baru, jadwal Musim 1 (9 tanggal). |
 | `migrations/20260903090000_area_c_4_8.sql` | Area C ikut gambar: motor baru 4 slot, motor bekas 8 slot (keputusan pemilik 2026-09-03). |
+| `migrations/20260904100000_qr_scans.sql` | Tabel `qr_scans`: catatan scan QR promosi per media dari halaman `/go` (media, platform kasar, waktu — tanpa data pribadi). Dibaca di `/admin/qr`. |
 | `seed.sql` | Data awal: 1 event (Drive Tech, Singosari), 9 tanggal Musim 1 (12-13 Sep 2026 lalu tiap Minggu s.d. 1 Nov 2026), 8 zona, 107 slot, 3 mitra leasing. |
 | `config.toml` | Konfigurasi Supabase CLI untuk pengembangan lokal. |
 

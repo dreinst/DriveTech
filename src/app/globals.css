@@ -243,3 +243,96 @@
     display: none;
   }
 }
+
+/* ------------------------------------------------------------
+   Splash /go (QR masuk situs): mobil melaju melintasi layar,
+   logo muncul, lalu otomatis ke beranda (durasi total dijaga
+   SplashMobil.tsx, ±2,6 detik). Saat prefers-reduced-motion:
+   reduce, aturan global di atas memangkas durasi ke ~0 sehingga
+   semua elemen langsung di keadaan akhirnya.
+   ------------------------------------------------------------ */
+@keyframes go-mobil {
+  0% {
+    transform: translateX(-120vw);
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  42% {
+    transform: translateX(0);
+    animation-timing-function: linear;
+  }
+  60% {
+    transform: translateX(0);
+    animation-timing-function: cubic-bezier(0.7, 0, 0.84, 0);
+  }
+  100% {
+    transform: translateX(130vw);
+  }
+}
+
+@keyframes go-roda {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@keyframes go-garis {
+  0% {
+    transform: translateX(0) scaleX(0.25);
+    opacity: 0;
+  }
+  35% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateX(-70px) scaleX(1);
+    opacity: 0;
+  }
+}
+
+@keyframes go-jalan {
+  to {
+    stroke-dashoffset: -48;
+  }
+}
+
+@keyframes go-logo {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.go-mobil {
+  animation: go-mobil 2.3s both;
+  will-change: transform;
+}
+
+.go-roda {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: go-roda 0.45s linear infinite;
+}
+
+.go-garis {
+  transform-box: fill-box;
+  transform-origin: right center;
+  animation: go-garis 0.5s ease-out infinite;
+}
+.go-garis:nth-of-type(2) {
+  animation-delay: 0.12s;
+}
+.go-garis:nth-of-type(3) {
+  animation-delay: 0.24s;
+}
+
+.go-jalan {
+  animation: go-jalan 0.5s linear infinite;
+}
+
+.go-logo {
+  animation: go-logo 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.9s both;
+}

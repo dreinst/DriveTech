@@ -99,6 +99,17 @@ function IconAnalitik() {
   );
 }
 
+function IconQr() {
+  return (
+    <svg {...ICON_PROPS}>
+      <rect x="2.5" y="2.5" width="6" height="6" rx="1.2" />
+      <rect x="11.5" y="2.5" width="6" height="6" rx="1.2" />
+      <rect x="2.5" y="11.5" width="6" height="6" rx="1.2" />
+      <path d="M11.5 11.5h2.5v2.5h-2.5zM17.5 11.5v2.5M11.5 17.5h2.5M15 15h2.5v2.5" />
+    </svg>
+  );
+}
+
 function IconPengaturan() {
   return (
     <svg {...ICON_PROPS}>
@@ -167,6 +178,12 @@ const NAV_ITEMS: readonly NavItem[] = [
     label: "Analitik",
     icon: IconAnalitik,
     match: (pathname) => pathname === "/admin/analitik" || pathname.startsWith("/admin/analitik/"),
+  },
+  {
+    href: "/admin/qr",
+    label: "QR Code",
+    icon: IconQr,
+    match: (pathname) => pathname === "/admin/qr" || pathname.startsWith("/admin/qr/"),
   },
   {
     href: "/admin/pengaturan",
