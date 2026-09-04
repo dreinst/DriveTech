@@ -781,7 +781,7 @@ export function FloorPlanBoard({
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/denah.svg"
-                alt="Denah lokasi pameran: tenda dealer mobil baru, area pameran mobil bekas, tenda motor baru, area motor bekas, tenda UMKM, tenda otomotif & leasing, warung, dan fasilitas umum."
+                alt="Denah lokasi pameran: mobil baru, area pameran mobil bekas, tenda motor baru, area motor bekas, tenda UMKM, tenda otomotif & leasing, warung, dan fasilitas umum."
                 className="mx-auto block w-full max-w-3xl"
               />
               {/* Teks gelap: paragraf ini tampil di atas kanvas peta yang terang. */}

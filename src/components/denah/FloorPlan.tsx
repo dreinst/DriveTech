@@ -650,7 +650,7 @@ export function FloorPlan({
     >
       <title>Denah lokasi pameran</title>
       <desc>
-        Denah interaktif area pameran (Layout v2): Area A tenda dealer mobil baru, Area B area
+        Denah interaktif area pameran (Layout v2): Area A mobil baru, Area B area
         pameran mobil bekas, Area C tenda motor baru dan area motor bekas, Area D tenda UMKM serta
         tenda otomotif dan leasing, deretan warung, dan fasilitas umum termasuk VIP lounge, tenda
         VIP, area wahana, dan toilet. Kotak hijau berarti slot tersedia pada tanggal yang dipilih,

@@ -110,7 +110,7 @@ function namedSlot(
   return { ...rect, svgElementId, label, slotNumber, labelOrientation };
 }
 
-/* ---------- Area A: Tenda Dealer Mobil Baru (10 slot, 2 baris x 5) ---------- */
+/* ---------- Area A: Mobil Baru (10 slot, 2 baris x 5) ---------- */
 
 const MOBIL_BARU_X = [500, 563, 626, 689, 752];
 const MOBIL_BARU_ROW_Y = [184, 296];
@@ -243,7 +243,7 @@ const fasilitasSlots: LayoutSlot[] = [
 export const FLOOR_PLAN_ZONES: LayoutZone[] = [
   {
     svgGroupId: "zone-mobil-baru",
-    name: "Area Dealer Mobil Baru",
+    name: "Area Mobil Baru",
     zoneType: "mobil_baru",
     accent: "#7030a0",
     container: { x: 492, y: 154, width: 330, height: 212, labelOrientation: "horizontal" },
