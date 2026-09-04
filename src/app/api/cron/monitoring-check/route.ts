@@ -12,7 +12,8 @@ export const maxDuration = 30;
  * (DB Supabase + beberapa halaman publik kunci) dan menyimpan satu baris
  * sampel per target ke public.monitoring_checks.
  *
- * Dipicu Vercel Cron (lihat vercel.json, jadwal tiap 5 menit) atau bisa
+ * Dipicu Vercel Cron (lihat vercel.json — jadwal HARIAN, dibatasi paket Hobby
+ * maksimal 1x/hari per cron job; upgrade ke Pro untuk jadwal lebih sering) atau bisa
  * dipanggil manual dari dashboard /admin/monitoring ("Jalankan sekarang").
  * Sama seperti /api/cron/sync-cancelled: kalau env CRON_SECRET diisi,
  * permintaan wajib membawa header Authorization: Bearer ***.
