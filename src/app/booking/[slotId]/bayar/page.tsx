@@ -14,6 +14,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Stepper } from "@/components/ui/Stepper";
 import {
   EVENT_INFO,
+  QRIS_TRANSFER_CODE,
   WA_BANTUAN_TEXT,
   waHref,
 } from "@/lib/domain/constants";
@@ -251,7 +252,7 @@ export default async function BayarPage({ params }: PageProps) {
           <CardContent>
             <PaymentForm
               bookingId={booking.id}
-              amount={nominal}
+              amount={nominal + QRIS_TRANSFER_CODE}
               existingProofUrl={payment?.proof_url ?? null}
               bookingCode={booking.booking_code}
             />

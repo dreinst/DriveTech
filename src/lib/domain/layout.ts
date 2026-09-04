@@ -243,7 +243,7 @@ const fasilitasSlots: LayoutSlot[] = [
 export const FLOOR_PLAN_ZONES: LayoutZone[] = [
   {
     svgGroupId: "zone-mobil-baru",
-    name: "Tenda Dealer Mobil Baru",
+    name: "Area Dealer Mobil Baru",
     zoneType: "mobil_baru",
     accent: "#7030a0",
     container: { x: 492, y: 154, width: 330, height: 212, labelOrientation: "horizontal" },
@@ -283,7 +283,7 @@ export const FLOOR_PLAN_ZONES: LayoutZone[] = [
     // container tambahan = kolom 21-30. Pita VERTIKAL: kolom selebar 70 tidak
     // muat menampung judul mendatar.
     svgGroupId: "zone-umkm",
-    name: "Tenda UMKM",
+    name: "Area UMKM",
     zoneType: "umkm",
     accent: "#0070c0",
     container: { x: 240, y: 462, width: 70, height: 386, labelOrientation: "vertical", title: "UMKM 1-10" },
@@ -294,7 +294,7 @@ export const FLOOR_PLAN_ZONES: LayoutZone[] = [
   },
   {
     svgGroupId: "zone-booth-khusus",
-    name: "Tenda Otomotif & Leasing",
+    name: "Area Otomotif & Leasing",
     zoneType: "booth_khusus",
     accent: "#0f766e",
     container: { x: 312, y: 462, width: 70, height: 386, labelOrientation: "vertical", title: "Leasing & Otomotif 11-20" },

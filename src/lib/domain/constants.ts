@@ -98,6 +98,13 @@ export const QRIS_INFO = {
 } as const;
 
 /**
+ * Kode akhir tetap yang ditambahkan ke nominal QRIS (mis. Rp100.000 jadi
+ * Rp100.212) — bukan biaya nyata, hanya penanda supaya bukti transfer mudah
+ * dikenali sebagai transaksi QRIS DriveTech saat dicocokkan panitia.
+ */
+export const QRIS_TRANSFER_CODE = 212;
+
+/**
  * SUMBER KEBENARAN TUNGGAL zona yang tidak bisa dibooking online.
  * facility memang tidak disewakan; warung SEMENTARA ditutup untuk booking online
  * (keputusan produk) — denah, saran slot, dan service booking semua merujuk ke sini.

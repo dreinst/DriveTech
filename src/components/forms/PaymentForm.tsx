@@ -157,23 +157,32 @@ export function PaymentForm({
           </p>
 
           <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start">
-            {/* Gambar QRIS dibiarkan besar & tajam supaya bisa dipindai langsung dari layar. */}
-            <a
-              href={QRIS_INFO.imagePath}
-              target="_blank"
-              rel="noopener noreferrer"
-              title="Buka gambar QRIS ukuran penuh"
-              className="shrink-0 self-center sm:self-start"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element -- gambar statis di public/, harus tetap tajam untuk dipindai */}
-              <img
-                src={QRIS_INFO.imagePath}
-                alt={`Kode QRIS ${QRIS_INFO.merchantName}, NMID ${QRIS_INFO.nmid}, terminal ${QRIS_INFO.terminal}`}
-                width={224}
-                height={316}
-                className="h-auto w-56 rounded-[var(--radius-sm)] border border-line bg-white"
-              />
-            </a>
+            {/* Gambar QRIS dibesarkan & dibiarkan tajam supaya bisa dipindai langsung dari layar
+                tanpa perlu di-zoom lagi. */}
+            <div className="flex shrink-0 flex-col items-center gap-2 self-center sm:self-start">
+              <a
+                href={QRIS_INFO.imagePath}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Buka gambar QRIS ukuran penuh"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element -- gambar statis di public/, harus tetap tajam untuk dipindai */}
+                <img
+                  src={QRIS_INFO.imagePath}
+                  alt={`Kode QRIS ${QRIS_INFO.merchantName}, NMID ${QRIS_INFO.nmid}, terminal ${QRIS_INFO.terminal}`}
+                  width={224}
+                  height={316}
+                  className="h-auto w-72 rounded-[var(--radius-sm)] border border-line bg-white sm:w-80"
+                />
+              </a>
+              <a
+                href={QRIS_INFO.imagePath}
+                download="qris-drivetech.jpg"
+                className="inline-flex h-9 w-full items-center justify-center rounded-[var(--radius-sm)] border border-line bg-surface-3 px-3 text-xs font-medium text-ink hover:border-line-strong"
+              >
+                Unduh gambar QRIS
+              </a>
+            </div>
 
             <dl className="min-w-0 flex-1 space-y-3.5">
               <div>
@@ -209,8 +218,9 @@ export function PaymentForm({
                   </dd>
                 </div>
                 <p className="mt-1.5 text-xs leading-relaxed text-muted">
-                  Masukkan nominal <strong className="text-ink">tepat sampai angka terakhir</strong>{" "}
-                  &mdash; QRIS ini statis, nominalnya Anda isi sendiri di aplikasi.
+                  Masukkan nominal <strong className="text-ink">tepat sampai 3 angka terakhir</strong>{" "}
+                  &mdash; QRIS ini statis, nominalnya Anda isi sendiri di aplikasi. Tiga digit
+                  terakhir (&ldquo;212&rdquo;) adalah kode tetap DriveTech, bukan kesalahan hitung.
                 </p>
               </div>
 
