@@ -208,8 +208,8 @@ export default async function BerandaPage() {
           Zona Pameran
         </h2>
         {(() => {
-          // Baris atas (bento): EMPAT zona kendaraan (Layout v2: Tenda Dealer
-          // Mobil Baru, Area Pameran Mobil Bekas, Area Pameran Motor Baru, Area
+          // Baris atas (bento): EMPAT zona kendaraan (Layout v2: Area Mobil
+          // Baru, Area Pameran Mobil Bekas, Area Pameran Motor Baru, Area
           // Pameran Motor Bekas) — kartu pertama besar menempati 2 kolom x 3
           // baris, tiga kartu kecil menumpuk di kolom ketiga.
           // Baris bawah: Tenda UMKM & Tenda Otomotif/Leasing dibagi DUA SETENGAH
