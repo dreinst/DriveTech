@@ -621,6 +621,40 @@ export type Database = {
         };
         Relationships: [];
       };
+      /** Sampel health/availability/performance untuk /admin/monitoring (migrasi 20260905090000). */
+      monitoring_checks: {
+        Row: {
+          id: number;
+          created_at: string;
+          check_type: "db" | "site" | "cron";
+          target: string;
+          status: "ok" | "degraded" | "down";
+          latency_ms: number | null;
+          detail: string | null;
+          meta: Json;
+        };
+        Insert: {
+          id?: number;
+          created_at?: string;
+          check_type: "db" | "site" | "cron";
+          target: string;
+          status: "ok" | "degraded" | "down";
+          latency_ms?: number | null;
+          detail?: string | null;
+          meta?: Json;
+        };
+        Update: {
+          id?: number;
+          created_at?: string;
+          check_type?: "db" | "site" | "cron";
+          target?: string;
+          status?: "ok" | "degraded" | "down";
+          latency_ms?: number | null;
+          detail?: string | null;
+          meta?: Json;
+        };
+        Relationships: [];
+      };
       rate_limit_events: {
         Row: { id: number; key: string; created_at: string };
         Insert: { id?: number; key: string; created_at?: string };
@@ -741,6 +775,7 @@ export type AdminUserRow = Tables<"admin_users">;
 export type EventDateRow = Tables<"event_dates">;
 export type BookingDateRow = Tables<"booking_dates">;
 export type VehicleListingRow = Tables<"vehicle_listings">;
+export type MonitoringCheckRow = Tables<"monitoring_checks">;
 
 /** Satu baris view publik slot_date_status (okupansi per slot per tanggal). */
 export type SlotDateStatusRow =
