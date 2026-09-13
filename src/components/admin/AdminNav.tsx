@@ -99,6 +99,15 @@ function IconAnalitik() {
   );
 }
 
+function IconMonitoring() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M2.5 11h3l2-5 3 9 2-6.5 1.5 2.5h3.5" />
+      <circle cx="10" cy="10" r="7.3" />
+    </svg>
+  );
+}
+
 function IconQr() {
   return (
     <svg {...ICON_PROPS}>
@@ -178,6 +187,12 @@ const NAV_ITEMS: readonly NavItem[] = [
     label: "Analitik",
     icon: IconAnalitik,
     match: (pathname) => pathname === "/admin/analitik" || pathname.startsWith("/admin/analitik/"),
+  },
+  {
+    href: "/admin/monitoring",
+    label: "Monitoring",
+    icon: IconMonitoring,
+    match: (pathname) => pathname === "/admin/monitoring" || pathname.startsWith("/admin/monitoring/"),
   },
   {
     href: "/admin/qr",

@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/weekly-recap",
       "schedule": "0 17 * * 0"
+    },
+    {
+      "path": "/api/cron/monitoring-check",
+      "schedule": "0 3 * * *"
     }
   ]
 }
