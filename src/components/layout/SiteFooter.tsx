@@ -28,7 +28,7 @@ export function SiteFooter() {
               {EVENT_INFO.name}
             </p>
             <p className="mt-1.5 text-sm text-subtle">
-              Diselenggarakan oleh D&rsquo;Pro Event Organizer &middot; Dikelola Dreinst
+              Made by dreinst, organized by D&rsquo;Production Event Organizer
             </p>
           </div>
           <ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
