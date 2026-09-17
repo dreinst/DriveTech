@@ -20,7 +20,7 @@ set search_path = public, extensions;
 -- -----------------------------------------------------------------------------
 -- 1. Event (satu event saja, id di-hardcode agar seed idempotent)
 --    Model per tanggal: start_date/end_date tidak dipakai lagi (null); jadwal
---    sesungguhnya ada di tabel event_dates (pembukaan 12-13 September 2026, lalu setiap hari Minggu s.d. 1 November 2026).
+--    sesungguhnya ada di tabel event_dates (pembukaan 7-8 November 2026, lalu setiap hari Minggu s.d. 27 Desember 2026).
 -- -----------------------------------------------------------------------------
 insert into public.events (id, name, location, start_date, end_date, is_active)
 values (
@@ -39,17 +39,17 @@ on conflict (id) do update
       is_active  = excluded.is_active;
 
 -- -----------------------------------------------------------------------------
--- 1b. Tanggal gelaran Musim 1 (Deck v4, keputusan pemilik 2026-09-02):
---     pembukaan Sabtu-Minggu 12-13 September 2026, selanjutnya setiap hari
---     Minggu sampai 1 November 2026 (8 pekan, 9 tanggal).
+-- 1b. Tanggal gelaran Musim 1 (keputusan pemilik 2026-09-17, mundur 8 pekan
+--     dari Deck v4): pembukaan Sabtu-Minggu 7-8 November 2026, selanjutnya
+--     setiap hari Minggu sampai 27 Desember 2026 (8 pekan, 9 tanggal).
 -- -----------------------------------------------------------------------------
 insert into public.event_dates (event_id, event_date, is_active)
 select '11111111-1111-4111-8111-111111111111', v.d, true
 from (values
-  (date '2026-09-12'), (date '2026-09-13'),
-  (date '2026-09-20'), (date '2026-09-27'),
-  (date '2026-10-04'), (date '2026-10-11'), (date '2026-10-18'), (date '2026-10-25'),
-  (date '2026-11-01')
+  (date '2026-11-07'), (date '2026-11-08'),
+  (date '2026-11-15'), (date '2026-11-22'), (date '2026-11-29'),
+  (date '2026-12-06'), (date '2026-12-13'), (date '2026-12-20'),
+  (date '2026-12-27')
 ) as v(d)
 on conflict (event_date) do nothing;
 

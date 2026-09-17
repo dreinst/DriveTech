@@ -74,8 +74,8 @@ const STEP_LABELS: readonly string[] = ["Pilih Zona", "Pilih Slot", "Pilih Tangg
 /* ---------- Helper tanggal (murni, di luar komponen) ---------- */
 
 /**
- * Jadwal Musim 1 (MUSIM_1_DATES: pembukaan 12-13 September 2026, lalu tiap hari
- * Minggu s.d. 1 November 2026) yang belum lewat — HANYA untuk mode fallback saat
+ * Jadwal Musim 1 (MUSIM_1_DATES: pembukaan 7-8 November 2026, lalu tiap hari
+ * Minggu s.d. 27 Desember 2026) yang belum lewat — HANYA untuk mode fallback saat
  * database belum terhubung. Ini bukan data karangan melainkan cermin seed
  * event_dates. Dipanggil dari useEffect (client-only) supaya tidak menimbulkan
  * hydration mismatch.

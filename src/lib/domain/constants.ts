@@ -16,13 +16,13 @@ export const EVENT_INFO = {
    */
   mapsEmbedUrl: "https://www.google.com/maps?q=-7.8773823,112.6773862&z=16&output=embed",
   /**
-   * Jadwal Musim 1 (Deck v4, keputusan pemilik 2026-09-02): pembukaan dua hari
-   * Sabtu-Minggu 12-13 September 2026, selanjutnya setiap hari Minggu sampai
-   * 1 November 2026 (8 pekan). Tanggal konkretnya ada di MUSIM_1_DATES dan
-   * tabel event_dates.
+   * Jadwal Musim 1 (keputusan pemilik 2026-09-17, mundur 8 pekan dari rencana
+   * Deck v4): pembukaan dua hari Sabtu-Minggu 7-8 November 2026, selanjutnya
+   * setiap hari Minggu sampai 27 Desember 2026 (8 pekan). Tanggal konkretnya
+   * ada di MUSIM_1_DATES dan tabel event_dates.
    */
   scheduleText:
-    "Pembukaan Sabtu–Minggu 12–13 September 2026, selanjutnya setiap hari Minggu sampai 1 November 2026",
+    "Pembukaan Sabtu–Minggu 7–8 November 2026, selanjutnya setiap hari Minggu sampai 27 Desember 2026",
   organizer: "Panitia Drive Tech",
   /**
    * Kontak panitia (WhatsApp). Keputusan pemilik 2026-09-03 (sore): DUA nomor
@@ -41,19 +41,19 @@ export type ContactInfo = (typeof EVENT_INFO.contacts)[number];
 
 /**
  * Tanggal gelaran Musim 1 (ISO "YYYY-MM-DD") — cermin seed.sql & migrasi
- * 20260902101000_layout_v2.sql. Dipakai HANYA untuk mode fallback denah
+ * 20260917120000_jadwal_musim1_november.sql. Dipakai HANYA untuk mode fallback denah
  * (database belum terhubung); sumber kebenaran tetap tabel event_dates.
  */
 export const MUSIM_1_DATES: readonly string[] = [
-  "2026-09-12",
-  "2026-09-13",
-  "2026-09-20",
-  "2026-09-27",
-  "2026-10-04",
-  "2026-10-11",
-  "2026-10-18",
-  "2026-10-25",
-  "2026-11-01",
+  "2026-11-07",
+  "2026-11-08",
+  "2026-11-15",
+  "2026-11-22",
+  "2026-11-29",
+  "2026-12-06",
+  "2026-12-13",
+  "2026-12-20",
+  "2026-12-27",
 ];
 
 /** Digit saja dari nomor telepon lokal ("0822-2855-5254" -> "082228555254"). */
