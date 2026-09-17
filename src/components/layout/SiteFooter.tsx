@@ -9,8 +9,8 @@ const FOOTER_LINKS = [
 ] as const;
 
 /**
- * Footer ekstra gelap ala referensi Stitch: wordmark uppercase, baris
- * penyelenggara, baris link, baris hak cipta. Format identitas dari pemilik:
+ * Footer ekstra gelap ala referensi Stitch: logo D'Pro (SVG putih), wordmark
+ * uppercase, baris penyelenggara, baris link, baris hak cipta. Format identitas dari pemilik:
  * "Drive Tech — D'Pro Event Organizer — Dreinst".
  */
 export function SiteFooter() {
@@ -23,13 +23,21 @@ export function SiteFooter() {
     <footer className="border-t border-line bg-[#050505]">
       <div className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6">
         <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-ink">
-              {EVENT_INFO.name}
-            </p>
-            <p className="mt-1.5 text-sm text-subtle">
-              Made by dreinst, organized by D&rsquo;Production Event Organizer
-            </p>
+          <div className="flex items-center gap-4">
+            {/* eslint-disable-next-line @next/next/no-img-element -- SVG statis, tanpa optimasi */}
+            <img
+              src="/logo-dpro.svg"
+              alt="D'Production Event Organizer"
+              className="h-12 w-auto shrink-0"
+            />
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-ink">
+                {EVENT_INFO.name}
+              </p>
+              <p className="mt-1.5 text-sm text-subtle">
+                Made by dreinst, organized by D&rsquo;Production Event Organizer
+              </p>
+            </div>
           </div>
           <ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
             {FOOTER_LINKS.map((link) => (
