@@ -1,7 +1,7 @@
 # Drive Tech — Booking Lapak Per Tanggal & Modul Leasing
 
 Aplikasi web untuk **Drive Tech** — pasar otomotif akhir pekan di **Kampung Tentara, Singosari, Malang**,
-Musim 1 dibuka **Sabtu–Minggu 12–13 September 2026**, lalu digelar **setiap hari Minggu sampai 1 November 2026** (8 pekan),
+Musim 1 dibuka **Sabtu–Minggu 7–8 November 2026**, lalu digelar **setiap hari Minggu sampai 27 Desember 2026** (8 pekan),
 untuk mobil & motor baru, mobil & motor bekas, UMKM, otomotif & leasing, dan kuliner.
 Pengunjung dan calon tenant melihat **denah interaktif** yang sinkron *realtime* dengan
 database, lalu memesan lapak sendiri **per tanggal**: pilih satu atau beberapa tanggal
@@ -477,7 +477,7 @@ Tenor yang diterima: `12, 18, 24, 36, 48, 60`. Komisi platform dihitung otomatis
 ├── tools/                         Skrip bantu: generator SVG denah + webhook Google Sheets (.gs)
 ├── supabase/
 │   ├── migrations/                Skema: enum, tabel, index, trigger, RLS, Realtime, Storage
-│   ├── seed.sql                   1 event, 9 tanggal Musim 1 (12-13 Sep, lalu tiap Minggu s.d. 1 Nov 2026), 8 zona, 107 slot, 3 mitra leasing
+│   ├── seed.sql                   1 event, 9 tanggal Musim 1 (7-8 Nov, lalu tiap Minggu s.d. 27 Des 2026), 8 zona, 107 slot, 3 mitra leasing
 │   └── README.md                  Panduan database (lokal, cloud, RLS, Storage)
 └── src/
     ├── middleware.ts              Refresh sesi Supabase di setiap request

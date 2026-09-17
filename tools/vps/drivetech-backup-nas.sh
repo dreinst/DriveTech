@@ -10,7 +10,7 @@
 #     drivetech-storage-<tgl>.tar.gz  berkas Storage (foto kendaraan, bukti QRIS)
 #     INFO-<tgl>.txt                  ringkasan isi backup
 #
-# Penomoran minggu mengikuti Musim 1 Drive Tech: pekan pembukaan 12-13 Sep 2026
+# Penomoran minggu mengikuti Musim 1 Drive Tech: pekan pembukaan 7-8 Nov 2026
 # = "Database Minggu 1" (SEASON_MONDAY = Senin pekan itu). Sebelum itu masuk
 # "Database Pra-Musim".
 #
@@ -42,7 +42,7 @@ DB_CONTAINER="supabase-db"
 STORAGE_DIR="/root/supabase-selfhost/volumes/storage"
 LOG="/var/log/drivetech-backup.log"
 KEEP_LOCAL=4
-SEASON_MONDAY="2026-09-07"
+SEASON_MONDAY="2026-11-02"
 UPLOAD_TRIES="${UPLOAD_TRIES:-3}"                  # percobaan langsung dalam satu jalan
 UPLOAD_WAIT="${UPLOAD_WAIT:-120}"                  # jeda antar percobaan (detik)
 REMIND_EVERY="${REMIND_EVERY:-24}"                 # ingatkan lagi tiap N pengulangan (~24 jam)
