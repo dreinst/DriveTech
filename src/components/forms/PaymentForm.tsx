@@ -5,14 +5,14 @@ import type { ChangeEvent } from "react";
 
 import { CopyButton } from "@/app/booking/_components/CopyButton";
 import { Alert } from "@/components/ui/Alert";
-import { Button } from "@/components/ui/Button";
+import { Button, buttonClass } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 import { submitPaymentAction } from "@/lib/actions/booking";
 import { initialActionState } from "@/lib/actions/state";
-import { KOMPRESI_BUKTI, MAX_PROOF_BYTES, QRIS_INFO } from "@/lib/domain/constants";
+import { KOMPRESI_BUKTI, MAX_PROOF_BYTES } from "@/lib/domain/constants";
 import { compressImage, formatBytes } from "@/lib/image";
-import { formatRupiah } from "@/lib/utils";
+import { cn, formatRupiah } from "@/lib/utils";
 
 const JENIS_DIIZINKAN = ["image/jpeg", "image/png", "image/webp"];
 
@@ -24,6 +24,8 @@ export type PaymentFormProps = {
   existingProofUrl?: string | null;
   /** Kode booking — ditampilkan agar penyewa bisa menuliskannya di catatan pembayaran. */
   bookingCode: string;
+  /** Tautan wa.me ke bot kantor berisi kode booking; bot membalas dengan kartu QRIS bernominal. */
+  waQrisUrl: string;
 };
 
 /**
@@ -51,6 +53,7 @@ export function PaymentForm({
   amount,
   existingProofUrl = null,
   bookingCode,
+  waQrisUrl,
 }: PaymentFormProps) {
   const [state, formAction] = useActionState(submitPaymentAction, initialActionState);
   const id = useId();
@@ -150,125 +153,65 @@ export function PaymentForm({
       <div className="space-y-4">
         {/* ---------- Kartu QRIS ---------- */}
         <div className="rounded-[var(--radius)] border border-line bg-surface-2 p-4 sm:p-5">
-          <p className="text-sm font-semibold text-ink">Bayar lewat QRIS</p>
+          <p className="text-sm font-semibold text-ink">Bayar lewat QRIS dari WhatsApp</p>
           <p className="mt-1 text-xs leading-relaxed text-muted">
-            Pindai kode QRIS di bawah dengan aplikasi bank atau e-wallet apa pun yang berlogo
-            QRIS, bayar tepat sesuai nominal, lalu unggah tangkapan layar transaksi berhasil.
+            Tekan tombol di bawah untuk mengirim kode booking ke WhatsApp panitia. Bot kami membalas
+            dengan QRIS yang nominalnya sudah terisi otomatis, jadi Anda tinggal memindai dan membayar.
           </p>
 
-          <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start">
-            {/* Gambar QRIS dibesarkan & dibiarkan tajam supaya bisa dipindai langsung dari layar
-                tanpa perlu di-zoom lagi. */}
-            <div className="flex shrink-0 flex-col items-center gap-2 self-center sm:self-start">
-              <a
-                href={QRIS_INFO.imagePath}
-                target="_blank"
-                rel="noopener noreferrer"
-                title="Buka gambar QRIS ukuran penuh"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element -- gambar statis di public/, harus tetap tajam untuk dipindai */}
-                <img
-                  src={QRIS_INFO.imagePath}
-                  alt={`Kode QRIS ${QRIS_INFO.merchantName}, NMID ${QRIS_INFO.nmid}, terminal ${QRIS_INFO.terminal}`}
-                  width={224}
-                  height={316}
-                  className="h-auto w-72 rounded-[var(--radius-sm)] border border-line bg-white sm:w-80"
-                />
-              </a>
-              <a
-                href={QRIS_INFO.imagePath}
-                download="qris-drivetech.jpg"
-                className="inline-flex h-9 w-full items-center justify-center rounded-[var(--radius-sm)] border border-line bg-surface-3 px-3 text-xs font-medium text-ink hover:border-line-strong"
-              >
-                Unduh gambar QRIS
-              </a>
+          <a
+            href={waQrisUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={cn(buttonClass("primary", "md"), "mt-4 w-full")}
+          >
+            Minta QRIS via WhatsApp
+          </a>
+
+          <dl className="mt-4 space-y-3.5">
+            <div className="border-t border-line pt-3">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <dt className="text-sm text-muted">Nominal bayar</dt>
+                <dd className="tabular text-lg font-bold text-accent">{formatRupiah(amount)}</dd>
+              </div>
+              <p className="mt-1.5 text-xs leading-relaxed text-muted">
+                Tiga angka terakhir adalah <strong className="text-ink">kode unik</strong> booking Anda,
+                supaya pembayarannya mudah dikenali panitia. Mohon bayar tepat sesuai nominal ini.
+              </p>
             </div>
 
-            <dl className="min-w-0 flex-1 space-y-3.5">
-              <div>
-                <dt className="text-xs font-medium uppercase tracking-[0.08em] text-subtle">
-                  Nama merchant
-                </dt>
-                <dd className="mt-0.5 text-sm font-semibold text-ink">{QRIS_INFO.merchantName}</dd>
-              </div>
-
-              <div>
-                <dt className="text-xs font-medium uppercase tracking-[0.08em] text-subtle">
-                  NMID &middot; Terminal
-                </dt>
-                <dd className="tabular mt-0.5 font-mono text-sm font-semibold text-ink">
-                  {QRIS_INFO.nmid} &middot; {QRIS_INFO.terminal}
-                </dd>
-              </div>
-
-              <div className="border-t border-line pt-3">
-                <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <dt className="text-sm text-muted">Nominal bayar</dt>
-                  <dd className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                    <span className="tabular text-lg font-bold text-accent">
-                      {formatRupiah(amount)}
-                    </span>
-                    {/* Salin angka polos (tanpa "Rp"/titik) supaya bisa langsung
-                        ditempel di kolom nominal aplikasi pembayaran. */}
-                    <CopyButton
-                      value={String(amount)}
-                      label="Salin nominal"
-                      className="h-9 px-4 text-xs"
-                    />
-                  </dd>
-                </div>
-                <p className="mt-1.5 text-xs leading-relaxed text-muted">
-                  Masukkan nominal <strong className="text-ink">tepat sampai 3 angka terakhir</strong>{" "}
-                  &mdash; QRIS ini statis, nominalnya Anda isi sendiri di aplikasi. Tiga digit
-                  terakhir (&ldquo;212&rdquo;) adalah kode tetap DriveTech, bukan kesalahan hitung.
-                </p>
-              </div>
-
-              <div className="border-t border-line pt-3">
-                <dt className="text-xs font-medium uppercase tracking-[0.08em] text-subtle">
-                  Kode booking
-                </dt>
-                <dd className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-2">
-                  <span className="tabular select-all font-mono text-xl font-bold tracking-widest text-ink">
-                    {bookingCode}
-                  </span>
-                  <CopyButton value={bookingCode} label="Salin" className="h-9 px-4 text-xs" />
-                </dd>
-                <p className="mt-1.5 text-xs leading-relaxed text-muted">
-                  Kalau aplikasi Anda menyediakan kolom catatan, tulis kode ini di sana supaya
-                  pembayaran lebih cepat dikenali panitia.
-                </p>
-              </div>
-            </dl>
-          </div>
+            <div className="border-t border-line pt-3">
+              <dt className="text-xs font-medium uppercase tracking-[0.08em] text-subtle">
+                Kode booking
+              </dt>
+              <dd className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-2">
+                <span className="tabular select-all font-mono text-xl font-bold tracking-widest text-ink">
+                  {bookingCode}
+                </span>
+                <CopyButton value={bookingCode} label="Salin" className="h-9 px-4 text-xs" />
+              </dd>
+            </div>
+          </dl>
 
           <ol className="mt-4 space-y-1.5 border-t border-line pt-3 text-xs leading-relaxed text-muted">
             <li>
-              <strong className="text-ink">1.</strong> Buka aplikasi bank / e-wallet berlogo QRIS.
+              <strong className="text-ink">1.</strong> Tekan &ldquo;Minta QRIS via WhatsApp&rdquo;, lalu
+              kirim pesan yang sudah terisi.
             </li>
             <li>
-              <strong className="text-ink">2.</strong> Pindai kode QRIS di atas (atau unggah gambarnya
-              dari galeri lewat menu &ldquo;scan dari galeri&rdquo;).
+              <strong className="text-ink">2.</strong> Pindai QRIS dari bot dengan aplikasi bank atau
+              e-wallet berlogo QRIS, lalu bayar.
             </li>
             <li>
-              <strong className="text-ink">3.</strong> Masukkan nominal tepat{" "}
-              <span className="tabular font-semibold text-ink">{formatRupiah(amount)}</span> lalu bayar.
-            </li>
-            <li>
-              <strong className="text-ink">4.</strong> Simpan tangkapan layar halaman &ldquo;transaksi
-              berhasil&rdquo; — pastikan nominal dan waktu pembayaran terlihat.
-            </li>
-            <li>
-              <strong className="text-ink">5.</strong> Unggah tangkapan layar itu di bawah, lalu tekan
-              Konfirmasi Pembayaran.
+              <strong className="text-ink">3.</strong> Kirim tangkapan layar &ldquo;transaksi
+              berhasil&rdquo; di chat WhatsApp yang sama.
             </li>
           </ol>
 
           <p className="mt-3 rounded-[var(--radius-sm)] border-l-2 border-accent bg-accent-soft px-3 py-2 text-xs leading-relaxed text-ink-2">
-            Setelah bukti terkirim, kode booking Anda masuk antrean verifikasi. Panitia mencocokkan{" "}
-            <strong className="text-ink">nominal</strong> dan{" "}
-            <strong className="text-ink">waktu pembayaran</strong> pada bukti dengan waktu pengiriman
-            yang tercatat di sistem; booking dikunci setelah diverifikasi.
+            Setelah panitia mencocokkan pembayaran Anda, booking dikonfirmasi dan kabarnya dikirim
+            lewat WhatsApp dan email. WhatsApp sedang bermasalah? Anda tetap bisa mengunggah bukti di
+            bawah ini.
           </p>
         </div>
 

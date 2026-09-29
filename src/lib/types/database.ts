@@ -221,6 +221,9 @@ export type Database = {
           id: string;
           booking_id: string;
           amount: number;
+          unique_code: number | null;
+          wa_chat: string | null;
+          reminded_at: string | null;
           method: Database["public"]["Enums"]["payment_method"];
           status: Database["public"]["Enums"]["payment_status"];
           proof_url: string | null;
@@ -235,6 +238,9 @@ export type Database = {
           id?: string;
           booking_id: string;
           amount: number;
+          unique_code?: number | null;
+          wa_chat?: string | null;
+          reminded_at?: string | null;
           method: Database["public"]["Enums"]["payment_method"];
           status?: Database["public"]["Enums"]["payment_status"];
           proof_url?: string | null;
@@ -249,6 +255,9 @@ export type Database = {
           id?: string;
           booking_id?: string;
           amount?: number;
+          unique_code?: number | null;
+          wa_chat?: string | null;
+          reminded_at?: string | null;
           method?: Database["public"]["Enums"]["payment_method"];
           status?: Database["public"]["Enums"]["payment_status"];
           proof_url?: string | null;
@@ -687,6 +696,11 @@ export type Database = {
       rate_limit_hit: {
         Args: { p_key: string; p_limit: number; p_window_seconds: number };
         Returns: boolean;
+      };
+      /** Kode unik 500..999 untuk nominal transfer QRIS (migrasi 20260929130000). null = kode habis. */
+      alokasi_kode_unik: {
+        Args: { p_payment: string };
+        Returns: number | null;
       };
     };
     Enums: {

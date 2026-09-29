@@ -41,3 +41,11 @@ export function zoneHasVariedFees(
   const base = Number(zone.admin_fee ?? 0);
   return slots.some((slot) => slotAdminFee(slot, zone) !== base);
 }
+
+/**
+ * Nominal yang ditransfer penyewa: tagihan + kode unik (500..999) dari alokasi_kode_unik(). Kode unik membuat
+ * setiap tagihan hidup punya nominal berbeda, jadi panitia bisa mencocokkan uang masuk di GoPay Merchant.
+ */
+export function totalBayar(payment: { amount: number | string; unique_code?: number | null }): number {
+  return Number(payment.amount) + (payment.unique_code ?? 0);
+}
