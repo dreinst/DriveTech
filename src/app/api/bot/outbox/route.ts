@@ -32,10 +32,12 @@ export async function GET(request: Request): Promise<NextResponse> {
 
     const kode = [...new Set(antre.data.map((m) => m.booking_code).filter((k): k is string => Boolean(k)))];
     const chats = new Map<string, string>();
+    const sudahBayar = new Set<string>(); // pengingat yang antre sebelum bukti masuk atau ditolak tidak dikirim lagi
     if (kode.length > 0) {
-      const r = await supabase.from("bookings").select("booking_code, payment:admin_fee_payments(wa_chat)").in("booking_code", kode);
-      for (const b of (r.data ?? []) as unknown as { booking_code: string; payment: { wa_chat: string | null } | null }[]) {
+      const r = await supabase.from("bookings").select("booking_code, payment:admin_fee_payments(wa_chat, status)").in("booking_code", kode);
+      for (const b of (r.data ?? []) as unknown as { booking_code: string; payment: { wa_chat: string | null; status: string } | null }[]) {
         if (b.payment?.wa_chat) chats.set(b.booking_code, b.payment.wa_chat);
+        if (b.payment && b.payment.status !== "unpaid") sudahBayar.add(b.booking_code);
       }
     }
 
@@ -43,7 +45,8 @@ export async function GET(request: Request): Promise<NextResponse> {
     const lewati: string[] = [];
     for (const m of antre.data) {
       // "created" dilewati: penyewa baru mendapat kartu QRIS langsung dari bot saat chat pertama.
-      const chat = m.booking_code && m.kind !== "created" ? chats.get(m.booking_code) : undefined;
+      const basi = m.kind === "created" || (m.kind === "pengingat" && m.booking_code !== null && sudahBayar.has(m.booking_code));
+      const chat = m.booking_code && !basi ? chats.get(m.booking_code) : undefined;
       if (chat) kirim.push({ id: m.id, chat, text: m.body, kode: m.booking_code, jenis: m.kind });
       else lewati.push(m.id);
     }
