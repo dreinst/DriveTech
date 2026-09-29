@@ -14,11 +14,11 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Stepper } from "@/components/ui/Stepper";
 import {
   EVENT_INFO,
-  QRIS_TRANSFER_CODE,
   WA_BANTUAN_TEXT,
   waHref,
+  waQrisHref,
 } from "@/lib/domain/constants";
-import { slotAdminFee } from "@/lib/domain/harga";
+import { slotAdminFee, totalBayar } from "@/lib/domain/harga";
 import { hitungTotalBiaya } from "@/lib/domain/ketersediaan";
 import { batasPembayaran } from "@/lib/domain/tenggat";
 import { getBookingDetail } from "@/lib/services/booking";
@@ -246,13 +246,14 @@ export default async function BayarPage({ params }: PageProps) {
           <CardHeader>
             <CardTitle>Pembayaran</CardTitle>
             <CardDescription>
-              Bayar lewat QRIS lalu unggah bukti — diverifikasi manual oleh panitia.
+              Minta QRIS lewat WhatsApp, bayar, lalu kirim buktinya. Panitia memeriksanya secara manual.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <PaymentForm
               bookingId={booking.id}
-              amount={nominal + QRIS_TRANSFER_CODE}
+              amount={payment ? totalBayar(payment) : nominal}
+              waQrisUrl={waQrisHref(booking.booking_code)}
               existingProofUrl={payment?.proof_url ?? null}
               bookingCode={booking.booking_code}
             />

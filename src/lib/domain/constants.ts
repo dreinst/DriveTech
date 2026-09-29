@@ -98,11 +98,16 @@ export const QRIS_INFO = {
 } as const;
 
 /**
- * Kode akhir tetap yang ditambahkan ke nominal QRIS (mis. Rp100.000 jadi
- * Rp100.212) — bukan biaya nyata, hanya penanda supaya bukti transfer mudah
- * dikenali sebagai transaksi QRIS DriveTech saat dicocokkan panitia.
+ * Nomor WhatsApp kantor yang dijaga bot bayar manual (bot yang sama dengan KUWERA 5K). Penyewa menekan
+ * "Minta QRIS via WhatsApp", bot membalas dengan kartu QRIS bernominal (tagihan + kode unik 500..999),
+ * lalu penyewa mengirim bukti bayar di chat yang sama.
  */
-export const QRIS_TRANSFER_CODE = 212;
+export const WA_BOT_PHONE = "6282232999900";
+
+/** Tautan wa.me ke bot dengan pesan berisi kode booking, supaya bot langsung mengenali tagihannya. */
+export function waQrisHref(bookingCode: string): string {
+  return waHref(WA_BOT_PHONE, `Halo, saya mau bayar booking DriveTech ${bookingCode}`);
+}
 
 /**
  * Alamat produksi TETAP — basis URL kode QR promosi (lihat lib/qr-brand.ts).

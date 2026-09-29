@@ -412,8 +412,8 @@ export function buildBookingWa(kind: BookingNotifKind, d: BookingNotif): string 
     case "created":
       return `${kepala}\nBooking Anda kami terima. ${lapak}\nBiaya admin: *${formatRupiah(d.amount)}*.\n${
         d.deadlineText
-          ? `Bayar lewat QRIS lalu unggah bukti sebelum *${d.deadlineText}* agar slot tidak dilepas otomatis.`
-          : "Bayar lewat QRIS lalu unggah bukti agar slot dikonfirmasi."
+          ? `Minta QRIS lewat tombol WhatsApp di halaman bayar, lalu kirim bukti bayarnya sebelum *${d.deadlineText}* agar slot tidak dilepas otomatis.`
+          : "Minta QRIS lewat tombol WhatsApp di halaman bayar, lalu kirim bukti bayarnya agar slot dikonfirmasi."
       }`;
     case "verified":
       return `${kepala}\nPembayaran Anda TERVERIFIKASI. Booking dikonfirmasi. ${lapak}\nTunjukkan kode booking saat registrasi ulang di lokasi. Sampai jumpa di pameran!`;
@@ -422,8 +422,8 @@ export function buildBookingWa(kind: BookingNotifKind, d: BookingNotif): string 
         d.reason ? `\nAlasan: ${d.reason}.` : ""
       }\n${lapak}\n${
         d.deadlineText
-          ? `Silakan unggah ulang bukti yang benar sebelum *${d.deadlineText}*.`
-          : "Silakan unggah ulang bukti yang benar dari halaman status booking."
+          ? `Silakan kirim ulang bukti yang benar di chat ini sebelum *${d.deadlineText}*.`
+          : "Silakan kirim ulang bukti yang benar di chat ini."
       }`;
     case "cancelled":
       return `${kepala}\nBooking Anda DIBATALKAN.${d.reason ? `\nAlasan: ${d.reason}.` : ""}\n${lapak}\nTanggal sewa telah dilepas. Anda bisa memesan slot lain kapan saja. — ${KONTAK_PANITIA}`;
@@ -445,15 +445,15 @@ export function buildBookingEmail(kind: BookingNotifKind, d: BookingNotif): { su
   const badan: Record<BookingNotifKind, string> = {
     created: `Booking Anda kami terima.\nBiaya admin: ${formatRupiah(d.amount)}.\n${
       d.deadlineText
-        ? `Bayar lewat QRIS lalu unggah bukti sebelum ${d.deadlineText} agar slot tidak dilepas otomatis.`
-        : "Bayar lewat QRIS lalu unggah bukti agar slot dikonfirmasi."
+        ? `Minta QRIS lewat tombol WhatsApp di halaman bayar, lalu kirim bukti bayarnya sebelum ${d.deadlineText} agar slot tidak dilepas otomatis.`
+        : "Minta QRIS lewat tombol WhatsApp di halaman bayar, lalu kirim bukti bayarnya agar slot dikonfirmasi."
     }`,
     verified:
       "Pembayaran Anda TERVERIFIKASI dan booking dikonfirmasi. Tunjukkan kode booking (atau QR di halaman status) saat registrasi ulang di lokasi. Sampai jumpa di pameran!",
     rejected: `Mohon maaf, bukti pembayaran Anda DITOLAK.${d.reason ? `\nAlasan: ${d.reason}.` : ""}\n${
       d.deadlineText
-        ? `Silakan unggah ulang bukti yang benar sebelum ${d.deadlineText}.`
-        : "Silakan unggah ulang bukti yang benar dari halaman status booking."
+        ? `Silakan kirim ulang bukti yang benar lewat WhatsApp panitia atau halaman status booking sebelum ${d.deadlineText}.`
+        : "Silakan kirim ulang bukti yang benar lewat WhatsApp panitia atau halaman status booking."
     }`,
     cancelled: `Booking Anda DIBATALKAN.${d.reason ? `\nAlasan: ${d.reason}.` : ""}\nTanggal sewa telah dilepas. Anda bisa memesan slot lain kapan saja.`,
   };

@@ -21,7 +21,7 @@ import {
   WA_BANTUAN_TEXT,
   waHref,
 } from "@/lib/domain/constants";
-import { slotAdminFee } from "@/lib/domain/harga";
+import { slotAdminFee, totalBayar } from "@/lib/domain/harga";
 import { hitungTotalBiaya } from "@/lib/domain/ketersediaan";
 import { PAYMENT_METHOD_LABEL } from "@/lib/domain/labels";
 import { batasPembayaran } from "@/lib/domain/tenggat";
@@ -81,7 +81,7 @@ export default async function StatusBookingPage({ params }: PageProps) {
   const bisaBayar = (ditolak || payment?.status === "unpaid" || !payment) && !dibatalkan;
   // payment.amount sudah = biaya per tanggal x jumlah tanggal (dihitung createBooking).
   const nominal =
-    payment?.amount ??
+    (payment ? totalBayar(payment) : null) ??
     hitungTotalBiaya(
       slotAdminFee(booking.slot, booking.slot.zone),
       Math.max(booking.dates.length, 1),
@@ -241,7 +241,7 @@ export default async function StatusBookingPage({ params }: PageProps) {
                 selesai={Boolean(payment?.submitted_at)}
                 keterangan={
                   payment?.submitted_at
-                    ? `${PAYMENT_METHOD_LABEL[payment.method]}, ${formatRupiah(payment.amount)}.`
+                    ? `${PAYMENT_METHOD_LABEL[payment.method]}, ${formatRupiah(totalBayar(payment))}.`
                     : "Belum ada konfirmasi pembayaran."
                 }
               />

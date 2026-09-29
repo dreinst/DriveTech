@@ -6,7 +6,7 @@ import {
   PAYMENT_DEADLINE_HOURS,
   vehicleKindForZoneType,
 } from "@/lib/domain/constants";
-import { slotAdminFee } from "@/lib/domain/harga";
+import { slotAdminFee, totalBayar } from "@/lib/domain/harga";
 import { hitungTotalBiaya } from "@/lib/domain/ketersediaan";
 import { TENANT_TYPE_BY_ZONE_TYPE } from "@/lib/domain/labels";
 import { isEmailConfigured, notifyBooking, type BookingNotifKind } from "@/lib/notifications";
@@ -394,7 +394,7 @@ export async function createBooking(
     // expire_unpaid_bookings().
     method: "qris",
     status: "unpaid",
-  });
+  }).select("id").single();
 
   if (paymentInsert.error) {
     // Kompensasi: booking batal dibuat (booking_dates ikut terhapus lewat cascade).
@@ -402,6 +402,12 @@ export async function createBooking(
     await hapusTenantYatim();
     return dbFail<Out>(paymentInsert.error as PgError, "Gagal membuat tagihan biaya admin");
   }
+
+  /* --- Langkah 3b: kode unik 500..999 supaya nominal transfer QRIS berbeda dari tagihan hidup lain
+     (DriveTech dan KUWERA masuk ke merchant GoPay yang sama; KUWERA memakai 1..499). Kalau gagal,
+     tagihan tetap sah dan panitia bisa mencocokkan manual, jadi booking tidak dibatalkan. --- */
+  const kode = await supabase.rpc("alokasi_kode_unik", { p_payment: paymentInsert.data.id });
+  if (kode.error) console.warn("[booking] alokasi kode unik gagal:", kode.error.message);
 
   /* --- Langkah 4: simpan data kendaraan untuk katalog (khusus zona kendaraan) --- */
   if (zonaKendaraan && data.vehicle) {
@@ -475,7 +481,8 @@ export async function createBooking(
     slotName: slotDisplayName(slot),
     zoneName: slot.zone.name,
     dates,
-    amount,
+    // Nominal transfer = tagihan + kode unik, sama dengan yang tampil di halaman bayar dan kartu QRIS.
+    amount: amount + (kode.data ?? 0),
     deadlineText: `${formatTanggalWaktu(tenggat)} WIB`,
     statusUrl: `${getSiteUrl()}/booking/${booking.id}/status`,
   });
@@ -500,9 +507,9 @@ export async function kirimNotifikasiBooking(
     const detail = await getBookingDetail(bookingId);
     if (!detail.ok) return;
     const b = detail.data;
-    const amount =
-      b.payment?.amount ??
-      hitungTotalBiaya(slotAdminFee(b.slot, b.slot.zone), Math.max(b.dates.length, 1));
+    const amount = b.payment
+      ? totalBayar(b.payment)
+      : hitungTotalBiaya(slotAdminFee(b.slot, b.slot.zone), Math.max(b.dates.length, 1));
     // Bukti ditolak -> tenant punya jendela unggah ulang 24 jam sejak sekarang.
     const deadlineText =
       kind === "rejected"
