@@ -137,24 +137,26 @@ export default async function BayarPage({ params }: PageProps) {
           Slot Berhasil Dipesan
         </h1>
         <p className="mt-3 text-sm leading-relaxed text-muted sm:text-base">
-          Selesaikan pembayaran biaya admin lalu tunggu verifikasi panitia — kode booking
+          Selesaikan pembayaran biaya admin lalu tunggu verifikasi panitia. Kode booking
           Anda juga sudah dikirim ke email{booking.tenant.email ? ` ${booking.tenant.email}` : ""}. Belum terlihat? Periksa folder Spam/Junk, lalu tandai &ldquo;Bukan spam&rdquo; agar email berikutnya masuk kotak masuk.
         </p>
         <p className="mt-2 text-xs text-subtle">
           Bingung dengan kode booking? Hubungi WhatsApp{" "}
-          {EVENT_INFO.contacts.map((kontak) => (
-            <a
-              key={kontak.phone}
-              href={waHref(
-                kontak.phone,
-                `${WA_BANTUAN_TEXT} (kode booking ${booking.booking_code})`,
-              )}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-medium text-accent underline-offset-2 hover:underline"
-            >
-              {kontak.phone}
-            </a>
+          {EVENT_INFO.contacts.map((kontak, i) => (
+            <span key={kontak.phone}>
+              {i > 0 ? " atau " : null}
+              <a
+                href={waHref(
+                  kontak.phone,
+                  `${WA_BANTUAN_TEXT} (kode booking ${booking.booking_code})`,
+                )}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-accent underline-offset-2 hover:underline"
+              >
+                {kontak.phone}
+              </a>
+            </span>
           ))}
           .
         </p>
