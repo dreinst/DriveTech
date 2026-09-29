@@ -23,8 +23,9 @@ import { getFloorPlan } from "@/lib/services/slots";
 import type { SlotRow, ZoneType, ZoneWithSlots } from "@/lib/types/database";
 import { cn, formatRupiah, formatTanggal } from "@/lib/utils";
 
-// Halaman ini selalu mengambil status slot terbaru, jadi jangan dirender saat build.
-export const dynamic = "force-dynamic";
+// Di-cache CDN dan dirender ulang paling lama tiap 30 detik (ISR). Status slot tetap segar karena
+// FloorPlanBoard berlangganan realtime, dan aksi booking memanggil revalidatePath("/").
+export const revalidate = 30;
 
 /**
  * Warna aksen zona diambil dari data denah (domain/layout.ts) supaya kartu zona
