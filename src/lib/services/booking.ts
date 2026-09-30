@@ -403,7 +403,7 @@ export async function createBooking(
     return dbFail<Out>(paymentInsert.error as PgError, "Gagal membuat tagihan biaya admin");
   }
 
-  /* --- Langkah 3b: kode unik 500..999 supaya nominal transfer QRIS berbeda dari tagihan hidup lain
+  /* --- Langkah 3b: kode unik 350..500 supaya nominal transfer QRIS berbeda dari tagihan hidup lain
      (DriveTech dan KUWERA masuk ke merchant GoPay yang sama; KUWERA memakai 1..499). Kalau gagal,
      tagihan tetap sah dan panitia bisa mencocokkan manual, jadi booking tidak dibatalkan. --- */
   const kode = await supabase.rpc("alokasi_kode_unik", { p_payment: paymentInsert.data.id });
