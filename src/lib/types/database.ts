@@ -697,7 +697,7 @@ export type Database = {
         Args: { p_key: string; p_limit: number; p_window_seconds: number };
         Returns: boolean;
       };
-      /** Kode unik 500..999 untuk nominal transfer QRIS (migrasi 20260929130000). null = kode habis. */
+      /** Kode unik 350..500 untuk nominal transfer QRIS (migrasi 20260929130000). null = kode habis. */
       alokasi_kode_unik: {
         Args: { p_payment: string };
         Returns: number | null;
