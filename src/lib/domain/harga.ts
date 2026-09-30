@@ -43,7 +43,7 @@ export function zoneHasVariedFees(
 }
 
 /**
- * Nominal yang ditransfer penyewa: tagihan + kode unik (500..999) dari alokasi_kode_unik(). Kode unik membuat
+ * Nominal yang ditransfer penyewa: tagihan + kode unik (350..500) dari alokasi_kode_unik(). Kode unik membuat
  * setiap tagihan hidup punya nominal berbeda, jadi panitia bisa mencocokkan uang masuk di GoPay Merchant.
  */
 export function totalBayar(payment: { amount: number | string; unique_code?: number | null }): number {
