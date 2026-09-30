@@ -343,7 +343,7 @@ export default async function AdminBookingsPage({ searchParams }: PageProps) {
           {bookings.map((booking) => {
             const payment = booking.payment;
             const submitted = payment?.status === "submitted";
-            // +kode unik tagihan (500..999) supaya cocok dengan nominal di bukti transfer.
+            // +kode unik tagihan (350..500) supaya cocok dengan nominal di bukti transfer.
             const nominal = nominalBooking(booking) + (payment?.unique_code ?? 0);
 
             return (
@@ -430,7 +430,7 @@ export default async function AdminBookingsPage({ searchParams }: PageProps) {
                 {bookings.map((booking) => {
                   const payment = booking.payment;
                   const submitted = payment?.status === "submitted";
-                  // +kode unik tagihan (500..999) supaya cocok dengan nominal di bukti transfer.
+                  // +kode unik tagihan (350..500) supaya cocok dengan nominal di bukti transfer.
                   const nominal = nominalBooking(booking) + (payment?.unique_code ?? 0);
 
                   return (
