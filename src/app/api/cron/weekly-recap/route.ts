@@ -10,12 +10,12 @@ export const dynamic = "force-dynamic";
  *
  * Memanggil webhook Apps Script (?action=recap&key=...) yang menyalin sheet
  * "Bookings" ke tab arsip "Recap YYYY-MM-DD" TANPA menghapus master (keputusan
- * pemilik: recap tanpa kehilangan data). Dipicu Vercel Cron sekali seminggu
+ * pemilik: recap tanpa kehilangan data). Dipicu timer systemd di VPS sekali seminggu
  * (lihat vercel.json).
  *
  * Penjagaan (temuan audit 2026-09-03, FAIL-CLOSED):
  * - Di produksi CRON_SECRET WAJIB diisi; tanpa itu endpoint menolak 503, bukan
- *   terbuka untuk siapa pun. Vercel Cron mengirim "Authorization: Bearer
+ *   terbuka untuk siapa pun. Timer VPS mengirim "Authorization: Bearer
  *   <CRON_SECRET>" otomatis saat env itu ada. Di development boleh tanpa secret.
  * - Kunci aksi recap WAJIB dari env SHEETS_ACTION_KEY (= RECAP_KEY di
  *   tools/google-sheets-webhook.gs). Tidak ada lagi kunci bawaan di kode:

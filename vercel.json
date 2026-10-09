@@ -2,15 +2,5 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "regions": [
     "sin1"
-  ],
-  "crons": [
-    {
-      "path": "/api/cron/sync-cancelled",
-      "schedule": "0 20 * * *"
-    },
-    {
-      "path": "/api/cron/weekly-recap",
-      "schedule": "0 17 * * 0"
-    }
   ]
 }
