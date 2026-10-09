@@ -5,7 +5,7 @@ import { ZoneFeeForm } from "@/components/admin/ZoneFeeForm";
 import { Alert } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
-import { EVENT_INFO, isBookableZoneType, QRIS_INFO } from "@/lib/domain/constants";
+import { EVENT_INFO, isBookableZoneType, KONTAK_SPONSOR, QRIS_INFO } from "@/lib/domain/constants";
 import { ADMIN_ROLE_LABEL, ZONE_TYPE_LABEL } from "@/lib/domain/labels";
 import { listEventDates, listZonesAdmin } from "@/lib/services/admin";
 import { requireAdmin } from "@/lib/services/auth";
@@ -209,8 +209,9 @@ export default async function AdminPengaturanPage() {
             <BarisInfo label="Jadwal" value={EVENT_INFO.scheduleText} />
             <BarisInfo label="Penyelenggara" value={EVENT_INFO.organizer} />
             {EVENT_INFO.contacts.map((kontak) => (
-              <BarisInfo key={kontak.phone} label={`Kontak ${kontak.label}`} value={kontak.phone} />
+              <BarisInfo key={kontak.phone} label="Kontak bantuan" value={kontak.phone} />
             ))}
+            <BarisInfo label="Kontak sponsor" value={KONTAK_SPONSOR.phone} />
           </dl>
         </Card>
 

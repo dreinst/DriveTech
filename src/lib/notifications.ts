@@ -3,7 +3,7 @@
  *
  * Keputusan pemilik 2026-09-03: nomor WhatsApp kantor diblokir, jadi SEMUA kode
  * booking & notifikasi penyewa dikirim lewat EMAIL. WhatsApp panitia
- * (0888-4089-474 lalu nomor kantor 0822-3299-9900) hanya untuk bantuan bila penyewa bingung
+ * (0822-3299-9900) hanya untuk bantuan bila penyewa bingung
  * — disebut di kaki email sebagai tautan wa.me berpesan otomatis.
  *
  *   Email — urutan pemilihan transport:
@@ -39,13 +39,12 @@ const NOTIF_TIMEOUT_MS = 5000;
 const EMAIL_TIMEOUT_MS = 8000;
 /**
  * Kontak bantuan panitia yang disebut di setiap email (keputusan pemilik
- * 2026-09-03; urutan 474 dulu, 5254 terakhir). Tanpa import @/ agar modul tetap
+ * 9 Oktober 2026: bantuan hanya ke 9900). Tanpa import @/ agar modul tetap
  * mandiri. Teks pesan otomatis sama dengan WA_BANTUAN_TEXT di domain/constants.
  */
 const WA_BANTUAN_TEXT = "Halo, saya mengalami kendala saat pemesanan slot";
 const KONTAK_BANTUAN = [
-  { label: "Panitia", tampil: "0888-4089-474", digits: "628884089474" },
-  { label: "Kantor", tampil: "0822-3299-9900", digits: "6282232999900" },
+  { label: "WhatsApp", tampil: "0822-3299-9900", digits: "6282232999900" },
 ] as const;
 const waLink = (digits: string): string =>
   `https://wa.me/${digits}?text=${encodeURIComponent(WA_BANTUAN_TEXT)}`;

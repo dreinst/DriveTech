@@ -116,13 +116,13 @@ export async function requestEmailCode(
     // di produksi jangan pernah bocorkan kode.
     if (process.env.NODE_ENV !== "production") return ok<RequestEmailCodeOut>({ devCode: kode });
     return fail<RequestEmailCodeOut>(
-      "Pengiriman email belum dikonfigurasi. Hubungi panitia lewat WhatsApp 0888-4089-474.",
+      "Pengiriman email belum dikonfigurasi. Hubungi panitia lewat WhatsApp 0822-3299-9900.",
       "EMAIL_NOT_CONFIGURED",
     );
   }
   if (!hasil.delivered) {
     return fail<RequestEmailCodeOut>(
-      "Email verifikasi gagal dikirim. Periksa alamatnya lalu coba lagi, atau hubungi WhatsApp 0888-4089-474.",
+      "Email verifikasi gagal dikirim. Periksa alamatnya lalu coba lagi, atau hubungi WhatsApp 0822-3299-9900.",
       "EMAIL_FAILED",
     );
   }
