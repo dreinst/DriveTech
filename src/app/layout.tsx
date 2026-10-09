@@ -56,7 +56,7 @@ export const metadata: Metadata = {
 const dataTerstrukturSitus = {
   "@context": "https://schema.org",
   "@graph": [
-    { "@type": "WebSite", name: EVENT_INFO.name, alternateName: "Drive Tech Malang", url: siteUrl, inLanguage: "id-ID" },
+    { "@type": "WebSite", name: EVENT_INFO.name, alternateName: ["Drive Tech Malang", "Drivetech Malang", "Drivetech"], url: siteUrl, inLanguage: "id-ID" },
     {
       "@type": "Organization",
       name: "D'Production Event Organizer",
