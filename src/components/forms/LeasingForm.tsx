@@ -104,12 +104,12 @@ export function LeasingForm({ purchaseId, partners, unitPrice }: LeasingFormProp
                     required
                   />
                   <span
-                    className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-colors duration-150 ${
+                    className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-none border transition-colors duration-150 ${
                       dipilih ? "border-accent bg-accent" : "border-line-strong bg-card"
                     }`}
                     aria-hidden="true"
                   >
-                    {dipilih ? <span className="h-1.5 w-1.5 rounded-full bg-app" /> : null}
+                    {dipilih ? <span className="h-1.5 w-1.5 rounded-none bg-app" /> : null}
                   </span>
                 </label>
               );

@@ -29,9 +29,9 @@ export const EVENT_INFO = {
    * resmi. Tautan bantuan memakai waHref() dengan kalimat WA_BANTUAN_TEXT.
    */
   contacts: [
-    // Urutan = prioritas (keputusan pemilik 2026-09-03 sore): 474 dulu, 5254 terakhir.
-    { label: "Panitia 1", phone: "0888-4089-474" },
-    { label: "Panitia 2", phone: "0822-2855-5254" },
+    // Sejak 9 Oktober 2026: panitia 474 dan nomor kantor. Nomor 0822-2855-5254 tidak dipakai lagi.
+    { label: "Panitia", phone: "0888-4089-474" },
+    { label: "Kantor", phone: "0822-3299-9900" },
   ],
   description:
     "Pasar otomotif akhir pekan di Kampung Tentara, Singosari, Malang. Pilih zona, pilih lapak di denah, pilih tanggal, lalu bayar lewat QRIS.",
