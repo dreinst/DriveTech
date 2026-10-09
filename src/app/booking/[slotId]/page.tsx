@@ -318,7 +318,7 @@ export default async function BookingSlotPage({ params, searchParams }: PageProp
   );
 }
 
-/** Dua nomor WhatsApp panitia sebagai tautan, dipisah " / " (keputusan pemilik 2026-09-02). */
+/** Nomor WhatsApp bantuan sebagai tautan. */
 function KontakPanitia() {
   return (
     <>

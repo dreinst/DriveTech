@@ -27,19 +27,19 @@ export const EVENT_INFO = {
     "Pembukaan Sabtu dan Minggu, 7 dan 8 November 2026, selanjutnya setiap hari Minggu sampai 29 November 2026",
   organizer: "Panitia Drive Tech",
   /**
-   * Kontak panitia (WhatsApp). Keputusan pemilik 2026-09-03 (sore): DUA nomor
-   * resmi. Tautan bantuan memakai waHref() dengan kalimat WA_BANTUAN_TEXT.
+   * Kontak bantuan (WhatsApp) untuk kendala pemesanan dan urusan admin.
+   * Keputusan pemilik 9 Oktober 2026: bantuan hanya ke 9900, sponsor ke 474
+   * (lihat KONTAK_SPONSOR). Tautan bantuan memakai waHref() dengan WA_BANTUAN_TEXT.
    */
-  contacts: [
-    // Sejak 9 Oktober 2026: panitia 474 dan nomor kantor. Nomor 0822-2855-5254 tidak dipakai lagi.
-    { label: "Panitia", phone: "0888-4089-474" },
-    { label: "Kantor", phone: "0822-3299-9900" },
-  ],
+  contacts: [{ label: "WhatsApp", phone: "0822-3299-9900" }],
   description:
     "Pameran dan pasar otomotif akhir pekan di Singosari, Malang. Mobil dan motor baru maupun bekas, mulai 7 dan 8 November 2026. Gratis masuk, pesan lapak online.",
 } as const;
 
 export type ContactInfo = (typeof EVENT_INFO.contacts)[number];
+
+/** Kontak khusus calon sponsor. Jangan dipakai untuk bantuan pemesanan. */
+export const KONTAK_SPONSOR = { label: "Panitia", phone: "0888-4089-474" } as const;
 
 /**
  * Tanggal gelaran Musim 1 (ISO "YYYY-MM-DD") — cermin seed.sql & migrasi

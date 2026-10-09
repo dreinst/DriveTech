@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 /** Nomor hotline WhatsApp yang dipasang di bio Instagram @drivetechmalang. */
-const HOTLINE = EVENT_INFO.contacts[1];
+const HOTLINE = EVENT_INFO.contacts[0];
 
 const LINKS = [
   { href: "/", label: "Pesan Slot" },

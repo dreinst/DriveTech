@@ -6,7 +6,7 @@ import { CekStatusForm } from "@/components/denah/CekStatusForm";
 import { FloorPlanBoard } from "@/components/denah/FloorPlanBoard";
 import { Hitung, MobilMasuk, Muncul } from "@/components/motion/motion";
 import { Alert } from "@/components/ui/Alert";
-import { EVENT_INFO, isBookableZoneType, waHref } from "@/lib/domain/constants";
+import { EVENT_INFO, isBookableZoneType, KONTAK_SPONSOR, waHref } from "@/lib/domain/constants";
 import { fallbackZonesFromLayout } from "@/lib/domain/fallback";
 import { zoneHasVariedFees, zoneMinAdminFee } from "@/lib/domain/harga";
 import { slotStatusAcrossDates } from "@/lib/domain/ketersediaan";
@@ -469,17 +469,14 @@ export default async function BerandaPage() {
           </Muncul>
 
           <Muncul className="mt-10 flex flex-wrap gap-3">
-            {EVENT_INFO.contacts.map((kontak) => (
-              <a
-                key={kontak.phone}
-                href={waHref(kontak.phone, SPONSOR_WA_TEXT)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={cn(TOMBOL, "bg-accent text-[#0a0a0a] hover:bg-white")}
-              >
-                Tanya paket sponsor ke {kontak.label}, {kontak.phone}
-              </a>
-            ))}
+            <a
+              href={waHref(KONTAK_SPONSOR.phone, SPONSOR_WA_TEXT)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn(TOMBOL, "bg-accent text-[#0a0a0a] hover:bg-white")}
+            >
+              Tanya paket sponsor ke {KONTAK_SPONSOR.label}, {KONTAK_SPONSOR.phone}
+            </a>
           </Muncul>
         </div>
       </section>
