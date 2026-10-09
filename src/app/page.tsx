@@ -6,7 +6,7 @@ import { CekStatusForm } from "@/components/denah/CekStatusForm";
 import { FloorPlanBoard } from "@/components/denah/FloorPlanBoard";
 import { Hitung, MobilMasuk, Muncul } from "@/components/motion/motion";
 import { Alert } from "@/components/ui/Alert";
-import { EVENT_INFO, isBookableZoneType, MUSIM_1_DATES, waHref } from "@/lib/domain/constants";
+import { EVENT_INFO, isBookableZoneType, waHref } from "@/lib/domain/constants";
 import { fallbackZonesFromLayout } from "@/lib/domain/fallback";
 import { zoneHasVariedFees, zoneMinAdminFee } from "@/lib/domain/harga";
 import { slotStatusAcrossDates } from "@/lib/domain/ketersediaan";
@@ -82,17 +82,6 @@ function dataTerstrukturAcara(siteUrl: string) {
 /** Jumlah area fisik di denah (A sampai H). */
 const JUMLAH_AREA = 8;
 
-const hariPendek = new Intl.DateTimeFormat("id-ID", { weekday: "short", timeZone: "UTC" });
-const bulanPendek = new Intl.DateTimeFormat("id-ID", { month: "short", timeZone: "UTC" });
-
-/** "2026-11-07" menjadi "SAB 07 NOV" untuk pita tanggal. */
-function tanggalPita(iso: string): string {
-  const d = new Date(`${iso}T00:00:00Z`);
-  const hari = hariPendek.format(d).replace(".", "").slice(0, 3);
-  const bulan = bulanPendek.format(d).replace(".", "").slice(0, 3);
-  return `${hari} ${iso.slice(8, 10)} ${bulan}`.toUpperCase();
-}
-
 const TOMBOL =
   "judul inline-flex h-13 items-center justify-center px-7 text-xl tracking-[0.04em] transition-[transform,background-color,color] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.98]";
 
@@ -116,7 +105,6 @@ export default async function BerandaPage() {
   const eventDates = data?.eventDates ?? [];
   const occupancy = data?.occupancy ?? [];
   const activeDates = eventDates.map((d) => d.event_date);
-  const tanggalPitaList = (activeDates.length > 0 ? activeDates : MUSIM_1_DATES).map(tanggalPita);
 
   // "available" = masih ada minimal satu tanggal gelaran yang kosong.
   const verdictSlot = (slot: SlotRow, zoneType: ZoneType) =>
@@ -156,7 +144,7 @@ export default async function BerandaPage() {
         <div className="mx-auto grid w-full max-w-[90rem] gap-6 px-4 pt-8 sm:px-8 md:min-h-[46rem] md:grid-cols-[1fr_17rem] md:content-between md:gap-8 md:pt-10 md:pb-10">
           <div>
             <p className="label text-sm text-ink/70 sm:text-base">
-              Musim 1 <span aria-hidden="true">/</span> {tanggalPitaList[0]?.slice(4)} 2026{" "}
+              Musim 1 <span aria-hidden="true">/</span> 07 + 08 Nov 2026{" "}
               <span aria-hidden="true">/</span> {lokasi}
             </p>
             <h1 className="judul mt-3 text-[34vw] leading-[0.8] md:text-[clamp(11rem,27vw,21rem)]">
@@ -193,9 +181,9 @@ export default async function BerandaPage() {
             </div>
             <div>
               <dd className="judul text-5xl md:text-7xl">
-                <Hitung nilai={tanggalPitaList.length} />
+                7 + 8
               </dd>
-              <dt className="label mt-1 text-xs md:text-sm">Tanggal gelaran</dt>
+              <dt className="label mt-1 text-xs md:text-sm">November 2026</dt>
             </div>
             <div>
               <dd className="judul text-5xl md:text-7xl">Gratis</dd>
@@ -492,7 +480,7 @@ export default async function BerandaPage() {
             <p className="label text-sm text-ink/60">05 / Lokasi</p>
             <h2 className="judul mt-2 text-6xl sm:text-7xl">{lokasi.split(",")[0]}</h2>
             <p className="mt-4 text-base leading-relaxed text-ink/75">
-              {lokasi}. {EVENT_INFO.scheduleText}.
+              {lokasi}. Pembukaan Sabtu dan Minggu, 7 dan 8 November 2026.
             </p>
             <a
               href={EVENT_INFO.mapsUrl}

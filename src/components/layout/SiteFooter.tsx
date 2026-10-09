@@ -72,7 +72,7 @@ export function SiteFooter() {
               Dibuat oleh Dreinst dan dikelola oleh D&rsquo;Production Event Organizer
             </p>
           </div>
-          <p className="text-xs text-ink/60">Musim 1, 7 November sampai 27 Desember 2026</p>
+          <p className="text-xs text-ink/60">Pembukaan Sabtu dan Minggu, 7 dan 8 November 2026</p>
         </div>
       </div>
     </footer>
