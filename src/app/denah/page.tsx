@@ -16,8 +16,9 @@ import type { ZoneWithSlots } from "@/lib/types/database";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Denah Lokasi",
-  description: `Denah lengkap area ${EVENT_INFO.name} (Layout v2): Area A mobil baru, Area B area pameran mobil bekas, Area C tenda motor baru & area motor bekas, Area D tenda UMKM serta tenda otomotif & leasing, deretan warung, dan fasilitas umum. Hanya untuk dilihat — pemesanan slot lewat alur per zona di beranda.`,
+  title: "Denah lokasi pameran",
+  description: `Denah lengkap ${EVENT_INFO.name} di Kampung Tentara, Singosari, Malang: Area A mobil baru, Area B, C, dan D mobil bekas serta otomotif, Area E motor, Area F, G, dan H UMKM, warung, dan fasilitas umum.`,
+  alternates: { canonical: "/denah" },
 };
 
 /**
