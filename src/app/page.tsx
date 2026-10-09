@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import Image, { getImageProps } from "next/image";
 import Link from "next/link";
 
 import { CekStatusForm } from "@/components/denah/CekStatusForm";
@@ -82,6 +82,23 @@ function dataTerstrukturAcara(siteUrl: string) {
 /** Jumlah area fisik di denah (A sampai H). */
 const JUMLAH_AREA = 8;
 
+// Dua gambar hero untuk dua lebar layar (art direction lewat <picture>).
+const { props: gambarMotor } = getImageProps({
+  src: "/gambar/motor.webp",
+  alt: "",
+  width: 1100,
+  height: 978,
+  sizes: "30vw",
+});
+const { props: gambarMobil } = getImageProps({
+  src: "/gambar/mobil-klasik.webp",
+  alt: "",
+  width: 1500,
+  height: 797,
+  sizes: "105vw",
+  loading: "eager",
+});
+
 const TOMBOL =
   "judul inline-flex h-13 items-center justify-center px-7 text-xl tracking-[0.04em] transition-[transform,background-color,color] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.98]";
 
@@ -157,18 +174,20 @@ export default async function BerandaPage() {
             </h1>
           </div>
 
-          {/* Foto mobil asli (latar dipotong), melaju masuk dari kanan. Mobile: di alur
-              halaman di bawah judul. Desktop: menumpang di atas judul dan bidang oranye. */}
-          <div className="mobil-masuk pointer-events-none relative z-10 -mt-[9%] -mr-[14%] ml-[4%] md:absolute md:right-[1%] md:bottom-[9%] md:m-0 md:w-[66%]">
-            <Image
-              src="/gambar/mobil-hero.webp"
-              alt="Mobil sport konvertibel abu perak tampak samping"
-              width={1600}
-              height={436}
-              priority
-              sizes="(min-width: 768px) 66vw, 110vw"
-              className="h-auto w-full drop-shadow-[0_28px_24px_rgba(0,0,0,0.55)]"
-            />
+          {/* Aset resmi (latar dipotong), melaju masuk dari kanan. Mobile: mobil klasik oranye di
+              atas latar hitam. Desktop: motor hitam di atas bidang oranye. Satu <picture> supaya
+              peramban hanya mengunduh gambar yang dipakai. */}
+          <div className="mobil-masuk pointer-events-none relative z-10 -mt-[8%] -mr-[10%] ml-[6%] md:absolute md:right-[3.5%] md:bottom-[2%] md:m-0 md:w-[30%]">
+            <picture>
+              <source media="(min-width: 768px)" srcSet={gambarMotor.srcSet} sizes="30vw" />
+              {/* eslint-disable-next-line @next/next/no-img-element -- atribut berasal dari getImageProps */}
+              <img
+                {...gambarMobil}
+                alt="Mobil klasik oranye di layar kecil, motor klasik hitam di layar lebar"
+                fetchPriority="high"
+                className="h-auto w-full drop-shadow-[0_24px_20px_rgba(0,0,0,0.45)]"
+              />
+            </picture>
           </div>
 
           {/* Fakta singkat. Desktop: di atas bidang oranye. Mobile: pita oranye miring di bawah. */}
@@ -294,17 +313,17 @@ export default async function BerandaPage() {
         {/* Slogan + foto mobil asli kedua. */}
         <div className="relative mx-auto mt-14 w-full max-w-[90rem] px-4 pb-10 sm:px-8 md:mt-20">
           <Muncul>
-            <p aria-hidden="true" className="judul text-[19vw] text-[#ff7b00] md:text-[clamp(3.2rem,11.5vw,10rem)] md:whitespace-nowrap">
+            <p aria-hidden="true" className="judul text-[19vw] text-ink md:text-[clamp(3.2rem,11.5vw,10rem)] md:whitespace-nowrap">
               Lihat. Cek. Coba. Deal.
             </p>
           </Muncul>
-          <MobilMasuk className="pointer-events-none relative z-10 -mt-[3%] ml-auto w-[88%] md:-mt-[2.6%] md:w-[52%]">
+          <MobilMasuk className="pointer-events-none relative z-10 -mt-[4%] ml-auto w-[92%] md:-mt-[3.5%] md:w-[50%]">
             <Image
-              src="/gambar/mobil-area.webp"
-              alt="Mobil coupe warna tembaga tampak samping"
-              width={1400}
-              height={433}
-              sizes="(min-width: 768px) 52vw, 88vw"
+              src="/gambar/mobil-klasik.webp"
+              alt="Mobil klasik oranye bergaris hitam tampak depan samping"
+              width={1500}
+              height={797}
+              sizes="(min-width: 768px) 50vw, 92vw"
               className="h-auto w-full drop-shadow-[0_22px_18px_rgba(0,0,0,0.3)]"
             />
           </MobilMasuk>
@@ -370,6 +389,14 @@ export default async function BerandaPage() {
               </h2>
             </Muncul>
             <Muncul className="max-w-sm" delay={0.1}>
+              <Image
+                src="/gambar/mobil-depan.webp"
+                alt="Mobil sport oranye tampak depan"
+                width={900}
+                height={589}
+                sizes="(min-width: 768px) 24rem, 80vw"
+                className="mb-6 h-auto w-full drop-shadow-[0_20px_18px_rgba(0,0,0,0.6)]"
+              />
               <ul className="space-y-2 text-base leading-relaxed text-ink/75">
                 {SPONSOR_INTRO.points.map((poin) => (
                   <li key={poin}>{poin}</li>
