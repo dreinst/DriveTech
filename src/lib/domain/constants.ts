@@ -7,7 +7,7 @@ import type { SlotStatus, ZoneType } from "@/lib/types/database";
  */
 export const EVENT_INFO = {
   name: "Drive Tech",
-  location: "Kampung Tentara, Singosari, Malang",
+  location: "Kampung Tentara di Rest Area Singosari, Malang",
   /** Tautan Google Maps lokasi — tampilkan "Lihat di Google Maps" (_blank, rel noopener). */
   mapsUrl: "https://maps.app.goo.gl/g3tuQ5juNDEVowEp7",
   /**

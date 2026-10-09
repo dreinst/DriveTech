@@ -213,7 +213,7 @@ export default async function BerandaPage() {
           <div className="anim-fade-up max-w-sm md:col-span-2">
             <p className="text-base leading-relaxed text-ink/80">
               Sabtu dan Minggu, 7 dan 8 November, mobil dan motor baru maupun bekas kumpul di
-              Kampung Tentara, Singosari. Pengunjung masuk gratis. Punya unit yang mau dijual? Lapak
+              Kampung Tentara, Rest Area Singosari. Pengunjung masuk gratis. Punya unit yang mau dijual? Lapak
               mulai {formatRupiah(hargaTermurah)} per tanggal, posisinya Anda pilih sendiri di denah.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">

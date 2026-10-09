@@ -17,7 +17,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Denah lokasi pameran",
-  description: `Denah lengkap ${EVENT_INFO.name} di Kampung Tentara, Singosari, Malang: Area A mobil baru, Area B, C, dan D mobil bekas serta otomotif, Area E motor, Area F, G, dan H UMKM, warung, dan fasilitas umum.`,
+  description: `Denah lengkap ${EVENT_INFO.name} di Kampung Tentara, Rest Area Singosari, Malang: Area A mobil baru, Area B, C, dan D mobil bekas serta otomotif, Area E motor, Area F, G, dan H UMKM, warung, dan fasilitas umum.`,
   alternates: { canonical: "/denah" },
 };
 
