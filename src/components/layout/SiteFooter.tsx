@@ -66,7 +66,12 @@ export function SiteFooter() {
 
         <div className="mt-14 flex flex-col gap-4 border-t border-line pt-6 sm:flex-row sm:items-center sm:justify-between">
           <p className="flex items-center gap-4 text-xs text-ink/60">
-            <span>Made by dreinst</span>
+            <span>
+              Made by{" "}
+              <a href="https://www.instagram.com/dreiinst/" target="_blank" rel="noopener noreferrer" className="underline-offset-4 hover:underline">
+                dreinst
+              </a>
+            </span>
             <span aria-hidden="true" className="h-4 w-px bg-ink/25" />
             <span className="flex items-center gap-2.5">
               Organized by
