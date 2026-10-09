@@ -65,12 +65,13 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-14 flex flex-col gap-4 border-t border-line pt-6 sm:flex-row sm:items-center sm:justify-between">
-          <p className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-ink/60">
-            <span>Made by dreiinst</span>
-            <span className="flex items-center gap-2">
+          <p className="flex items-center gap-4 text-xs text-ink/60">
+            <span>Made by dreinst</span>
+            <span aria-hidden="true" className="h-4 w-px bg-ink/25" />
+            <span className="flex items-center gap-2.5">
               Organized by
               {/* eslint-disable-next-line @next/next/no-img-element -- SVG statis, tanpa optimasi */}
-              <img src="/logo-dpro-teks.svg" alt="D'Production" className="h-3 w-auto shrink-0" />
+              <img src="/logo-dpro-ringkas.svg" alt="D'PRO" className="h-5 w-auto shrink-0" />
             </span>
           </p>
           <p className="text-xs text-ink/60">Pembukaan Sabtu dan Minggu, 7 dan 8 November 2026</p>
