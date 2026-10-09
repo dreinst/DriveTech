@@ -607,7 +607,6 @@ function DetailFields({ tenantType, idPrefix, errors }: DetailFieldsProps) {
         <Field
           label="Nama perusahaan / brand"
           htmlFor={`${idPrefix}-perusahaan`}
-          hint="Booth 11-15 untuk bank/leasing, booth 16-20 untuk brand otomotif (lihat peruntukan slot)."
           error={errors["detail.nama_perusahaan"]}
         >
           <Input

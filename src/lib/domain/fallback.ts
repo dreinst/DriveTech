@@ -22,24 +22,6 @@ export const ADMIN_FEE_BY_ZONE_TYPE: Record<ZoneType, number> = {
   facility: 0,
 };
 
-/**
- * Peruntukan per-slot zona booth_khusus (harus sama dengan seed.sql):
- * slot 11-15 Booth Leasing, slot 16-20 Booth Otomotif — harga ikut zona
- * (Rp500.000), tanpa override per slot.
- */
-function boothPeruntukan(slotNumber: number | null): {
-  admin_fee_override: number | null;
-  peruntukan: string | null;
-} {
-  if (slotNumber !== null && slotNumber >= 11 && slotNumber <= 15) {
-    return { admin_fee_override: null, peruntukan: "Booth Leasing" };
-  }
-  if (slotNumber !== null && slotNumber >= 16 && slotNumber <= 20) {
-    return { admin_fee_override: null, peruntukan: "Booth Otomotif" };
-  }
-  return { admin_fee_override: null, peruntukan: null };
-}
-
 /** Timestamp tetap supaya render server & client identik (tidak ada Date.now()). */
 const FALLBACK_TIMESTAMP = "2026-01-01T00:00:00.000Z";
 
@@ -57,9 +39,8 @@ export function fallbackZonesFromLayout(): ZoneWithSlots[] {
       slot_label: slot.slotNumber === null ? slot.label : null,
       status: "available",
       svg_element_id: slot.svgElementId,
-      ...(zone.zoneType === "booth_khusus"
-        ? boothPeruntukan(slot.slotNumber)
-        : { admin_fee_override: null, peruntukan: null }),
+      admin_fee_override: null,
+      peruntukan: null,
       created_at: FALLBACK_TIMESTAMP,
       updated_at: FALLBACK_TIMESTAMP,
     }));

@@ -1,8 +1,8 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { animate, motion, MotionConfig, useInView, useReducedMotion } from "framer-motion";
 import type { Variants } from "framer-motion";
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
 /**
  * Primitif gerak TERPUSAT — semua animasi framer-motion di aplikasi
@@ -142,5 +142,80 @@ export function SheetIn({
     >
       {children}
     </motion.div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Gerak beranda (redesain Oktober 2026)                               */
+/* Semua hanya menggerakkan transform dan opacity supaya tetap ringan. */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Muncul saat masuk layar: geser dari (x, y) ke posisi akhir, sekali saja.
+ * Markup server dan klien selalu sama; pengguna yang meminta gerak dikurangi
+ * ditangani MotionConfig (geseran dilewati, hanya opacity yang berubah).
+ */
+export function Muncul({
+  children,
+  className,
+  delay = 0,
+  x = 0,
+  y = 28,
+}: MotionBlockProps & { delay?: number; x?: number; y?: number }) {
+  return (
+    <MotionConfig reducedMotion="user">
+      <motion.div
+        className={className}
+        initial={{ opacity: 0, x, y }}
+        whileInView={{ opacity: 1, x: 0, y: 0 }}
+        viewport={{ once: true, margin: "-60px" }}
+        transition={{ duration: 0.55, ease: EASE, delay }}
+      >
+        {children}
+      </motion.div>
+    </MotionConfig>
+  );
+}
+
+/** Mobil melaju masuk dari kanan saat masuk layar, lalu berhenti. */
+export function MobilMasuk({ children, className, delay = 0 }: MotionBlockProps & { delay?: number }) {
+  return (
+    <MotionConfig reducedMotion="user">
+      <motion.div
+        className={className}
+        initial={{ x: "60%", opacity: 0 }}
+        whileInView={{ x: 0, opacity: 1 }}
+        viewport={{ once: true, margin: "-40px" }}
+        transition={{ type: "spring", stiffness: 60, damping: 16, delay }}
+      >
+        {children}
+      </motion.div>
+    </MotionConfig>
+  );
+}
+
+/** Angka yang menghitung naik saat masuk layar. HTML awal sudah berisi angka akhir. */
+export function Hitung({ nilai, className }: { nilai: number; className?: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true });
+  const reduce = useReducedMotion();
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !inView || reduce) return;
+    const kontrol = animate(0, nilai, {
+      duration: 0.9,
+      ease: EASE,
+      onUpdate: (v) => {
+        el.textContent = String(Math.round(v));
+      },
+    });
+    return () => kontrol.stop();
+  }, [inView, nilai, reduce]);
+
+  return (
+    <span ref={ref} className={className}>
+      {nilai}
+    </span>
   );
 }

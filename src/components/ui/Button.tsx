@@ -5,13 +5,13 @@ export type ButtonVariant = "primary" | "accent" | "secondary" | "ghost" | "dang
 export type ButtonSize = "sm" | "md";
 
 const BASE_CLASS =
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full leading-none transition-[transform,opacity,background-color,border-color,color,box-shadow] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]";
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap leading-none [font-family:var(--font-display)] italic uppercase tracking-[0.06em] transition-[transform,opacity,background-color,border-color,color,box-shadow] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]";
 
 const VARIANT_CLASS: Record<ButtonVariant, string> = {
   /* Pil oranye teks gelap — aksi utama standar (CTA tema gelap). */
-  primary: "bg-accent font-semibold text-[#0a0a0a] hover:bg-[var(--accent-hover)]",
+  primary: "bg-accent font-bold text-[#0a0a0a] hover:bg-[var(--accent-hover)]",
   /* Sama dengan primary — dipertahankan untuk aksi pembayaran/konfirmasi penting. */
-  accent: "bg-accent font-semibold text-[#0a0a0a] hover:bg-[var(--accent-hover)]",
+  accent: "bg-accent font-bold text-[#0a0a0a] hover:bg-[var(--accent-hover)]",
   /* Pil kartu gelap berbingkai. */
   secondary:
     "border border-line bg-card font-medium text-ink hover:border-line-strong hover:bg-surface-3",
@@ -22,8 +22,8 @@ const VARIANT_CLASS: Record<ButtonVariant, string> = {
 };
 
 const SIZE_CLASS: Record<ButtonSize, string> = {
-  sm: "h-9 px-4 text-xs",
-  md: "h-11 px-6 text-sm",
+  sm: "h-9 px-4 text-[0.9375rem]",
+  md: "h-11 px-6 text-[1.0625rem]",
 };
 
 /**

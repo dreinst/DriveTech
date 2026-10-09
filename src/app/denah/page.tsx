@@ -59,12 +59,12 @@ export default async function DenahPage() {
     <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6">
       <PageHeader
         title="Denah Lokasi"
-        description={`Tata letak lengkap ${EVENT_INFO.name}, ${EVENT_INFO.location}: Area A mobil baru, Area B area pameran mobil bekas, Area C tenda motor baru & area motor bekas, Area D tenda UMKM serta tenda otomotif & leasing, deretan warung, dan fasilitas umum (VIP lounge, tenda VIP, area wahana, toilet, musholah, dll). Gulir untuk zoom, seret untuk menggeser. Halaman ini hanya untuk melihat — pemesanan dilakukan per zona lewat tombol Pesan Slot.`}
+        description={`Tata letak lengkap ${EVENT_INFO.name}, ${EVENT_INFO.location}: Area A mobil baru, Area B, C, dan D mobil bekas serta otomotif, Area E motor baru dan motor bekas, Area F, G, dan H UMKM, deretan warung, dan fasilitas umum. Gulir untuk zoom, seret untuk menggeser. Halaman ini hanya untuk melihat. Pemesanan dilakukan per zona lewat tombol Pesan Lapak.`}
         backHref="/"
         backLabel="Beranda"
         action={
           <Link href="/#denah" className={buttonClass("primary", "sm")}>
-            Pesan Slot
+            Pesan Lapak
           </Link>
         }
       />

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Barlow_Condensed, Inter } from "next/font/google";
 import type { ReactNode } from "react";
 import "./globals.css";
 import { SiteFooter } from "@/components/layout/SiteFooter";
@@ -7,17 +7,24 @@ import { SiteHeader } from "@/components/layout/SiteHeader";
 import { EVENT_INFO } from "@/lib/domain/constants";
 import { getSiteUrl } from "@/lib/site-url";
 
-/* SF Pro dipakai otomatis di perangkat Apple (font stack di globals.css);
-   Inter variable jadi padanannya di perangkat lain. */
+/* Isi memakai Inter, judul memakai Barlow Condensed (lihat --font-display di globals.css). */
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
   display: "swap",
 });
 
+const barlow = Barlow_Condensed({
+  subsets: ["latin"],
+  weight: ["600", "700", "900"],
+  style: ["normal", "italic"],
+  variable: "--font-barlow",
+  display: "swap",
+});
+
 const siteUrl = getSiteUrl();
 
-const siteTitle = `${EVENT_INFO.name} — Booking Slot`;
+const siteTitle = `${EVENT_INFO.name}, pesan lapak pameran otomotif`;
 const siteDescription = EVENT_INFO.description;
 
 export const metadata: Metadata = {
@@ -51,11 +58,11 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="id" className={inter.variable}>
+    <html lang="id" className={`${inter.variable} ${barlow.variable}`}>
       <body className="flex min-h-dvh flex-col bg-app font-sans text-ink antialiased">
         <a
           href="#konten-utama"
-          className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded-full focus:bg-accent focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-[#0a0a0a]"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:bg-accent focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-[#0a0a0a]"
         >
           Lewati ke konten utama
         </a>

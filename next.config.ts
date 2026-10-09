@@ -14,10 +14,15 @@ const SECURITY_HEADERS = [
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
 ];
 
+/** Berkas di public/ tidak ber-hash, jadi cukup sehari (jangan immutable). */
+const CACHE_SEHARI = "public, max-age=86400, stale-while-revalidate=604800";
+
 const nextConfig = {
   poweredByHeader: false,
   output: "standalone",
   images: {
+    // Hasil optimasi gambar disimpan 31 hari supaya sharp tidak mengolah ulang tiap jam.
+    minimumCacheTTL: 2678400,
     remotePatterns: [
       {
         protocol: "https",
@@ -43,7 +48,12 @@ const nextConfig = {
     ],
   },
   async headers() {
-    return [{ source: "/(.*)", headers: SECURITY_HEADERS }];
+    return [
+      { source: "/(.*)", headers: SECURITY_HEADERS },
+      { source: "/gambar/:path*", headers: [{ key: "Cache-Control", value: CACHE_SEHARI }] },
+      { source: "/:berkas(logo-dpro.svg|logo-drivetech.svg)", headers: [{ key: "Cache-Control", value: CACHE_SEHARI }] },
+      { source: "/denah.svg", headers: [{ key: "Cache-Control", value: "public, max-age=3600" }] },
+    ];
   },
 } satisfies NextConfig;
 

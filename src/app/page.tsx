@@ -1,15 +1,14 @@
+import Image from "next/image";
 import Link from "next/link";
-import type { ReactNode } from "react";
 
 import { CekStatusForm } from "@/components/denah/CekStatusForm";
 import { FloorPlanBoard } from "@/components/denah/FloorPlanBoard";
-import { FadeUp, Stagger, StaggerItem } from "@/components/motion/motion";
+import { Hitung, MobilMasuk, Muncul } from "@/components/motion/motion";
 import { Alert } from "@/components/ui/Alert";
-import { EVENT_INFO, isBookableZoneType, waHref } from "@/lib/domain/constants";
+import { EVENT_INFO, isBookableZoneType, MUSIM_1_DATES, waHref } from "@/lib/domain/constants";
 import { fallbackZonesFromLayout } from "@/lib/domain/fallback";
 import { zoneHasVariedFees, zoneMinAdminFee } from "@/lib/domain/harga";
 import { slotStatusAcrossDates } from "@/lib/domain/ketersediaan";
-import { FLOOR_PLAN_ZONES } from "@/lib/domain/layout";
 import {
   CATEGORY_EXCLUSIVITY,
   NAMING_BUNDLE_NOTE,
@@ -21,42 +20,28 @@ import {
 import { listActivePartners } from "@/lib/services/leasing";
 import { getFloorPlan } from "@/lib/services/slots";
 import type { SlotRow, ZoneType, ZoneWithSlots } from "@/lib/types/database";
-import { cn, formatRupiah, formatTanggal } from "@/lib/utils";
+import { cn, formatRupiah } from "@/lib/utils";
 
-// Di-cache CDN dan dirender ulang paling lama tiap 30 detik (ISR). Status slot tetap segar karena
+// Dirender ulang paling lama tiap 30 detik (ISR). Status lapak tetap segar karena
 // FloorPlanBoard berlangganan realtime, dan aksi booking memanggil revalidatePath("/").
 export const revalidate = 30;
 
-/**
- * Warna aksen zona diambil dari data denah (domain/layout.ts) supaya kartu zona
- * senada dengan pita judul zona di SVG — dipakai HANYA sebagai tint gradien 10-14%.
- */
-const ZONE_ACCENT: Partial<Record<ZoneType, string>> = Object.fromEntries(
-  FLOOR_PLAN_ZONES.map((zone) => [zone.zoneType, zone.accent]),
-);
+/** Jumlah area fisik di denah (A sampai H). */
+const JUMLAH_AREA = 8;
 
-/** Foto latar kartu zona (public/gambar, sudah dioptimalkan). */
-const ZONE_IMAGE: Partial<Record<ZoneType, string>> = {
-  mobil_baru: "/gambar/zona-mobil-baru.jpg",
-  mobil_bekas: "/gambar/zona-mobil-bekas.jpg",
-  // Dua zona motor (baru & bekas, Layout v2) memakai foto motor yang sama.
-  motor_baru: "/gambar/zona-mobil-motor.jpg",
-  mobil_motor_bekas: "/gambar/zona-mobil-motor.jpg",
-  umkm: "/gambar/zona-umkm.jpg",
-  // Foto dari pemilik (2026-09-03): tenda pembiayaan & otomotif dua sisi.
-  booth_khusus: "/gambar/zona-otomotif-leasing.jpg",
-};
+const hariPendek = new Intl.DateTimeFormat("id-ID", { weekday: "short", timeZone: "UTC" });
+const bulanPendek = new Intl.DateTimeFormat("id-ID", { month: "short", timeZone: "UTC" });
 
-function zoneTint(zoneType: ZoneType): string {
-  const image = ZONE_IMAGE[zoneType];
-  if (image) {
-    // Gradasi gelap dari bawah supaya judul & chip tetap terbaca di atas foto.
-    return `linear-gradient(to top, rgba(10,10,10,0.88) 0%, rgba(10,10,10,0.42) 48%, rgba(10,10,10,0.12) 100%), url(${image}) center / cover no-repeat`;
-  }
-  const accent = ZONE_ACCENT[zoneType];
-  if (!accent) return "var(--card)";
-  return `linear-gradient(150deg, color-mix(in srgb, ${accent} 12%, var(--card)) 0%, var(--card) 62%)`;
+/** "2026-11-07" menjadi "SAB 07 NOV" untuk pita tanggal. */
+function tanggalPita(iso: string): string {
+  const d = new Date(`${iso}T00:00:00Z`);
+  const hari = hariPendek.format(d).replace(".", "").slice(0, 3);
+  const bulan = bulanPendek.format(d).replace(".", "").slice(0, 3);
+  return `${hari} ${iso.slice(8, 10)} ${bulan}`.toUpperCase();
 }
+
+const TOMBOL =
+  "judul inline-flex h-13 items-center justify-center px-7 text-xl tracking-[0.04em] transition-[transform,background-color,color] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.98]";
 
 export default async function BerandaPage() {
   const [result, partnersResult] = await Promise.all([getFloorPlan(), listActivePartners()]);
@@ -69,394 +54,395 @@ export default async function BerandaPage() {
   const zones: ZoneWithSlots[] = hasZones && data ? data.zones : fallbackZonesFromLayout();
   const isFallback = !hasZones;
 
-  // Mitra leasing: kalau service gagal, wordmark disembunyikan (tanpa hardcode).
+  // Mitra leasing: kalau service gagal atau belum ada mitra aktif, bagiannya tidak ditampilkan.
   const partners = partnersResult.ok ? partnersResult.data : [];
 
-  const namaEvent = data?.event?.name ?? EVENT_INFO.name;
   const lokasi = data?.event?.location ?? EVENT_INFO.location;
 
   /* ---------- Model per tanggal: okupansi LINTAS seluruh tanggal mendatang ---------- */
   const eventDates = data?.eventDates ?? [];
   const occupancy = data?.occupancy ?? [];
-  const tanggalTerdekat = eventDates[0]?.event_date ?? null;
   const activeDates = eventDates.map((d) => d.event_date);
+  const tanggalPitaList = (activeDates.length > 0 ? activeDates : MUSIM_1_DATES).map(tanggalPita);
 
-  // Verdict slot lintas tanggal (alur "slot dulu, tanggal belakangan"):
   // "available" = masih ada minimal satu tanggal gelaran yang kosong.
-  // Tanpa tanggal (fallback / belum ada jadwal) semua slot non-blokir dianggap tersedia.
   const verdictSlot = (slot: SlotRow, zoneType: ZoneType) =>
-    slotStatusAcrossDates({
-      slot,
-      zoneType,
-      activeDates,
-      occupancy,
-    });
+    slotStatusAcrossDates({ slot, zoneType, activeDates, occupancy });
 
-  /* ---------- Statistik dari zona bookable (konsisten dengan panel peta) ---------- */
-  let totalSlot = 0;
-  let tersedia = 0;
-  let tertunda = 0;
-  let terisi = 0;
-  for (const zone of zones) {
-    if (!isBookableZoneType(zone.zone_type)) continue;
-    for (const slot of zone.slots) {
-      totalSlot += 1;
-      const verdict = verdictSlot(slot, zone.zone_type);
-      if (verdict === "available") tersedia += 1;
-      else if (verdict === "pending") tertunda += 1;
-      else if (verdict === "confirmed") terisi += 1;
-      // "blocked" (diblokir panitia) hanya masuk hitungan total.
-    }
-  }
-
-  /* ---------- Kartu zona: hanya zona yang bisa dibooking (warung & fasilitas
-     tidak diperjualbelikan online, jadi tidak dipajang di sini) ---------- */
-  const zonaKartu = zones.filter((zone) => isBookableZoneType(zone.zone_type));
+  // Hanya zona yang bisa dipesan (warung dan fasilitas tidak disewakan online).
+  const zonaBaris = zones
+    .filter((zone) => isBookableZoneType(zone.zone_type))
+    .map((zone) => ({
+      zone,
+      tersedia: zone.slots.filter((slot) => verdictSlot(slot, zone.zone_type) === "available").length,
+      harga: zoneMinAdminFee(zone, zone.slots),
+      hargaBeragam: zoneHasVariedFees(zone, zone.slots),
+    }));
+  const totalLapak = zonaBaris.reduce((n, baris) => n + baris.zone.slots.length, 0);
+  const totalTersedia = zonaBaris.reduce((n, baris) => n + baris.tersedia, 0);
 
   return (
-    <div className="pb-16">
-      {/* ================= HERO sinematik gelap-oranye ================= */}
-      <section className="relative flex min-h-[72vh] items-center justify-center overflow-hidden px-4 py-20">
-        {/* Foto hero (hall pameran neon oranye) sebagai layer dasar. */}
-        {/* eslint-disable-next-line @next/next/no-img-element -- latar dekoratif full-bleed */}
-        <img
-          src="/gambar/hero.jpg"
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-        {/* Overlay gelap supaya judul tetap kontras di atas foto. */}
+    <div>
+      {/* ================= HERO ================= */}
+      <section className="relative isolate overflow-hidden bg-[#0a0a0a]">
+        {/* Desktop: bidang oranye miring + garis putih ala livery di sisi kanan. */}
         <div
           aria-hidden="true"
-          className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(180deg, rgba(10,10,10,0.72) 0%, rgba(10,10,10,0.45) 45%, rgba(10,10,10,0.82) 100%)",
-          }}
-        />
-        {/* Sorot lampu halus + pendar aksen oranye ala showroom malam. */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(90% 65% at 50% 30%, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 45%, transparent 72%)",
-          }}
+          className="absolute inset-0 -z-10 hidden bg-accent md:block md:[clip-path:polygon(71.5%_0,100%_0,100%_100%,53.5%_100%)]"
         />
         <div
           aria-hidden="true"
-          className="absolute inset-0"
-          style={{
-            background: "radial-gradient(60% 45% at 50% 64%, var(--accent-soft) 0%, transparent 70%)",
-          }}
-        />
-        {/* Vignette: tepi menggelap supaya fokus ke judul. */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(120% 90% at 50% 42%, transparent 55%, rgba(0,0,0,0.55) 100%)",
-          }}
+          className="absolute inset-0 -z-10 hidden bg-white md:block md:[clip-path:polygon(68.8%_0,69.9%_0,51.9%_100%,50.8%_100%)]"
         />
 
-        <FadeUp className="relative z-10 w-full max-w-3xl text-center">
-          <h1 className="text-[clamp(2.5rem,6vw,4rem)] font-bold leading-[1.05] tracking-[-0.02em] text-ink">
-            {namaEvent}
-          </h1>
-          <p className="mt-5 text-base font-medium text-accent sm:text-lg">
-            {EVENT_INFO.scheduleText} &middot; {lokasi}
-          </p>
-          {tanggalTerdekat ? (
-            <p className="mt-2 text-sm text-muted">
-              Gelaran terdekat: {formatTanggal(tanggalTerdekat)}
+        <div className="mx-auto grid w-full max-w-[90rem] gap-6 px-4 pt-8 sm:px-8 md:min-h-[46rem] md:grid-cols-[1fr_17rem] md:content-between md:gap-8 md:pt-10 md:pb-10">
+          <div>
+            <p className="label text-sm text-ink/70 sm:text-base">
+              Musim 1 <span aria-hidden="true">/</span> {tanggalPitaList[0]?.slice(4)} 2026{" "}
+              <span aria-hidden="true">/</span> {lokasi}
             </p>
+            <h1 className="judul mt-3 text-[34vw] leading-[0.8] md:text-[clamp(11rem,27vw,21rem)]">
+              <span className="baris-naik text-ink">
+                <span>Drive</span>
+              </span>
+              <span className="baris-naik text-accent">
+                <span>Tech</span>
+              </span>
+            </h1>
+          </div>
+
+          {/* Foto mobil asli (latar dipotong), melaju masuk dari kanan. Mobile: di alur
+              halaman di bawah judul. Desktop: menumpang di atas judul dan bidang oranye. */}
+          <div className="mobil-masuk pointer-events-none relative z-10 -mt-[9%] -mr-[14%] ml-[4%] md:absolute md:right-[1%] md:bottom-[9%] md:m-0 md:w-[66%]">
+            <Image
+              src="/gambar/mobil-hero.webp"
+              alt="Mobil sport konvertibel abu perak tampak samping"
+              width={1600}
+              height={436}
+              priority
+              sizes="(min-width: 768px) 66vw, 110vw"
+              className="h-auto w-full drop-shadow-[0_28px_24px_rgba(0,0,0,0.55)]"
+            />
+          </div>
+
+          {/* Fakta singkat. Desktop: di atas bidang oranye. Mobile: pita oranye miring di bawah. */}
+          <dl className="order-last -mx-4 flex gap-6 bg-accent px-4 pt-12 pb-7 text-[#0a0a0a] [clip-path:polygon(0_26%,100%_0,100%_100%,0_100%)] sm:-mx-8 sm:px-8 md:order-none md:mx-0 md:flex-col md:bg-transparent md:p-0 md:pt-14 md:[clip-path:none]">
+            <div>
+              <dd className="judul text-5xl md:text-7xl">
+                <Hitung nilai={totalLapak} />
+              </dd>
+              <dt className="label mt-1 text-xs md:text-sm">Lapak di {JUMLAH_AREA} area</dt>
+            </div>
+            <div>
+              <dd className="judul text-5xl md:text-7xl">
+                <Hitung nilai={tanggalPitaList.length} />
+              </dd>
+              <dt className="label mt-1 text-xs md:text-sm">Tanggal gelaran</dt>
+            </div>
+            <div>
+              <dd className="judul text-5xl md:text-7xl">Gratis</dd>
+              <dt className="label mt-1 text-xs md:text-sm">Masuk untuk pengunjung</dt>
+            </div>
+          </dl>
+
+          <div className="anim-fade-up max-w-sm md:col-span-2">
+            <p className="text-base leading-relaxed text-ink/80">
+              Pasar otomotif akhir pekan di Singosari, Malang. Pilih zona, pilih lapak di denah, pilih
+              tanggal, lalu bayar lewat QRIS.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link href="/#denah" className={cn(TOMBOL, "bg-accent text-[#0a0a0a] hover:bg-white")}>
+                Pesan lapak
+              </Link>
+              <Link
+                href="/denah"
+                className={cn(TOMBOL, "border border-ink/50 text-ink hover:bg-ink hover:text-[#0a0a0a]")}
+              >
+                Lihat denah
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ================= PITA TANGGAL ================= */}
+      <div className="overflow-hidden border-t border-[#0a0a0a]/25 bg-accent py-4 text-[#0a0a0a]" aria-label="Tanggal gelaran Musim 1">
+        <ul className="pita-jalan flex w-max">
+          {[0, 1].map((salinan) =>
+            tanggalPitaList.map((tanggal) => (
+              <li
+                key={`${salinan}-${tanggal}`}
+                aria-hidden={salinan === 1 ? true : undefined}
+                className="judul flex items-center gap-8 pl-8 text-2xl leading-none tracking-[0.04em] sm:text-3xl"
+              >
+                {tanggal}
+                <span aria-hidden="true" className="h-2 w-2 rotate-45 bg-[#0a0a0a]" />
+              </li>
+            )),
+          )}
+        </ul>
+      </div>
+
+      {/* ================= AREA (tabel jenis lapak) ================= */}
+      <section id="area" className="terang scroll-mt-16 overflow-hidden bg-krem">
+        <div className="mx-auto w-full max-w-[90rem] px-4 pt-20 sm:px-8 md:pt-28">
+          <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+            <Muncul>
+              <p className="label text-sm text-ink/60">01 / Area pameran</p>
+              <h2 className="judul mt-2 text-[clamp(4rem,12vw,10.5rem)]">
+                {JUMLAH_AREA} area,
+                <br />
+                <Hitung nilai={totalLapak} /> lapak
+              </h2>
+            </Muncul>
+            <Muncul className="max-w-xs" delay={0.1}>
+              <p className="text-base leading-relaxed text-ink/75">
+                Tarif dihitung per lapak per tanggal gelaran. Satu lapak bisa dipesan untuk beberapa
+                tanggal sekaligus. Saat ini {totalTersedia} lapak masih punya tanggal kosong.
+              </p>
+            </Muncul>
+          </div>
+
+          <ul className="mt-12 border-b border-ink">
+            {zonaBaris.map(({ zone, tersedia, harga, hargaBeragam }, index) => (
+              <li key={zone.id}>
+                <Muncul delay={index * 0.04} y={18}>
+                  <Link
+                    href="/#denah"
+                    className="group grid grid-cols-[2.5rem_1fr_auto] items-center gap-x-4 gap-y-1 border-t border-ink px-0 py-5 transition-[background-color,color,padding] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-ink hover:px-4 hover:text-krem md:grid-cols-[3rem_minmax(0,22rem)_1fr_7rem_12rem_6rem] md:gap-x-8 md:py-6"
+                  >
+                    <span className="judul text-3xl text-[#ff7b00]">{String(index + 1).padStart(2, "0")}</span>
+                    <span className="judul text-[clamp(2rem,5vw,3.25rem)] leading-none">
+                      {zone.name.replace(/^Area\s+/i, "")}
+                    </span>
+                    <span className="judul row-span-2 text-right text-3xl leading-none md:order-5 md:row-span-1 md:text-[2.5rem]">
+                      {hargaBeragam ? <span className="label mr-1 text-xs not-italic">mulai</span> : null}
+                      {formatRupiah(harga)}
+                    </span>
+                    <span className="col-start-2 text-sm leading-relaxed opacity-70 md:col-start-auto">
+                      {zone.description}
+                    </span>
+                    <span className="label col-start-2 text-sm md:col-start-auto md:text-base">
+                      {tersedia} dari {zone.slots.length}
+                      <span className="md:hidden"> lapak tersedia</span>
+                    </span>
+                    <span className="label hidden text-right text-base md:order-6 md:block">
+                      Pesan{" "}
+                      <span
+                        aria-hidden="true"
+                        className="inline-block transition-transform duration-200 group-hover:translate-x-1.5"
+                      >
+                        →
+                      </span>
+                    </span>
+                  </Link>
+                </Muncul>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Slogan + foto mobil asli kedua. */}
+        <div className="relative mx-auto mt-14 w-full max-w-[90rem] px-4 pb-10 sm:px-8 md:mt-20">
+          <Muncul>
+            <p aria-hidden="true" className="judul text-[19vw] text-[#ff7b00] md:text-[clamp(3.2rem,11.5vw,10rem)] md:whitespace-nowrap">
+              Lihat. Cek. Coba. Deal.
+            </p>
+          </Muncul>
+          <MobilMasuk className="pointer-events-none relative z-10 -mt-[3%] ml-auto w-[88%] md:-mt-[2.6%] md:w-[52%]">
+            <Image
+              src="/gambar/mobil-area.webp"
+              alt="Mobil coupe warna tembaga tampak samping"
+              width={1400}
+              height={433}
+              sizes="(min-width: 768px) 52vw, 88vw"
+              className="h-auto w-full drop-shadow-[0_22px_18px_rgba(0,0,0,0.3)]"
+            />
+          </MobilMasuk>
+        </div>
+      </section>
+
+      {/* ================= DENAH (alur pilih zona, lapak, tanggal) ================= */}
+      <section id="denah" className="terang scroll-mt-16 bg-krem">
+        <div className="mx-auto w-full max-w-[90rem] px-4 pt-14 pb-20 sm:px-8 md:pb-28">
+          <Muncul>
+            <p className="label text-sm text-ink/60">02 / Denah</p>
+            <h2 className="judul mt-2 max-w-4xl text-[clamp(3.2rem,8.5vw,7rem)]">Pilih lapak langsung di denah</h2>
+          </Muncul>
+
+          {errorMessage ? (
+            <div className="mt-6">
+              <Alert tone={noConfig ? "info" : "warning"}>
+                {noConfig
+                  ? "Supabase belum dikonfigurasi. Denah di bawah hanya contoh dan lapak belum bisa dipesan."
+                  : `Denah gagal dimuat (${errorMessage}). Sementara ditampilkan denah contoh.`}
+              </Alert>
+            </div>
+          ) : isFallback ? (
+            <div className="mt-6">
+              <Alert tone="info">
+                Belum ada data zona di database. Denah di bawah memakai tata letak bawaan.
+              </Alert>
+            </div>
           ) : null}
 
-          <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link
-              href="/#denah"
-              className="inline-flex h-12 w-full items-center justify-center rounded-full bg-accent px-8 text-sm font-semibold text-app transition-[background-color,transform] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-accent-hover active:scale-[0.98] sm:w-auto"
-            >
-              Pesan Slot
-            </Link>
-            <Link
-              href="/#denah"
-              className="inline-flex h-12 w-full items-center justify-center rounded-full border border-line bg-surface-3 px-8 text-sm font-semibold text-ink transition-[border-color,transform] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] hover:border-line-strong active:scale-[0.98] sm:w-auto"
-            >
-              Lihat Denah
-            </Link>
-          </div>
-        </FadeUp>
-      </section>
-
-      {/* ================= STATS BAND (okupansi lintas tanggal mendatang) ================= */}
-      <section aria-label="Statistik slot" className="border-y border-line bg-card">
-        <Stagger
-          inView
-          className="mx-auto grid w-full max-w-6xl grid-cols-2 gap-x-4 gap-y-8 px-4 pt-10 pb-4 sm:px-6 md:grid-cols-4"
-        >
-          <StatAngka nilai={totalSlot} label="Total Slot" warna="text-ink" />
-          <StatAngka nilai={tersedia} label="Tersedia" warna="text-ok" />
-          <StatAngka nilai={tertunda} label="Tertunda" warna="text-warn" />
-          <StatAngka nilai={terisi} label="Terisi" warna="text-subtle" />
-        </Stagger>
-      </section>
-
-      {/* ================= ZONA PAMERAN (bento) ================= */}
-      <section id="zona" className="mx-auto w-full max-w-6xl scroll-mt-4 px-4 pt-16 sm:px-6">
-        <h2 className="text-[clamp(2rem,4vw,3rem)] font-semibold leading-tight tracking-[-0.01em] text-ink">
-          Zona Pameran
-        </h2>
-        {(() => {
-          // Baris atas (bento): EMPAT zona kendaraan (Layout v2: Area Mobil
-          // Baru, Area Pameran Mobil Bekas, Area Pameran Motor Baru, Area
-          // Pameran Motor Bekas) — kartu pertama besar menempati 2 kolom x 3
-          // baris, tiga kartu kecil menumpuk di kolom ketiga.
-          // Baris bawah: Tenda UMKM & Tenda Otomotif/Leasing dibagi DUA SETENGAH
-          // yang setara (md:grid-cols-2).
-          const utama = zonaKartu.filter(
-            (zone) => zone.zone_type !== "umkm" && zone.zone_type !== "booth_khusus",
-          );
-          const pasangan = zonaKartu.filter(
-            (zone) => zone.zone_type === "umkm" || zone.zone_type === "booth_khusus",
-          );
-          const kartu = (zone: (typeof zonaKartu)[number], besar: boolean) => (
-            <KartuZona
-              zone={zone}
-              besar={besar}
-              tersedia={
-                zone.slots.filter((slot) => verdictSlot(slot, zone.zone_type) === "available").length
-              }
-              harga={zoneMinAdminFee(zone, zone.slots)}
-              hargaBeragam={zoneHasVariedFees(zone, zone.slots)}
-            />
-          );
-          return (
-            <>
-              <Stagger inView className="mt-6 grid gap-4 md:grid-cols-3 md:auto-rows-fr">
-                {utama.map((zone, index) => (
-                  <StaggerItem
-                    key={zone.id}
-                    className={cn(
-                      index === 0 && utama.length > 2 && "md:col-span-2 md:row-span-3",
-                      index === 0 && utama.length <= 2 && "md:col-span-2",
-                    )}
-                  >
-                    {kartu(zone, index === 0)}
-                  </StaggerItem>
-                ))}
-              </Stagger>
-              {pasangan.length > 0 ? (
-                <Stagger
-                  inView
-                  className={cn("mt-4 grid gap-4", pasangan.length === 2 && "md:grid-cols-2")}
-                >
-                  {pasangan.map((zone) => (
-                    <StaggerItem key={zone.id}>{kartu(zone, false)}</StaggerItem>
-                  ))}
-                </Stagger>
-              ) : null}
-            </>
-          );
-        })()}
-      </section>
-
-      {/* ================= PETA ================= */}
-      <section id="denah" className="mx-auto w-full max-w-6xl scroll-mt-4 px-4 pt-16 sm:px-6">
-        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-          <h2 className="text-[clamp(2rem,4vw,3rem)] font-semibold leading-tight tracking-[-0.01em] text-ink">
-            Denah Lokasi
-          </h2>
-        </div>
-
-        {errorMessage ? (
-          <div className="mt-4">
-            <Alert tone={noConfig ? "info" : "warning"}>
-              {noConfig
-                ? "Supabase belum dikonfigurasi — denah di bawah hanya contoh dan slot belum bisa dipesan."
-                : `Denah gagal dimuat (${errorMessage}) — sementara ditampilkan denah contoh.`}
-            </Alert>
-          </div>
-        ) : isFallback ? (
-          <div className="mt-4">
-            <Alert tone="info">
-              Belum ada data zona di database — denah di bawah memakai tata letak bawaan.
-            </Alert>
-          </div>
-        ) : null}
-
-        <div className="mx-auto mt-6 w-full max-w-3xl">
-          <FloorPlanBoard
-            zones={zones}
-            isFallback={isFallback}
-            eventDates={eventDates}
-            occupancy={occupancy}
-          />
+          <Muncul className="mt-10" delay={0.05}>
+            <FloorPlanBoard zones={zones} isFallback={isFallback} eventDates={eventDates} occupancy={occupancy} />
+          </Muncul>
         </div>
       </section>
 
-      {/* ================= BELI KENDARAAN SECARA KREDIT (strip premium) ================= */}
-      <section
-        aria-label="Beli kendaraan secara kredit"
-        className="mt-16 border-y border-line bg-surface-2"
-      >
-        <div className="mx-auto w-full max-w-6xl px-4 py-14 text-center sm:px-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">
-            Beli Kendaraan Secara Kredit
-          </p>
-          {partners.length > 0 ? (
-            <ul className="mt-6 flex flex-wrap items-center justify-center gap-x-10 gap-y-4 sm:gap-x-14">
+      {/* ================= MITRA KREDIT (hanya bila ada mitra aktif) ================= */}
+      {partners.length > 0 ? (
+        <section aria-label="Beli kendaraan secara kredit" className="border-y border-line bg-[#0a0a0a]">
+          <div className="mx-auto flex w-full max-w-[90rem] flex-col gap-6 px-4 py-12 sm:px-8 md:flex-row md:items-center md:justify-between">
+            <p className="label text-sm text-accent">Beli kendaraan secara kredit</p>
+            <ul className="flex flex-wrap items-center gap-x-12 gap-y-4">
               {partners.map((partner) => (
-                <li
-                  key={partner.id}
-                  className="text-base font-semibold uppercase tracking-[0.14em] text-subtle sm:text-lg"
-                >
+                <li key={partner.id} className="judul text-3xl text-ink/70">
                   {partner.name}
                 </li>
               ))}
             </ul>
-          ) : null}
+          </div>
+        </section>
+      ) : null}
 
-        </div>
-      </section>
+      {/* ================= SPONSOR ================= */}
+      <section id="sponsor" className="scroll-mt-16 bg-[#0a0a0a]">
+        <div className="mx-auto w-full max-w-[90rem] px-4 py-20 sm:px-8 md:py-28">
+          <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+            <Muncul>
+              <p className="label text-sm text-ink/60">03 / Sponsor</p>
+              <h2 className="judul mt-2 text-[clamp(4rem,12vw,10.5rem)]">
+                Paket sponsor
+                <br />
+                <span className="text-accent">Musim 1</span>
+              </h2>
+            </Muncul>
+            <Muncul className="max-w-sm" delay={0.1}>
+              <ul className="space-y-2 text-base leading-relaxed text-ink/75">
+                {SPONSOR_INTRO.points.map((poin) => (
+                  <li key={poin}>{poin}</li>
+                ))}
+              </ul>
+            </Muncul>
+          </div>
 
-      {/* ================= SPONSOR (Deck v4 slide 12-15) ================= */}
-      <section id="sponsor" className="mx-auto w-full max-w-6xl scroll-mt-4 px-4 pt-16 sm:px-6">
-        <FadeUp>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">
-            Musim 1 &middot; 8 Minggu
-          </p>
-          <h2 className="mt-2 text-[clamp(2rem,4vw,3rem)] font-semibold leading-tight tracking-[-0.01em] text-ink">
-            {SPONSOR_INTRO.title}
-          </h2>
-          <ul className="mt-4 grid gap-2 text-sm leading-relaxed text-muted sm:grid-cols-3">
-            {SPONSOR_INTRO.points.map((poin) => (
-              <li key={poin} className="flex gap-2">
-                <span aria-hidden="true" className="mt-[0.45rem] h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
-                <span>{poin}</span>
-              </li>
-            ))}
-          </ul>
-        </FadeUp>
-
-        {/* ---------- Empat tier sponsor ---------- */}
-        <Stagger inView className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {SPONSOR_TIERS.map((tier) => (
-            <StaggerItem key={tier.id} className="h-full">
-              <article
-                className={cn(
-                  "flex h-full flex-col rounded-2xl border bg-card p-6 shadow-[var(--shadow-sm)]",
-                  tier.highlighted ? "border-accent" : "border-line",
-                )}
-              >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-subtle">
-                    {tier.slots} slot
+          <div className="mt-14 grid md:grid-cols-2 lg:grid-cols-4">
+            {SPONSOR_TIERS.map((tier, index) => (
+              <Muncul key={tier.id} delay={index * 0.06} className="h-full">
+                <article
+                  className={cn(
+                    "flex h-full flex-col gap-5 px-7 pt-8 pb-9",
+                    tier.highlighted
+                      ? "bg-accent text-[#0a0a0a]"
+                      : "border-t border-l border-ink/25 text-ink last:border-r",
+                  )}
+                >
+                  <p className={cn("label text-sm", !tier.highlighted && "text-ink/60")}>
+                    {tier.slots} slot{tier.tagline ? `, ${tier.tagline}` : ""}
                   </p>
-                  {tier.tagline ? (
-                    <span className="rounded-full bg-accent-soft px-2.5 py-0.5 text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-accent">
-                      {tier.tagline}
+                  <h3 className="judul text-6xl">{tier.name}</h3>
+                  <p>
+                    <span className={cn("judul block text-[2.5rem]", !tier.highlighted && "text-accent")}>
+                      {formatRupiah(tier.pricePerWeek)}
                     </span>
-                  ) : null}
-                </div>
-                <h3 className="mt-3 text-2xl font-semibold tracking-[-0.01em] text-ink">{tier.name}</h3>
-                <p className="mt-1">
-                  <span className="tabular text-xl font-bold text-accent">
-                    {formatRupiah(tier.pricePerWeek)}
-                  </span>
-                  <span className="text-sm text-muted">/minggu</span>
-                </p>
-                <ul className="mt-4 space-y-2 border-t border-line pt-4 text-sm text-muted">
-                  {tier.benefits.map((manfaat) => (
-                    <li key={manfaat} className="flex gap-2">
-                      <span aria-hidden="true" className="text-ok">
-                        ✓
-                      </span>
-                      <span>{manfaat}</span>
-                    </li>
-                  ))}
-                </ul>
-              </article>
-            </StaggerItem>
-          ))}
-        </Stagger>
+                    <span className="text-sm opacity-70">per minggu</span>
+                  </p>
+                  <ul
+                    className={cn(
+                      "space-y-2 border-t pt-4 text-[0.9375rem] leading-relaxed",
+                      tier.highlighted ? "border-[#0a0a0a]/30" : "border-ink/25 text-ink/85",
+                    )}
+                  >
+                    {tier.benefits.map((manfaat) => (
+                      <li key={manfaat}>{manfaat}</li>
+                    ))}
+                  </ul>
+                </article>
+              </Muncul>
+            ))}
+          </div>
 
-        {/* ---------- Hak penamaan + eksklusivitas kategori ---------- */}
-        <div className="mt-6 grid gap-4 lg:grid-cols-5">
-          <FadeUp className="rounded-2xl border border-line bg-surface-2 p-6 lg:col-span-3">
-            <h3 className="text-lg font-semibold tracking-tight text-ink">
-              Hak Penamaan Titik Strategis
-            </h3>
-            <p className="mt-1 text-sm text-muted">Satu slot eksklusif per titik, harga per minggu.</p>
-            <ul className="mt-4 grid gap-2 sm:grid-cols-2">
-              {NAMING_RIGHTS.map((titik) => (
+          <Muncul className="mt-16">
+            <p className="label text-sm text-ink/60">Hak penamaan, satu slot per titik</p>
+            <ul className="mt-5">
+              {[...NAMING_RIGHTS, CATEGORY_EXCLUSIVITY].map((titik) => (
                 <li
                   key={titik.id}
-                  className="flex items-center justify-between gap-3 rounded-[var(--radius-sm)] border border-line bg-card px-4 py-3"
+                  className="flex flex-wrap items-baseline justify-between gap-x-6 border-t border-ink/25 py-4"
                 >
-                  <span className="text-sm font-medium text-ink">{titik.name}</span>
-                  <span className="tabular shrink-0 text-sm font-semibold text-accent">
+                  <span className="judul text-3xl sm:text-4xl">{titik.name}</span>
+                  <span className="judul text-3xl text-accent sm:text-4xl">
                     {formatRupiah(titik.pricePerWeek)}
-                    <span className="font-normal text-muted">/minggu</span>
+                    <span className="ml-2 font-sans text-sm font-normal normal-case not-italic tracking-normal text-ink/60">
+                      per minggu
+                    </span>
                   </span>
                 </li>
               ))}
             </ul>
-            <p className="mt-4 text-xs leading-relaxed text-muted">{NAMING_BUNDLE_NOTE}</p>
-          </FadeUp>
+            <p className="mt-5 max-w-3xl text-sm leading-relaxed text-ink/60">
+              {NAMING_BUNDLE_NOTE} {CATEGORY_EXCLUSIVITY.futureNote} {SPONSOR_INTRO.note}
+            </p>
+          </Muncul>
 
-          <FadeUp className="rounded-2xl border border-line bg-surface-2 p-6 lg:col-span-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-subtle">
-              Eksklusivitas kategori &middot; {CATEGORY_EXCLUSIVITY.slots} slot
-            </p>
-            <h3 className="mt-2 text-lg font-semibold tracking-tight text-ink">
-              {CATEGORY_EXCLUSIVITY.name}
-            </h3>
-            <p className="mt-1">
-              <span className="tabular text-xl font-bold text-accent">
-                {formatRupiah(CATEGORY_EXCLUSIVITY.pricePerWeek)}
-              </span>
-              <span className="text-sm text-muted">/minggu</span>
-            </p>
-            <p className="mt-3 text-sm leading-relaxed text-muted">{CATEGORY_EXCLUSIVITY.description}</p>
-            <p className="mt-3 border-t border-line pt-3 text-xs leading-relaxed text-subtle">
-              {CATEGORY_EXCLUSIVITY.futureNote}
-            </p>
-          </FadeUp>
-        </div>
-
-        {/* ---------- CTA WhatsApp (tanpa form) ---------- */}
-        <FadeUp className="mt-6 rounded-2xl border border-line bg-card p-6 sm:flex sm:items-center sm:justify-between sm:gap-6">
-          <div>
-            <p className="text-base font-semibold text-ink">Tertarik jadi sponsor?</p>
-            <p className="mt-1 text-sm text-muted">
-              Hubungi panitia lewat WhatsApp untuk proposal lengkap dan ketersediaan slot.{" "}
-              {SPONSOR_INTRO.note}
-            </p>
-          </div>
-          <div className="mt-4 flex flex-col gap-2 sm:mt-0 sm:shrink-0">
+          <Muncul className="mt-10 flex flex-wrap gap-3">
             {EVENT_INFO.contacts.map((kontak) => (
               <a
                 key={kontak.phone}
                 href={waHref(kontak.phone, SPONSOR_WA_TEXT)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex h-11 items-center justify-center rounded-full bg-accent px-5 text-sm font-semibold text-app transition-[background-color,transform] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-accent-hover active:scale-[0.98]"
+                className={cn(TOMBOL, "bg-accent text-[#0a0a0a] hover:bg-white")}
               >
-                WhatsApp {kontak.label} &middot; <span className="tabular ml-1">{kontak.phone}</span>
+                WhatsApp {kontak.label}, {kontak.phone}
               </a>
             ))}
-          </div>
-        </FadeUp>
+          </Muncul>
+        </div>
       </section>
 
-      {/* ================= CEK STATUS + KONTAK ================= */}
-      {/* Satu panel komposit: peta mengisi kiri, cek status + kontak rapat di kanan.
-          Sengaja tanpa kartu bersarang & subjudul supaya nyaris tanpa whitespace. */}
-      <section id="cek-status" className="mx-auto w-full max-w-6xl scroll-mt-4 px-4 pt-12 sm:px-6">
-        <div className="overflow-hidden rounded-2xl border border-line bg-card lg:grid lg:grid-cols-5">
-          <div className="h-64 w-full lg:col-span-3 lg:h-auto lg:min-h-[400px]">
+      {/* ================= CEK STATUS ================= */}
+      <section id="cek-status" className="terang scroll-mt-16 bg-accent">
+        <div className="mx-auto flex w-full max-w-[90rem] flex-col gap-8 px-4 py-16 sm:px-8 md:flex-row md:items-end md:justify-between md:py-24">
+          <Muncul>
+            <p className="label text-sm text-ink/70">04 / Cek status</p>
+            <h2 className="judul mt-2 text-[clamp(5rem,15vw,13.5rem)] leading-[0.82]">
+              Sudah
+              <br />
+              pesan?
+            </h2>
+          </Muncul>
+          <Muncul className="w-full max-w-lg" delay={0.1}>
+            <p className="text-base leading-relaxed">
+              Masukkan kode booking dari email Anda untuk melihat status pembayaran dan lapak.
+            </p>
+            <CekStatusForm className="mt-4 [&_button]:bg-[#0a0a0a] [&_button]:text-white [&_button:hover]:bg-[#2a2a2a]" />
+          </Muncul>
+        </div>
+      </section>
+
+      {/* ================= LOKASI ================= */}
+      <section aria-label="Lokasi acara" className="bg-[#0a0a0a]">
+        <div className="mx-auto grid w-full max-w-[90rem] gap-8 px-4 py-16 sm:px-8 lg:grid-cols-5">
+          <div className="lg:col-span-2">
+            <p className="label text-sm text-ink/60">05 / Lokasi</p>
+            <h2 className="judul mt-2 text-6xl sm:text-7xl">{lokasi.split(",")[0]}</h2>
+            <p className="mt-4 text-base leading-relaxed text-ink/75">
+              {lokasi}. {EVENT_INFO.scheduleText}.
+            </p>
+            <a
+              href={EVENT_INFO.mapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn(TOMBOL, "mt-6 border border-ink/50 text-ink hover:bg-ink hover:text-[#0a0a0a]")}
+            >
+              Buka di Google Maps
+            </a>
+          </div>
+          <div className="h-72 w-full border border-ink/25 lg:col-span-3 lg:h-96">
             <iframe
               src={EVENT_INFO.mapsEmbedUrl}
               title="Peta lokasi Drive Tech di Rest Area Singosari Malang (Kampung Tentara)"
@@ -466,132 +452,8 @@ export default async function BerandaPage() {
               className="h-full w-full border-0"
             />
           </div>
-
-          <div className="flex flex-col gap-4 p-5 lg:col-span-2 lg:border-l lg:border-line">
-            <div>
-              <h2 className="text-sm font-semibold tracking-tight text-ink">Cek Status Booking</h2>
-              <CekStatusForm className="mt-2.5" />
-            </div>
-
-            <div className="border-t border-line" />
-
-            <dl className="space-y-2.5">
-              <BarisKontak label="Lokasi">{lokasi}</BarisKontak>
-              <BarisKontak label="Jadwal">{EVENT_INFO.scheduleText}</BarisKontak>
-              {tanggalTerdekat ? (
-                <BarisKontak label="Gelaran terdekat">{formatTanggal(tanggalTerdekat)}</BarisKontak>
-              ) : null}
-              <BarisKontak label="Penyelenggara">{EVENT_INFO.organizer}</BarisKontak>
-              {/* Dua nomor WhatsApp panitia (keputusan pemilik 2026-09-02). */}
-              {EVENT_INFO.contacts.map((kontak) => (
-                <BarisKontak key={kontak.phone} label={`WhatsApp ${kontak.label}`}>
-                  <a
-                    href={waHref(kontak.phone)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="tabular font-semibold text-accent underline-offset-2 hover:underline"
-                  >
-                    {kontak.phone}
-                  </a>
-                </BarisKontak>
-              ))}
-            </dl>
-
-            <a
-              href={EVENT_INFO.mapsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-auto inline-flex items-center gap-1.5 text-sm font-medium text-accent underline-offset-4 hover:underline"
-            >
-              Buka di Google Maps <span aria-hidden="true">↗</span>
-            </a>
-          </div>
         </div>
       </section>
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Bagian kecil                                                        */
-/* ------------------------------------------------------------------ */
-
-function StatAngka({ nilai, label, warna }: { nilai: number; label: string; warna: string }) {
-  return (
-    <StaggerItem className="text-center">
-      <p className={cn("tabular text-4xl font-semibold tracking-[-0.02em] sm:text-5xl", warna)}>
-        {nilai}
-      </p>
-      <p className="mt-2 text-[0.8125rem] font-medium uppercase tracking-[0.08em] text-subtle">
-        {label}
-      </p>
-    </StaggerItem>
-  );
-}
-
-function KartuZona({
-  zone,
-  besar,
-  tersedia,
-  harga,
-  hargaBeragam,
-}: {
-  zone: ZoneWithSlots;
-  besar: boolean;
-  /** Jumlah slot yang masih punya minimal satu tanggal gelaran kosong. */
-  tersedia: number;
-  /** Biaya admin terendah di zona (harga efektif per slot). */
-  harga: number;
-  /** True bila ada slot dengan harga override berbeda -> "mulai Rp X". */
-  hargaBeragam: boolean;
-}) {
-  const total = zone.slots.length;
-
-  return (
-    <Link
-      href="/#denah"
-      className={cn(
-        "group flex h-full flex-col justify-end rounded-2xl border border-line p-6 transition-[border-color,box-shadow,transform] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] hover:border-line-strong hover:shadow-[var(--shadow-md)] active:scale-[0.99] sm:p-7",
-        besar ? "min-h-64 md:min-h-[32rem]" : "min-h-40",
-      )}
-      style={{ backgroundColor: "var(--card)", background: zoneTint(zone.zone_type) }}
-    >
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="tabular rounded-full border border-line bg-card/80 px-3 py-1 text-xs font-medium text-ink backdrop-blur-sm">
-          {total} slot
-        </span>
-        <span className="tabular rounded-full bg-ok-soft px-3 py-1 text-xs font-medium text-ok">
-          {tersedia} tersedia
-        </span>
-        <span className="tabular rounded-full bg-accent-soft px-3 py-1 text-xs font-semibold text-accent">
-          {hargaBeragam ? "mulai " : ""}
-          {formatRupiah(harga)}/tanggal
-        </span>
-      </div>
-
-      <h3
-        className={cn(
-          "mt-3 font-semibold tracking-[-0.01em] text-ink",
-          besar ? "text-2xl sm:text-3xl" : "text-xl",
-        )}
-      >
-        {zone.name}
-      </h3>
-
-      {zone.description ? (
-        <p className={cn("mt-1.5 text-sm leading-relaxed text-muted", !besar && "line-clamp-2")}>
-          {zone.description}
-        </p>
-      ) : null}
-    </Link>
-  );
-}
-
-function BarisKontak({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div>
-      <dt className="text-xs font-medium uppercase tracking-[0.08em] text-subtle">{label}</dt>
-      <dd className="mt-0.5 text-sm font-medium text-ink">{children}</dd>
     </div>
   );
 }
