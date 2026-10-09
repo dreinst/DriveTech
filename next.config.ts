@@ -19,6 +19,8 @@ const CACHE_SEHARI = "public, max-age=86400, stale-while-revalidate=604800";
 
 const nextConfig = {
   poweredByHeader: false,
+  // Kompresi (br, zstd, gzip) dikerjakan Traefik lewat middleware kompresi@file.
+  compress: false,
   output: "standalone",
   images: {
     // Hasil optimasi gambar disimpan 31 hari supaya sharp tidak mengolah ulang tiap jam.

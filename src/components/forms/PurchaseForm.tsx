@@ -198,13 +198,13 @@ export function PurchaseForm({ slotId, namaLapak }: PurchaseFormProps) {
                       {PURCHASE_PAYMENT_METHOD_LABEL[item.value]}
                     </span>
                     <span
-                      className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-colors duration-150 ${
+                      className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-none border transition-colors duration-150 ${
                         dipilih ? "border-accent bg-accent" : "border-line-strong bg-card"
                       }`}
                       aria-hidden="true"
                     >
                       {dipilih ? (
-                        <span className="h-1.5 w-1.5 rounded-full bg-app" />
+                        <span className="h-1.5 w-1.5 rounded-none bg-app" />
                       ) : null}
                     </span>
                   </span>
@@ -220,7 +220,7 @@ export function PurchaseForm({ slotId, namaLapak }: PurchaseFormProps) {
                   {item.badge ? (
                     /* Badge kecil penonjol opsi Kredit — pil aksen solid teks gelap agar tetap
                        terbaca baik pada kartu terpilih (latar accent-soft) maupun tidak. */
-                    <span className="inline-flex w-fit items-center rounded-full bg-accent px-2 py-0.5 text-[0.6875rem] font-medium leading-4 text-app">
+                    <span className="inline-flex w-fit items-center rounded-none bg-accent px-2 py-0.5 text-[0.6875rem] font-medium leading-4 text-app">
                       {item.badge}
                     </span>
                   ) : null}

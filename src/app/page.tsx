@@ -84,7 +84,7 @@ export default async function BerandaPage() {
   return (
     <div>
       {/* ================= HERO ================= */}
-      <section className="relative isolate overflow-hidden bg-[#0a0a0a]">
+      <section className="gelap relative isolate overflow-hidden bg-[#0a0a0a]">
         {/* Desktop: bidang oranye miring + garis putih ala livery di sisi kanan. */}
         <div
           aria-hidden="true"
@@ -184,7 +184,7 @@ export default async function BerandaPage() {
       </div>
 
       {/* ================= AREA (tabel jenis lapak) ================= */}
-      <section id="area" className="terang scroll-mt-16 overflow-hidden bg-krem">
+      <section id="area" className="scroll-mt-16 overflow-hidden bg-krem">
         <div className="mx-auto w-full max-w-[90rem] px-4 pt-20 sm:px-8 md:pt-28">
           <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
             <Muncul>
@@ -263,7 +263,7 @@ export default async function BerandaPage() {
       </section>
 
       {/* ================= DENAH (alur pilih zona, lapak, tanggal) ================= */}
-      <section id="denah" className="terang scroll-mt-16 bg-krem">
+      <section id="denah" className="scroll-mt-16 bg-krem">
         <div className="mx-auto w-full max-w-[90rem] px-4 pt-14 pb-20 sm:px-8 md:pb-28">
           <Muncul>
             <p className="label text-sm text-ink/60">02 / Denah</p>
@@ -294,7 +294,7 @@ export default async function BerandaPage() {
 
       {/* ================= MITRA KREDIT (hanya bila ada mitra aktif) ================= */}
       {partners.length > 0 ? (
-        <section aria-label="Beli kendaraan secara kredit" className="border-y border-line bg-[#0a0a0a]">
+        <section aria-label="Beli kendaraan secara kredit" className="gelap border-y border-line bg-[#0a0a0a]">
           <div className="mx-auto flex w-full max-w-[90rem] flex-col gap-6 px-4 py-12 sm:px-8 md:flex-row md:items-center md:justify-between">
             <p className="label text-sm text-accent">Beli kendaraan secara kredit</p>
             <ul className="flex flex-wrap items-center gap-x-12 gap-y-4">
@@ -309,7 +309,7 @@ export default async function BerandaPage() {
       ) : null}
 
       {/* ================= SPONSOR ================= */}
-      <section id="sponsor" className="scroll-mt-16 bg-[#0a0a0a]">
+      <section id="sponsor" className="gelap scroll-mt-16 bg-[#0a0a0a]">
         <div className="mx-auto w-full max-w-[90rem] px-4 py-20 sm:px-8 md:py-28">
           <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
             <Muncul>
@@ -405,7 +405,7 @@ export default async function BerandaPage() {
       </section>
 
       {/* ================= CEK STATUS ================= */}
-      <section id="cek-status" className="terang scroll-mt-16 bg-accent">
+      <section id="cek-status" className="scroll-mt-16 bg-accent">
         <div className="mx-auto flex w-full max-w-[90rem] flex-col gap-8 px-4 py-16 sm:px-8 md:flex-row md:items-end md:justify-between md:py-24">
           <Muncul>
             <p className="label text-sm text-ink/70">04 / Cek status</p>
@@ -425,7 +425,7 @@ export default async function BerandaPage() {
       </section>
 
       {/* ================= LOKASI ================= */}
-      <section aria-label="Lokasi acara" className="bg-[#0a0a0a]">
+      <section aria-label="Lokasi acara" className="gelap bg-[#0a0a0a]">
         <div className="mx-auto grid w-full max-w-[90rem] gap-8 px-4 py-16 sm:px-8 lg:grid-cols-5">
           <div className="lg:col-span-2">
             <p className="label text-sm text-ink/60">05 / Lokasi</p>

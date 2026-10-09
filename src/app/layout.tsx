@@ -68,7 +68,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         </a>
         <SiteHeader />
         {/* Tiap halaman mengatur container-nya sendiri (hero beranda full-bleed). */}
-        <main id="konten-utama" className="w-full flex-1">
+        <main id="konten-utama" className="terang w-full flex-1 bg-krem">
           {children}
         </main>
         <SiteFooter />

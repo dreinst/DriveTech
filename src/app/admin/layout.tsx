@@ -34,7 +34,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   const nama = admin.full_name?.trim() || admin.email;
 
   return (
-    <div className="flex min-h-[calc(100dvh-4rem)] w-full flex-col lg:flex-row">
+    <div className="gelap flex min-h-[calc(100dvh-4rem)] w-full flex-col bg-[#0a0a0a] lg:flex-row">
       {/* Sidebar (>= lg) / bar navigasi atas (< lg) — hitam lebih pekat dari kanvas. */}
       <aside className="sticky top-16 z-30 shrink-0 border-b border-line bg-[#050505] lg:h-[calc(100dvh-4rem)] lg:w-64 lg:border-b-0 lg:border-r">
         <AdminNav

@@ -9,8 +9,10 @@
    Warna denah SVG (status slot, zona, taman, tank) TIDAK di sini:
    itu data denah di domain/layout.ts & constants.ts.
    ============================================================ */
-:root {
+:root,
+.gelap {
   /* --- Token kontrak --- */
+  color-scheme: dark;
   --bg: #0a0a0a;
   --card: #1a1a1a;
   --surface-2: #111111;
@@ -261,6 +263,15 @@
 /* Oranye merek terlalu pucat sebagai TEKS di latar terang: pakai versi lebih tua. */
 .terang .text-accent {
   color: #b34700;
+}
+
+/* Bagian gelap di dalam halaman terang kembali ke oranye merek dan teks terang. */
+.gelap {
+  color: var(--ink);
+}
+
+.terang .gelap .text-accent {
+  color: var(--accent);
 }
 
 /* Gerak hero memakai CSS murni supaya judul dan mobil tampil tanpa menunggu JavaScript. */

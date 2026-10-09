@@ -96,7 +96,7 @@ export default async function KatalogPage({ searchParams }: PageProps) {
                       href={hrefKatalog(t, zona, jenis)}
                       aria-current={aktif ? "date" : undefined}
                       className={cn(
-                        "inline-flex min-h-9 items-center rounded-full border px-3.5 text-sm font-medium transition-colors duration-150",
+                        "inline-flex min-h-9 items-center rounded-none border px-3.5 text-sm font-medium transition-colors duration-150",
                         aktif
                           ? "border-accent bg-accent text-app"
                           : "border-line bg-card text-muted hover:border-accent hover:text-ink",
@@ -119,7 +119,7 @@ export default async function KatalogPage({ searchParams }: PageProps) {
                 <Link
                   href={hrefKatalog(data.selectedDate, zona)}
                   className={cn(
-                    "inline-flex min-h-8 items-center rounded-full border px-3.5 text-xs font-semibold transition-colors duration-150",
+                    "inline-flex min-h-8 items-center rounded-none border px-3.5 text-xs font-semibold transition-colors duration-150",
                     !jenis
                       ? "border-ink bg-ink text-app"
                       : "border-line bg-card text-muted hover:border-ink hover:text-ink",
@@ -133,7 +133,7 @@ export default async function KatalogPage({ searchParams }: PageProps) {
                   <Link
                     href={hrefKatalog(data.selectedDate, zona, j)}
                     className={cn(
-                      "inline-flex min-h-8 items-center rounded-full border px-3.5 text-xs font-semibold transition-colors duration-150",
+                      "inline-flex min-h-8 items-center rounded-none border px-3.5 text-xs font-semibold transition-colors duration-150",
                       jenis === j
                         ? "border-ink bg-ink text-app"
                         : "border-line bg-card text-muted hover:border-ink hover:text-ink",
@@ -149,7 +149,7 @@ export default async function KatalogPage({ searchParams }: PageProps) {
                 <Link
                   href={hrefKatalog(data.selectedDate, undefined, jenis)}
                   className={cn(
-                    "inline-flex min-h-8 items-center rounded-full px-3 text-xs font-medium transition-colors duration-150",
+                    "inline-flex min-h-8 items-center rounded-none px-3 text-xs font-medium transition-colors duration-150",
                     !zona ? "bg-surface-3 text-ink" : "text-muted hover:text-ink",
                   )}
                 >
@@ -161,7 +161,7 @@ export default async function KatalogPage({ searchParams }: PageProps) {
                   <Link
                     href={hrefKatalog(data.selectedDate, z, jenis)}
                     className={cn(
-                      "inline-flex min-h-8 items-center rounded-full px-3 text-xs font-medium transition-colors duration-150",
+                      "inline-flex min-h-8 items-center rounded-none px-3 text-xs font-medium transition-colors duration-150",
                       zona === z ? "bg-surface-3 text-ink" : "text-muted hover:text-ink",
                     )}
                   >
