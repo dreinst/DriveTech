@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -19,12 +20,64 @@ import {
 } from "@/lib/domain/sponsor";
 import { listActivePartners } from "@/lib/services/leasing";
 import { getFloorPlan } from "@/lib/services/slots";
+import { getSiteUrl } from "@/lib/site-url";
 import type { SlotRow, ZoneType, ZoneWithSlots } from "@/lib/types/database";
 import { cn, formatRupiah } from "@/lib/utils";
 
 // Dirender ulang paling lama tiap 30 detik (ISR). Status lapak tetap segar karena
 // FloorPlanBoard berlangganan realtime, dan aksi booking memanggil revalidatePath("/").
 export const revalidate = 30;
+
+export const metadata: Metadata = { alternates: { canonical: "/" } };
+
+/**
+ * Tanggal yang ditulis di pita berjalan. Sementara hanya akhir pekan pembukaan
+ * (permintaan pemilik 9 Oktober 2026) supaya pengunjung tidak salah info;
+ * tanggal lain tetap bisa dipilih saat memesan lapak.
+ */
+const PITA_TANGGAL = ["Sabtu 07 November 2026", "Minggu 08 November 2026"] as const;
+
+/**
+ * Data terstruktur acara (schema.org Event) untuk hasil pencarian. Hanya memuat
+ * akhir pekan pembukaan, sama dengan pita tanggal. Jam buka belum ditetapkan,
+ * jadi tanggal ditulis tanpa jam.
+ */
+function dataTerstrukturAcara(siteUrl: string) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Event",
+    name: "Drive Tech Malang 2026",
+    description: EVENT_INFO.description,
+    startDate: "2026-11-07",
+    endDate: "2026-11-08",
+    eventStatus: "https://schema.org/EventScheduled",
+    eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+    isAccessibleForFree: true,
+    image: [`${siteUrl}/gambar/og.jpg`],
+    url: siteUrl,
+    location: {
+      "@type": "Place",
+      name: "Kampung Tentara (Rest Area Singosari)",
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: "Singosari, Malang",
+        addressRegion: "Jawa Timur",
+        addressCountry: "ID",
+      },
+      geo: { "@type": "GeoCoordinates", latitude: -7.8773823, longitude: 112.6773862 },
+      hasMap: EVENT_INFO.mapsUrl,
+    },
+    organizer: { "@type": "Organization", name: "D'Production Event Organizer", url: "https://www.dpro.events" },
+    offers: {
+      "@type": "Offer",
+      name: "Masuk pengunjung",
+      price: 0,
+      priceCurrency: "IDR",
+      availability: "https://schema.org/InStock",
+      url: siteUrl,
+    },
+  };
+}
 
 /** Jumlah area fisik di denah (A sampai H). */
 const JUMLAH_AREA = 8;
@@ -83,6 +136,11 @@ export default async function BerandaPage() {
 
   return (
     <div>
+      <script
+        type="application/ld+json"
+        // Isi berasal dari konstanta di berkas ini, bukan masukan pengguna.
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(dataTerstrukturAcara(getSiteUrl())) }}
+      />
       {/* ================= HERO ================= */}
       <section className="gelap relative isolate overflow-hidden bg-[#0a0a0a]">
         {/* Desktop: bidang oranye miring + garis putih ala livery di sisi kanan. */}
@@ -147,8 +205,9 @@ export default async function BerandaPage() {
 
           <div className="anim-fade-up max-w-sm md:col-span-2">
             <p className="text-base leading-relaxed text-ink/80">
-              Pasar otomotif akhir pekan di Singosari, Malang. Pilih zona, pilih lapak di denah, pilih
-              tanggal, lalu bayar lewat QRIS.
+              Pameran dan pasar otomotif akhir pekan di Kampung Tentara, Singosari, Malang. Mobil dan
+              motor, baru maupun bekas, ditambah UMKM. Mau buka lapak? Pilih zona, pilih lapak di
+              denah, pilih tanggal, lalu bayar lewat QRIS.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link href="/#denah" className={cn(TOMBOL, "bg-accent text-[#0a0a0a] hover:bg-white")}>
@@ -166,13 +225,15 @@ export default async function BerandaPage() {
       </section>
 
       {/* ================= PITA TANGGAL ================= */}
-      <div className="overflow-hidden border-t border-[#0a0a0a]/25 bg-accent py-4 text-[#0a0a0a]" aria-label="Tanggal gelaran Musim 1">
-        <ul className="pita-jalan flex w-max">
-          {[0, 1].map((salinan) =>
-            tanggalPitaList.map((tanggal) => (
+      <div
+        className="overflow-hidden border-t border-[#0a0a0a]/25 bg-accent py-4 text-[#0a0a0a]"
+        aria-label="Pembukaan Sabtu dan Minggu, 7 dan 8 November 2026"
+      >
+        <ul className="pita-jalan flex w-max" aria-hidden="true">
+          {Array.from({ length: 8 }, (_, salinan) =>
+            PITA_TANGGAL.map((tanggal) => (
               <li
                 key={`${salinan}-${tanggal}`}
-                aria-hidden={salinan === 1 ? true : undefined}
                 className="judul flex items-center gap-8 pl-8 text-2xl leading-none tracking-[0.04em] sm:text-3xl"
               >
                 {tanggal}

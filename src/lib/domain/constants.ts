@@ -34,7 +34,7 @@ export const EVENT_INFO = {
     { label: "Kantor", phone: "0822-3299-9900" },
   ],
   description:
-    "Pasar otomotif akhir pekan di Kampung Tentara, Singosari, Malang. Pilih zona, pilih lapak di denah, pilih tanggal, lalu bayar lewat QRIS.",
+    "Pameran dan pasar otomotif akhir pekan di Singosari, Malang. Mobil dan motor baru maupun bekas, mulai 7 dan 8 November 2026. Gratis masuk, pesan lapak online.",
 } as const;
 
 export type ContactInfo = (typeof EVENT_INFO.contacts)[number];

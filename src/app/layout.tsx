@@ -24,7 +24,7 @@ const barlow = Barlow_Condensed({
 
 const siteUrl = getSiteUrl();
 
-const siteTitle = `${EVENT_INFO.name}, pesan lapak pameran otomotif`;
+const siteTitle = `${EVENT_INFO.name} Malang, pameran dan pasar otomotif di Singosari`;
 const siteDescription = EVENT_INFO.description;
 
 export const metadata: Metadata = {
@@ -37,6 +37,7 @@ export const metadata: Metadata = {
   applicationName: EVENT_INFO.name,
   openGraph: {
     type: "website",
+    url: siteUrl,
     locale: "id_ID",
     siteName: EVENT_INFO.name,
     title: siteTitle,
@@ -49,6 +50,20 @@ export const metadata: Metadata = {
     description: siteDescription,
     images: ["/gambar/og.jpg"],
   },
+};
+
+/** Data terstruktur situs (nama situs di hasil pencarian) dan penyelenggara. */
+const dataTerstrukturSitus = {
+  "@context": "https://schema.org",
+  "@graph": [
+    { "@type": "WebSite", name: EVENT_INFO.name, alternateName: "Drive Tech Malang", url: siteUrl, inLanguage: "id-ID" },
+    {
+      "@type": "Organization",
+      name: "D'Production Event Organizer",
+      url: "https://www.dpro.events",
+      sameAs: ["https://www.instagram.com/drivetechmalang"],
+    },
+  ],
 };
 
 export const viewport: Viewport = {
@@ -66,6 +81,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         >
           Lewati ke konten utama
         </a>
+        <script
+          type="application/ld+json"
+          // Isi berasal dari konstanta di berkas ini, bukan masukan pengguna.
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(dataTerstrukturSitus) }}
+        />
         <SiteHeader />
         {/* Tiap halaman mengatur container-nya sendiri (hero beranda full-bleed). */}
         <main id="konten-utama" className="terang w-full flex-1 bg-krem">

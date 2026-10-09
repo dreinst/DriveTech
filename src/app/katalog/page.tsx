@@ -20,9 +20,10 @@ import { cn, formatRupiah, formatTanggal, slotDisplayName } from "@/lib/utils";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Katalog Kendaraan",
+  title: "Katalog mobil dan motor dijual di Malang",
   description:
-    "Lihat mobil & motor yang dijual di pameran per tanggal — lengkap dengan harga, plat, dan lokasi slot parkirnya.",
+    "Daftar mobil dan motor yang dijual di Drive Tech, Singosari, Malang. Lihat harga, plat, dan nomor lapaknya per tanggal gelaran.",
+  alternates: { canonical: "/katalog" },
 };
 
 type PageProps = {
