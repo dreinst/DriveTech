@@ -136,6 +136,7 @@ export default async function BerandaPage() {
       harga: zoneMinAdminFee(zone, zone.slots),
       hargaBeragam: zoneHasVariedFees(zone, zone.slots),
     }));
+  const hargaTermurah = Math.min(...zonaBaris.map((baris) => baris.harga));
   const totalLapak = zonaBaris.reduce((n, baris) => n + baris.zone.slots.length, 0);
   const totalTersedia = zonaBaris.reduce((n, baris) => n + baris.tersedia, 0);
 
@@ -180,7 +181,6 @@ export default async function BerandaPage() {
           <div className="mobil-masuk pointer-events-none relative z-10 -mt-[8%] -mr-[10%] ml-[6%] md:absolute md:right-[3.5%] md:bottom-[2%] md:m-0 md:w-[30%]">
             <picture>
               <source media="(min-width: 768px)" srcSet={gambarMotor.srcSet} sizes="30vw" />
-              {/* eslint-disable-next-line @next/next/no-img-element -- atribut berasal dari getImageProps */}
               <img
                 {...gambarMobil}
                 alt="Mobil klasik oranye di layar kecil, motor klasik hitam di layar lebar"
@@ -212,9 +212,9 @@ export default async function BerandaPage() {
 
           <div className="anim-fade-up max-w-sm md:col-span-2">
             <p className="text-base leading-relaxed text-ink/80">
-              Pameran dan pasar otomotif akhir pekan di Kampung Tentara, Singosari, Malang. Mobil dan
-              motor, baru maupun bekas, ditambah UMKM. Mau buka lapak? Pilih zona, pilih lapak di
-              denah, pilih tanggal, lalu bayar lewat QRIS.
+              Sabtu dan Minggu, 7 dan 8 November, mobil dan motor baru maupun bekas kumpul di
+              Kampung Tentara, Singosari. Pengunjung masuk gratis. Punya unit yang mau dijual? Lapak
+              mulai {formatRupiah(hargaTermurah)} per tanggal, posisinya Anda pilih sendiri di denah.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link href="/#denah" className={cn(TOMBOL, "bg-accent text-[#0a0a0a] hover:bg-white")}>
@@ -224,7 +224,7 @@ export default async function BerandaPage() {
                 href="/denah"
                 className={cn(TOMBOL, "border border-ink/50 text-ink hover:bg-ink hover:text-[#0a0a0a]")}
               >
-                Lihat denah
+                Lihat denah lokasi
               </Link>
             </div>
           </div>
@@ -265,8 +265,8 @@ export default async function BerandaPage() {
             </Muncul>
             <Muncul className="max-w-xs" delay={0.1}>
               <p className="text-base leading-relaxed text-ink/75">
-                Tarif dihitung per lapak per tanggal gelaran. Satu lapak bisa dipesan untuk beberapa
-                tanggal sekaligus. Saat ini {totalTersedia} lapak masih punya tanggal kosong.
+                Anda hanya membayar tanggal yang diambil. Mau beberapa akhir pekan sekaligus, cukup
+                satu kali pesan. Saat ini {totalTersedia} lapak masih punya tanggal kosong.
               </p>
             </Muncul>
           </div>
@@ -336,6 +336,10 @@ export default async function BerandaPage() {
           <Muncul>
             <p className="label text-sm text-ink/60">02 / Denah</p>
             <h2 className="judul mt-2 max-w-4xl text-[clamp(3.2rem,8.5vw,7rem)]">Pilih lapak langsung di denah</h2>
+            <p className="mt-4 max-w-xl text-base leading-relaxed text-ink/75">
+              Lapak berwarna putih masih kosong. Pilih zonanya, ketuk lapak yang Anda mau, lalu
+              tentukan tanggalnya. Pembayaran lewat QRIS setelah data diisi.
+            </p>
           </Muncul>
 
           {errorMessage ? (
@@ -473,7 +477,7 @@ export default async function BerandaPage() {
                 rel="noopener noreferrer"
                 className={cn(TOMBOL, "bg-accent text-[#0a0a0a] hover:bg-white")}
               >
-                WhatsApp {kontak.label}, {kontak.phone}
+                Tanya paket sponsor ke {kontak.label}, {kontak.phone}
               </a>
             ))}
           </Muncul>
@@ -493,7 +497,7 @@ export default async function BerandaPage() {
           </Muncul>
           <Muncul className="w-full max-w-lg" delay={0.1}>
             <p className="text-base leading-relaxed">
-              Masukkan kode booking dari email Anda untuk melihat status pembayaran dan lapak.
+              Ketik kode booking dari email Anda. Status pembayaran dan lapak langsung tampil.
             </p>
             <CekStatusForm className="mt-4 [&_button]:bg-[#0a0a0a] [&_button]:text-white [&_button:hover]:bg-[#2a2a2a]" />
           </Muncul>
