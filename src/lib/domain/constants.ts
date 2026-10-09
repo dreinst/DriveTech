@@ -16,13 +16,15 @@ export const EVENT_INFO = {
    */
   mapsEmbedUrl: "https://www.google.com/maps?q=-7.8773823,112.6773862&z=16&output=embed",
   /**
+   * Sejak 9 Oktober 2026 pemesanan dibuka untuk bulan pertama saja (7 sampai 29 November);
+   * tanggal Desember dinonaktifkan di tabel event_dates dan bisa dibuka lagi dari panel admin.
    * Jadwal Musim 1 (keputusan pemilik 2026-09-17, mundur 8 pekan dari rencana
    * Deck v4): pembukaan dua hari Sabtu-Minggu 7-8 November 2026, selanjutnya
    * setiap hari Minggu sampai 27 Desember 2026 (8 pekan). Tanggal konkretnya
    * ada di MUSIM_1_DATES dan tabel event_dates.
    */
   scheduleText:
-    "Pembukaan Sabtu dan Minggu, 7 dan 8 November 2026, selanjutnya setiap hari Minggu sampai 27 Desember 2026",
+    "Pembukaan Sabtu dan Minggu, 7 dan 8 November 2026, selanjutnya setiap hari Minggu sampai 29 November 2026",
   organizer: "Panitia Drive Tech",
   /**
    * Kontak panitia (WhatsApp). Keputusan pemilik 2026-09-03 (sore): DUA nomor
@@ -50,10 +52,6 @@ export const MUSIM_1_DATES: readonly string[] = [
   "2026-11-15",
   "2026-11-22",
   "2026-11-29",
-  "2026-12-06",
-  "2026-12-13",
-  "2026-12-20",
-  "2026-12-27",
 ];
 
 /** Digit saja dari nomor telepon lokal ("0822-2855-5254" -> "082228555254"). */
