@@ -9,7 +9,7 @@ const FOOTER_LINKS = [
   { href: "/admin", label: "Admin" },
 ] as const;
 
-/** Footer hitam: merek, lokasi, WhatsApp kantor, tautan, lalu kredit pembuat. */
+/** Footer hitam: merek, lokasi, WhatsApp, tautan, lalu kredit pembuat. */
 export function SiteFooter() {
   return (
     <footer className="border-t border-line bg-[#0a0a0a]">
@@ -39,7 +39,7 @@ export function SiteFooter() {
               </a>
             </div>
             <div>
-              <p className="label text-sm text-accent">WhatsApp kantor</p>
+              <p className="label text-sm text-accent">WhatsApp</p>
               <a
                 href={waHref(WA_BOT_PHONE)}
                 target="_blank"
@@ -65,13 +65,14 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-14 flex flex-col gap-4 border-t border-line pt-6 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            {/* eslint-disable-next-line @next/next/no-img-element -- SVG statis, tanpa optimasi */}
-            <img src="/logo-dpro.svg" alt="D'Production Event Organizer" className="h-8 w-auto shrink-0" />
-            <p className="text-xs text-ink/60">
-              Dibuat oleh Dreinst dan dikelola oleh D&rsquo;Production Event Organizer
-            </p>
-          </div>
+          <p className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-ink/60">
+            <span>Made by dreiinst</span>
+            <span className="flex items-center gap-2">
+              Organized by
+              {/* eslint-disable-next-line @next/next/no-img-element -- SVG statis, tanpa optimasi */}
+              <img src="/logo-dpro-teks.svg" alt="D'Production" className="h-3 w-auto shrink-0" />
+            </span>
+          </p>
           <p className="text-xs text-ink/60">Pembukaan Sabtu dan Minggu, 7 dan 8 November 2026</p>
         </div>
       </div>
