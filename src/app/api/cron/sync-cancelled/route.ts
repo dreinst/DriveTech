@@ -17,12 +17,12 @@ const LOOKBACK_MS = 25 * 60 * 60 * 1000;
  * ke database tanpa lewat aplikasi, jadi sheet tidak pernah diberi tahu dan
  * barisnya membeku di "pending_payment").
  *
- * Dipicu Vercel Cron (lihat vercel.json) sekali sehari. Aman dipanggil ulang:
+ * Dipicu timer systemd di VPS (drivetech-cron-sync-cancelled) sekali sehari. Aman dipanggil ulang:
  * Apps Script meng-upsert per bookingCode.
  *
  * Penjagaan (temuan audit 2026-09-03, FAIL-CLOSED): di produksi CRON_SECRET
  * WAJIB diisi — tanpa itu endpoint menolak 503, bukan terbuka untuk siapa pun.
- * Vercel Cron mengirim "Authorization: Bearer <CRON_SECRET>" otomatis saat env
+ * Timer VPS mengirim "Authorization: Bearer <CRON_SECRET>" otomatis saat env
  * itu ada. Di development boleh tanpa secret.
  */
 export async function GET(request: Request): Promise<NextResponse> {

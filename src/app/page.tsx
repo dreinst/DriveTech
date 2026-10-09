@@ -53,7 +53,7 @@ function dataTerstrukturAcara(siteUrl: string) {
     eventStatus: "https://schema.org/EventScheduled",
     eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
     isAccessibleForFree: true,
-    image: [`${siteUrl}/gambar/og.jpg`],
+    image: [`${siteUrl}/gambar/pratinjau.jpg`],
     url: siteUrl,
     location: {
       "@type": "Place",

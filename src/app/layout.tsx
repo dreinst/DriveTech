@@ -42,13 +42,13 @@ export const metadata: Metadata = {
     siteName: EVENT_INFO.name,
     title: siteTitle,
     description: siteDescription,
-    images: [{ url: "/gambar/og.jpg", width: 1200, height: 630, alt: EVENT_INFO.name }],
+    images: [{ url: "/gambar/pratinjau.jpg", width: 1200, height: 630, alt: EVENT_INFO.name }],
   },
   twitter: {
     card: "summary_large_image",
     title: siteTitle,
     description: siteDescription,
-    images: ["/gambar/og.jpg"],
+    images: ["/gambar/pratinjau.jpg"],
   },
 };
 
