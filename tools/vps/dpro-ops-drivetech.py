@@ -19,7 +19,7 @@ helper = '''
 async def drivetech_putusan(kode, aksi, alasan=""):
     """Setujui/tolak pembayaran DriveTech lewat API aplikasinya (verifyPayment/rejectPayment yang sama dengan /admin)."""
     import aiohttp
-    url = os.environ.get("DRIVETECH_URL", "https://drive-tech-sigma.vercel.app").rstrip("/")
+    url = os.environ.get("DRIVETECH_URL", "https://drivetech.dpro.events").rstrip("/")
     try:
         async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30)) as http:
             async with http.post(f"{url}/api/bot/booking/{kode}/putusan", json={"aksi": aksi, "alasan": alasan},

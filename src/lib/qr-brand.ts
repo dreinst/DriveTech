@@ -157,9 +157,8 @@ export function qrBrandSvg(text: string, opts: QrBrandOptions = {}): string {
 }
 
 /**
- * Basis URL yang di-encode ke QR. SENGAJA tidak memakai VERCEL_URL (alamat
- * per-deployment yang berubah tiap build) — QR yang sudah dicetak harus
- * mengarah ke alamat tetap. Urutan: NEXT_PUBLIC_SITE_URL (kecuali localhost)
+ * Basis URL yang di-encode ke QR. QR yang sudah dicetak harus mengarah ke
+ * alamat tetap. Urutan: NEXT_PUBLIC_SITE_URL (kecuali localhost)
  * -> alamat produksi tetap.
  */
 export function qrBaseUrl(): string {

@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
  * Memanggil webhook Apps Script (?action=recap&key=...) yang menyalin sheet
  * "Bookings" ke tab arsip "Recap YYYY-MM-DD" TANPA menghapus master (keputusan
  * pemilik: recap tanpa kehilangan data). Dipicu timer systemd di VPS sekali seminggu
- * (lihat vercel.json).
+ * (lihat tools/vps).
  *
  * Penjagaan (temuan audit 2026-09-03, FAIL-CLOSED):
  * - Di produksi CRON_SECRET WAJIB diisi; tanpa itu endpoint menolak 503, bukan
