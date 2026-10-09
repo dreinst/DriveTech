@@ -42,6 +42,31 @@ const PITA_TANGGAL = ["Sabtu 07 November 2026", "Minggu 08 November 2026"] as co
  * akhir pekan pembukaan, sama dengan pita tanggal. Jam buka belum ditetapkan,
  * jadi tanggal ditulis tanpa jam.
  */
+/**
+ * Tanya jawab singkat di kaki beranda. Dipakai dua kali: tampil di halaman dan
+ * sebagai data terstruktur FAQPage, supaya mesin pencari punya jawaban siap kutip.
+ */
+function tanyaJawab(lokasi: string, hargaTermurah: number) {
+  return [
+    {
+      tanya: "Drive Tech itu acara apa?",
+      jawab: `Drive Tech adalah pameran dan pasar otomotif akhir pekan di Malang. Mobil dan motor, baru maupun bekas, dipajang dan dijual langsung di ${lokasi}.`,
+    },
+    {
+      tanya: "Kapan dan di mana Drive Tech diadakan?",
+      jawab: `Pembukaan Sabtu dan Minggu, 7 dan 8 November 2026, di ${lokasi}. Setelah itu Drive Tech buka setiap hari Minggu sampai 29 November 2026.`,
+    },
+    {
+      tanya: "Apakah pengunjung harus membayar?",
+      jawab: "Tidak. Pengunjung masuk gratis dan tidak perlu mendaftar.",
+    },
+    {
+      tanya: "Bagaimana cara menyewa lapak?",
+      jawab: `Pilih zona dan lapak di denah pada situs ini, tentukan tanggalnya, isi data, lalu bayar lewat QRIS. Sewa lapak mulai ${formatRupiah(hargaTermurah)} per tanggal.`,
+    },
+  ];
+}
+
 function dataTerstrukturAcara(siteUrl: string) {
   return {
     "@context": "https://schema.org",
@@ -137,6 +162,7 @@ export default async function BerandaPage() {
       hargaBeragam: zoneHasVariedFees(zone, zone.slots),
     }));
   const hargaTermurah = Math.min(...zonaBaris.map((baris) => baris.harga));
+  const daftarTanya = tanyaJawab(lokasi, hargaTermurah);
   const totalLapak = zonaBaris.reduce((n, baris) => n + baris.zone.slots.length, 0);
   const totalTersedia = zonaBaris.reduce((n, baris) => n + baris.tersedia, 0);
 
@@ -530,6 +556,36 @@ export default async function BerandaPage() {
             />
           </div>
         </div>
+      </section>
+
+      {/* ================= TANYA JAWAB ================= */}
+      <section aria-label="Tanya jawab" className="bg-krem">
+        <div className="mx-auto w-full max-w-[90rem] px-4 py-16 sm:px-8 md:py-24">
+          <p className="label text-sm text-ink/60">06 / Tanya jawab</p>
+          <h2 className="judul mt-2 text-6xl sm:text-7xl">Yang sering ditanyakan</h2>
+          <dl className="mt-10 grid gap-x-14 gap-y-8 md:grid-cols-2">
+            {daftarTanya.map((butir) => (
+              <div key={butir.tanya} className="border-t border-ink/25 pt-5">
+                <dt className="judul text-2xl">{butir.tanya}</dt>
+                <dd className="mt-2 text-base leading-relaxed text-ink/75">{butir.jawab}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              mainEntity: daftarTanya.map((butir) => ({
+                "@type": "Question",
+                name: butir.tanya,
+                acceptedAnswer: { "@type": "Answer", text: butir.jawab },
+              })),
+            }),
+          }}
+        />
       </section>
     </div>
   );
