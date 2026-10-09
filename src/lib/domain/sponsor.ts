@@ -36,7 +36,7 @@ export type NamingRight = {
 export const SPONSOR_INTRO = {
   title: "Paket Sponsor Musim 1",
   points: [
-    "8 minggu pilot program — eksposur berulang setiap akhir pekan, bukan satu kali tayang.",
+    "Delapan pekan berturut-turut, merek Anda tampil setiap akhir pekan.",
     "Pasar mingguan gratis masuk, terbuka untuk semua kalangan.",
     "Berbasis transaksi: audiens datang untuk lihat, cek, coba, dan deal.",
   ],
@@ -103,7 +103,7 @@ export const CATEGORY_EXCLUSIVITY: NamingRight & { futureNote: string } = {
   name: "Mitra Pembiayaan Resmi",
   pricePerWeek: 1_500_000,
   slots: 1,
-  description: "Penamaan resmi untuk seluruh tenda leasing di lokasi acara — 1 slot eksklusif per kategori.",
+  description: "Penamaan resmi untuk seluruh tenda leasing di lokasi acara, 1 slot eksklusif per kategori.",
   futureNote:
     "Model eksklusivitas kategori ini terbuka untuk kategori lain (asuransi, media, kuliner); harga dan slotnya dibicarakan terpisah.",
 };

@@ -2,30 +2,7 @@ import type { ReactNode } from "react";
 
 import { SLOT_SELECTED_STYLE, SLOT_STATUS_STYLE } from "@/lib/domain/constants";
 import type { SlotDateVerdict } from "@/lib/domain/ketersediaan";
-import { TANK_STYLE } from "@/lib/domain/layout";
 import { cn } from "@/lib/utils";
-
-/** Ikon tank mini, memakai warna yang sama dengan gambar tank di denah. */
-function TankIcon() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 30 14" className="h-3.5 w-[30px] shrink-0">
-      <rect x="0" y="0" width="22" height="4" rx="2" fill={TANK_STYLE.track} />
-      <rect x="0" y="10" width="22" height="4" rx="2" fill={TANK_STYLE.track} />
-      <rect
-        x="1.5"
-        y="2.5"
-        width="19"
-        height="9"
-        rx="3"
-        fill={TANK_STYLE.hullFill}
-        stroke={TANK_STYLE.hullStroke}
-        strokeWidth="1"
-      />
-      <rect x="10" y="6" width="19" height="2" rx="1" fill={TANK_STYLE.barrel} />
-      <circle cx="10" cy="7" r="3.5" fill={TANK_STYLE.turret} />
-    </svg>
-  );
-}
 
 /** Kotak kecil warna status, meniru kotak slot pada denah. */
 function Swatch({ fill, stroke }: { fill: string; stroke: string }) {
@@ -79,8 +56,8 @@ export type FloorPlanLegendProps = {
  * Legenda status denah ala panel mockup — model per tanggal, alur "slot dulu,
  * tanggal belakangan": tiga verdict slot LINTAS tanggal gelaran mendatang
  * (dengan hitungan live bila tersedia), status "Dipilih" disorot aksen oranye,
- * satu item netral untuk slot yang diblokir panitia + fasilitas & warung,
- * dan ikon tank display. Aksen per zona sengaja tidak dilegendakan — nama zona
+ * dan satu item netral untuk slot yang diblokir panitia + fasilitas & warung.
+ * Aksen per zona sengaja tidak dilegendakan — nama zona
  * sudah tertulis di denahnya sendiri.
  */
 export function FloorPlanLegend({ className, counts }: FloorPlanLegendProps) {
@@ -118,7 +95,6 @@ export function FloorPlanLegend({ className, counts }: FloorPlanLegendProps) {
         description="Ditutup panitia atau tidak disewakan online"
         count={counts?.blocked}
       />
-      <LegendRow swatch={<TankIcon />} title="Tank display Kostrad" />
     </ul>
   );
 }

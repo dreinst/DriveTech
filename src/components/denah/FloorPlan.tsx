@@ -9,19 +9,14 @@ import {
   DECOR_STYLE,
   FLOOR_PLAN_ANNOTATIONS,
   FLOOR_PLAN_DECOR,
-  FLOOR_PLAN_FRAME,
+  FLOOR_PLAN_OUTLINE,
   FLOOR_PLAN_VIEWBOX,
   FLOOR_PLAN_ZONES,
   slotFontSize,
-  TANK_STYLE,
-  slotsInContainer,
   wrapLabel,
-  zoneContainers,
   type DecorItem,
   type LabelOrientation,
-  type LayoutContainer,
   type LayoutSlot,
-  type LayoutZone,
   type Rect,
 } from "@/lib/domain/layout";
 import type { SlotRow, SlotStatus, ZoneType, ZoneWithSlots } from "@/lib/types/database";
@@ -148,269 +143,45 @@ function BoxLabel({ rect, lines, fontSize, fill, orientation, opacity }: BoxLabe
   );
 }
 
-/* ---------- Sub-komponen: dekor (taman & pagar), tidak bisa diklik ---------- */
+/* ---------- Sub-komponen: dekor (taman, bangunan, gerbang), tidak bisa diklik ---------- */
 
 function Decor({ item }: { item: DecorItem }) {
   const style = DECOR_STYLE[item.kind];
-  const showLabel = item.label.length > 0 && item.width >= 40 && item.height >= 30;
-  const orientation: LabelOrientation = item.height > item.width * 1.6 ? "vertical" : "horizontal";
-  const fitted = showLabel ? fitLabel(item.label, item, orientation) : null;
-
+  const { cx, cy } = centerOf(item);
   return (
-    <g aria-hidden="true" style={{ pointerEvents: "none" }}>
-      <rect
-        x={item.x}
-        y={item.y}
-        width={item.width}
-        height={item.height}
-        rx={item.kind === "pagar" ? 3 : 6}
-        fill={style.fill}
-        stroke={style.stroke ?? "none"}
-        strokeWidth={style.stroke ? 1 : 0}
-      />
-      {fitted ? (
-        <BoxLabel
-          rect={item}
-          lines={fitted.lines}
-          fontSize={Math.min(fitted.fontSize, 12)}
-          fill="#4b7f52"
-          orientation={orientation}
-          opacity={0.85}
-        />
-      ) : null}
-    </g>
+    <rect
+      aria-hidden="true"
+      x={item.x}
+      y={item.y}
+      width={item.width}
+      height={item.height}
+      fill={style.fill}
+      stroke={style.stroke ?? "none"}
+      strokeWidth={style.stroke ? 5 : 0}
+      transform={item.rotate ? `rotate(${item.rotate} ${cx} ${cy})` : undefined}
+      style={{ pointerEvents: "none" }}
+    />
   );
 }
 
-/* ---------- Sub-komponen: tank display Kostrad (dekor, tampak atas stilasi) ---------- */
+/* ---------- Sub-komponen: label area (kotak hitam, teks putih) ---------- */
 
-/**
- * Bentuk: 2 track gelap di sisi panjang + hull rounded di tengah + turret lingkaran
- * + laras tipis dari turret melewati ujung depan (~22px). Laras menghadap +x
- * sebelum dirotasi `item.rotate`° mengelilingi titik tengah rect.
- */
-function TankDecor({ item }: { item: DecorItem }) {
-  const { x, y, width: w, height: h } = item;
-  const cx = x + w / 2;
-  const cy = y + h / 2;
-  const rotate = item.rotate ?? 0;
-
-  const trackH = Math.max(6, Math.round(h * 0.2));
-  const turretR = Math.min(11, h * 0.3);
-  const turretCx = x + w * 0.44;
-  const barrelEnd = x + w + 22;
-
-  // Label "Tank" diletakkan di bawah BOUNDING BOX hasil rotasi (plus laras kalau
-  // larasnya menghadap ke bawah), supaya tidak menabrak gambar tanknya sendiri.
-  const rad = (rotate * Math.PI) / 180;
-  const belowExtent =
-    (w * Math.abs(Math.sin(rad)) + h * Math.abs(Math.cos(rad))) / 2 +
-    (Math.sin(rad) > 0.01 ? 22 : 0);
-  const labelY = cy + belowExtent + 7;
-  const showLabel = labelY < FLOOR_PLAN_FRAME.y + FLOOR_PLAN_FRAME.height - 6;
-
+function AreaTag({ x, y, text }: { x: number; y: number; text: string }) {
+  const width = text.length * 8.2 + 14;
   return (
     <g aria-hidden="true" style={{ pointerEvents: "none" }}>
-      <g transform={rotate !== 0 ? `rotate(${rotate} ${cx} ${cy})` : undefined}>
-        <rect x={x} y={y} width={w} height={trackH} rx={3} fill={TANK_STYLE.track} />
-        <rect x={x} y={y + h - trackH} width={w} height={trackH} rx={3} fill={TANK_STYLE.track} />
-        <rect
-          x={x + 3}
-          y={y + trackH - 2}
-          width={w - 6}
-          height={h - 2 * trackH + 4}
-          rx={5}
-          fill={TANK_STYLE.hullFill}
-          stroke={TANK_STYLE.hullStroke}
-          strokeWidth={TANK_STYLE.hullStrokeWidth}
-        />
-        <rect
-          x={turretCx}
-          y={cy - 1.5}
-          width={barrelEnd - turretCx}
-          height={3}
-          rx={1.5}
-          fill={TANK_STYLE.barrel}
-        />
-        <circle cx={turretCx} cy={cy} r={turretR} fill={TANK_STYLE.turret} />
-      </g>
-      {showLabel ? (
-        <text
-          x={cx}
-          y={labelY}
-          fill={TANK_STYLE.label}
-          fontSize={TANK_STYLE.labelFontSize}
-          fontWeight={600}
-          textAnchor="middle"
-          dominantBaseline="middle"
-        >
-          Tank
-        </text>
-      ) : null}
-    </g>
-  );
-}
-
-/* ---------- Sub-komponen: container zona + pita judul ---------- */
-
-type ZoneContainerProps = {
-  zone: LayoutZone;
-  /** Kotak yang digambar — container utama atau salah satu extraContainers. */
-  container: LayoutContainer;
-  available: number;
-  total: number;
-  /** True = bukan zona aktif saat peta terkunci per zona -> digambar redup. */
-  dimmed?: boolean;
-};
-
-/** Perkiraan lebar teks pita (font 12 tebal / 10 sedang) untuk memutuskan muat/tidak. */
-function bandTextWidth(text: string, fontSize: number): number {
-  return text.length * fontSize * CHAR_WIDTH_RATIO;
-}
-
-function ZoneContainer({ zone, container, available, total, dimmed = false }: ZoneContainerProps) {
-  const bandSize = 24;
-  const isVertical = container.labelOrientation === "vertical";
-  const title = container.title ?? zone.name;
-  const stat = `${available}/${total} tersedia`;
-
-  // Pita pendek (mis. Motor Baru 170 px): judul di tengah dan statistik di
-  // ujung akan saling tindih -> statistik disembunyikan (angkanya tetap ada di
-  // kartu zona & panel statistik).
-  const along = isVertical ? container.height : container.width;
-  const showStat = bandTextWidth(title, 12) / 2 + bandTextWidth(stat, 10) + 20 < along / 2;
-
-  return (
-    <g aria-hidden="true" opacity={dimmed ? 0.4 : undefined} style={{ pointerEvents: "none" }}>
-      <rect
-        x={container.x}
-        y={container.y}
-        width={container.width}
-        height={container.height}
-        rx={10}
-        fill="#ffffff"
-        stroke="#cbd5e1"
-        strokeWidth={1}
-      />
-      {/* Garis tepi tebal berwarna aksen zona, seperti denah aslinya. */}
-      <rect
-        x={container.x + 2}
-        y={container.y + 2}
-        width={container.width - 4}
-        height={container.height - 4}
-        rx={8}
-        fill="none"
-        stroke={zone.accent}
-        strokeWidth={2}
-        opacity={0.55}
-      />
-
-      {isVertical ? (
-        <>
-          <rect
-            x={container.x}
-            y={container.y}
-            width={bandSize}
-            height={container.height}
-            rx={10}
-            fill={zone.accent}
-          />
-          <text
-            x={container.x + bandSize / 2}
-            y={container.y + container.height / 2}
-            fill="#ffffff"
-            fontSize={12}
-            fontWeight={700}
-            textAnchor="middle"
-            dominantBaseline="middle"
-            transform={`rotate(-90 ${container.x + bandSize / 2} ${container.y + container.height / 2})`}
-          >
-            {title}
-          </text>
-          {showStat ? (
-            <text
-              x={container.x + bandSize / 2 - (container.height / 2 - 8)}
-              y={container.y + container.height / 2}
-              fill="#ffffff"
-              fontSize={10}
-              fontWeight={600}
-              textAnchor="start"
-              dominantBaseline="middle"
-              opacity={0.9}
-              transform={`rotate(-90 ${container.x + bandSize / 2} ${container.y + container.height / 2})`}
-            >
-              {stat}
-            </text>
-          ) : null}
-        </>
-      ) : (
-        <>
-          <rect
-            x={container.x}
-            y={container.y}
-            width={container.width}
-            height={bandSize}
-            rx={10}
-            fill={zone.accent}
-          />
-          <rect
-            x={container.x}
-            y={container.y + bandSize - 10}
-            width={container.width}
-            height={10}
-            fill={zone.accent}
-          />
-          <text
-            x={container.x + 10}
-            y={container.y + bandSize / 2 + 1}
-            fill="#ffffff"
-            fontSize={12}
-            fontWeight={700}
-            textAnchor="start"
-            dominantBaseline="middle"
-          >
-            {title}
-          </text>
-          {showStat ? (
-            <text
-              x={container.x + container.width - 10}
-              y={container.y + bandSize / 2 + 1}
-              fill="#ffffff"
-              fontSize={10}
-              fontWeight={600}
-              textAnchor="end"
-              dominantBaseline="middle"
-              opacity={0.9}
-            >
-              {stat}
-            </text>
-          ) : null}
-        </>
-      )}
-    </g>
-  );
-}
-
-/* ---------- Sub-komponen: anotasi arah (MASUK / KELUAR) ---------- */
-
-function DirectionAnnotation({ x, y, text }: { x: number; y: number; text: string }) {
-  const isKeluar = text.trim().toUpperCase().startsWith("KELUAR");
-  const tx = x - 30;
-  const points = isKeluar
-    ? `${tx - 5},${y - 1} ${tx + 5},${y - 1} ${tx},${y - 9}`
-    : `${tx - 5},${y - 9} ${tx + 5},${y - 9} ${tx},${y - 1}`;
-
-  return (
-    <g aria-hidden="true" style={{ pointerEvents: "none" }}>
-      <polygon points={points} fill="#334155" />
+      <rect x={x} y={y} width={width} height={22} fill="#0a0a0a" />
       <text
-        x={x}
-        y={y}
-        fill="#334155"
-        fontSize={11}
-        fontWeight={600}
+        x={x + width / 2}
+        y={y + 12}
+        fill="#ffffff"
+        fontSize={14}
+        fontWeight={700}
+        fontStyle="italic"
+        letterSpacing={1}
         textAnchor="middle"
         dominantBaseline="middle"
+        style={{ fontFamily: "var(--font-display)" }}
       >
         {text}
       </text>
@@ -459,7 +230,7 @@ function SlotShape({
   } else {
     status = row?.status ?? "available";
   }
-  // Slot yang sedang dipilih memakai gaya "Dipilih" biru ala mockup.
+  // Slot yang sedang dipilih memakai gaya "Pilihan Anda" (oranye).
   const style = selected && bookable ? SLOT_SELECTED_STYLE : SLOT_STATUS_STYLE[status];
   const interactive =
     inActiveZone && bookable && !blocked && row !== undefined && onSelectSlot !== undefined;
@@ -500,7 +271,7 @@ function SlotShape({
       : nonInteractiveLabel ?? undefined;
 
   const fitted = isNumberOnly ? null : fitLabel(text, layoutSlot, layoutSlot.labelOrientation);
-  // Slot parkir serong (Area B 1-10): kotaknya diputar mengelilingi titik tengah,
+  // Lapak miring (Area G): kotaknya diputar mengelilingi titik tengah,
   // teks nomor tetap tegak supaya terbaca.
   const slotTransform = layoutSlot.rotate
     ? `rotate(${layoutSlot.rotate} ${layoutSlot.x + layoutSlot.width / 2} ${layoutSlot.y + layoutSlot.height / 2})`
@@ -530,7 +301,6 @@ function SlotShape({
         y={layoutSlot.y}
         width={layoutSlot.width}
         height={layoutSlot.height}
-        rx={4}
         transform={slotTransform}
         fill={style.fill}
         stroke={style.stroke}
@@ -552,7 +322,6 @@ function SlotShape({
           y={layoutSlot.y - 3}
           width={layoutSlot.width + 6}
           height={layoutSlot.height + 6}
-          rx={7}
           transform={slotTransform}
           fill="none"
           stroke={SLOT_SELECTED_STYLE.stroke}
@@ -570,8 +339,8 @@ function SlotShape({
           fontSize={slotFontSize(layoutSlot)}
           fontWeight={600}
           textAnchor="middle"
-          dominantBaseline="middle"
-          style={{ pointerEvents: "none" }}
+          dominantBaseline="central"
+          style={{ pointerEvents: "none", fontFamily: "var(--font-display)" }}
         >
           {text}
         </text>
@@ -599,7 +368,7 @@ export function FloorPlan({
   activeZone,
 }: FloorPlanProps) {
   const strokeScale = Math.max(interactionScale ?? 1, 1);
-  // Satu Map untuk semua slot: lookup O(1) saat menggambar 107 kotak.
+  // Satu Map untuk semua slot: lookup O(1) saat menggambar 178 kotak.
   const slotIndex = useMemo(() => {
     const map = new Map<string, SelectedSlotPayload>();
     for (const zone of zones) {
@@ -615,32 +384,6 @@ export function FloorPlan({
     return map;
   }, [zones]);
 
-  // "X/Y tersedia" di pita container: dihitung PER CONTAINER (zona UMKM punya
-  // dua kolom terpisah) memakai verdict per tanggal kalau tersedia, supaya
-  // angkanya konsisten dengan warna slot & panel statistik.
-  const containerStats = useMemo(() => {
-    const stats = new Map<string, { available: number; total: number }>();
-    for (const zone of FLOOR_PLAN_ZONES) {
-      zoneContainers(zone).forEach((container, index) => {
-        const slots = slotsInContainer(zone, container);
-        let available = 0;
-        for (const slot of slots) {
-          const row = slotIndex.get(slot.svgElementId);
-          if (!row) {
-            available += 1;
-            continue;
-          }
-          const free = verdicts
-            ? (verdicts.get(row.id) ?? "available") === "available"
-            : row.status === "available";
-          if (free) available += 1;
-        }
-        stats.set(`${zone.svgGroupId}-${index}`, { available, total: slots.length });
-      });
-    }
-    return stats;
-  }, [slotIndex, verdicts]);
-
   return (
     <svg
       role="img"
@@ -650,58 +393,18 @@ export function FloorPlan({
     >
       <title>Denah lokasi pameran</title>
       <desc>
-        Denah interaktif area pameran (Layout v2): Area A mobil baru, Area B area
-        pameran mobil bekas, Area C tenda motor baru dan area motor bekas, Area D tenda UMKM serta
-        tenda otomotif dan leasing, deretan warung, dan fasilitas umum termasuk VIP lounge, tenda
-        VIP, area wahana, dan toilet. Kotak hijau berarti slot tersedia pada tanggal yang dipilih,
-        kuning menunggu pembayaran, merah sudah terisi; abu-abu adalah slot yang diblokir panitia
-        serta fasilitas dan warung yang tidak disewakan online. Tiga tank display Kostrad digambar
-        sebagai hiasan.
+        Denah interaktif Drive Tech di Kampung Tentara, Singosari: Area A mobil baru, Area B, C,
+        dan D mobil bekas serta otomotif, Area E motor baru dan motor bekas, Area F, G, dan H UMKM,
+        deretan warung, dan fasilitas umum. Kotak putih berarti lapak tersedia, oranye muda
+        menunggu pembayaran, hitam sudah terisi, krem adalah fasilitas dan warung yang tidak
+        disewakan online.
       </desc>
 
-      {/* (a) Bingkai lokasi */}
-      <rect
-        x={FLOOR_PLAN_FRAME.x}
-        y={FLOOR_PLAN_FRAME.y}
-        width={FLOOR_PLAN_FRAME.width}
-        height={FLOOR_PLAN_FRAME.height}
-        rx={8}
-        fill="none"
-        stroke="#1e293b"
-        strokeWidth={2}
-      />
+      {/* (a) Batas lokasi */}
+      <path d={FLOOR_PLAN_OUTLINE} fill="#ffffff" stroke="#0a0a0a" strokeWidth={2.5} />
 
-      {/* (b) Dekor lapisan bawah: taman, pagar, dan tank display Kostrad */}
-      {FLOOR_PLAN_DECOR.filter((item) => !item.above).map((item) =>
-        item.kind === "tank" ? (
-          <TankDecor key={item.id} item={item} />
-        ) : (
-          <Decor key={item.id} item={item} />
-        ),
-      )}
-
-      {/* (c) Container zona + pita judul (zona UMKM punya dua kolom -> dua container) */}
-      {FLOOR_PLAN_ZONES.flatMap((zone) =>
-        zoneContainers(zone).map((container, index) => {
-          const stat = containerStats.get(`${zone.svgGroupId}-${index}`) ?? {
-            available: 0,
-            total: zone.slots.length,
-          };
-          return (
-            <ZoneContainer
-              key={`container-${zone.svgGroupId}-${index}`}
-              zone={zone}
-              container={container}
-              available={stat.available}
-              total={stat.total}
-              dimmed={activeZone ? zone.svgGroupId !== activeZone.svgGroupId : false}
-            />
-          );
-        }),
-      )}
-
-      {/* (c2) Dekor lapisan atas: strip pohon di dalam container zona (Area B) */}
-      {FLOOR_PLAN_DECOR.filter((item) => item.above).map((item) => (
+      {/* (b) Dekor: taman, bangunan, gerbang */}
+      {FLOOR_PLAN_DECOR.map((item) => (
         <Decor key={item.id} item={item} />
       ))}
 
@@ -735,32 +438,9 @@ export function FloorPlan({
         </g>
       ))}
 
-      {/* (e) Anotasi teks */}
-      {FLOOR_PLAN_ZONES.flatMap((zone) =>
-        (zone.annotations ?? []).map((annotation) => (
-          <DirectionAnnotation
-            key={`${zone.svgGroupId}-${annotation.text}`}
-            x={annotation.x}
-            y={annotation.y}
-            text={annotation.text}
-          />
-        )),
-      )}
+      {/* (e) Label area */}
       {FLOOR_PLAN_ANNOTATIONS.map((annotation) => (
-        <text
-          key={annotation.text}
-          x={annotation.x}
-          y={annotation.y}
-          fill="#1e293b"
-          fontSize={12}
-          fontWeight={annotation.bold ? 700 : 400}
-          textAnchor="middle"
-          dominantBaseline="middle"
-          aria-hidden="true"
-          style={{ pointerEvents: "none" }}
-        >
-          {annotation.text}
-        </text>
+        <AreaTag key={annotation.text} {...annotation} />
       ))}
     </svg>
   );

@@ -5,49 +5,37 @@ import { EVENT_INFO } from "@/lib/domain/constants";
 type NavItem = { href: string; label: string };
 
 /**
- * Anchor menuju bagian-bagian beranda + halaman katalog kendaraan.
- * Katalog satu tautan saja — pembedaan mobil/motor terjadi DI DALAM halaman
- * lewat chips filter jenis (keputusan pemilik, 2026-08-28).
+ * Anchor menuju bagian beranda + halaman katalog kendaraan.
  * "Denah" menuju halaman /denah yang hanya untuk melihat tata letak lengkap;
- * alur pemesanan (peta terkunci per zona) tetap lewat CTA "Pesan Slot".
- * "Sponsor" menuju section paket sponsor di beranda (CTA WhatsApp panitia).
+ * alur pemesanan (peta terkunci per zona) tetap lewat tombol "Pesan Lapak".
  */
 const NAV_ITEMS: readonly NavItem[] = [
   { href: "/katalog", label: "Katalog" },
-  { href: "/#zona", label: "Zona" },
+  { href: "/#area", label: "Area" },
   { href: "/denah", label: "Denah" },
-  // Paket sponsor Musim 1 (Deck v4) — section di beranda, tanpa form.
   { href: "/#sponsor", label: "Sponsor" },
   { href: "/#cek-status", label: "Cek Status" },
 ];
 
-/**
- * Header sticky gelap semi-transparan ala referensi Stitch.
- * Tanpa JavaScript: menu mobile memakai <details>/<summary>.
- */
+/** Header sticky hitam. Tanpa JavaScript: menu mobile memakai <details>/<summary>. */
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-[#0a0a0a]/85 backdrop-blur">
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-        {/* Monogram + wordmark oranye */}
-        <Link
-          href="/"
-          className="flex min-w-0 items-center gap-2.5 text-[15px] font-bold tracking-tight text-accent"
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element -- SVG statis, tanpa optimasi */}
-          <img src="/logo-drivetech.svg" alt="" aria-hidden="true" className="h-7 w-auto shrink-0" />
-          <span className="truncate">{EVENT_INFO.name}</span>
+    <header className="sticky top-0 z-40 border-b border-line bg-[#0a0a0a]/90 backdrop-blur">
+      <div className="mx-auto flex h-16 w-full max-w-[90rem] items-center justify-between gap-4 px-4 sm:px-8">
+        <Link href="/" className="flex min-w-0 items-center gap-3 text-ink">
+          {/* eslint-disable-next-line @next/next/no-img-element -- emblem kecil 10 KB, tanpa optimasi */}
+          <img src="/gambar/emblem.webp" alt="" aria-hidden="true" width={36} height={36} className="h-9 w-9 shrink-0" />
+          <span className="judul truncate text-[1.6rem] leading-none">{EVENT_INFO.name}</span>
         </Link>
 
-        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-          {/* Nav desktop */}
+        <div className="flex shrink-0 items-center gap-1 sm:gap-3">
           <nav aria-label="Navigasi utama" className="hidden md:block">
             <ul className="flex items-center">
               {NAV_ITEMS.map((item) => (
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className="inline-flex min-h-11 items-center whitespace-nowrap px-3 text-sm font-medium text-muted transition-colors duration-150 hover:text-ink"
+                    className="label inline-flex min-h-11 items-center whitespace-nowrap px-3 text-[0.9375rem] text-ink/75 transition-colors duration-150 hover:text-accent"
                   >
                     {item.label}
                   </Link>
@@ -56,28 +44,17 @@ export function SiteHeader() {
             </ul>
           </nav>
 
-          {/* CTA pil oranye. Tautan admin sengaja tidak ditampilkan ke publik —
-              panitia mengakses langsung lewat /admin/login. */}
+          {/* Tautan admin sengaja tidak ditampilkan ke publik: panitia masuk lewat /admin/login. */}
           <Link href="/#denah" className={buttonClass("primary", "sm")}>
-            Pesan Slot
+            Pesan Lapak
           </Link>
 
-          {/* Menu mobile */}
           <details className="relative md:hidden">
             <summary
-              className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-full text-ink transition-colors duration-150 hover:bg-ink/5 [&::-webkit-details-marker]:hidden"
+              className="flex h-11 w-11 cursor-pointer list-none items-center justify-center text-ink transition-colors duration-150 hover:bg-ink/5 [&::-webkit-details-marker]:hidden"
               aria-label="Buka menu navigasi"
             >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                aria-hidden="true"
-              >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                 <path d="M4 7h16" />
                 <path d="M4 12h16" />
                 <path d="M4 17h16" />
@@ -85,14 +62,14 @@ export function SiteHeader() {
             </summary>
             <nav
               aria-label="Navigasi mobile"
-              className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-56 rounded-[var(--radius)] border border-line bg-card p-2 shadow-[var(--shadow-md)]"
+              className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-60 border border-line bg-[#0a0a0a] p-2"
             >
-              <ul className="space-y-0.5">
+              <ul>
                 {NAV_ITEMS.map((item) => (
                   <li key={item.href}>
                     <Link
                       href={item.href}
-                      className="block rounded-[var(--radius-sm)] px-3 py-2.5 text-sm font-medium text-ink transition-colors duration-150 hover:bg-surface-3"
+                      className="label block px-3 py-3 text-base text-ink transition-colors duration-150 hover:bg-accent hover:text-[#0a0a0a]"
                     >
                       {item.label}
                     </Link>

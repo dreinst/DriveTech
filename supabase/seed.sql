@@ -58,24 +58,24 @@ on conflict (event_date) do nothing;
 -- -----------------------------------------------------------------------------
 insert into public.zones (event_id, name, zone_type, svg_group_id, admin_fee, description, display_order)
 values
-  ('11111111-1111-4111-8111-111111111111', 'Tenda Dealer Mobil Baru',
+  ('11111111-1111-4111-8111-111111111111', 'Area Mobil Baru',
    'mobil_baru',        'zone-mobil-baru',  1000000,
-   'Area A — tenda dealer resmi mobil baru, 10 slot.',                                    1),
-  ('11111111-1111-4111-8111-111111111111', 'Area Pameran Mobil Bekas',
+   'Area A, tenda pameran mobil baru di dekat gerbang masuk, 10 lapak.',                                    1),
+  ('11111111-1111-4111-8111-111111111111', 'Area Mobil Bekas',
    'mobil_bekas',       'zone-mobil-bekas',   50000,
-   'Area B — area pameran mobil bekas untuk individu maupun dealer, 30 slot.',            2),
-  ('11111111-1111-4111-8111-111111111111', 'Area Pameran Motor Baru',
+   'Area B, C, dan D, terbuka untuk perorangan dan dealer, 60 lapak.',            2),
+  ('11111111-1111-4111-8111-111111111111', 'Area Motor Baru',
    'motor_baru',        'zone-motor-baru',   500000,
-   'Area C — tenda dealer motor baru, 4 slot.',                                           3),
-  ('11111111-1111-4111-8111-111111111111', 'Area Pameran Motor Bekas',
+   'Area E, tenda pameran motor baru, 5 lapak.',                                           3),
+  ('11111111-1111-4111-8111-111111111111', 'Area Motor Bekas',
    'mobil_motor_bekas', 'zone-mobil-motor',   25000,
-   'Area C — area pameran motor bekas, 8 slot.',                                         4),
-  ('11111111-1111-4111-8111-111111111111', 'Tenda UMKM',
+   'Area E, pameran motor bekas, 20 lapak.',                                         4),
+  ('11111111-1111-4111-8111-111111111111', 'Area UMKM',
    'umkm',              'zone-umkm',         250000,
-   'Area D — tenda UMKM: kolom 1-10 untuk UMKM umum dan kolom 21-30 untuk UMKM & otomotif, 20 slot.', 5),
-  ('11111111-1111-4111-8111-111111111111', 'Tenda Otomotif & Leasing',
+   'Area F, G, dan H, tenant UMKM, 43 lapak.', 5),
+  ('11111111-1111-4111-8111-111111111111', 'Area Otomotif',
    'booth_khusus',      'zone-booth-khusus', 500000,
-   'Area D kolom 11-20 — tenda premium 2 sisi: 5 booth bank/leasing dan 5 booth brand otomotif, 10 slot.', 6),
+   'Area D, di tengah pameran mobil bekas, 15 lapak.', 6),
   ('11111111-1111-4111-8111-111111111111', 'Warung',
    'warung',            'zone-warung',       500000,
    'Unit warung/kuliner, 12 unit termasuk unit bernama.',                                 7),
@@ -85,7 +85,7 @@ values
 on conflict (svg_group_id) do nothing;
 
 -- -----------------------------------------------------------------------------
--- 3. Slot zona bernomor (generate_series) — 10 + 30 + 4 + 8 + 30 = 82 baris
+-- 3. Slot zona bernomor (generate_series) — 10 + 60 + 5 + 20 + 43 + 15 = 153 baris
 --    svg_element_id = 'slot-<zoneSlug>-<NN>' dengan NN dua digit mulai 01.
 -- -----------------------------------------------------------------------------
 
@@ -97,47 +97,44 @@ cross join generate_series(1, 10) as i
 where z.svg_group_id = 'zone-mobil-baru'
 on conflict (svg_element_id) do nothing;
 
--- 3b. zone-mobil-bekas : slot 1..30 -> slot-mobil-bekas-01 .. slot-mobil-bekas-30
+-- 3b. zone-mobil-bekas : slot 1..60 -> slot-mobil-bekas-01 .. slot-mobil-bekas-60
 insert into public.slots (zone_id, slot_number, slot_label, svg_element_id)
 select z.id, i, null, 'slot-mobil-bekas-' || lpad(i::text, 2, '0')
 from public.zones z
-cross join generate_series(1, 30) as i
+cross join generate_series(1, 60) as i
 where z.svg_group_id = 'zone-mobil-bekas'
 on conflict (svg_element_id) do nothing;
 
--- 3c0. zone-motor-baru : slot 1..4 -> slot-motor-baru-01 .. slot-motor-baru-04
+-- 3c0. zone-motor-baru : slot 1..5 -> slot-motor-baru-01 .. slot-motor-baru-05
 --      (4 + 8 mengikuti gambar Layout v2, keputusan pemilik 2026-09-03)
 insert into public.slots (zone_id, slot_number, slot_label, svg_element_id)
 select z.id, i, null, 'slot-motor-baru-' || lpad(i::text, 2, '0')
 from public.zones z
-cross join generate_series(1, 4) as i
+cross join generate_series(1, 5) as i
 where z.svg_group_id = 'zone-motor-baru'
 on conflict (svg_element_id) do nothing;
 
--- 3c. zone-mobil-motor : slot 1..8 -> slot-mobil-motor-01 .. slot-mobil-motor-08
+-- 3c. zone-mobil-motor : slot 1..20 -> slot-mobil-motor-01 .. slot-mobil-motor-20
 insert into public.slots (zone_id, slot_number, slot_label, svg_element_id)
 select z.id, i, null, 'slot-mobil-motor-' || lpad(i::text, 2, '0')
 from public.zones z
-cross join generate_series(1, 8) as i
+cross join generate_series(1, 20) as i
 where z.svg_group_id = 'zone-mobil-motor'
 on conflict (svg_element_id) do nothing;
 
--- 3d. zone-umkm : slot 1-10 & 21-30 -> slot-umkm-01.. (kolom tengah = booth)
+-- 3d. zone-umkm : slot 1..43 -> slot-umkm-01 .. slot-umkm-43 (Area F, G, H)
 insert into public.slots (zone_id, slot_number, slot_label, svg_element_id)
 select z.id, i, null, 'slot-umkm-' || lpad(i::text, 2, '0')
 from public.zones z
-cross join generate_series(1, 30) as i
+cross join generate_series(1, 43) as i
 where z.svg_group_id = 'zone-umkm'
-  and (i between 1 and 10 or i between 21 and 30)
 on conflict (svg_element_id) do nothing;
 
--- 3e. zone-booth-khusus : slot 11..20 (svg id tetap slot-umkm-XX; booth 2 sisi)
---     11-15 'Booth Leasing', 16-20 'Booth Otomotif'; harga ikut zones.admin_fee.
-insert into public.slots (zone_id, slot_number, slot_label, svg_element_id, peruntukan)
-select z.id, i, null, 'slot-umkm-' || lpad(i::text, 2, '0'),
-       case when i <= 15 then 'Booth Leasing' else 'Booth Otomotif' end
+-- 3e. zone-booth-khusus (Area Otomotif) : slot 1..15 -> slot-otomotif-01 .. slot-otomotif-15
+insert into public.slots (zone_id, slot_number, slot_label, svg_element_id)
+select z.id, i, null, 'slot-otomotif-' || lpad(i::text, 2, '0')
 from public.zones z
-cross join generate_series(11, 20) as i
+cross join generate_series(1, 15) as i
 where z.svg_group_id = 'zone-booth-khusus'
 on conflict (svg_element_id) do nothing;
 
@@ -175,19 +172,19 @@ insert into public.slots (zone_id, slot_number, slot_label, svg_element_id)
 select z.id, null::int, v.slot_label, v.svg_element_id
 from public.zones z
 cross join (values
-  ('Kantor Sekretariat & Rest Area Kostrad'::text, 'slot-fasilitas-kantor-sekretariat'::text),
-  ('Stage Utama',                                  'slot-fasilitas-stage-utama'),
-  ('Tempat Cuci Mobil & Motor',                    'slot-fasilitas-tempat-cuci'),
+  ('Sekretariat'::text, 'slot-fasilitas-kantor-sekretariat'::text),
+  ('Panggung',                                  'slot-fasilitas-stage-utama'),
+  ('Cuci Mobil & Motor',                    'slot-fasilitas-tempat-cuci'),
   ('Area Zumba',                                   'slot-fasilitas-area-zumba'),
-  ('Musholah',                                     'slot-fasilitas-musholah'),
+  ('Mushola',                                     'slot-fasilitas-musholah'),
   ('Lapangan Tembak',                              'slot-fasilitas-lapangan-tembak'),
-  ('Parkiran Untuk Pengunjung',                    'slot-fasilitas-parkiran'),
+  ('Kolam Renang',                    'slot-fasilitas-kolam-renang'),
   ('Kolam Pemancingan',                            'slot-fasilitas-kolam-pemancingan'),
   -- Layout v2 (2026-09-02): hanya gambar di denah, tidak bisa dibooking
-  ('VIP Lounge',                                   'slot-fasilitas-vip-lounge'),
-  ('LED',                                          'slot-fasilitas-led'),
+  ('Tempat Gym',                                   'slot-fasilitas-tempat-gym'),
+  ('Layar LED',                                          'slot-fasilitas-led'),
   ('Tenda VIP',                                    'slot-fasilitas-tenda-vip'),
-  ('Area Wahana',                                  'slot-fasilitas-area-wahana'),
+  ('Playground',                                  'slot-fasilitas-area-wahana'),
   ('Toilet',                                       'slot-fasilitas-toilet')
 ) as v(slot_label, svg_element_id)
 where z.svg_group_id = 'zone-fasilitas'

@@ -36,7 +36,7 @@ export function PageHeader({ title, description, backHref, backLabel, action }: 
       ) : null}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 space-y-1.5">
-          <h1 className="text-2xl font-semibold tracking-[-0.01em] text-ink sm:text-3xl">
+          <h1 className="judul text-5xl text-ink sm:text-6xl">
             {title}
           </h1>
           {description ? (

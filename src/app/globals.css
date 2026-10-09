@@ -36,10 +36,11 @@
   --danger-soft: rgba(255, 69, 58, 0.16);
 
   /* Kanvas denah TETAP TERANG di dalam bingkai gelap (lihat screenshot denah). */
-  --map-canvas: #e9e9e9;
+  --map-canvas: #f2eee6;
 
-  --radius: 16px;
-  --radius-sm: 12px;
+  /* Redesain Oktober 2026: semua sudut siku. */
+  --radius: 0px;
+  --radius-sm: 0px;
 
   /* Tema gelap memisah lapisan lewat warna tonal, bukan bayangan —
      bayangan nyaris nol, hanya definisi tepi yang sangat halus. */
@@ -102,10 +103,22 @@
   --color-accent2: var(--accent);
   --color-accent2-soft: var(--accent-soft);
 
-  /* SF Pro di perangkat Apple, Inter (next/font) di lainnya. */
-  --font-sans:
-    -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
-    var(--font-inter), "Helvetica Neue", sans-serif;
+  --color-krem: #f2eee6;
+  --color-tinta: #0a0a0a;
+
+  /* Sudut siku di semua utility rounded-* (rounded-full tetap bulat untuk titik & avatar). */
+  --radius-xs: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
+  --radius-4xl: 0px;
+
+  /* Judul: Barlow Condensed miring tebal. Isi: Inter. Keduanya lewat next/font. */
+  --font-display: var(--font-barlow), "Arial Narrow", sans-serif;
+  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
 }
 
 @layer base {
@@ -209,7 +222,121 @@
   }
 }
 
+/* ------------------------------------------------------------
+   Tema TERANG untuk satu bagian halaman (latar krem): token yang
+   sama dibalik, jadi komponen bertoken ikut terang tanpa diubah.
+   ------------------------------------------------------------ */
+.terang {
+  --bg: #f2eee6;
+  --card: #ffffff;
+  --surface-2: #f7f4ee;
+  --surface-3: #e7e1d6;
+  --ink: #0a0a0a;
+  --ink-2: #1c1c1c;
+  --muted: #4d4a44;
+  --subtle: #6b675f;
+  --line: rgba(10, 10, 10, 0.18);
+  --line-strong: rgba(10, 10, 10, 0.55);
+  --accent-soft: rgba(255, 123, 0, 0.18);
+  --ok: #0f7a35;
+  --ok-soft: rgba(15, 122, 53, 0.12);
+  --warn: #9a5400;
+  --warn-soft: rgba(255, 159, 10, 0.2);
+  --danger: #c22a20;
+  --danger-soft: rgba(194, 42, 32, 0.1);
+  --surface: var(--card);
+  --surface-hover: rgba(10, 10, 10, 0.05);
+  --border: var(--line);
+  --border-strong: var(--line-strong);
+  --text: var(--ink);
+  --text-muted: var(--muted);
+  --text-subtle: var(--subtle);
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  color: var(--ink);
+  color-scheme: light;
+}
+
+/* Oranye merek terlalu pucat sebagai TEKS di latar terang: pakai versi lebih tua. */
+.terang .text-accent {
+  color: #b34700;
+}
+
+/* Gerak hero memakai CSS murni supaya judul dan mobil tampil tanpa menunggu JavaScript. */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes baris-naik {
+    from {
+      transform: translateY(105%);
+    }
+  }
+
+  @keyframes mobil-masuk {
+    from {
+      transform: translateX(60%);
+      opacity: 0;
+    }
+  }
+
+  .baris-naik > span {
+    animation: baris-naik 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .baris-naik:nth-child(2) > span {
+    animation-delay: 0.08s;
+  }
+
+  .mobil-masuk {
+    animation: mobil-masuk 0.95s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
+  }
+}
+
+.baris-naik {
+  display: block;
+  overflow: hidden;
+  padding-right: 0.08em;
+  padding-bottom: 0.04em;
+}
+
+.baris-naik > span {
+  display: block;
+}
+
+/* Pita tanggal berjalan (isi digandakan, jadi geser tepat setengah lebar). */
+@keyframes pita-jalan {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.pita-jalan {
+  animation: pita-jalan 38s linear infinite;
+  will-change: transform;
+}
+
+.pita-jalan:hover {
+  animation-play-state: paused;
+}
+
 @layer utilities {
+  /* Judul besar: Barlow Condensed miring tebal, huruf besar, rapat. */
+  .judul {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+    line-height: 0.86;
+  }
+
+  /* Label kecil berjarak lebar. */
+  .label {
+    font-family: var(--font-display);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+  }
+
   /* Angka uang/statistik selalu tabular agar kolom sejajar. */
   .tabular {
     font-variant-numeric: tabular-nums;

@@ -22,7 +22,7 @@ export const EVENT_INFO = {
    * ada di MUSIM_1_DATES dan tabel event_dates.
    */
   scheduleText:
-    "Pembukaan Sabtu–Minggu 7–8 November 2026, selanjutnya setiap hari Minggu sampai 27 Desember 2026",
+    "Pembukaan Sabtu dan Minggu, 7 dan 8 November 2026, selanjutnya setiap hari Minggu sampai 27 Desember 2026",
   organizer: "Panitia Drive Tech",
   /**
    * Kontak panitia (WhatsApp). Keputusan pemilik 2026-09-03 (sore): DUA nomor
@@ -34,7 +34,7 @@ export const EVENT_INFO = {
     { label: "Panitia 2", phone: "0822-2855-5254" },
   ],
   description:
-    "Pasar otomotif akhir pekan di Kota Malang: pilih tanggal, pilih zona, lalu booking lapak langsung dari denah.",
+    "Pasar otomotif akhir pekan di Kampung Tentara, Singosari, Malang. Pilih zona, pilih lapak di denah, pilih tanggal, lalu bayar lewat QRIS.",
 } as const;
 
 export type ContactInfo = (typeof EVENT_INFO.contacts)[number];
@@ -104,6 +104,9 @@ export const QRIS_INFO = {
  */
 export const WA_BOT_PHONE = "6282232999900";
 
+/** Nomor kantor yang sama dalam format tampil (footer situs). */
+export const WA_KANTOR_TAMPIL = "0822-3299-9900";
+
 /** Tautan wa.me ke bot dengan pesan berisi kode booking, supaya bot langsung mengenali tagihannya. */
 export function waQrisHref(bookingCode: string): string {
   return waHref(WA_BOT_PHONE, `Halo, saya mau bayar booking DriveTech ${bookingCode}`);
@@ -133,22 +136,17 @@ export function isBookableZoneType(z: ZoneType): boolean {
  * ketersediaan tetap terbaca sekilas. Warna aksen zona ada di domain/layout.ts.
  */
 export const SLOT_STATUS_STYLE: Record<SlotStatus | "facility", { fill: string; stroke: string; text: string }> = {
-  available: { fill: "#dcfce7", stroke: "#16a34a", text: "#166534" },
-  pending: { fill: "#fef3c7", stroke: "#d97706", text: "#92400e" },
-  confirmed: { fill: "#fee2e2", stroke: "#dc2626", text: "#991b1b" },
-  facility: { fill: "#e2e8f0", stroke: "#94a3b8", text: "#475569" },
+  available: { fill: "#ffffff", stroke: "#0a0a0a", text: "#0a0a0a" },
+  pending: { fill: "#ffc892", stroke: "#ffc892", text: "#0a0a0a" },
+  confirmed: { fill: "#0a0a0a", stroke: "#0a0a0a", text: "#ffffff" },
+  facility: { fill: "#e7e1d6", stroke: "#cfc7b8", text: "#57524a" },
 };
 
-/**
- * Gaya slot yang sedang DIPILIH pengguna di denah (status "Dipilih" biru ala
- * mockup auto_market_weekend): isi biru lembut + garis & teks biru aksen.
- */
+/** Gaya lapak yang sedang DIPILIH pengguna di denah: isi oranye, garis hitam. */
 export const SLOT_SELECTED_STYLE = {
-  // Terpilih: isi oranye aksen + garis TEBAL HITAM — sengaja bukan garis oranye,
-  // supaya tidak tertukar dengan status "Tertunda" (amber) di peta.
-  fill: "rgba(255,140,0,0.20)",
-  stroke: "#0A0A0A",
-  text: "#0A0A0A",
+  fill: "#ff7b00",
+  stroke: "#0a0a0a",
+  text: "#0a0a0a",
 } as const;
 
 /** Bucket publik Supabase Storage untuk bukti transfer. */

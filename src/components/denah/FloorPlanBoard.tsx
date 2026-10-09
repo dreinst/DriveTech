@@ -129,11 +129,11 @@ function verdictToSlotStatus(verdict: SlotDateVerdict): SlotStatus {
 
 function RealtimeIndicator({ connected }: { connected: boolean }) {
   return (
-    <p className="pointer-events-none absolute left-4 top-4 z-10 flex items-center gap-1.5 rounded-full border border-line bg-card/90 px-3 py-1.5 text-xs font-medium text-muted shadow-[var(--shadow-sm)] backdrop-blur">
+    <p className="pointer-events-none absolute left-4 top-4 z-10 flex items-center gap-1.5 rounded-none border border-line bg-card/90 px-3 py-1.5 text-xs font-medium text-muted shadow-[var(--shadow-sm)] backdrop-blur">
       <span
         aria-hidden="true"
         className={cn(
-          "inline-block h-2 w-2 rounded-full",
+          "inline-block h-2 w-2 rounded-none",
           connected ? "animate-pulse bg-ok" : "bg-line-strong",
         )}
       />
@@ -196,7 +196,7 @@ function ZoneStep({ cards, onPick }: ZoneStepProps) {
               <span className="flex w-full items-center gap-2.5">
                 <span
                   aria-hidden="true"
-                  className="h-2.5 w-2.5 shrink-0 rounded-full"
+                  className="h-2.5 w-2.5 shrink-0 rounded-none"
                   style={{ backgroundColor: accent }}
                 />
                 <span
@@ -341,7 +341,7 @@ function SlotDetailPanel({
           type="button"
           onClick={onClose}
           aria-label="Tutup detail slot"
-          className="-mr-2 -mt-2 flex h-10 w-10 items-center justify-center rounded-full text-muted transition-colors duration-150 hover:bg-surface-3 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
+          className="-mr-2 -mt-2 flex h-10 w-10 items-center justify-center rounded-none text-muted transition-colors duration-150 hover:bg-surface-3 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
         >
           <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4.5 w-4.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
             <path d="M6 6l12 12M18 6L6 18" />
@@ -733,8 +733,8 @@ export function FloorPlanBoard({
           <Button variant="secondary" size="sm" onClick={backToZona}>
             <span aria-hidden="true">←</span> Pilih Zona
           </Button>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-ink">
+          <div className="order-last min-w-0 basis-full sm:order-none sm:flex-1 sm:basis-0">
+            <p className="judul truncate text-2xl text-ink">
               {selectedZone?.name ?? "Semua zona"}
             </p>
             <p className="truncate text-xs text-muted">
@@ -745,7 +745,7 @@ export function FloorPlanBoard({
           </div>
           {/* Denah lengkap dibuka di halaman terpisah yang hanya untuk melihat —
               peta booking ini tetap terkunci pada zona terpilih. */}
-          <Link href="/denah" className={buttonClass("ghost", "sm")}>
+          <Link href="/denah" className={cn(buttonClass("ghost", "sm"), "ml-auto")}>
             Lihat Denah Lengkap
           </Link>
         </div>

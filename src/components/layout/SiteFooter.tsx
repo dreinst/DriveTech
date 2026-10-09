@@ -1,71 +1,78 @@
 import Link from "next/link";
-import { EVENT_INFO, waHref } from "@/lib/domain/constants";
+import { EVENT_INFO, WA_BOT_PHONE, WA_KANTOR_TAMPIL, waHref } from "@/lib/domain/constants";
 
 const FOOTER_LINKS = [
+  { href: "/katalog", label: "Katalog" },
   { href: "/#denah", label: "Denah" },
   { href: "/#sponsor", label: "Sponsor" },
   { href: "/#cek-status", label: "Cek Status" },
   { href: "/admin", label: "Admin" },
 ] as const;
 
-/**
- * Footer ekstra gelap ala referensi Stitch: logo D'Pro (SVG putih), wordmark
- * uppercase, baris penyelenggara, baris link, baris hak cipta. Format identitas dari pemilik:
- * "Drive Tech — D'Pro Event Organizer — Dreinst".
- */
+/** Footer hitam: merek, lokasi, WhatsApp kantor, tautan, lalu kredit pembuat. */
 export function SiteFooter() {
-  // Model per tanggal: event berjalan terus tiap akhir pekan, jadi tahun hak cipta = tahun berjalan.
-  const tahun = new Date().getFullYear();
-  // "Kontak" membuka WhatsApp nomor panitia pertama (dua nomor lengkap ada di beranda).
-  const kontakUtama = EVENT_INFO.contacts[0];
-
   return (
-    <footer className="border-t border-line bg-[#050505]">
-      <div className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6">
-        <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-4">
-            {/* eslint-disable-next-line @next/next/no-img-element -- SVG statis, tanpa optimasi */}
-            <img
-              src="/logo-dpro.svg"
-              alt="D'Production Event Organizer"
-              className="h-12 w-auto shrink-0"
-            />
+    <footer className="border-t border-line bg-[#0a0a0a]">
+      <div className="mx-auto w-full max-w-[90rem] px-4 pt-16 pb-8 sm:px-8">
+        <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:justify-between">
+          <Link href="/" className="flex items-center gap-4 text-ink">
+            {/* eslint-disable-next-line @next/next/no-img-element -- emblem kecil 10 KB, tanpa optimasi */}
+            <img src="/gambar/emblem.webp" alt="" aria-hidden="true" width={56} height={56} className="h-14 w-14" />
+            <span className="judul text-5xl">{EVENT_INFO.name}</span>
+          </Link>
+
+          <div className="grid gap-8 sm:grid-cols-3 sm:gap-14">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-ink">
-                {EVENT_INFO.name}
+              <p className="label text-sm text-accent">Lokasi</p>
+              <p className="mt-3 text-sm leading-relaxed text-ink/85">
+                Kampung Tentara
+                <br />
+                Singosari, Malang
               </p>
-              <p className="mt-1.5 text-sm text-subtle">
-                Made by dreinst, organized by D&rsquo;Production Event Organizer
-              </p>
-            </div>
-          </div>
-          <ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
-            {FOOTER_LINKS.map((link) => (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  className="text-muted transition-colors duration-150 hover:text-ink"
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
-            <li>
               <a
-                href={waHref(kontakUtama.phone)}
+                href={EVENT_INFO.mapsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-muted transition-colors duration-150 hover:text-ink"
+                className="mt-2 inline-block text-sm text-ink/85 underline-offset-4 hover:text-accent hover:underline"
               >
-                Kontak
+                Lihat di Google Maps
               </a>
-            </li>
-          </ul>
+            </div>
+            <div>
+              <p className="label text-sm text-accent">WhatsApp kantor</p>
+              <a
+                href={waHref(WA_BOT_PHONE)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="tabular mt-3 inline-block text-sm text-ink/85 underline-offset-4 hover:text-accent hover:underline"
+              >
+                {WA_KANTOR_TAMPIL}
+              </a>
+            </div>
+            <div>
+              <p className="label text-sm text-accent">Jelajahi</p>
+              <ul className="mt-3 space-y-1.5 text-sm">
+                {FOOTER_LINKS.map((link) => (
+                  <li key={link.href}>
+                    <Link href={link.href} className="text-ink/85 underline-offset-4 hover:text-accent hover:underline">
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
         </div>
-        <div className="mt-10 border-t border-line pt-6">
-          <p className="text-xs text-subtle">
-            &copy; {tahun} {EVENT_INFO.name}
-          </p>
+
+        <div className="mt-14 flex flex-col gap-4 border-t border-line pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element -- SVG statis, tanpa optimasi */}
+            <img src="/logo-dpro.svg" alt="D'Production Event Organizer" className="h-8 w-auto shrink-0" />
+            <p className="text-xs text-ink/60">
+              Dibuat oleh Dreinst dan dikelola oleh D&rsquo;Production Event Organizer
+            </p>
+          </div>
+          <p className="text-xs text-ink/60">Musim 1, 7 November sampai 27 Desember 2026</p>
         </div>
       </div>
     </footer>
