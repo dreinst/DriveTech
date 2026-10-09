@@ -393,7 +393,7 @@ export function FloorPlan({
     >
       <title>Denah lokasi pameran</title>
       <desc>
-        Denah interaktif Drive Tech di Kampung Tentara, Singosari: Area A mobil baru, Area B, C,
+        Denah interaktif Drive Tech di Kampung Tentara, Rest Area Singosari: Area A mobil baru, Area B, C,
         dan D mobil bekas serta otomotif, Area E motor baru dan motor bekas, Area F, G, dan H UMKM,
         deretan warung, dan fasilitas umum. Kotak putih berarti lapak tersedia, oranye muda
         menunggu pembayaran, hitam sudah terisi, krem adalah fasilitas dan warung yang tidak

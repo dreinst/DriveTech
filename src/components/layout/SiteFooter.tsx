@@ -27,7 +27,7 @@ export function SiteFooter() {
               <p className="mt-3 text-sm leading-relaxed text-ink/85">
                 Kampung Tentara
                 <br />
-                Singosari, Malang
+                Rest Area Singosari, Malang
               </p>
               <a
                 href={EVENT_INFO.mapsUrl}
