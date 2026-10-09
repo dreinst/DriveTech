@@ -36,9 +36,9 @@ export type NamingRight = {
 export const SPONSOR_INTRO = {
   title: "Paket Sponsor Musim 1",
   points: [
-    "Delapan pekan berturut-turut, merek Anda tampil setiap akhir pekan.",
-    "Pasar mingguan gratis masuk, terbuka untuk semua kalangan.",
-    "Berbasis transaksi: audiens datang untuk lihat, cek, coba, dan deal.",
+    "Merek Anda tampil setiap akhir pekan di depan orang yang datang untuk membeli kendaraan.",
+    "Pengunjung masuk gratis, jadi acara terbuka untuk semua kalangan.",
+    "Mereka datang untuk lihat, cek, coba, lalu deal di tempat.",
   ],
   note: "Harga sponsor terpisah dari tarif sewa lapak penyewa dan UMKM.",
 } as const;
