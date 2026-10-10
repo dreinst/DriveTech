@@ -36,8 +36,10 @@ export function dynamicQris(staticPayload: string, amount: number) {
   return body + crc16(body);
 }
 
-// Isi QR pada public/qris-drivetech.jpg (merchant "Drive Tech", NMID ID1026472717465, terminal A01). Bukan rahasia,
-// karena gambar QRIS-nya memang dibagikan. Bisa diganti lewat env QRIS_STATIC_PAYLOAD tanpa mengubah kode.
-const QRIS_STATIC_DRIVETECH =
-  "00020101021126610014COM.GO-JEK.WWW01189360091430182701300210G0182701300303UMI51440014ID.CO.QRIS.WWW0215ID10264727174650303UMI5204573453033605802ID5910Drive Tech6006MALANG61056514662070703A01630482F5";
-export const qrisStatic = () => process.env.QRIS_STATIC_PAYLOAD?.trim() || QRIS_STATIC_DRIVETECH;
+// QRIS statis merchant "D'Production Event Organi" (NMID ID1026472717465, terminal A01), sama dengan yang dipakai
+// KUWERA 5K. Keputusan pemilik 2026-10-11: pembayaran DriveTech memakai QR bernama D'Production, bukan yang bernama
+// "Drive Tech" di public/qris-drivetech.jpg (merchant dan NMID-nya sama, hanya nama tampilannya berbeda). Bukan
+// rahasia, karena gambar QRIS-nya memang dibagikan. Bisa diganti lewat env QRIS_STATIC_PAYLOAD tanpa mengubah kode.
+const QRIS_STATIC_DPRODUCTION =
+  "00020101021126610014COM.GO-JEK.WWW01189360091430182701300210G0182701300303UMI51440014ID.CO.QRIS.WWW0215ID10264727174650303UMI5204573453033605802ID5925D'Production Event Organi6006MALANG61056514662070703A016304003F";
+export const qrisStatic = () => process.env.QRIS_STATIC_PAYLOAD?.trim() || QRIS_STATIC_DPRODUCTION;
