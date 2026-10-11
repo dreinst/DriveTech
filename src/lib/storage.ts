@@ -79,6 +79,13 @@ function namaBukti(url: string): string | null {
   }
 }
 
+/** Isi berkas bukti dari proof_url tersimpan, untuk unduhan admin; null kalau berkasnya tidak ada di disk kita. */
+export async function bacaBukti(url: string): Promise<{ data: Buffer; ekstensi: string } | null> {
+  const nama = namaBukti(url);
+  const data = nama ? await bacaBerkas(STORAGE_BUCKET_BUKTI, nama) : null;
+  return nama && data ? { data, ekstensi: path.extname(nama).slice(1) || "jpg" } : null;
+}
+
 /**
  * Apakah URL ini benar-benar menunjuk berkas bukti DI PENYIMPANAN KITA?
  *

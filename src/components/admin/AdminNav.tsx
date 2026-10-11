@@ -216,7 +216,7 @@ const NAV_ITEMS: readonly NavItem[] = [
   },
   {
     href: "/drivetechadmin/qr",
-    label: "QR Code",
+    label: "QR dan Bukti",
     icon: IconQr,
     match: (pathname) => pathname === "/drivetechadmin/qr" || pathname.startsWith("/drivetechadmin/qr/"),
   },

@@ -1,19 +1,25 @@
 import type { Metadata } from "next";
 
+import { ProofThumb } from "@/components/admin/ProofThumb";
 import { QrGenerator } from "@/components/admin/QrGenerator";
 import { StatCard } from "@/components/admin/StatCard";
 import { Alert } from "@/components/ui/Alert";
+import { buttonClass } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { totalBayar } from "@/lib/domain/harga";
 import { qrBaseUrl } from "@/lib/qr-brand";
 import { QR_MEDIA_PRESETS, QR_MEDIA_TANPA_PARAM, QR_MEDIA_UJI } from "@/lib/qr-media";
 import { requireAdmin } from "@/lib/services/auth";
+import { listBukti } from "@/lib/services/bukti";
 import { ringkasanScanQr } from "@/lib/services/qr";
-import { formatTanggalWaktu } from "@/lib/utils";
+import { resolveProofUrl } from "@/lib/storage";
+import { formatRupiah, formatTanggalWaktu } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "QR Code",
+  title: "QR dan Bukti",
   description: "Buat kode QR promosi per media dan lihat media mana yang paling banyak di-scan.",
 };
 
@@ -49,14 +55,21 @@ export default async function AdminQrPage() {
   await requireAdmin();
   const stat = await ringkasanScanQr();
   const baseUrl = qrBaseUrl();
+  const buktiResult = await listBukti();
+  const bukti = buktiResult.ok
+    ? await Promise.all(
+        buktiResult.data.map(async (row) => ({ ...row, url: await resolveProofUrl(row.proof_url) })),
+      )
+    : [];
 
   return (
     <div className="space-y-6">
       <header className="space-y-1.5">
-        <h1 className="text-2xl font-semibold tracking-[-0.01em] text-ink sm:text-3xl">QR Code</h1>
+        <h1 className="text-2xl font-semibold tracking-[-0.01em] text-ink sm:text-3xl">QR dan Bukti</h1>
         <p className="max-w-2xl text-sm text-muted">
           Kode QR untuk spanduk, flyer, LED, dan media sosial. Pengunjung yang scan masuk lewat
-          halaman sambutan beranimasi, dan setiap scan dihitung per media.
+          halaman sambutan beranimasi, dan setiap scan dihitung per media. Daftar bukti bayar ada
+          di bagian bawah.
         </p>
       </header>
 
@@ -128,6 +141,74 @@ export default async function AdminQrPage() {
           <Alert tone={stat.code === "NO_CONFIG" ? "info" : "warning"} title="Statistik belum bisa dimuat">
             {stat.error}
           </Alert>
+        )}
+      </section>
+
+      {/* ---------- Bukti bayar ---------- */}
+      <section className="space-y-4">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold tracking-tight text-ink">Bukti bayar</h2>
+            <p className="mt-0.5 text-sm text-muted">
+              Semua bukti yang diunggah penyewa. Di dalam ZIP, nama berkasnya memakai kode booking.
+            </p>
+          </div>
+          {bukti.length > 0 ? (
+            <a href="/drivetechadmin/berkas/zip" className={buttonClass("secondary", "sm")}>
+              Unduh semua (ZIP)
+            </a>
+          ) : null}
+        </div>
+
+        {!buktiResult.ok ? (
+          <Alert tone="warning" title="Daftar bukti belum bisa dimuat">
+            {buktiResult.error}
+          </Alert>
+        ) : bukti.length === 0 ? (
+          <Card className="p-6">
+            <p className="text-sm text-muted">Belum ada bukti bayar yang diunggah.</p>
+          </Card>
+        ) : (
+          <Card>
+            <div className="overflow-x-auto rounded-[var(--radius)]">
+              <table className="w-full min-w-[40rem] border-collapse text-left text-sm">
+                <thead className="bg-surface-2 text-xs uppercase tracking-wide text-subtle">
+                  <tr>
+                    <th scope="col" className="px-4 py-2.5 font-semibold">Booking</th>
+                    <th scope="col" className="px-4 py-2.5 text-right font-semibold">Nominal</th>
+                    <th scope="col" className="px-4 py-2.5 font-semibold">Status</th>
+                    <th scope="col" className="px-4 py-2.5 font-semibold">Dikirim</th>
+                    <th scope="col" className="px-4 py-2.5 font-semibold">Bukti</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-line">
+                  {bukti.map((row) => (
+                    <tr key={row.booking_code} className="hover:bg-surface-2">
+                      <td className="px-4 py-3">
+                        <p className="font-mono text-xs font-semibold text-ink">{row.booking_code}</p>
+                        <p className="text-muted">{row.tenant_name}</p>
+                      </td>
+                      <td className="tabular px-4 py-3 text-right font-medium text-ink">
+                        {formatRupiah(totalBayar(row))}
+                      </td>
+                      <td className="px-4 py-3">
+                        <StatusBadge
+                          status={row.booking_status === "cancelled" ? row.booking_status : row.status}
+                          kind={row.booking_status === "cancelled" ? "booking" : "payment"}
+                        />
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-muted">
+                        {formatTanggalWaktu(row.submitted_at)}
+                      </td>
+                      <td className="px-4 py-2">
+                        <ProofThumb url={row.url} alt={`Bukti ${row.booking_code}`} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
         )}
       </section>
 
