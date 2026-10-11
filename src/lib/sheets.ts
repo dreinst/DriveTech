@@ -5,7 +5,7 @@
  * operasi utama sukses. Semua kegagalan hanya dicatat console.warn dan tidak
  * pernah menggagalkan operasi utama.
  *
- * Di serverless (Vercel), promise yang dibiarkan menggantung bisa ikut
+ * Di runtime serverless, promise yang dibiarkan menggantung bisa ikut
  * dibekukan begitu respons terkirim — pengiriman didaftarkan lewat `after()`
  * (next/server) supaya runtime menahan instance sampai webhook selesai.
  * Di luar konteks request (mis. skrip), `after()` melempar — fallback ke

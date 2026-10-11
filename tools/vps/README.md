@@ -1,6 +1,6 @@
 # Worker VPS — antrean WhatsApp penyewa
 
-Aplikasi (Vercel) tidak mengirim WhatsApp sendiri. Ia menulis pesan ke tabel
+Aplikasi tidak mengirim WhatsApp sendiri. Ia menulis pesan ke tabel
 `public.notification_outbox` (mode `WA_PROVIDER=outbox`, bawaan — lihat
 `src/lib/notifications.ts`), lalu worker di VPS dreinst mengirimnya lewat
 `hermes send` = bot WhatsApp Hermes di **nomor kantor 6282232999900**
@@ -61,5 +61,5 @@ WhatsApp dapat memblokir nomor yang mengirim banyak pesan ke kontak baru.
 Karena itu worker memberi jeda acak antar pesan, hanya mengirim pesan
 transaksional ke nomor yang diisi penyewa sendiri, dan berhenti setelah 50
 detik per run. Bila nomor kantor terblokir, pesan menumpuk di antrean
-(`pending`/`failed`) — pindahkan ke `WA_PROVIDER=fonnte` di Vercel sebagai
+(`pending`/`failed`), pindahkan ke `WA_PROVIDER=fonnte` di env aplikasi sebagai
 cadangan, lalu antre ulang seperti di atas.

@@ -112,8 +112,8 @@ export function waQrisHref(bookingCode: string): string {
 
 /**
  * Alamat produksi TETAP, basis URL kode QR promosi (lihat lib/qr-brand.ts).
- * QR yang dicetak sebelum 9 Oktober 2026 masih memuat alamat lama
- * drive-tech-sigma.vercel.app, jadi alamat itu harus tetap dialihkan ke sini.
+ * QR yang dicetak sebelum 9 Oktober 2026 masih memuat alamat lama,
+ * jadi alamat lama itu harus tetap dialihkan ke sini.
  */
 export const SITE_URL_PRODUKSI = "https://drivetech.dpro.events";
 

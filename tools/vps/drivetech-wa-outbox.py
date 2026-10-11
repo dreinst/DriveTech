@@ -3,7 +3,7 @@
 Worker antrean WhatsApp Drive Tech — dijalankan di VPS dreinst (root) oleh
 timer systemd tiap menit (tools/vps/drivetech-wa-outbox.timer).
 
-Alur (keputusan pemilik 2026-09-03): aplikasi di Vercel menulis pesan ke
+Alur (keputusan pemilik 2026-09-03): aplikasi menulis pesan ke
 public.notification_outbox (lihat src/lib/notifications.ts mode "outbox");
 worker ini membaca baris berstatus pending lalu mengirimnya lewat
 `hermes send --to whatsapp:<nomor>` = bot WhatsApp Hermes di NOMOR KANTOR

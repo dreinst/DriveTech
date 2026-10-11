@@ -108,7 +108,7 @@ terpasang), jadi menjalankannya dua kali tidak menggandakan data. Seed juga
 mengisi `event_dates` dengan 9 tanggal Musim 1 (7-8 Nov 2026, lalu setiap hari Minggu s.d. 27 Des 2026)
 dari tanggal seed dijalankan (`current_date`).
 
-Setelah push, isi env project di hosting (Vercel dsb.):
+Setelah push, isi env aplikasi di Coolify:
 
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co

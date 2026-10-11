@@ -44,7 +44,7 @@ function toDate(d: string | Date | null | undefined): Date | null {
 }
 
 /**
- * timeZone WAJIB Asia/Jakarta: di Vercel server berjalan di UTC, tanpa ini
+ * timeZone WAJIB Asia/Jakarta: server berjalan di UTC, tanpa ini
  * jam tampil mundur 7 jam (temuan audit 2026-08-29). Tanggal polos
  * "YYYY-MM-DD" tetap aman: diparse sebagai 00:00 lokal lalu diformat WIB.
  */

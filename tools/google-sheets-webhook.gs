@@ -61,7 +61,7 @@ var UPDATED_AT_HEADER = "updated_at";
  * kunci untuk recap sekaligus reset, dan kunci itu tertulis di repo):
  *
  * - RECAP_KEY : aksi ?action=recap (snapshot arsip mingguan, tidak menghapus
- *               apa pun). Nilainya SAMA dengan env SHEETS_ACTION_KEY di Vercel
+ *               apa pun). Nilainya SAMA dengan env SHEETS_ACTION_KEY di server
  *               (dipakai /api/cron/weekly-recap).
  * - RESET_KEY : aksi ?action=reset (menghapus sheet) dan ?action=init. TIDAK
  *               disimpan di repo — isi sendiri di editor Apps Script dengan
@@ -178,7 +178,7 @@ function doPost(e) {
  * Snapshot RECAP MINGGUAN (?action=recap&key=RECAP_KEY). Menyalin isi sheet
  * "Bookings" APA ADANYA ke tab arsip bernama "Recap YYYY-MM-DD" — master TIDAK
  * pernah dikosongkan (permintaan pemilik: recap tanpa kehilangan data). Dipicu
- * otomatis tiap minggu oleh Vercel Cron (/api/cron/weekly-recap). Idempotent:
+ * otomatis tiap minggu oleh timer di VPS (/api/cron/weekly-recap). Idempotent:
  * snapshot tanggal yang sama dibuat ulang kalau dipicu dua kali.
  */
 function recapSnapshot_() {

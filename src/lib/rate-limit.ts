@@ -7,7 +7,7 @@ import { isServiceRoleConfigured } from "@/lib/supabase/config";
  * Dua lapis pembatas laju:
  *
  * 1. `checkRateLimit` — fixed window in-memory PER INSTANCE. Murah, menahan
- *    spam/bot sederhana di satu instance, tapi di serverless Vercel hitungannya
+ *    spam/bot sederhana di satu instance, tapi kalau app jalan di banyak instance hitungannya
  *    tidak dibagi antar instance dan tidak menyentuh Server Action.
  * 2. `rateLimitShared` — BERSAMA lintas instance, dicatat di tabel
  *    public.rate_limit_events lewat fungsi public.rate_limit_hit (migrasi
@@ -64,7 +64,7 @@ export function checkRateLimit(key: string, limit: number, windowMs: number): Ra
   return { allowed: true, retryAfterSeconds: 0 };
 }
 
-/** IP klien dari header proxy Vercel; "unknown" kalau tidak ada (mis. dev lokal). */
+/** IP klien dari header proxy; "unknown" kalau tidak ada (mis. dev lokal). */
 export function clientIpFrom(request: Request): string {
   const forwarded = request.headers.get("x-forwarded-for");
   if (forwarded) {
@@ -74,7 +74,7 @@ export function clientIpFrom(request: Request): string {
   return request.headers.get("x-real-ip")?.trim() || "unknown";
 }
 
-/** IP klien dari header proxy Vercel untuk SERVER ACTION (tanpa objek Request). */
+/** IP klien dari header proxy untuk SERVER ACTION (tanpa objek Request). */
 export async function clientIpFromHeaders(): Promise<string> {
   const h = await headers();
   const forwarded = h.get("x-forwarded-for");
