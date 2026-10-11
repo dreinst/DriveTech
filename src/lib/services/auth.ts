@@ -15,7 +15,7 @@ if (typeof window !== "undefined") {
 const LOGIN_PATH = "/drivetechadmin/login";
 
 /** Kolom admin_users yang boleh keluar dari modul ini; password_hash tidak pernah ikut. */
-const kolomAdmin = () => sql`id, email, username, full_name, role, created_at`;
+const kolomAdmin = () => sql`id, email, username, full_name, role, created_at, aktif`;
 
 /** Admin yang sedang login, atau null. Tidak pernah melempar. */
 export async function getCurrentAdmin(): Promise<AdminUserRow | null> {
@@ -24,9 +24,10 @@ export async function getCurrentAdmin(): Promise<AdminUserRow | null> {
   try {
     const adminId = await bacaSesi((await cookies()).get(SESI_COOKIE)?.value);
     if (!adminId) return null;
-    // Cookie yang sah belum cukup: barisnya harus masih ada di admin_users.
+    // Cookie yang sah belum cukup: barisnya harus masih ada di admin_users dan
+    // akunnya aktif, jadi sesi akun yang dinonaktifkan langsung ditolak.
     const { data } = await cobaSatu(
-      sql<AdminUserRow[]>`select ${kolomAdmin()} from admin_users where id = ${adminId}`,
+      sql<AdminUserRow[]>`select ${kolomAdmin()} from admin_users where id = ${adminId} and aktif`,
     );
     return data;
   } catch {
@@ -94,6 +95,7 @@ export async function signInAdmin(
   const { data: admin, error } = await cobaSatu(sql<AdminUserRow[]>`
     select ${kolomAdmin()} from admin_users
      where username = ${parsed.data.username.trim().toLowerCase()}
+       and aktif
        and password_hash = crypt(${parsed.data.password}, password_hash)`);
   if (error) console.warn(`[auth] login gagal diperiksa: ${error.message}`);
   const sesi = admin ? await buatSesi(admin.id) : null;

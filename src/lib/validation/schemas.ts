@@ -296,6 +296,31 @@ export const adminLoginSchema = z.object({
   password: z.string().min(6, "Kata sandi minimal 6 karakter."),
 });
 
+/** Sandi baru akun admin: bcrypt hanya membaca 72 byte pertama, jadi dibatasi di situ. */
+const sandiBaru = z
+  .string()
+  .min(8, "Kata sandi minimal 8 karakter.")
+  .max(72, "Kata sandi maksimal 72 karakter.");
+
+export const buatAkunSchema = z.object({
+  username: z
+    .string()
+    .trim()
+    .min(3, "Username minimal 3 karakter.")
+    .max(50, "Username maksimal 50 karakter.")
+    .regex(/^[a-z0-9._-]+$/, "Username hanya boleh huruf kecil, angka, titik, underscore, atau strip."),
+  fullName: z.string().trim().min(2, "Nama minimal 2 karakter.").max(80, "Nama maksimal 80 karakter."),
+  role: z.enum(["superadmin", "admin"], { error: "Peran tidak valid." }),
+  password: sandiBaru,
+});
+
+export const gantiSandiAkunSchema = z.object({ id: uuid("ID akun"), password: sandiBaru });
+
+export const gantiSandiSendiriSchema = z.object({
+  sandiLama: z.string().min(1, "Sandi lama wajib diisi."),
+  sandiBaru,
+});
+
 export const overrideSlotSchema = z.object({
   slotId: uuid("ID slot"),
   status: z.enum(["available", "pending", "confirmed"], { error: "Status slot tidak valid." }),

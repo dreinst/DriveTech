@@ -321,6 +321,8 @@ export type Database = {
           full_name: string | null;
           role: Database["public"]["Enums"]["admin_role"];
           created_at: string;
+          /** false = akun dinonaktifkan: tidak bisa login, sesi berjalan ditolak. */
+          aktif: boolean;
         };
         Update: {
           id?: string;
@@ -329,6 +331,7 @@ export type Database = {
           full_name?: string | null;
           role?: Database["public"]["Enums"]["admin_role"];
           created_at?: string;
+          aktif?: boolean;
         };
       };
       notification_outbox: {

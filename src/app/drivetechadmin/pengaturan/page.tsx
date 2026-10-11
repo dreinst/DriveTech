@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
 
 import { EventDateAddForm, EventDateToggle } from "@/components/admin/EventDateForms";
+import { FormAksi } from "@/components/admin/FormAksi";
 import { ZoneFeeForm } from "@/components/admin/ZoneFeeForm";
 import { Alert } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
+import { Field, Input } from "@/components/ui/Field";
+import { SubmitButton } from "@/components/ui/SubmitButton";
+import { gantiSandiSendiriAction } from "@/lib/actions/alat";
 import { EVENT_INFO, isBookableZoneType, KONTAK_SPONSOR, QRIS_INFO } from "@/lib/domain/constants";
 import { ADMIN_ROLE_LABEL, ZONE_TYPE_LABEL } from "@/lib/domain/labels";
 import { listEventDates, listZonesAdmin } from "@/lib/services/admin";
@@ -274,6 +278,39 @@ export default async function AdminPengaturanPage() {
               {ADMIN_ROLE_LABEL[admin.role]}
             </Badge>
           </div>
+        </div>
+
+        <div className="mt-5 border-t border-line pt-5">
+          <h3 className="text-sm font-semibold text-ink">Ganti sandi</h3>
+          <FormAksi
+            action={gantiSandiSendiriAction}
+            className="mt-3 grid max-w-xl gap-3 sm:grid-cols-2"
+          >
+            <Field label="Sandi lama" htmlFor="sandi-lama" required>
+              <Input
+                id="sandi-lama"
+                name="sandiLama"
+                type="password"
+                autoComplete="current-password"
+                required
+              />
+            </Field>
+            <Field label="Sandi baru" htmlFor="sandi-baru" hint="Minimal 8 karakter." required>
+              <Input
+                id="sandi-baru"
+                name="sandiBaru"
+                type="password"
+                autoComplete="new-password"
+                minLength={8}
+                required
+              />
+            </Field>
+            <div className="sm:col-span-2">
+              <SubmitButton variant="secondary" size="sm" pendingText="Menyimpan…">
+                Simpan sandi baru
+              </SubmitButton>
+            </div>
+          </FormAksi>
         </div>
       </Card>
     </div>

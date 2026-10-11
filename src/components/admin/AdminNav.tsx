@@ -219,6 +219,13 @@ const NAV_ITEMS: readonly NavItem[] = [
       pathname === "/drivetechadmin/pengaturan" || pathname.startsWith("/drivetechadmin/pengaturan/"),
   },
   {
+    href: "/drivetechadmin/akun",
+    label: "Akun Admin",
+    icon: IconTenant,
+    superOnly: true,
+    match: (pathname) => pathname === "/drivetechadmin/akun",
+  },
+  {
     href: "/drivetechadmin/log",
     label: "Log Aktivitas",
     icon: IconLog,

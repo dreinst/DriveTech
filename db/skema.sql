@@ -343,7 +343,8 @@ CREATE TABLE public.admin_users (
     role public.admin_role DEFAULT 'admin'::public.admin_role NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     username text,
-    password_hash text
+    password_hash text,
+    aktif boolean DEFAULT true NOT NULL
 );
 
 
@@ -359,6 +360,13 @@ COMMENT ON COLUMN public.admin_users.username IS 'Nama login, huruf kecil.';
 --
 
 COMMENT ON COLUMN public.admin_users.password_hash IS 'Hash bcrypt, dicocokkan lewat pgcrypto crypt(). NULL = tidak bisa login.';
+
+
+--
+-- Name: COLUMN admin_users.aktif; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.admin_users.aktif IS 'false = akun dinonaktifkan: tidak bisa login dan sesi berjalan ditolak.';
 
 
 --

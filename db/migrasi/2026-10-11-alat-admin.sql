@@ -23,4 +23,9 @@ COMMENT ON TABLE public.admin_log IS 'Log aksi admin yang mengubah data. Tidak p
 
 CREATE INDEX IF NOT EXISTS admin_log_waktu_idx ON public.admin_log USING btree (waktu DESC);
 
+-- Kelola akun admin: akun bisa dinonaktifkan tanpa dihapus.
+ALTER TABLE public.admin_users ADD COLUMN IF NOT EXISTS aktif boolean DEFAULT true NOT NULL;
+
+COMMENT ON COLUMN public.admin_users.aktif IS 'false = akun dinonaktifkan: tidak bisa login dan sesi berjalan ditolak.';
+
 COMMIT;
