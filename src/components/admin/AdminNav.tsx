@@ -132,6 +132,15 @@ function IconPengaturan() {
 /* Daftar menu                                                         */
 /* ------------------------------------------------------------------ */
 
+function IconCocok() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M3 6.5h11M11 3.5l3 3-3 3" />
+      <path d="M17 13.5H6M9 10.5l-3 3 3 3" />
+    </svg>
+  );
+}
+
 function IconLog() {
   return (
     <svg {...ICON_PROPS}>
@@ -174,6 +183,12 @@ const NAV_ITEMS: readonly NavItem[] = [
     match: (pathname, payment) =>
       (pathname === "/drivetechadmin/bookings" || pathname.startsWith("/drivetechadmin/bookings/")) &&
       payment === "submitted",
+  },
+  {
+    href: "/drivetechadmin/cocok",
+    label: "Cocokkan Bayar",
+    icon: IconCocok,
+    match: (pathname) => pathname === "/drivetechadmin/cocok",
   },
   {
     href: "/drivetechadmin/slots",
