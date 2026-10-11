@@ -329,7 +329,7 @@ CREATE TABLE public.admin_fee_payments (
     unique_code integer,
     wa_chat text,
     reminded_at timestamp with time zone,
-    CONSTRAINT admin_fee_payments_unique_code_range CHECK (((unique_code IS NULL) OR ((unique_code >= 500) AND (unique_code <= 999))))
+    CONSTRAINT admin_fee_payments_unique_code_range CHECK (((unique_code IS NULL) OR ((unique_code >= 350) AND (unique_code <= 999))))
 );
 
 
