@@ -20,10 +20,11 @@ import {
 } from "@/lib/services/admin";
 import { setVehicleVisibility } from "@/lib/services/catalog";
 import { requireAdmin, requireFullAdmin, signInAdmin, signOutAdmin } from "@/lib/services/auth";
+import { catatLog, kodeBooking } from "@/lib/services/log";
 import { getSlotDetail } from "@/lib/services/slots";
 import { TENANT_TYPE_BY_ZONE_TYPE } from "@/lib/domain/labels";
 import { clientIpFromHeaders, rateLimitShared } from "@/lib/rate-limit";
-import { tujuanAdminAman } from "@/lib/utils";
+import { slotDisplayName, tujuanAdminAman } from "@/lib/utils";
 import {
   addEventDateSchema,
   adminCancelBookingSchema,
@@ -97,6 +98,7 @@ export async function adminLoginAction(
 
   const result = await signInAdmin(parsed.data.username, parsed.data.password);
   if (!result.ok) return errorState(result.error);
+  await catatLog(result.data.id, "login");
 
   const tujuan = tujuanAdminAman(teks(form, "next"));
   revalidatePath("/drivetechadmin");
@@ -151,6 +153,11 @@ export async function overrideSlotStatusAction(
 
   const result = await overrideSlotStatus(parsed.data.slotId, parsed.data.status);
   if (!result.ok) return errorState(result.error);
+  await catatLog(
+    gate.data.id,
+    "status_slot",
+    `${slotDisplayName(result.data)}: ${parsed.data.status === "available" ? "dibuka" : "diblokir"}`,
+  );
 
   revalidateAdmin();
   return successState("Status slot berhasil diperbarui.");
@@ -174,6 +181,7 @@ export async function setVehicleVisibilityAction(
 
   const result = await setVehicleVisibility(listingId, visible);
   if (!result.ok) return errorState(result.error);
+  await catatLog(gate.data.id, "katalog", `listing ${listingId}: ${visible ? "ditampilkan" : "disembunyikan"}`);
 
   revalidatePath("/katalog");
   revalidatePath("/drivetechadmin/bookings");
@@ -201,6 +209,7 @@ export async function verifyPaymentAction(
 
   const result = await verifyPayment(parsed.data.paymentId, admin.id);
   if (!result.ok) return errorState(result.error);
+  await catatLog(admin.id, "verifikasi_pembayaran", await kodeBooking(parsed.data.paymentId));
 
   revalidateAdmin();
   return successState("Pembayaran diverifikasi, booking dikonfirmasi.");
@@ -253,6 +262,11 @@ export async function adminCreateBookingAction(
     return errorState(result.error);
   }
 
+  await catatLog(
+    gate.data.id,
+    "booking_manual",
+    `${result.data.bookingCode}${autoConfirm ? " (langsung dikonfirmasi)" : ""}`,
+  );
   revalidateAdmin();
   // redirect() melempar NEXT_REDIRECT — jangan dibungkus try/catch.
   redirect(`/drivetechadmin/bookings?q=${result.data.bookingCode}`);
@@ -278,6 +292,12 @@ export async function adminMoveBookingSlotAction(
 
   const result = await adminMoveBookingSlot(bookingId, targetSlotId);
   if (!result.ok) return errorState(result.error);
+  const tujuan = await getSlotDetail(targetSlotId);
+  await catatLog(
+    gate.data.id,
+    "pindah_slot",
+    `${await kodeBooking(bookingId)} ke ${tujuan.ok ? slotDisplayName(tujuan.data) : targetSlotId}`,
+  );
 
   revalidateAdmin();
   return successState("Booking berhasil dipindahkan ke slot baru.");
@@ -302,6 +322,11 @@ export async function adminCancelBookingAction(
 
   const result = await adminCancelBooking(parsed.data.bookingId, parsed.data.reason);
   if (!result.ok) return errorState(result.error);
+  await catatLog(
+    gate.data.id,
+    "batal_booking",
+    `${await kodeBooking(parsed.data.bookingId)}: ${parsed.data.reason}`,
+  );
 
   revalidateAdmin();
   return successState("Booking dibatalkan. Tanggal sewa dilepas dan tenant diberi tahu.");
@@ -325,6 +350,11 @@ export async function rejectPaymentAction(
 
   const result = await rejectPayment(parsed.data.paymentId, admin.id, parsed.data.reason);
   if (!result.ok) return errorState(result.error);
+  await catatLog(
+    admin.id,
+    "tolak_pembayaran",
+    `${await kodeBooking(parsed.data.paymentId)}: ${parsed.data.reason}`,
+  );
 
   revalidateAdmin();
   return successState("Pembayaran ditolak. Tenant bisa mengunggah bukti baru.");
@@ -374,6 +404,7 @@ export async function updateLeasingApplicationAction(
 
   const result = await updateLeasingApplication(parsed.data.id, patch);
   if (!result.ok) return errorState(result.error);
+  await catatLog(gate.data.id, "update_leasing", `${parsed.data.id}: ${JSON.stringify(patch)}`);
 
   revalidatePath("/drivetechadmin");
   revalidatePath("/drivetechadmin/leasing");
@@ -397,6 +428,7 @@ export async function setCommissionPaidAction(
 
   const result = await setCommissionPaid(id, paid);
   if (!result.ok) return errorState(result.error);
+  await catatLog(gate.data.id, "komisi_leasing", `${id}: ${paid ? "sudah dibayar" : "belum dibayar"}`);
 
   revalidatePath("/drivetechadmin");
   revalidatePath("/drivetechadmin/leasing");
@@ -427,6 +459,11 @@ export async function upsertPartnerAction(
 
   const result = await upsertPartner(parsed.data);
   if (!result.ok) return errorState(result.error);
+  await catatLog(
+    gate.data.id,
+    "mitra_leasing",
+    `${result.data.name} (${result.data.is_active ? "aktif" : "nonaktif"})`,
+  );
 
   revalidatePath("/drivetechadmin/leasing");
   return successState("Data partner leasing tersimpan.");
@@ -452,6 +489,7 @@ export async function addEventDateAction(
 
   const result = await addEventDate(parsed.data.date);
   if (!result.ok) return errorState(result.error);
+  await catatLog(gate.data.id, "tanggal_gelaran", `tambah ${result.data.event_date}`);
 
   revalidatePath("/");
   revalidatePath("/drivetechadmin/pengaturan");
@@ -475,6 +513,11 @@ export async function setEventDateActiveAction(
 
   const result = await setEventDateActive(id, active);
   if (!result.ok) return errorState(result.error);
+  await catatLog(
+    gate.data.id,
+    "tanggal_gelaran",
+    `${result.data.event_date} ${active ? "diaktifkan" : "dinonaktifkan"}`,
+  );
 
   revalidatePath("/");
   revalidatePath("/drivetechadmin/pengaturan");
@@ -504,6 +547,7 @@ export async function updateZoneFeeAction(
 
   const result = await updateZoneFee(parsed.data.zoneId, parsed.data.adminFee);
   if (!result.ok) return errorState(result.error);
+  await catatLog(gate.data.id, "tarif_zona", `${result.data.name}: Rp${result.data.admin_fee}`);
 
   // Biaya tampil di denah publik, dashboard, dan halaman pengaturan.
   revalidatePath("/");

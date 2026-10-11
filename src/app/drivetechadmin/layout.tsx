@@ -42,6 +42,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
             name: nama,
             email: admin.email,
             roleLabel: ADMIN_ROLE_LABEL[admin.role],
+            superadmin: admin.role === "superadmin",
           }}
         />
       </aside>

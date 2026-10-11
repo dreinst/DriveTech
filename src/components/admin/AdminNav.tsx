@@ -132,10 +132,21 @@ function IconPengaturan() {
 /* Daftar menu                                                         */
 /* ------------------------------------------------------------------ */
 
+function IconLog() {
+  return (
+    <svg {...ICON_PROPS}>
+      <circle cx="10" cy="10" r="7.5" />
+      <path d="M10 5.8V10l2.8 1.8" />
+    </svg>
+  );
+}
+
 type NavItem = {
   href: string;
   label: string;
   icon: () => ReactNode;
+  /** Menu khusus superadmin: tidak dirender untuk role admin (halamannya sendiri tetap menolak di server). */
+  superOnly?: boolean;
   /** Cara menentukan aktif dari pathname + query. */
   match: (pathname: string, payment: string | null) => boolean;
 };
@@ -207,6 +218,13 @@ const NAV_ITEMS: readonly NavItem[] = [
     match: (pathname) =>
       pathname === "/drivetechadmin/pengaturan" || pathname.startsWith("/drivetechadmin/pengaturan/"),
   },
+  {
+    href: "/drivetechadmin/log",
+    label: "Log Aktivitas",
+    icon: IconLog,
+    superOnly: true,
+    match: (pathname) => pathname === "/drivetechadmin/log",
+  },
 ];
 
 export type AdminNavProps = {
@@ -215,6 +233,7 @@ export type AdminNavProps = {
     name: string;
     email: string;
     roleLabel: string;
+    superadmin: boolean;
   };
 };
 
@@ -224,6 +243,7 @@ function NavInner({ admin }: AdminNavProps) {
   const payment = searchParams?.get("payment") ?? null;
 
   const inisial = (admin?.name ?? "A").trim().charAt(0).toUpperCase() || "A";
+  const items = NAV_ITEMS.filter((item) => !item.superOnly || admin?.superadmin);
 
   return (
     <>
@@ -242,7 +262,7 @@ function NavInner({ admin }: AdminNavProps) {
 
         <nav aria-label="Navigasi admin" className="mt-6">
           <ul className="space-y-1">
-            {NAV_ITEMS.map((item) => {
+            {items.map((item) => {
               const aktif = item.match(pathname, payment);
               return (
                 <li key={item.href}>
@@ -306,7 +326,7 @@ function NavInner({ admin }: AdminNavProps) {
       <div className="lg:hidden">
         <nav aria-label="Navigasi admin" className="no-scrollbar overflow-x-auto">
           <ul className="flex items-center gap-1 px-3 py-2">
-            {NAV_ITEMS.map((item) => {
+            {items.map((item) => {
               const aktif = item.match(pathname, payment);
               return (
                 <li key={item.href} className="shrink-0">

@@ -2,6 +2,7 @@ import type { NextResponse } from "next/server";
 
 import { handleRoute, jsonError, jsonOk, mapResultToResponse, readJsonObject } from "@/app/api/_lib/respond";
 import { rejectPayment, verifyPayment } from "@/lib/services/admin";
+import { catatLog } from "@/lib/services/log";
 import { adminPenyetuju, bookingByCode, botAuthorized, ringkasanBot } from "@/lib/services/bot";
 
 export const runtime = "nodejs";
@@ -32,6 +33,11 @@ export async function POST(request: Request, { params }: RouteContext): Promise<
     if (!admin.ok) return mapResultToResponse(admin);
     const hasil = aksi === "setujui" ? await verifyPayment(payment.id, admin.data) : await rejectPayment(payment.id, admin.data, alasan);
     if (!hasil.ok) return mapResultToResponse(hasil);
+    await catatLog(
+      admin.data,
+      aksi === "setujui" ? "verifikasi_pembayaran" : "tolak_pembayaran",
+      `${found.data.booking_code} lewat bot WhatsApp`,
+    );
 
     const terbaru = await bookingByCode(code);
     return terbaru.ok ? jsonOk(ringkasanBot(terbaru.data)) : mapResultToResponse(terbaru);

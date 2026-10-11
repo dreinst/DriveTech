@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { cobaSatu, isDbConfigured, sql } from "@/lib/db";
 import { fail, ok, type Result } from "@/lib/result";
@@ -56,6 +56,16 @@ export async function requireFullAdmin(): Promise<Result<AdminUserRow>> {
     );
   }
   return ok(admin);
+}
+
+/**
+ * Gerbang HALAMAN khusus superadmin: role 'admin' mendapat 404, sama seperti
+ * orang tanpa sesi (lihat middleware), jadi menunya tidak bisa dibuka lewat alamat langsung.
+ */
+export async function requireSuperadmin(): Promise<AdminUserRow> {
+  const admin = await requireAdmin();
+  if (admin.role !== "superadmin") notFound();
+  return admin;
 }
 
 /**

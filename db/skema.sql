@@ -1241,3 +1241,26 @@ CREATE TABLE public.jalan_sehat_peserta (
     menang_at timestamp with time zone,
     created_at timestamp with time zone DEFAULT now() NOT NULL
 );
+
+
+--
+-- Alat admin (2026-10-11). Untuk database yang sudah berjalan, perubahan yang
+-- sama ada di db/migrasi/2026-10-11-alat-admin.sql.
+--
+
+--
+-- Name: admin_log; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.admin_log (
+    id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    waktu timestamp with time zone DEFAULT now() NOT NULL,
+    admin_id uuid,
+    username text NOT NULL,
+    aksi text NOT NULL,
+    rincian text DEFAULT ''::text NOT NULL
+);
+
+COMMENT ON TABLE public.admin_log IS 'Log aksi admin yang mengubah data. Tidak pernah memuat sandi.';
+
+CREATE INDEX admin_log_waktu_idx ON public.admin_log USING btree (waktu DESC);
