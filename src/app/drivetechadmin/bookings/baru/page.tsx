@@ -52,7 +52,7 @@ export default async function AdminBookingBaruPage() {
           </p>
         </div>
         <Link
-          href="/admin/bookings"
+          href="/drivetechadmin/bookings"
           className="inline-flex h-11 items-center rounded-full border border-line bg-card px-4 text-sm font-medium text-muted hover:border-line-strong hover:text-ink"
         >
           ← Kembali ke pemesanan

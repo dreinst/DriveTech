@@ -8,12 +8,12 @@ import { adminLoginAction } from "@/lib/actions/admin";
 import { initialActionState } from "@/lib/actions/state";
 
 export type LoginFormProps = {
-  /** Tujuan setelah login berhasil (harus rute internal). Default "/admin". */
+  /** Tujuan setelah login berhasil (harus rute internal). Default "/drivetechadmin". */
   next?: string;
 };
 
 /** Form masuk admin: username + kata sandi (username dipetakan ke email internal). */
-export function LoginForm({ next = "/admin" }: LoginFormProps) {
+export function LoginForm({ next = "/drivetechadmin" }: LoginFormProps) {
   const [state, formAction] = useActionState(adminLoginAction, initialActionState);
   const fieldErrors = state.fieldErrors ?? {};
 
@@ -35,7 +35,7 @@ export function LoginForm({ next = "/admin" }: LoginFormProps) {
           autoComplete="username"
           autoCapitalize="none"
           spellCheck={false}
-          placeholder="Administrator"
+          placeholder="Username"
           required
           aria-invalid={fieldErrors.username ? true : undefined}
         />

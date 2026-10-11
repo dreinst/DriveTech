@@ -141,7 +141,7 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
           <Button type="submit" size="sm">
             Cari
           </Button>
-          <Link href="/admin/tenants" className={buttonClass("ghost", "sm")}>
+          <Link href="/drivetechadmin/tenants" className={buttonClass("ghost", "sm")}>
             Reset
           </Link>
         </div>
@@ -170,11 +170,11 @@ export default async function AdminTenantsPage({ searchParams }: PageProps) {
           }
           action={
             q.length > 0 ? (
-              <Link href="/admin/tenants" className={buttonClass("secondary", "sm")}>
+              <Link href="/drivetechadmin/tenants" className={buttonClass("secondary", "sm")}>
                 Tampilkan semua tenant
               </Link>
             ) : (
-              <Link href="/admin/slots" className={buttonClass("secondary", "sm")}>
+              <Link href="/drivetechadmin/slots" className={buttonClass("secondary", "sm")}>
                 Lihat daftar slot
               </Link>
             )

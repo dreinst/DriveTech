@@ -45,8 +45,8 @@ export async function submitLeasingAction(
   const purchaseId = parsed.data.purchaseTransactionId;
   revalidatePath(`/beli/${purchaseId}/leasing`);
   revalidatePath(`/beli/${purchaseId}/status`);
-  revalidatePath("/admin/leasing");
-  revalidatePath("/admin");
+  revalidatePath("/drivetechadmin/leasing");
+  revalidatePath("/drivetechadmin");
 
   // redirect() melempar NEXT_REDIRECT — jangan dibungkus try/catch.
   redirect(`/beli/${purchaseId}/status`);

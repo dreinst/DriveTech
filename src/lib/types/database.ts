@@ -428,7 +428,7 @@ export type Database = {
       purchase_payment_method: "cash" | "transfer" | "credit";
       purchase_status: "new" | "contacted" | "deal" | "cancelled";
       leasing_status: "submitted" | "verifying" | "approved" | "rejected" | "completed";
-      admin_role: "admin" | "verifikator";
+      admin_role: "superadmin" | "admin";
     };
   };
 };

@@ -256,7 +256,7 @@ export async function createBookingAction(
 
   revalidatePath("/");
   revalidatePath(`/booking/${parsed.data.slotId}`);
-  revalidatePath("/admin/bookings");
+  revalidatePath("/drivetechadmin/bookings");
 
   // redirect() melempar NEXT_REDIRECT — jangan dibungkus try/catch.
   redirect(`/booking/${result.data.bookingId}/bayar`);
@@ -348,8 +348,8 @@ export async function submitPaymentAction(
 
   revalidatePath(`/booking/${bookingId}/bayar`);
   revalidatePath(`/booking/${bookingId}/status`);
-  revalidatePath("/admin/bookings");
-  revalidatePath("/admin");
+  revalidatePath("/drivetechadmin/bookings");
+  revalidatePath("/drivetechadmin");
 
   redirect(`/booking/${bookingId}/status`);
   // Tidak pernah tercapai: redirect() melempar NEXT_REDIRECT.
@@ -388,8 +388,8 @@ export async function cancelBookingAction(
 
   revalidatePath("/");
   revalidatePath(`/booking/${parsed.data.bookingId}/status`);
-  revalidatePath("/admin/bookings");
-  revalidatePath("/admin/slots");
+  revalidatePath("/drivetechadmin/bookings");
+  revalidatePath("/drivetechadmin/slots");
 
   redirect(`/booking/${parsed.data.bookingId}/status`);
   // Tidak pernah tercapai: redirect() melempar NEXT_REDIRECT.

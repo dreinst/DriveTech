@@ -12,7 +12,7 @@ type RouteContext = { params: Promise<{ code: string }> };
 /**
  * POST /api/bot/booking/{kode}/putusan (khusus bot D'Pro Ops, header x-bot-key)
  * Body { aksi: "setujui" | "tolak", alasan?, oleh? } dari tombol Setujui/Tolak di Discord. Memakai
- * verifyPayment/rejectPayment yang sama dengan /admin/bookings, jadi email dan kabar WhatsApp ikut terkirim.
+ * verifyPayment/rejectPayment yang sama dengan /drivetechadmin/bookings, jadi email dan kabar WhatsApp ikut terkirim.
  */
 export async function POST(request: Request, { params }: RouteContext): Promise<NextResponse> {
   return handleRoute("POST /api/bot/booking/[code]/putusan", async () => {

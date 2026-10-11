@@ -7,7 +7,7 @@ const siteUrl = getSiteUrl();
  * Hanya rute publik yang statis: beranda (peta booking + cek status lewat
  * anchor), katalog kendaraan, dan denah lengkap (hanya melihat). Rute
  * /booking/* dan /beli/* bergantung slotId — tidak untuk diindeks massal;
- * /admin/* privat (diblok di robots.ts).
+ * /drivetechadmin/* privat (diblok di robots.ts).
  */
 export default function sitemap(): MetadataRoute.Sitemap {
   return [

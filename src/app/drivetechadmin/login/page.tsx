@@ -21,7 +21,7 @@ type PageProps = {
 
 export default async function AdminLoginPage({ searchParams }: PageProps) {
   const admin = await getCurrentAdmin();
-  if (admin) redirect("/admin"); // redirect() melempar NEXT_REDIRECT
+  if (admin) redirect("/drivetechadmin"); // redirect() melempar NEXT_REDIRECT
 
   const { next } = await searchParams;
   const terkonfigurasi = isDbConfigured();

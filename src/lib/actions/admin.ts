@@ -59,18 +59,18 @@ function teks(formData: FormData, key: string): string {
 /** Segarkan seluruh halaman admin yang menampilkan data slot/booking. */
 function revalidateAdmin(): void {
   revalidatePath("/");
-  revalidatePath("/admin");
-  revalidatePath("/admin/slots");
-  revalidatePath("/admin/bookings");
-  revalidatePath("/admin/tenants");
-  revalidatePath("/admin/leasing");
+  revalidatePath("/drivetechadmin");
+  revalidatePath("/drivetechadmin/slots");
+  revalidatePath("/drivetechadmin/bookings");
+  revalidatePath("/drivetechadmin/tenants");
+  revalidatePath("/drivetechadmin/leasing");
 }
 
 /* ------------------------------------------------------------------ */
 /* Autentikasi                                                         */
 /* ------------------------------------------------------------------ */
 
-/** Login admin di /admin/login. */
+/** Login admin di /drivetechadmin/login. */
 export async function adminLoginAction(
   prevState: ActionState,
   formData: FormData,
@@ -99,7 +99,7 @@ export async function adminLoginAction(
   if (!result.ok) return errorState(result.error);
 
   const tujuan = tujuanAdminAman(teks(form, "next"));
-  revalidatePath("/admin");
+  revalidatePath("/drivetechadmin");
 
   // redirect() melempar NEXT_REDIRECT — jangan dibungkus try/catch.
   redirect(tujuan);
@@ -120,9 +120,9 @@ export async function adminLogoutAction(
   void formData;
 
   await signOutAdmin();
-  revalidatePath("/admin");
+  revalidatePath("/drivetechadmin");
 
-  redirect("/admin/login");
+  redirect("/drivetechadmin/login");
 
   // Tidak pernah tercapai: redirect() melempar NEXT_REDIRECT.
   return { status: "success" };
@@ -132,7 +132,7 @@ export async function adminLogoutAction(
 /* Slot                                                                */
 /* ------------------------------------------------------------------ */
 
-/** Override manual status slot di /admin/slots. */
+/** Override manual status slot di /drivetechadmin/slots. */
 export async function overrideSlotStatusAction(
   prevState: ActionState,
   formData: FormData,
@@ -156,7 +156,7 @@ export async function overrideSlotStatusAction(
   return successState("Status slot berhasil diperbarui.");
 }
 
-/** Tampilkan / sembunyikan satu kendaraan dari katalog publik (/admin/bookings). */
+/** Tampilkan / sembunyikan satu kendaraan dari katalog publik (/drivetechadmin/bookings). */
 export async function setVehicleVisibilityAction(
   prevState: ActionState,
   formData: FormData,
@@ -176,7 +176,7 @@ export async function setVehicleVisibilityAction(
   if (!result.ok) return errorState(result.error);
 
   revalidatePath("/katalog");
-  revalidatePath("/admin/bookings");
+  revalidatePath("/drivetechadmin/bookings");
   return successState(
     visible ? "Kendaraan ditampilkan di katalog." : "Kendaraan disembunyikan dari katalog.",
   );
@@ -186,7 +186,7 @@ export async function setVehicleVisibilityAction(
 /* Verifikasi pembayaran                                               */
 /* ------------------------------------------------------------------ */
 
-/** Setujui bukti pembayaran biaya admin di /admin/bookings. */
+/** Setujui bukti pembayaran biaya admin di /drivetechadmin/bookings. */
 export async function verifyPaymentAction(
   prevState: ActionState,
   formData: FormData,
@@ -255,7 +255,7 @@ export async function adminCreateBookingAction(
 
   revalidateAdmin();
   // redirect() melempar NEXT_REDIRECT — jangan dibungkus try/catch.
-  redirect(`/admin/bookings?q=${result.data.bookingCode}`);
+  redirect(`/drivetechadmin/bookings?q=${result.data.bookingCode}`);
   return { status: "success" };
 }
 
@@ -334,7 +334,7 @@ export async function rejectPaymentAction(
 /* Leasing                                                             */
 /* ------------------------------------------------------------------ */
 
-/** Perbarui status/DP/tenor/komisi satu pengajuan leasing di /admin/leasing. */
+/** Perbarui status/DP/tenor/komisi satu pengajuan leasing di /drivetechadmin/leasing. */
 export async function updateLeasingApplicationAction(
   prevState: ActionState,
   formData: FormData,
@@ -375,8 +375,8 @@ export async function updateLeasingApplicationAction(
   const result = await updateLeasingApplication(parsed.data.id, patch);
   if (!result.ok) return errorState(result.error);
 
-  revalidatePath("/admin");
-  revalidatePath("/admin/leasing");
+  revalidatePath("/drivetechadmin");
+  revalidatePath("/drivetechadmin/leasing");
   return successState("Pengajuan leasing berhasil diperbarui.");
 }
 
@@ -398,8 +398,8 @@ export async function setCommissionPaidAction(
   const result = await setCommissionPaid(id, paid);
   if (!result.ok) return errorState(result.error);
 
-  revalidatePath("/admin");
-  revalidatePath("/admin/leasing");
+  revalidatePath("/drivetechadmin");
+  revalidatePath("/drivetechadmin/leasing");
   return successState(paid ? "Komisi ditandai sudah dibayar." : "Komisi ditandai belum dibayar.");
 }
 
@@ -428,7 +428,7 @@ export async function upsertPartnerAction(
   const result = await upsertPartner(parsed.data);
   if (!result.ok) return errorState(result.error);
 
-  revalidatePath("/admin/leasing");
+  revalidatePath("/drivetechadmin/leasing");
   return successState("Data partner leasing tersimpan.");
 }
 
@@ -436,7 +436,7 @@ export async function upsertPartnerAction(
 /* Tanggal gelaran                                                     */
 /* ------------------------------------------------------------------ */
 
-/** Tambah tanggal gelaran baru di /admin/pengaturan (field form: "date"). */
+/** Tambah tanggal gelaran baru di /drivetechadmin/pengaturan (field form: "date"). */
 export async function addEventDateAction(
   prevState: ActionState,
   formData: FormData,
@@ -454,7 +454,7 @@ export async function addEventDateAction(
   if (!result.ok) return errorState(result.error);
 
   revalidatePath("/");
-  revalidatePath("/admin/pengaturan");
+  revalidatePath("/drivetechadmin/pengaturan");
   return successState("Tanggal gelaran ditambahkan.");
 }
 
@@ -477,7 +477,7 @@ export async function setEventDateActiveAction(
   if (!result.ok) return errorState(result.error);
 
   revalidatePath("/");
-  revalidatePath("/admin/pengaturan");
+  revalidatePath("/drivetechadmin/pengaturan");
   return successState(active ? "Tanggal gelaran diaktifkan." : "Tanggal gelaran dinonaktifkan.");
 }
 
@@ -485,7 +485,7 @@ export async function setEventDateActiveAction(
 /* Pengaturan                                                          */
 /* ------------------------------------------------------------------ */
 
-/** Simpan biaya admin satu zona di /admin/pengaturan. */
+/** Simpan biaya admin satu zona di /drivetechadmin/pengaturan. */
 export async function updateZoneFeeAction(
   prevState: ActionState,
   formData: FormData,
@@ -507,8 +507,8 @@ export async function updateZoneFeeAction(
 
   // Biaya tampil di denah publik, dashboard, dan halaman pengaturan.
   revalidatePath("/");
-  revalidatePath("/admin");
-  revalidatePath("/admin/pengaturan");
-  revalidatePath("/admin/slots");
+  revalidatePath("/drivetechadmin");
+  revalidatePath("/drivetechadmin/pengaturan");
+  revalidatePath("/drivetechadmin/slots");
   return successState("Biaya admin zona tersimpan.");
 }

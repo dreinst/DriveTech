@@ -15,7 +15,7 @@ export type KatalogToggleProps = {
 /**
  * Kontrol kecil di daftar booking admin: tampilkan/sembunyikan kendaraan dari
  * /katalog. Hanya dirender untuk booking zona kendaraan (listing 1:1).
- * Aksi khusus role admin (requireFullAdmin di server action).
+ * Aksi khusus superadmin (requireFullAdmin di server action).
  */
 export function KatalogToggle({ listing, className }: KatalogToggleProps) {
   const [state, formAction] = useActionState(setVehicleVisibilityAction, initialActionState);

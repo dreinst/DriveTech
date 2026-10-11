@@ -32,7 +32,7 @@ Denah "/"  →  pilih ZONA → ketuk SLOT di peta → pilih TANGGAL (≥1 tangga
            →  /booking/{bookingId}/bayar bayar QRIS + unggah bukti  → pembayaran (submitted)
            →  /booking/{bookingId}/status pantau verifikasi panitia
                                      ↓
-              Admin /admin/bookings  verifikasi                     → booking confirmed
+              Admin /drivetechadmin/bookings  verifikasi                     → booking confirmed
                                      tolak                          → pembayaran rejected, tanggal tetap terkunci
 ```
 
@@ -44,7 +44,7 @@ Anti double-booking dijaga database lewat unique index parsial
 bisa disewa orang berbeda di tanggal yang berbeda. Kolom `slots.status` kini berarti kondisi
 slotnya sendiri: `available` = normal, selain itu = **diblokir panitia** untuk semua tanggal
 (label UI "Diblokir") — bukan lagi status booking. Daftar tanggal gelaran (tabel
-`event_dates`) dikelola panitia di `/admin/pengaturan`.
+`event_dates`) dikelola panitia di `/drivetechadmin/pengaturan`.
 
 ### B. Modul Leasing (pengunjung membeli unit di lokasi)
 
@@ -54,7 +54,7 @@ Denah "/"  →  slot tenant terisi
            →  (kalau credit) /beli/{transactionId}/leasing   pilih mitra, DP, tenor
            →  /beli/{transactionId}/status   pantau status pengajuan
                                      ↓
-              Admin /admin/leasing  update status & komisi platform
+              Admin /drivetechadmin/leasing  update status & komisi platform
 ```
 
 Komisi platform = `(harga unit − DP) × commission_rate mitra`.
@@ -120,7 +120,7 @@ Skrip npm yang tersedia:
 
 Semua entitas (booking, pembayaran, pembelian unit, pengajuan leasing) bisa disinkronkan
 otomatis ke Google Sheets lewat webhook Apps Script — ditambah tombol **Ekspor CSV** manual
-di `/admin/bookings`.
+di `/drivetechadmin/bookings`.
 
 Cara pasang (± 3 menit, cukup sekali):
 
@@ -166,9 +166,9 @@ values ('administrator@drivetech.local', 'administrator', 'Nama Admin', 'admin',
 
 2. Ganti sandi kapan pun dengan
    `update public.admin_users set password_hash = crypt('sandi-baru', gen_salt('bf', 10)) where username = '...'`.
-3. Login di `/admin/login`.
+3. Login di `/drivetechadmin/login`.
 
-Peran yang tersedia: `admin` (akses penuh) dan `verifikator` (fokus verifikasi pembayaran).
+Peran yang tersedia: `superadmin` (akses penuh) dan `admin` (fokus verifikasi pembayaran).
 
 ---
 
@@ -184,7 +184,7 @@ Peran yang tersedia: `admin` (akses penuh) dan `verifikator` (fokus verifikasi p
 | `/katalog/{listingId}` | Detail satu kendaraan: foto besar, spesifikasi, tanggal hadir, lokasi slot. Pembelian offline di lokasi. |
 | `/booking/by-svg/{svgElementId}` | Jembatan denah statis → form: cari slot lewat `svg_element_id` lalu redirect ke `/booking/{slotId}`; id tak dikenal → 404. |
 | `/booking/{bookingId}/bayar` | Bayar lewat **QRIS panitia** (gambar QRIS statis, nominal diisi pembayar) + unggah tangkapan layar bukti berhasil. Opsi cash dihapus 2026-08-28, transfer bank dihapus 2026-09-02; booking dikunci lewat pembayaran yang diverifikasi. |
-| `/booking/{bookingId}/status` | Status booking + pembayaran, tombol batal, dan **QR verifikasi panitia** (memuat `/admin/bookings?q=<kode>` agar panitia bisa mencocokkan bukti, nominal, dan waktu kirim dengan waktu pada bukti). |
+| `/booking/{bookingId}/status` | Status booking + pembayaran, tombol batal, dan **QR verifikasi panitia** (memuat `/drivetechadmin/bookings?q=<kode>` agar panitia bisa mencocokkan bukti, nominal, dan waktu kirim dengan waktu pada bukti). |
 | `/beli/{slotId}` | Formulir pembeli unit: cash / transfer / credit. |
 | `/beli/{transactionId}/leasing` | Pilih mitra leasing, DP, tenor, simulasi cicilan. |
 | `/beli/{transactionId}/status` | Status pengajuan leasing. |
@@ -198,14 +198,14 @@ Peran yang tersedia: `admin` (akses penuh) dan `verifikator` (fokus verifikasi p
 
 | Rute | Isi |
 | --- | --- |
-| `/admin/login` | Login email + password. |
-| `/admin` | Dashboard: okupansi per zona untuk tanggal gelaran terdekat, pembayaran & leasing menunggu. |
-| `/admin/slots` | Blokir / buka slot untuk semua tanggal (override panitia). |
-| `/admin/bookings` | Verifikasi / tolak pembayaran, chip tanggal sewa, tombol Ekspor CSV. |
-| `/admin/leasing` | Kelola mitra leasing, status pengajuan, komisi. |
-| `/admin/tenants` | Daftar tenant beserta lapaknya. |
-| `/admin/analitik` | Grafik okupansi (per tanggal terdekat), tren booking, leasing, metode bayar. |
-| `/admin/pengaturan` | Kelola tanggal event (`event_dates`), biaya admin per zona, info event. |
+| `/drivetechadmin/login` | Login email + password. |
+| `/drivetechadmin` | Dashboard: okupansi per zona untuk tanggal gelaran terdekat, pembayaran & leasing menunggu. |
+| `/drivetechadmin/slots` | Blokir / buka slot untuk semua tanggal (override panitia). |
+| `/drivetechadmin/bookings` | Verifikasi / tolak pembayaran, chip tanggal sewa, tombol Ekspor CSV. |
+| `/drivetechadmin/leasing` | Kelola mitra leasing, status pengajuan, komisi. |
+| `/drivetechadmin/tenants` | Daftar tenant beserta lapaknya. |
+| `/drivetechadmin/analitik` | Grafik okupansi (per tanggal terdekat), tren booking, leasing, metode bayar. |
+| `/drivetechadmin/pengaturan` | Kelola tanggal event (`event_dates`), biaya admin per zona, info event. |
 
 ### API (Route Handler, `runtime = "nodejs"`, `dynamic = "force-dynamic"`)
 
@@ -472,7 +472,7 @@ Tenor yang diterima: `12, 18, 24, 36, 48, 60`. Komisi platform dihitung otomatis
 │   ├── skema.sql                  Skema lengkap: enum, tabel, index, trigger, fungsi
 │   └── seed.sql                   1 event, 9 tanggal Musim 1 (7-8 Nov, lalu tiap Minggu s.d. 27 Des 2026), 8 zona, 107 slot, 3 mitra leasing
 └── src/
-    ├── middleware.ts              Penjaga rute /admin (cek tanda tangan cookie sesi)
+    ├── middleware.ts              Penjaga rute /drivetechadmin (cek tanda tangan cookie sesi)
     ├── app/
     │   ├── page.tsx               Landing + denah interaktif
     │   ├── booking/               Alur sewa lapak (data tenant → bayar → status)
@@ -514,8 +514,8 @@ enum `admin_role`:
 
 | Role | Maksud |
 | --- | --- |
-| `admin` | Akses penuh seluruh menu admin. |
-| `verifikator` | Fokus verifikasi pembayaran biaya admin. |
+| `superadmin` | Akses penuh seluruh menu admin. |
+| `admin` | Fokus verifikasi pembayaran biaya admin. |
 
 Kalau ternyata pembagian peran tidak dibutuhkan, cukup beri
 semua orang role `admin` — tidak ada migrasi yang perlu dibatalkan. Sebaliknya, menambah

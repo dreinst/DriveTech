@@ -142,7 +142,7 @@ export default async function AdminSlotsPage({ searchParams }: PageProps) {
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <AutoRefresh />
-          <Link href="/admin/bookings" className={buttonClass("secondary", "sm")}>
+          <Link href="/drivetechadmin/bookings" className={buttonClass("secondary", "sm")}>
             Ke daftar pemesanan
           </Link>
         </div>
@@ -179,7 +179,7 @@ export default async function AdminSlotsPage({ searchParams }: PageProps) {
           <Button type="submit" size="sm">
             Terapkan
           </Button>
-          <Link href="/admin/slots" className={buttonClass("ghost", "sm")}>
+          <Link href="/drivetechadmin/slots" className={buttonClass("ghost", "sm")}>
             Reset filter
           </Link>
         </div>
@@ -229,7 +229,7 @@ export default async function AdminSlotsPage({ searchParams }: PageProps) {
           title="Tidak ada slot yang cocok"
           description="Ubah atau kosongkan filter untuk melihat slot lain."
           action={
-            <Link href="/admin/slots" className={buttonClass("secondary", "sm")}>
+            <Link href="/drivetechadmin/slots" className={buttonClass("secondary", "sm")}>
               Reset filter
             </Link>
           }
@@ -286,7 +286,7 @@ export default async function AdminSlotsPage({ searchParams }: PageProps) {
                       {bookingUtama ? (
                         <div className="space-y-1">
                           <Link
-                            href={`/admin/bookings?q=${encodeURIComponent(bookingUtama.booking_code)}`}
+                            href={`/drivetechadmin/bookings?q=${encodeURIComponent(bookingUtama.booking_code)}`}
                             className="font-mono text-xs font-semibold text-ink underline underline-offset-2 hover:text-accent"
                           >
                             {bookingUtama.booking_code}

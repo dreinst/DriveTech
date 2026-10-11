@@ -8,7 +8,7 @@ import { addEventDateAction, setEventDateActiveAction } from "@/lib/actions/admi
 import { initialActionState } from "@/lib/actions/state";
 
 /**
- * Form kelola tanggal gelaran (event_dates) di /admin/pengaturan —
+ * Form kelola tanggal gelaran (event_dates) di /drivetechadmin/pengaturan —
  * model per tanggal: pemesan hanya bisa memilih tanggal yang aktif di sini.
  */
 

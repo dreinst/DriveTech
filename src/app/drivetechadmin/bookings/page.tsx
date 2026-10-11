@@ -66,7 +66,7 @@ function hrefFilter(aktif: FilterAktif, perubahan: Partial<FilterAktif>): string
   if (gabungan.status) params.set("status", gabungan.status);
   if (gabungan.q) params.set("q", gabungan.q);
   const query = params.toString();
-  return query.length > 0 ? `/admin/bookings?${query}` : "/admin/bookings";
+  return query.length > 0 ? `/drivetechadmin/bookings?${query}` : "/drivetechadmin/bookings";
 }
 
 /** Satu baris tab filter berbentuk <Link>. */
@@ -222,7 +222,7 @@ export default async function AdminBookingsPage({ searchParams }: PageProps) {
   const bookings = result.ok ? [...result.data].sort(menungguVerifikasiDulu) : [];
   const menungguVerifikasi = bookings.filter((row) => row.payment?.status === "submitted").length;
   // Hasil pindaian QR verifikasi (status booking penyewa memuat
-  // /admin/bookings?q=<kode>): q persis sama dengan kode salah satu baris.
+  // /drivetechadmin/bookings?q=<kode>): q persis sama dengan kode salah satu baris.
   const hasilPindaian =
     qParam.length > 0
       ? bookings.find((row) => row.booking_code === qParam.toUpperCase()) ?? null
@@ -264,7 +264,7 @@ export default async function AdminBookingsPage({ searchParams }: PageProps) {
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <Link
-            href="/admin/bookings/baru"
+            href="/drivetechadmin/bookings/baru"
             className="inline-flex h-11 items-center rounded-full bg-accent px-4 text-sm font-semibold text-[#0a0a0a] transition-[filter] duration-150 hover:brightness-95"
           >
             + Booking manual
@@ -295,7 +295,7 @@ export default async function AdminBookingsPage({ searchParams }: PageProps) {
         <TabFilter judul="Status bayar" paramKey="bayar" opsi={opsiBayar} aktif={aktif} />
         <TabFilter judul="Status booking" paramKey="status" opsi={opsiBooking} aktif={aktif} />
 
-        <form action="/admin/bookings" method="get" className="flex flex-wrap items-center gap-2">
+        <form action="/drivetechadmin/bookings" method="get" className="flex flex-wrap items-center gap-2">
           {aktif.bayar ? <input type="hidden" name="bayar" value={aktif.bayar} /> : null}
           {aktif.status ? <input type="hidden" name="status" value={aktif.status} /> : null}
           <Input

@@ -11,7 +11,7 @@ import { initialActionState } from "@/lib/actions/state";
  * Dibungkus useActionState (bukan langsung `action={adminLogoutAction}`) karena
  * server action ini mengembalikan ActionState, sementara prop `action` pada
  * <form> hanya menerima fungsi bertipe void/Promise<void>. Perilakunya sama:
- * submit -> signOutAdmin() -> redirect ke /admin/login.
+ * submit -> signOutAdmin() -> redirect ke /drivetechadmin/login.
  */
 export function LogoutButton() {
   const [, formAction] = useActionState(adminLogoutAction, initialActionState);

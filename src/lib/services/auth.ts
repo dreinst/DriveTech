@@ -12,7 +12,7 @@ if (typeof window !== "undefined") {
   throw new Error("src/lib/services/auth.ts hanya boleh dipakai di server.");
 }
 
-const LOGIN_PATH = "/admin/login";
+const LOGIN_PATH = "/drivetechadmin/login";
 
 /** Kolom admin_users yang boleh keluar dari modul ini; password_hash tidak pernah ikut. */
 const kolomAdmin = () => sql`id, email, username, full_name, role, created_at`;
@@ -43,15 +43,15 @@ export async function requireAdmin(): Promise<AdminUserRow> {
 }
 
 /**
- * requireAdmin + wajib role 'admin' penuh. Role 'verifikator' hanya untuk
+ * requireAdmin + wajib role 'superadmin'. Role 'admin' hanya untuk
  * verifikasi pembayaran (lihat README bagian peran), jadi seluruh aksi mutasi
- * lain harus lewat gate ini — middleware/requireAdmin saja tidak memeriksa role.
+ * lain harus lewat gate ini; middleware/requireAdmin saja tidak memeriksa role.
  */
 export async function requireFullAdmin(): Promise<Result<AdminUserRow>> {
   const admin = await requireAdmin();
-  if (admin.role !== "admin") {
+  if (admin.role !== "superadmin") {
     return fail<AdminUserRow>(
-      "Aksi ini khusus role admin. Akun verifikator hanya bisa memverifikasi pembayaran.",
+      "Aksi ini khusus superadmin. Akun admin hanya bisa memverifikasi pembayaran.",
       "FORBIDDEN",
     );
   }

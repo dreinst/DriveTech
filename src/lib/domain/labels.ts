@@ -89,8 +89,8 @@ export const TENANT_TYPE_LABEL: Record<TenantType, string> = {
 };
 
 export const ADMIN_ROLE_LABEL: Record<AdminRole, string> = {
+  superadmin: "Superadmin",
   admin: "Admin",
-  verifikator: "Verifikator",
 };
 
 /** Tipe tenant yang otomatis dipilih dari tipe zona slot. facility tidak bisa dibooking. */

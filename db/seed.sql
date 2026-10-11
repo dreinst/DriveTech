@@ -233,18 +233,18 @@ where not exists (
 --
 --        insert into public.admin_users (email, username, full_name, role, password_hash)
 --        values (
---          'administrator@drivetech.local',         -- identitas internal, tidak dikirimi email
---          'administrator',                         -- nama login, HURUF KECIL
+--          'superadmin@drivetech.local',         -- identitas internal, tidak dikirimi email
+--          'superadmin',                            -- nama login, HURUF KECIL
 --          'Nama Admin',
---          'admin',                                 -- 'admin' atau 'verifikator'
+--          'superadmin',                            -- 'superadmin' atau 'admin'
 --          crypt('sandi-yang-kuat', gen_salt('bf', 10))
 --        );
 --
 -- Ganti sandi:
 --        update public.admin_users
 --           set password_hash = crypt('sandi-baru', gen_salt('bf', 10))
---         where username = 'administrator';
+--         where username = 'superadmin';
 --
--- Role 'admin' bisa semua hal; 'verifikator' ditujukan untuk verifikasi
+-- Role 'superadmin' bisa semua hal; 'admin' ditujukan untuk verifikasi
 -- pembayaran admin fee saja.
 -- =============================================================================

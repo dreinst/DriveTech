@@ -30,7 +30,7 @@ function Pesan({ state }: { state: ActionState }) {
 }
 
 /**
- * Aksi verifikator pada satu baris pembayaran biaya admin:
+ * Aksi admin pada satu baris pembayaran biaya admin:
  * - "Verifikasi" (dengan konfirmasi) -> pembayaran verified, booking confirmed, slot terisi.
  * - "Tolak" (buka <details>, wajib isi alasan) -> pembayaran rejected, booking & slot tetap pending.
  */

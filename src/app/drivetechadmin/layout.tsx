@@ -16,11 +16,11 @@ export const metadata: Metadata = {
 };
 
 /**
- * Kerangka seluruh area /admin ala mockup dasbor gelap:
+ * Kerangka seluruh area /drivetechadmin ala mockup dasbor gelap:
  * sidebar hitam pekat border-r di kiri (>= lg), bar atas yang bisa digeser
  * di layar kecil, dan area konten lega di kanan.
  *
- * Layout ini SENGAJA tidak pernah memanggil redirect(): /admin/login berada di
+ * Layout ini SENGAJA tidak pernah memanggil redirect(): /drivetechadmin/login berada di
  * bawahnya, jadi kalau belum ada sesi admin kita cukup merender children polos
  * dan biarkan tiap halaman (lewat requireAdmin) yang menjaga aksesnya sendiri.
  */

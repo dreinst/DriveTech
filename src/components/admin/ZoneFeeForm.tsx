@@ -15,7 +15,7 @@ export type ZoneFeeFormProps = {
 };
 
 /**
- * Form satu baris di /admin/pengaturan: ubah biaya admin sebuah zona lalu
+ * Form satu baris di /drivetechadmin/pengaturan: ubah biaya admin sebuah zona lalu
  * simpan per baris. Nilai tersimpan langsung dipakai denah publik & booking.
  */
 export function ZoneFeeForm({ zoneId, zoneName, defaultFee }: ZoneFeeFormProps) {

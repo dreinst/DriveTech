@@ -104,10 +104,10 @@ export type SlotFilter = {
   q?: string;
 };
 
-/** Tenant + jumlah booking miliknya (untuk /admin/tenants). */
+/** Tenant + jumlah booking miliknya (untuk /drivetechadmin/tenants). */
 export type TenantListItem = TenantRow & { bookingCount: number };
 
-/** Pengajuan leasing beserta partner dan transaksi pembeliannya (untuk /admin/leasing). */
+/** Pengajuan leasing beserta partner dan transaksi pembeliannya (untuk /drivetechadmin/leasing). */
 export type AdminLeasingItem = LeasingApplicationRow & {
   partner: LeasingPartnerRow | null;
   purchase: (PurchaseTransactionRow & { slot: SlotDetail | null }) | null;
@@ -153,7 +153,7 @@ async function ambilOkupansiTanggalTerdekat(): Promise<
   return ok<Out>({ tanggal, occupancy: [...occQuery.data] });
 }
 
-/** Ringkasan angka untuk /admin. */
+/** Ringkasan angka untuk /drivetechadmin. */
 export async function getDashboardStats(): Promise<Result<DashboardStats>> {
   if (!isDbConfigured()) return fail<DashboardStats>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
@@ -248,7 +248,7 @@ export async function getDashboardStats(): Promise<Result<DashboardStats>> {
 /* Booking & tenant                                                    */
 /* ------------------------------------------------------------------ */
 
-/** Daftar booking untuk /admin/bookings. Filter turunan dikerjakan di memori. */
+/** Daftar booking untuk /drivetechadmin/bookings. Filter turunan dikerjakan di memori. */
 export async function listBookings(filter?: BookingFilter): Promise<Result<BookingDetail[]>> {
   if (!isDbConfigured()) return fail<BookingDetail[]>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
@@ -304,7 +304,7 @@ export async function listTenants(): Promise<Result<TenantListItem[]>> {
 /* Slot                                                                */
 /* ------------------------------------------------------------------ */
 
-/** Daftar slot + zona untuk /admin/slots. */
+/** Daftar slot + zona untuk /drivetechadmin/slots. */
 export async function listSlots(filter?: SlotFilter): Promise<Result<SlotDetail[]>> {
   if (!isDbConfigured()) return fail<SlotDetail[]>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
@@ -869,7 +869,7 @@ export async function listZonesAdmin(): Promise<Result<ZoneRow[]>> {
   return ok([...data]);
 }
 
-/** Ubah biaya admin satu zona (dipakai /admin/pengaturan). */
+/** Ubah biaya admin satu zona (dipakai /drivetechadmin/pengaturan). */
 export async function updateZoneFee(zoneId: string, adminFee: number): Promise<Result<ZoneRow>> {
   if (!isDbConfigured()) return fail<ZoneRow>(NO_CONFIG_MESSAGE, "NO_CONFIG");
   if (!Number.isFinite(adminFee) || adminFee < 0) {
@@ -1001,7 +1001,7 @@ const LEASING_STATUS_URUT: readonly LeasingStatus[] = [
 ];
 
 /**
- * Semua seri untuk /admin/analitik dalam satu panggilan.
+ * Semua seri untuk /drivetechadmin/analitik dalam satu panggilan.
  * Data sedikit itu wajar (event baru): seri kosong dikembalikan sebagai array
  * kosong supaya halaman bisa menampilkan EmptyState per kartu.
  */

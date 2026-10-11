@@ -6,7 +6,6 @@ const FOOTER_LINKS = [
   { href: "/#denah", label: "Denah" },
   { href: "/#sponsor", label: "Sponsor" },
   { href: "/#cek-status", label: "Cek Status" },
-  { href: "/admin", label: "Admin" },
 ] as const;
 
 /** Footer hitam: merek, lokasi, WhatsApp, tautan, lalu kredit pembuat. */

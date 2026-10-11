@@ -270,7 +270,7 @@ export default async function AdminPengaturanPage() {
             <p className="truncate text-xs text-muted">{admin.email}</p>
           </div>
           <div className="ml-auto shrink-0">
-            <Badge tone={admin.role === "admin" ? "blue" : "slate"} dot>
+            <Badge tone={admin.role === "superadmin" ? "blue" : "slate"} dot>
               {ADMIN_ROLE_LABEL[admin.role]}
             </Badge>
           </div>

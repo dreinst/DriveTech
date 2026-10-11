@@ -133,64 +133,64 @@ type NavItem = {
 
 const NAV_ITEMS: readonly NavItem[] = [
   {
-    href: "/admin",
+    href: "/drivetechadmin",
     label: "Dashboard",
     icon: IconIkhtisar,
-    match: (pathname) => pathname === "/admin",
+    match: (pathname) => pathname === "/drivetechadmin",
   },
   {
-    href: "/admin/bookings",
+    href: "/drivetechadmin/bookings",
     label: "Pemesanan",
     icon: IconPemesanan,
     match: (pathname, payment) =>
-      (pathname === "/admin/bookings" || pathname.startsWith("/admin/bookings/")) &&
+      (pathname === "/drivetechadmin/bookings" || pathname.startsWith("/drivetechadmin/bookings/")) &&
       payment !== "submitted",
   },
   {
     // Pintasan langsung ke antrean bukti transfer yang menunggu verifikasi.
-    href: "/admin/bookings?payment=submitted",
+    href: "/drivetechadmin/bookings?payment=submitted",
     label: "Pembayaran",
     icon: IconPembayaran,
     match: (pathname, payment) =>
-      (pathname === "/admin/bookings" || pathname.startsWith("/admin/bookings/")) &&
+      (pathname === "/drivetechadmin/bookings" || pathname.startsWith("/drivetechadmin/bookings/")) &&
       payment === "submitted",
   },
   {
-    href: "/admin/slots",
+    href: "/drivetechadmin/slots",
     label: "Inventaris",
     icon: IconInventaris,
-    match: (pathname) => pathname === "/admin/slots" || pathname.startsWith("/admin/slots/"),
+    match: (pathname) => pathname === "/drivetechadmin/slots" || pathname.startsWith("/drivetechadmin/slots/"),
   },
   {
-    href: "/admin/tenants",
+    href: "/drivetechadmin/tenants",
     label: "Tenant",
     icon: IconTenant,
-    match: (pathname) => pathname === "/admin/tenants" || pathname.startsWith("/admin/tenants/"),
+    match: (pathname) => pathname === "/drivetechadmin/tenants" || pathname.startsWith("/drivetechadmin/tenants/"),
   },
   {
-    href: "/admin/leasing",
+    href: "/drivetechadmin/leasing",
     label: "Leasing",
     icon: IconLeasing,
-    match: (pathname) => pathname === "/admin/leasing" || pathname.startsWith("/admin/leasing/"),
+    match: (pathname) => pathname === "/drivetechadmin/leasing" || pathname.startsWith("/drivetechadmin/leasing/"),
   },
   {
-    href: "/admin/analitik",
+    href: "/drivetechadmin/analitik",
     label: "Analitik",
     icon: IconAnalitik,
-    match: (pathname) => pathname === "/admin/analitik" || pathname.startsWith("/admin/analitik/"),
+    match: (pathname) => pathname === "/drivetechadmin/analitik" || pathname.startsWith("/drivetechadmin/analitik/"),
   },
   {
-    href: "/admin/qr",
+    href: "/drivetechadmin/qr",
     label: "QR Code",
     icon: IconQr,
-    match: (pathname) => pathname === "/admin/qr" || pathname.startsWith("/admin/qr/"),
+    match: (pathname) => pathname === "/drivetechadmin/qr" || pathname.startsWith("/drivetechadmin/qr/"),
   },
   {
-    href: "/admin/pengaturan",
+    href: "/drivetechadmin/pengaturan",
     label: "Pengaturan",
     icon: IconPengaturan,
     match: (pathname) =>
-      pathname === "/admin/pengaturan" || pathname.startsWith("/admin/pengaturan/"),
+      pathname === "/drivetechadmin/pengaturan" || pathname.startsWith("/drivetechadmin/pengaturan/"),
   },
 ];
 

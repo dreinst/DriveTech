@@ -30,8 +30,8 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
 --
 
 CREATE TYPE public.admin_role AS ENUM (
-    'admin',
-    'verifikator'
+    'superadmin',
+    'admin'
 );
 
 
@@ -341,7 +341,7 @@ CREATE TABLE public.admin_users (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     email text NOT NULL,
     full_name text,
-    role public.admin_role DEFAULT 'verifikator'::public.admin_role NOT NULL,
+    role public.admin_role DEFAULT 'admin'::public.admin_role NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     username text,
     password_hash text

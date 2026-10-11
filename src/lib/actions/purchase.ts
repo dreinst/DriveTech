@@ -48,7 +48,7 @@ export async function createPurchaseAction(
   if (!result.ok) return errorState(result.error);
 
   revalidatePath(`/beli/${parsed.data.slotId}`);
-  revalidatePath("/admin/leasing");
+  revalidatePath("/drivetechadmin/leasing");
 
   const tujuan =
     parsed.data.paymentMethod === "credit"

@@ -17,7 +17,7 @@ if "drivetech_putusan" in s:
 helper = '''
 
 async def drivetech_putusan(kode, aksi, alasan=""):
-    """Setujui/tolak pembayaran DriveTech lewat API aplikasinya (verifyPayment/rejectPayment yang sama dengan /admin)."""
+    """Setujui/tolak pembayaran DriveTech lewat API aplikasinya (verifyPayment/rejectPayment yang sama dengan /drivetechadmin)."""
     import aiohttp
     url = os.environ.get("DRIVETECH_URL", "https://drivetech.dpro.events").rstrip("/")
     try:

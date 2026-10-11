@@ -44,7 +44,7 @@ export function SiteHeader() {
             </ul>
           </nav>
 
-          {/* Tautan admin sengaja tidak ditampilkan ke publik: panitia masuk lewat /admin/login. */}
+          {/* Tautan admin sengaja tidak ditampilkan ke publik: panitia masuk lewat /drivetechadmin/login. */}
           <Link href="/#denah" className={buttonClass("primary", "sm")}>
             Pesan Lapak
           </Link>

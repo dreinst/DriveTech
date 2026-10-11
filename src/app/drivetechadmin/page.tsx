@@ -177,7 +177,7 @@ export default async function AdminDashboardPage() {
               <p className="mt-0.5 text-xs text-muted">Okupansi {labelTanggalOkupansi}</p>
             </div>
             <Link
-              href="/admin/slots"
+              href="/drivetechadmin/slots"
               className="text-xs font-medium text-accent underline-offset-2 hover:underline"
             >
               Kelola slot
@@ -240,7 +240,7 @@ export default async function AdminDashboardPage() {
           <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-line px-6 py-5">
             <h2 className="text-lg font-semibold tracking-tight text-ink">Transaksi Terbaru</h2>
             <Link
-              href="/admin/bookings"
+              href="/drivetechadmin/bookings"
               className="text-sm font-medium text-accent underline-offset-2 hover:underline"
             >
               Lihat Semua
@@ -277,8 +277,8 @@ export default async function AdminDashboardPage() {
                       slotAdminFee(booking.slot, booking.slot.zone) *
                         Math.max(1, booking.dates.length);
                     const hrefDetail = submitted
-                      ? `/admin/bookings?payment=submitted&q=${encodeURIComponent(booking.booking_code)}`
-                      : `/admin/bookings?q=${encodeURIComponent(booking.booking_code)}`;
+                      ? `/drivetechadmin/bookings?payment=submitted&q=${encodeURIComponent(booking.booking_code)}`
+                      : `/drivetechadmin/bookings?q=${encodeURIComponent(booking.booking_code)}`;
 
                     return (
                       <tr

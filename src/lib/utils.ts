@@ -18,7 +18,7 @@ export function tujuanAdminAman(next: string | string[] | undefined): string {
   ) {
     return nilai;
   }
-  return "/admin";
+  return "/drivetechadmin";
 }
 
 const rupiahFormatter = new Intl.NumberFormat("id-ID", {
