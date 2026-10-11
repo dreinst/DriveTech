@@ -151,7 +151,11 @@ function susunBarisCsv(bookings: BookingDetail[]): ExportCsvRow[] {
     tanggal: booking.dates.join(";"),
     metode: booking.payment ? PAYMENT_METHOD_LABEL[booking.payment.method] : "",
     nominal: nominalBooking(booking),
+    kode_unik: booking.payment?.unique_code ?? "",
     status_bayar: booking.payment ? PAYMENT_STATUS_LABEL[booking.payment.status] : "",
+    bukti_dikirim: booking.payment?.submitted_at ?? "",
+    diverifikasi: booking.payment?.verified_at ?? "",
+    alasan_tolak: booking.payment?.reject_reason ?? "",
     status_booking: BOOKING_STATUS_LABEL[booking.status],
     created_at: booking.created_at,
   }));

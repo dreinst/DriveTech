@@ -116,37 +116,12 @@ Skrip npm yang tersedia:
 
 ---
 
-## 4. Integrasi Google Sheets
+## 4. Unduh data
 
-Semua entitas (booking, pembayaran, pembelian unit, pengajuan leasing) bisa disinkronkan
-otomatis ke Google Sheets lewat webhook Apps Script — ditambah tombol **Ekspor CSV** manual
-di `/drivetechadmin/bookings`.
-
-Cara pasang (± 3 menit, cukup sekali):
-
-1. Buka spreadsheet tujuan (spreadsheet Google Sheets mana pun milik panitia;
-   kalau ganti spreadsheet, pasang ulang skrip lalu perbarui `SHEETS_WEBHOOK_URL`).
-2. Menu **Extensions → Apps Script**, hapus isi editor bawaan, lalu tempel seluruh isi
-   `tools/google-sheets-webhook.gs`. Skrip memakai `SpreadsheetApp.getActiveSpreadsheet()`,
-   jadi wajib dipasang **di dalam** spreadsheet itu — bukan sebagai project Apps Script lepas.
-3. **Deploy → New deployment → Web app**: *Execute as* = **Me**, *Who has access* =
-   **Anyone**, lalu klik Deploy dan izinkan akses saat diminta.
-4. Salin **Web app URL** (berakhiran `/exec`) ke `.env.local`:
-
-```env
-SHEETS_WEBHOOK_URL=https://script.google.com/macros/s/…/exec
-```
-
-Perilakunya:
-
-* Aplikasi mengirim POST JSON `{ entity, sentAt, data }` setelah operasi sukses — buat
-  booking, submit/verifikasi/tolak pembayaran, batal booking, pembelian unit, pengajuan &
-  update leasing (lihat `src/lib/sheets.ts`).
-* Skrip membuat satu sheet per entitas (**Bookings**, **Payments**, **Purchases**,
-  **Leasing**), header otomatis dari keys data, lalu meng-*upsert* baris berdasarkan kolom
-  pertama (kode/id) dan mengisi kolom `updated_at`.
-* Sinkronisasi bersifat *fire-and-forget*: bila `SHEETS_WEBHOOK_URL` kosong atau webhook
-  gagal, operasi utama **tidak ikut gagal** (hanya tercatat `console.warn` di server).
+Semua data tersimpan di database. Panitia mengunduhnya dari panel admin dengan tombol
+**Ekspor CSV**: booking dan pembayaran di `/drivetechadmin/bookings`, tenant di
+`/drivetechadmin/tenants`, pembelian unit dan leasing di `/drivetechadmin/leasing`. Berkasnya
+memakai pemisah titik koma supaya langsung rapi di Excel.
 
 ---
 
@@ -467,7 +442,7 @@ Tenor yang diterima: `12, 18, 24, 36, 48, 60`. Komisi platform dihitung otomatis
 .
 ├── layout-venue-v2.jpeg  Denah asli event (Layout v2, 2026-09-02) — sumber kebenaran tata letak
 ├── public/denah.svg               Denah statis hasil generator (fallback & pratinjau)
-├── tools/                         Skrip bantu: generator SVG denah + webhook Google Sheets (.gs)
+├── tools/                         Skrip bantu: generator SVG denah, alat VPS
 ├── db/
 │   ├── skema.sql                  Skema lengkap: enum, tabel, index, trigger, fungsi
 │   └── seed.sql                   1 event, 9 tanggal Musim 1 (7-8 Nov, lalu tiap Minggu s.d. 27 Des 2026), 8 zona, 107 slot, 3 mitra leasing
@@ -691,8 +666,7 @@ Hal-hal yang perlu diketahui sebelum dipakai sungguhan.
   per username), pembayaran (10/jam per booking), dan pembelian. Fail-open bila DB
   bermasalah.
 * **Endpoint cron fail-closed.** `/api/cron/*` menolak 503 di produksi bila
-  `CRON_SECRET` kosong; recap mingguan juga butuh `SHEETS_ACTION_KEY` (= `RECAP_KEY`
-  di Apps Script, terpisah dari `RESET_KEY` yang hanya ada di editor Apps Script).
+  `CRON_SECRET` kosong.
 * **Belum ada CAPTCHA / verifikasi nomor telepon.** Tenant dikenali dari nomor telepon
   saja; pembatas laju di atas menahan penimbunan massal dari satu jaringan, tetapi
   booking iseng memakai nomor palsu satuan belum tersaring otomatis (OTP WhatsApp

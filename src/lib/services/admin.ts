@@ -1,5 +1,4 @@
 import { fail, ok, type Result } from "@/lib/result";
-import { syncToSheet } from "@/lib/sheets";
 import { coba, cobaSatu, isDbConfigured, sql } from "@/lib/db";
 import { isBookableZoneType, isVehicleZoneType } from "@/lib/domain/constants";
 import type {
@@ -443,24 +442,11 @@ export async function verifyPayment(paymentId: string, adminId: string): Promise
     return dbFail<null>(bookingUpdate.error, "Gagal mengonfirmasi booking");
   }
 
-  void syncToSheet("payment", {
-    bookingCode: booking.booking_code,
-    status: "verified",
-    verifiedAt: now,
-  });
-  void syncToSheet("booking", {
-    bookingCode: booking.booking_code,
-    status: "confirmed",
-  });
 
   // Booking confirmed = kendaraannya (bila ada) mulai tampil di /katalog.
   const listing = await cobaSatu(sql<{ is_visible: boolean }[]>`
     select is_visible from vehicle_listings where booking_id = ${booking.id}`);
   if (listing.data) {
-    void syncToSheet("vehicle", {
-      bookingCode: booking.booking_code,
-      tampil: listing.data.is_visible ? "ya" : "disembunyikan-admin",
-    });
   }
 
   void kirimNotifikasiBooking("verified", booking.id);
@@ -498,18 +484,6 @@ export async function rejectPayment(
     })} where id = ${paymentResult.data.id}`);
 
   if (error) return dbFail<null>(error, "Gagal menolak pembayaran");
-
-  // Kode booking hanya untuk sinkron sheet — kegagalan query tidak menggagalkan operasi.
-  const bookingQuery = await cobaSatu(sql<{ booking_code: string }[]>`
-    select booking_code from bookings where id = ${paymentResult.data.booking_id}`);
-  const bookingCode = bookingQuery.data?.booking_code ?? null;
-  if (bookingCode) {
-    void syncToSheet("payment", {
-      bookingCode,
-      status: "rejected",
-      rejectReason: alasan,
-    });
-  }
 
   void kirimNotifikasiBooking("rejected", paymentResult.data.booking_id, { reason: alasan });
 
@@ -561,10 +535,6 @@ export async function adminCreateBooking(
       update bookings set status = 'confirmed', updated_at = ${now}
        where id = ${created.data.bookingId}`);
 
-    void syncToSheet("booking", {
-      bookingCode: created.data.bookingCode,
-      status: "confirmed",
-    });
     void kirimNotifikasiBooking("verified", created.data.bookingId);
   }
 
@@ -575,7 +545,7 @@ export async function adminCreateBooking(
  * Pindahkan booking ke slot lain (aksi admin). Slot tujuan wajib: bisa dipesan,
  * tidak diblokir, TIPE ZONA SAMA (agar jenis tenant & data kendaraan tetap
  * valid), dan BEBAS pada semua tanggal aktif booking. Memindah booking.slot_id +
- * baris booking_dates aktif + listing kendaraan (bila ada), lalu sinkron Sheet.
+ * baris booking_dates aktif + listing kendaraan (bila ada).
  */
 export async function adminMoveBookingSlot(
   bookingId: string,
@@ -644,11 +614,6 @@ export async function adminMoveBookingSlot(
       update vehicle_listings set slot_id = ${targetSlotId} where booking_id = ${booking.id}`);
   }
 
-  void syncToSheet("booking", {
-    bookingCode: booking.booking_code,
-    slot: target.svg_element_id ?? target.slot_label ?? target.id,
-    zona: target.zone.name,
-  });
 
   return ok(null);
 }
@@ -687,11 +652,6 @@ export async function adminCancelBooking(
   if (updated.error) return dbFail<null>(updated.error, "Gagal membatalkan booking");
   if (!updated.data) return ok(null); // sudah dibatalkan proses lain — idempoten
 
-  void syncToSheet("booking", {
-    bookingCode: booking.booking_code,
-    status: "cancelled",
-    catatan: `dibatalkan panitia: ${alasan}`,
-  });
   void kirimNotifikasiBooking("cancelled", booking.id, { reason: alasan });
 
   return ok(null);
@@ -769,16 +729,6 @@ export async function updateLeasingApplication(
   if (!data) return fail<LeasingApplicationRow>("Pengajuan leasing tidak ditemukan.", "NOT_FOUND");
 
   const row = data;
-  void syncToSheet("leasing", {
-    leasingId: row.id,
-    purchaseTransactionId: row.purchase_transaction_id,
-    status: row.status,
-    dpAmount: row.dp_amount ?? "",
-    tenorBulan: row.tenor_bulan ?? "",
-    commissionAmount: row.commission_amount ?? "",
-    commissionPaid: row.commission_paid === true,
-    notes: row.notes ?? "",
-  });
 
   return ok(row);
 }

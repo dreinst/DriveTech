@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { AutoRefresh } from "@/components/admin/AutoRefresh";
+import { ExportCsvButton, type ExportCsvRow } from "@/components/admin/ExportCsvButton";
 import { LeasingUpdateForm } from "@/components/admin/LeasingUpdateForm";
 import { PartnerForm } from "@/components/admin/PartnerForm";
 import { Alert } from "@/components/ui/Alert";
@@ -63,6 +64,27 @@ function jumlahKomisi(rows: AdminLeasingItem[], lolos: (row: AdminLeasingItem) =
     .reduce((total, row) => total + (row.commission_amount ?? 0), 0);
 }
 
+
+/** Baris CSV ekspor: satu baris per pengajuan leasing beserta pembelian unitnya. */
+function susunBarisCsv(pengajuan: AdminLeasingItem[]): ExportCsvRow[] {
+  return pengajuan.map((row) => ({
+    kode_transaksi: row.purchase?.transaction_code ?? "",
+    pembeli: row.purchase?.buyer_name ?? "",
+    phone: row.purchase?.buyer_phone ?? "",
+    unit: row.purchase?.unit_description ?? "",
+    harga_unit: row.purchase?.unit_price ?? "",
+    slot: row.purchase?.slot ? slotDisplayName(row.purchase.slot) : "",
+    mitra: row.partner?.name ?? "",
+    dp: row.dp_amount ?? "",
+    tenor_bulan: row.tenor_bulan ?? "",
+    status: LEASING_STATUS_LABEL[row.status],
+    komisi: row.commission_amount ?? "",
+    komisi_dibayar: row.commission_paid ? "ya" : "belum",
+    catatan: row.notes ?? "",
+    created_at: row.created_at,
+  }));
+}
+
 export default async function AdminLeasingPage() {
   await requireAdmin();
 
@@ -93,7 +115,14 @@ export default async function AdminLeasingPage() {
             Pantau pengajuan pembiayaan pengunjung dan komisi platform.
           </p>
         </div>
-        <AutoRefresh />
+        <div className="flex flex-wrap items-center gap-3">
+          <ExportCsvButton
+            filename="drive-tech-leasing.csv"
+            rows={susunBarisCsv(pengajuan)}
+            label="Ekspor CSV"
+          />
+          <AutoRefresh />
+        </div>
       </header>
 
       {!pengajuanResult.ok ? (

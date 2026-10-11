@@ -1,5 +1,4 @@
 import { fail, ok, type Result } from "@/lib/result";
-import { syncToSheet } from "@/lib/sheets";
 import { coba, cobaSatu, isDbConfigured, sql } from "@/lib/db";
 import type {
   LeasingApplicationRow,
@@ -132,17 +131,6 @@ export async function submitLeasingApplication(
 
   const row = inserted.data;
 
-  // Sinkron ke Google Sheets — fire-and-forget, tidak menahan respons.
-  void syncToSheet("leasing", {
-    leasingId: row.id,
-    purchaseTransactionId: purchase.id,
-    status: "submitted",
-    dpAmount: data.dpAmount,
-    tenorBulan: data.tenorBulan,
-    commissionAmount: commission ?? "",
-    commissionPaid: false,
-    notes: data.notes ?? "",
-  });
 
   return ok<Out>({ leasingApplicationId: row.id });
 }

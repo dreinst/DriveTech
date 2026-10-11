@@ -1,5 +1,4 @@
 import { fail, ok, type Result } from "@/lib/result";
-import { syncToSheet } from "@/lib/sheets";
 import { coba, cobaSatu, isDbConfigured, sql } from "@/lib/db";
 import type {
   BookingStatus,
@@ -156,10 +155,6 @@ export async function setVehicleVisibility(
 
   const bookingCode = updated.data.booking_code;
   if (bookingCode) {
-    void syncToSheet("vehicle", {
-      bookingCode,
-      tampil: visible ? "ya" : "disembunyikan-admin",
-    });
   }
 
   return ok(null);

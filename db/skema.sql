@@ -229,8 +229,7 @@ begin
           and b.created_at < now() - batas)
         or (p.status = 'rejected' and p.updated_at < now() - batas)
         -- Bukti dikirim tapi tidak diverifikasi siapa pun selama batas_submitted:
-        -- lepaskan tanggalnya. updated_at ikut terisi oleh trigger
-        -- bookings_set_updated_at, jadi rekonsiliasi sheet bisa menemukannya.
+        -- lepaskan tanggalnya.
         or (p.status = 'submitted'
           and coalesce(p.submitted_at, p.updated_at, b.created_at) < now() - batas_submitted)
       )

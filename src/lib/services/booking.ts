@@ -11,7 +11,6 @@ import { hitungTotalBiaya } from "@/lib/domain/ketersediaan";
 import { TENANT_TYPE_BY_ZONE_TYPE } from "@/lib/domain/labels";
 import { isEmailConfigured, notifyBooking, type BookingNotifKind } from "@/lib/notifications";
 import { fail, ok, type Result } from "@/lib/result";
-import { syncToSheet } from "@/lib/sheets";
 import { getSiteUrl } from "@/lib/site-url";
 import { formatTanggalWaktu, slotDisplayName } from "@/lib/utils";
 import { coba, cobaSatu, isDbConfigured, sql } from "@/lib/db";
@@ -412,35 +411,8 @@ export async function createBooking(
       return dbFail<Out>(listingInsert.error, "Gagal menyimpan data kendaraan");
     }
 
-    void syncToSheet("vehicle", {
-      bookingCode: booking.booking_code,
-      vehicleName: v.vehicleName,
-      jenis: jenisDariZona,
-      plate: v.plateNumber,
-      price: v.price,
-      tahun: v.year ?? "",
-      km: v.mileageKm ?? "",
-      transmisi: v.transmission ?? "",
-      warna: v.color ?? "",
-      slot: slot.svg_element_id ?? slot.slot_label ?? slot.id,
-      zona: slot.zone.name,
-      tanggal: dates.join(", "),
-      photoUrl: v.photoUrl,
-      tampil: "menunggu-konfirmasi",
-    });
   }
 
-  // Sinkron ke Google Sheets — fire-and-forget, tidak menahan respons.
-  void syncToSheet("booking", {
-    bookingCode: booking.booking_code,
-    status: "pending_payment",
-    tanggal: dates.join(", "),
-    slot: slot.svg_element_id ?? slot.slot_label ?? slot.id,
-    zona: slot.zone.name,
-    tenantName: data.tenantName,
-    phone: data.tenantPhone,
-    amount,
-  });
 
   // Notifikasi email (utama) + WA bila aktif ke tenant (fire-and-forget). Tenggat = created + 24 jam,
   // cermin expire_unpaid_bookings; dihitung di sini karena notif modul murni.
@@ -593,14 +565,6 @@ export async function submitPayment(
       return dbFail<Out>(inserted.error, "Gagal menyimpan pembayaran");
     }
 
-    void syncToSheet("payment", {
-      bookingCode: booking.booking_code,
-      status: "submitted",
-      method: data.method,
-      amount,
-      proofUrl: data.proofUrl ?? "",
-      submittedAt: now,
-    });
 
     return ok<Out>({ bookingId: booking.id });
   }
@@ -619,14 +583,6 @@ export async function submitPayment(
     return dbFail<Out>(updated.error, "Gagal menyimpan pembayaran");
   }
 
-  void syncToSheet("payment", {
-    bookingCode: booking.booking_code,
-    status: "submitted",
-    method: data.method,
-    amount: booking.payment.amount,
-    proofUrl: data.proofUrl ?? booking.payment.proof_url ?? "",
-    submittedAt: now,
-  });
 
   return ok<Out>({ bookingId: booking.id });
 }
@@ -702,10 +658,6 @@ export async function cancelBooking(
     );
   }
 
-  void syncToSheet("booking", {
-    bookingCode: booking.booking_code,
-    status: "cancelled",
-  });
 
   void kirimNotifikasiBooking("cancelled", booking.id);
 
