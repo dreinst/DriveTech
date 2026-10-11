@@ -114,7 +114,7 @@ export default async function AdminAnalitikPage() {
       <div className="grid gap-4 lg:grid-cols-2">
         <KartuChart judul="Okupansi per Zona" deskripsi={deskripsiOkupansi}>
           {data.okupansiPerZona.length === 0 ? (
-            <BelumAdaData pesan="Belum ada zona dengan slot terdaftar. Jalankan supabase/seed.sql lebih dulu." />
+            <BelumAdaData pesan="Belum ada zona dengan slot terdaftar. Jalankan db/seed.sql lebih dulu." />
           ) : (
             <OkupansiZonaChart data={data.okupansiPerZona} />
           )}

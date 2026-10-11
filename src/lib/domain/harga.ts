@@ -8,7 +8,7 @@ import type { SlotRow, ZoneRow } from "@/lib/types/database";
  * Override dipakai mis. slot UMKM 11-20 ("Booth Leasing"/"Booth Otomotif",
  * Rp 500.000) sementara slot UMKM lain ikut harga zona (Rp 250.000).
  *
- * Modul murni (tanpa Supabase/server) supaya bisa dipakai komponen client
+ * Modul murni (tanpa database/server) supaya bisa dipakai komponen client
  * (panel detail slot, kartu zona) maupun service server (createBooking).
  */
 export function slotAdminFee(

@@ -1,7 +1,6 @@
 import { fail, ok, type Result } from "@/lib/result";
 import { syncToSheet } from "@/lib/sheets";
-import { createAdminSupabase } from "@/lib/supabase/admin";
-import { isServiceRoleConfigured } from "@/lib/supabase/config";
+import { coba, cobaSatu, isDbConfigured, sql } from "@/lib/db";
 import type {
   LeasingApplicationRow,
   LeasingDetail,
@@ -12,7 +11,7 @@ import {
   zodFieldErrors,
   type SubmitLeasingInput,
 } from "@/lib/validation/schemas";
-import { dbFail, NO_CONFIG_MESSAGE, pickOne, type PgError } from "./slots";
+import { dbFail, NO_CONFIG_MESSAGE, pickOne } from "./slots";
 
 // Modul KHUSUS SERVER (lihat catatan "server-only" di services/slots.ts).
 if (typeof window !== "undefined") {
@@ -51,17 +50,14 @@ export function hitungKomisi(
 
 /** Daftar partner leasing yang aktif (dipakai form pengajuan kredit). */
 export async function listActivePartners(): Promise<Result<LeasingPartnerRow[]>> {
-  if (!isServiceRoleConfigured()) return fail<LeasingPartnerRow[]>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<LeasingPartnerRow[]>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
-  const supabase = createAdminSupabase();
-  const { data, error } = await supabase
-    .from("leasing_partners")
-    .select("*")
-    .eq("is_active", true)
-    .order("name", { ascending: true });
+  const { data, error } = await coba(
+    sql<LeasingPartnerRow[]>`select * from leasing_partners where is_active order by name`,
+  );
 
-  if (error) return dbFail<LeasingPartnerRow[]>(error as PgError, "Gagal memuat partner leasing");
-  return ok((data ?? []) as LeasingPartnerRow[]);
+  if (error) return dbFail<LeasingPartnerRow[]>(error, "Gagal memuat partner leasing");
+  return ok([...data]);
 }
 
 /**
@@ -72,7 +68,7 @@ export async function submitLeasingApplication(
   input: SubmitLeasingInput,
 ): Promise<Result<{ leasingApplicationId: string }>> {
   type Out = { leasingApplicationId: string };
-  if (!isServiceRoleConfigured()) return fail<Out>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<Out>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
   const parsed = submitLeasingSchema.safeParse(input);
   if (!parsed.success) {
@@ -82,20 +78,15 @@ export async function submitLeasingApplication(
   }
   const data = parsed.data;
 
-  const supabase = createAdminSupabase();
-
-  const purchaseQuery = await supabase
-    .from("purchase_transactions")
-    .select("id, payment_method, unit_price")
-    .eq("id", data.purchaseTransactionId)
-    .maybeSingle();
-
+  const purchaseQuery = await cobaSatu(
+    sql<{ id: string; payment_method: string; unit_price: number | null }[]>`
+      select id, payment_method, unit_price from purchase_transactions
+       where id = ${data.purchaseTransactionId}`,
+  );
   if (purchaseQuery.error) {
-    return dbFail<Out>(purchaseQuery.error as PgError, "Gagal memuat transaksi pembelian");
+    return dbFail<Out>(purchaseQuery.error, "Gagal memuat transaksi pembelian");
   }
-  const purchase = (purchaseQuery.data ?? null) as
-    | { id: string; payment_method: string; unit_price: number | null }
-    | null;
+  const purchase = purchaseQuery.data;
   if (!purchase) return fail<Out>("Transaksi tidak ditemukan.", "NOT_FOUND");
   if (purchase.payment_method !== "credit") {
     return fail<Out>(
@@ -104,18 +95,15 @@ export async function submitLeasingApplication(
     );
   }
 
-  const partnerQuery = await supabase
-    .from("leasing_partners")
-    .select("id, commission_rate, is_active")
-    .eq("id", data.leasingPartnerId)
-    .maybeSingle();
-
+  const partnerQuery = await cobaSatu(
+    sql<{ id: string; commission_rate: number | null; is_active: boolean }[]>`
+      select id, commission_rate, is_active from leasing_partners
+       where id = ${data.leasingPartnerId}`,
+  );
   if (partnerQuery.error) {
-    return dbFail<Out>(partnerQuery.error as PgError, "Gagal memuat partner leasing");
+    return dbFail<Out>(partnerQuery.error, "Gagal memuat partner leasing");
   }
-  const partner = (partnerQuery.data ?? null) as
-    | { id: string; commission_rate: number | null; is_active: boolean }
-    | null;
+  const partner = partnerQuery.data;
   if (!partner) return fail<Out>("Partner leasing tidak ditemukan.", "NOT_FOUND");
   if (!partner.is_active) {
     return fail<Out>("Partner leasing tersebut sedang tidak aktif.", "INACTIVE_PARTNER");
@@ -123,9 +111,8 @@ export async function submitLeasingApplication(
 
   const commission = hitungKomisi(purchase.unit_price, data.dpAmount, partner.commission_rate);
 
-  const inserted = await supabase
-    .from("leasing_applications")
-    .insert({
+  const inserted = await cobaSatu(sql<{ id: string }[]>`
+    insert into leasing_applications ${sql({
       purchase_transaction_id: purchase.id,
       leasing_partner_id: partner.id,
       dp_amount: data.dpAmount,
@@ -134,19 +121,16 @@ export async function submitLeasingApplication(
       commission_amount: commission,
       commission_paid: false,
       notes: data.notes ?? null,
-    })
-    .select("id")
-    .single();
+    })} returning id`);
 
   if (inserted.error || !inserted.data) {
-    const error = inserted.error as PgError;
-    if (error?.code === UNIQUE_VIOLATION) {
+    if (inserted.error?.code === UNIQUE_VIOLATION) {
       return fail<Out>("Transaksi ini sudah punya pengajuan leasing.", "ALREADY_EXISTS");
     }
-    return dbFail<Out>(error, "Gagal menyimpan pengajuan leasing");
+    return dbFail<Out>(inserted.error, "Gagal menyimpan pengajuan leasing");
   }
 
-  const row = inserted.data as { id: string };
+  const row = inserted.data;
 
   // Sinkron ke Google Sheets — fire-and-forget, tidak menahan respons.
   void syncToSheet("leasing", {
@@ -167,19 +151,18 @@ export async function submitLeasingApplication(
 export async function getLeasingByPurchase(
   purchaseId: string,
 ): Promise<Result<LeasingDetail | null>> {
-  if (!isServiceRoleConfigured()) {
+  if (!isDbConfigured()) {
     return fail<LeasingDetail | null>(NO_CONFIG_MESSAGE, "NO_CONFIG");
   }
 
-  const supabase = createAdminSupabase();
-  const { data, error } = await supabase
-    .from("leasing_applications")
-    .select("*, partner:leasing_partners(*)")
-    .eq("purchase_transaction_id", purchaseId)
-    .maybeSingle();
+  const { data, error } = await cobaSatu(sql`
+    select la.*, to_jsonb(lp) as partner
+      from leasing_applications la
+      left join leasing_partners lp on lp.id = la.leasing_partner_id
+     where la.purchase_transaction_id = ${purchaseId}`);
 
   if (error) {
-    return dbFail<LeasingDetail | null>(error as PgError, "Gagal memuat pengajuan leasing");
+    return dbFail<LeasingDetail | null>(error, "Gagal memuat pengajuan leasing");
   }
 
   return ok(normalizeLeasingRow(data));

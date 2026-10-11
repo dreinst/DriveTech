@@ -20,8 +20,7 @@ import {
 } from "@/lib/services/booking";
 import { requestEmailCode } from "@/lib/services/otp";
 import { getSlotDetail } from "@/lib/services/slots";
-import { createAdminSupabase } from "@/lib/supabase/admin";
-import { isServiceRoleConfigured } from "@/lib/supabase/config";
+import { simpanBerkas } from "@/lib/storage";
 import {
   cancelBookingSchema,
   publicBookingSchema,
@@ -101,7 +100,7 @@ const PESAN_BATAS_BOOKING =
 
 /**
  * URL sementara agar skema (photoUrl wajib http/https) bisa divalidasi SEBELUM
- * foto diunggah; tidak pernah tersimpan — diganti URL storage asli usai unggah.
+ * foto diunggah; tidak pernah tersimpan — diganti URL berkas asli usai unggah.
  */
 const FOTO_PLACEHOLDER_URL = "https://placeholder.invalid/foto-kendaraan.jpg";
 
@@ -220,42 +219,28 @@ export async function createBookingAction(
   // Isian valid — sekarang baru foto diunggah dan URL aslinya dipasang.
   let vehicleFinal = parsed.data.vehicle;
   if (zonaKendaraan && fotoKendaraan && vehicleFinal) {
-    if (!isServiceRoleConfigured()) {
-      return errorState(
-        "Supabase belum dikonfigurasi. Salin .env.example ke .env.local dan isi kredensialnya.",
-      );
-    }
-
-    const supabase = createAdminSupabase();
     const dasar = crypto.randomUUID();
-    const nama = `${dasar}.${ekstensiBukti(fotoKendaraan.type)}`;
-    const unggah = await supabase.storage
-      .from(STORAGE_BUCKET_FOTO_KENDARAAN)
-      .upload(nama, fotoKendaraan, { contentType: fotoKendaraan.type, cacheControl: "3600" });
-    if (unggah.error) {
-      return errorState(`Gagal mengunggah foto kendaraan: ${unggah.error.message}`, {
+    const urlFoto = await simpanBerkas(
+      STORAGE_BUCKET_FOTO_KENDARAAN,
+      `${dasar}.${ekstensiBukti(fotoKendaraan.type)}`,
+      fotoKendaraan,
+    );
+    if (!urlFoto) {
+      return errorState("Gagal mengunggah foto kendaraan.", {
         vehiclePhoto: "Foto gagal diunggah, coba lagi.",
       });
     }
-    const { data } = supabase.storage.from(STORAGE_BUCKET_FOTO_KENDARAAN).getPublicUrl(nama);
-    vehicleFinal = { ...vehicleFinal, photoUrl: data.publicUrl };
+    vehicleFinal = { ...vehicleFinal, photoUrl: urlFoto };
 
     // Versi kecil: BONUS, tidak pernah menggagalkan booking. Kalau unggahannya
     // gagal, kartu katalog tinggal memakai foto besar seperti sebelumnya.
     if (fotoKendaraanKecil) {
-      const namaKecil = `${dasar}-kartu.${ekstensiBukti(fotoKendaraanKecil.type)}`;
-      const unggahKecil = await supabase.storage
-        .from(STORAGE_BUCKET_FOTO_KENDARAAN)
-        .upload(namaKecil, fotoKendaraanKecil, {
-          contentType: fotoKendaraanKecil.type,
-          cacheControl: "3600",
-        });
-      if (!unggahKecil.error) {
-        const kecil = supabase.storage
-          .from(STORAGE_BUCKET_FOTO_KENDARAAN)
-          .getPublicUrl(namaKecil);
-        vehicleFinal = { ...vehicleFinal, photoThumbUrl: kecil.data.publicUrl };
-      }
+      const urlKecil = await simpanBerkas(
+        STORAGE_BUCKET_FOTO_KENDARAAN,
+        `${dasar}-kartu.${ekstensiBukti(fotoKendaraanKecil.type)}`,
+        fotoKendaraanKecil,
+      );
+      if (urlKecil) vehicleFinal = { ...vehicleFinal, photoThumbUrl: urlKecil };
     }
   }
 
@@ -337,28 +322,17 @@ export async function submitPaymentAction(
         proof: "Format bukti pembayaran harus JPG, PNG, atau WEBP.",
       });
     }
-    if (!isServiceRoleConfigured()) {
-      return errorState(
-        "Supabase belum dikonfigurasi. Salin .env.example ke .env.local dan isi kredensialnya.",
-      );
-    }
-
-    const supabase = createAdminSupabase();
-    const nama = `${booking.id}-${booking.slot_id}.${ekstensiBukti(berkas.type)}`;
-    const unggah = await supabase.storage.from(STORAGE_BUCKET_BUKTI).upload(nama, berkas, {
-      upsert: true,
-      contentType: berkas.type,
-      cacheControl: "3600",
-    });
-
-    if (unggah.error) {
-      return errorState(`Gagal mengunggah bukti pembayaran: ${unggah.error.message}`, {
+    const urlBukti = await simpanBerkas(
+      STORAGE_BUCKET_BUKTI,
+      `${booking.id}-${booking.slot_id}.${ekstensiBukti(berkas.type)}`,
+      berkas,
+    );
+    if (!urlBukti) {
+      return errorState("Gagal mengunggah bukti pembayaran.", {
         proof: "Bukti pembayaran gagal diunggah, coba lagi.",
       });
     }
-
-    const { data } = supabase.storage.from(STORAGE_BUCKET_BUKTI).getPublicUrl(nama);
-    proofUrl = data.publicUrl;
+    proofUrl = urlBukti;
   }
 
   const parsed = submitPaymentSchema.safeParse({ bookingId, method, proofUrl });

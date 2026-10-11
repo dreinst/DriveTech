@@ -86,7 +86,7 @@ export async function adminLoginAction(
   }
 
   // Pembatas laju bersama (temuan audit 2026-09-03): per IP dan per username,
-  // dicek SEBELUM GoTrue dipanggil. Pesannya sengaja generik (anti enumerasi).
+  // dicek SEBELUM sandi diperiksa. Pesannya sengaja generik (anti enumerasi).
   const ipKlien = await clientIpFromHeaders();
   const bolehIp = await rateLimitShared(`login:ip:${ipKlien}`, 10, 600);
   const bolehUser =

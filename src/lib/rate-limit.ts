@@ -1,8 +1,6 @@
 import { headers } from "next/headers";
 
-import { createAdminSupabase } from "@/lib/supabase/admin";
-import { isServiceRoleConfigured } from "@/lib/supabase/config";
-
+import { isDbConfigured, sql } from "@/lib/db";
 /**
  * Dua lapis pembatas laju:
  *
@@ -10,8 +8,8 @@ import { isServiceRoleConfigured } from "@/lib/supabase/config";
  *    spam/bot sederhana di satu instance, tapi kalau app jalan di banyak instance hitungannya
  *    tidak dibagi antar instance dan tidak menyentuh Server Action.
  * 2. `rateLimitShared` — BERSAMA lintas instance, dicatat di tabel
- *    public.rate_limit_events lewat fungsi public.rate_limit_hit (migrasi
- *    20260903121000_rate_limit_bersama.sql) memakai service_role. Ini yang
+ *    public.rate_limit_events lewat fungsi public.rate_limit_hit (lihat
+ *    db/skema.sql). Ini yang
  *    menutup temuan audit 2026-09-03: form web (Server Action), API, pembatalan
  *    mandiri, dan login admin semua memakai kunci yang sama sehingga penyerang
  *    tidak bisa menggandakan jatah lewat jalur berbeda.
@@ -98,7 +96,7 @@ function peringatkanSekali(pesan: string): void {
  * Pembatas laju BERSAMA lintas instance: catat satu permintaan untuk `key`
  * dan kembalikan true bila masih di bawah `limit` per `windowSeconds`.
  *
- * FAIL-OPEN: kalau Supabase belum dikonfigurasi atau RPC galat, kembalikan
+ * FAIL-OPEN: kalau database belum dikonfigurasi atau query galat, kembalikan
  * true — gangguan database tidak boleh mematikan seluruh alur booking; galat
  * dicatat sekali per pesan. Jangan pernah melempar.
  */
@@ -107,19 +105,11 @@ export async function rateLimitShared(
   limit: number,
   windowSeconds: number,
 ): Promise<boolean> {
-  if (!isServiceRoleConfigured()) return true;
+  if (!isDbConfigured()) return true;
   try {
-    const supabase = createAdminSupabase();
-    const { data, error } = await supabase.rpc("rate_limit_hit", {
-      p_key: key,
-      p_limit: limit,
-      p_window_seconds: windowSeconds,
-    });
-    if (error) {
-      peringatkanSekali(`rate_limit_hit gagal: ${error.message}`);
-      return true;
-    }
-    return data !== false;
+    const [row] = await sql<{ boleh: boolean | null }[]>`
+      select rate_limit_hit(${key}, ${limit}, ${windowSeconds}) as boleh`;
+    return row?.boleh !== false;
   } catch (err) {
     peringatkanSekali(`rate_limit_hit exception: ${err instanceof Error ? err.message : String(err)}`);
     return true;

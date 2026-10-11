@@ -4,9 +4,8 @@ import { z } from "zod";
 import { MAX_PROOF_BYTES, STORAGE_BUCKET_BUKTI } from "@/lib/domain/constants";
 import { checkRateLimit, clientIpFrom, rateLimitShared } from "@/lib/rate-limit";
 import { getBookingDetail, submitPayment } from "@/lib/services/booking";
-import { createAdminSupabase } from "@/lib/supabase/admin";
-import { isProofUrlMilikKita } from "@/lib/storage";
-import { isServiceRoleConfigured } from "@/lib/supabase/config";
+import { isDbConfigured } from "@/lib/db";
+import { isProofUrlMilikKita, simpanBerkas } from "@/lib/storage";
 import { submitPaymentSchema } from "@/lib/validation/schemas";
 import {
   formText,
@@ -38,8 +37,8 @@ function ekstensiBukti(mime: string): string {
 type PayloadPembayaran = { method: string; proofUrl: string };
 
 /**
- * Unggah bukti pembayaran QRIS ke bucket `bukti-transfer` (PRIVATE sejak 2026-08-29;
- * ditampilkan lewat signed URL — lihat lib/storage.ts) dan kembalikan URL
+ * Unggah bukti pembayaran QRIS ke folder `bukti-transfer` (PRIVAT sejak 2026-08-29;
+ * ditampilkan lewat URL bertanda tangan, lihat lib/storage.ts) dan kembalikan URL
  * identitasnya. Mengembalikan NextResponse (error siap kirim) kalau berkasnya
  * ditolak. HANYA boleh dipanggil setelah booking terverifikasi ada — endpoint
  * publik ini sempat bisa dipakai menumpang unggah gambar dengan nama bebas
@@ -66,15 +65,12 @@ async function unggahBukti(
     };
   }
 
-  const supabase = createAdminSupabase();
-  const nama = `${bookingId}-api.${ekstensiBukti(berkas.type)}`;
-  const unggah = await supabase.storage.from(STORAGE_BUCKET_BUKTI).upload(nama, berkas, {
-    upsert: true,
-    contentType: berkas.type,
-    cacheControl: "3600",
-  });
-
-  if (unggah.error) {
+  const url = await simpanBerkas(
+    STORAGE_BUCKET_BUKTI,
+    `${bookingId}-api.${ekstensiBukti(berkas.type)}`,
+    berkas,
+  );
+  if (!url) {
     return {
       response: jsonError("Bukti pembayaran gagal diunggah, coba lagi.", 502, {
         code: "UPLOAD_FAILED",
@@ -82,9 +78,7 @@ async function unggahBukti(
       }),
     };
   }
-
-  const { data } = supabase.storage.from(STORAGE_BUCKET_BUKTI).getPublicUrl(nama);
-  return { url: data.publicUrl };
+  return { url };
 }
 
 /**
@@ -112,15 +106,15 @@ export async function POST(request: Request, { params }: RouteContext): Promise<
         fieldErrors: { bookingId: "ID booking tidak valid." },
       });
     }
-    if (!isServiceRoleConfigured()) {
+    if (!isDbConfigured()) {
       return jsonError(
-        "Supabase belum dikonfigurasi. Isi SUPABASE_SERVICE_ROLE_KEY pada .env.local.",
+        "Database belum dikonfigurasi. Isi DATABASE_URL pada .env.local.",
         503,
         { code: "NO_CONFIG" },
       );
     }
     // Pembatas bersama per booking: bukti tidak perlu dikirim ulang puluhan kali
-    // per jam; juga menahan pemakaian endpoint ini sebagai penulis storage.
+    // per jam; juga menahan pemakaian endpoint ini sebagai penulis berkas.
     if (!(await rateLimitShared(`payment:booking:${bookingId}`, 10, 3600))) {
       return jsonRateLimited(600);
     }
@@ -160,7 +154,7 @@ export async function POST(request: Request, { params }: RouteContext): Promise<
       };
     }
 
-    // Bukti hanya sah kalau berkasnya memang ada di storage kita. Tanpa ini,
+    // Bukti hanya sah kalau berkasnya memang ada di penyimpanan kita. Tanpa ini,
     // tautan gambar acak dari internet bisa dipakai mengunci slot gratis
     // sampai 72 jam tanpa pernah membayar (temuan audit 2026-08-30).
     if (payload.proofUrl.length > 0 && !isProofUrlMilikKita(payload.proofUrl)) {

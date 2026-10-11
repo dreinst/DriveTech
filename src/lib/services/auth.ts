@@ -1,9 +1,9 @@
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { cobaSatu, isDbConfigured, sql } from "@/lib/db";
 import { fail, ok, type Result } from "@/lib/result";
-import { createAdminSupabase } from "@/lib/supabase/admin";
-import { isServiceRoleConfigured, isSupabaseConfigured } from "@/lib/supabase/config";
-import { createServerSupabase } from "@/lib/supabase/server";
+import { bacaSesi, buatSesi, isAuthConfigured, SESI_COOKIE, SESI_UMUR_DETIK } from "@/lib/sesi";
 import type { AdminUserRow } from "@/lib/types/database";
 import { adminLoginSchema, zodFieldErrors } from "@/lib/validation/schemas";
 
@@ -14,50 +14,21 @@ if (typeof window !== "undefined") {
 
 const LOGIN_PATH = "/admin/login";
 
-/**
- * Domain internal untuk memetakan username admin -> email Supabase Auth.
- * ".local" sengaja tidak bisa menerima email sungguhan; email ini murni
- * identitas internal, bukan alamat yang dihubungi. Ganti di sini kalau perlu.
- */
-const ADMIN_USERNAME_DOMAIN = "drivetech.local";
-
-/**
- * Username admin -> email internal (lowercase, deterministik). "Administrator"
- * menjadi "administrator@drivetech.local". Harus konsisten dengan email yang
- * tersimpan di auth.users/admin_users.
- */
-export function usernameToAdminEmail(username: string): string {
-  return `${username.trim().toLowerCase()}@${ADMIN_USERNAME_DOMAIN}`;
-}
-
-/**
- * Tabel admin_users tidak punya policy RLS sama sekali (lihat kontrak), jadi
- * pembacaannya WAJIB lewat service role. Sesi loginnya sendiri tetap dibaca dari
- * cookie memakai client anon (createServerSupabase).
- */
-async function ambilAdminById(userId: string): Promise<AdminUserRow | null> {
-  if (!isServiceRoleConfigured()) return null;
-  const supabase = createAdminSupabase();
-  const { data, error } = await supabase
-    .from("admin_users")
-    .select("*")
-    .eq("id", userId)
-    .maybeSingle();
-  if (error || !data) return null;
-  return data as AdminUserRow;
-}
+/** Kolom admin_users yang boleh keluar dari modul ini; password_hash tidak pernah ikut. */
+const kolomAdmin = () => sql`id, email, username, full_name, role, created_at`;
 
 /** Admin yang sedang login, atau null. Tidak pernah melempar. */
 export async function getCurrentAdmin(): Promise<AdminUserRow | null> {
-  if (!isSupabaseConfigured()) return null;
+  if (!isDbConfigured()) return null;
 
   try {
-    const supabase = await createServerSupabase();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return null;
-    return await ambilAdminById(user.id);
+    const adminId = await bacaSesi((await cookies()).get(SESI_COOKIE)?.value);
+    if (!adminId) return null;
+    // Cookie yang sah belum cukup: barisnya harus masih ada di admin_users.
+    const { data } = await cobaSatu(
+      sql<AdminUserRow[]>`select ${kolomAdmin()} from admin_users where id = ${adminId}`,
+    );
+    return data;
   } catch {
     // Env belum lengkap atau sesi rusak: perlakukan sebagai belum login.
     return null;
@@ -87,7 +58,11 @@ export async function requireFullAdmin(): Promise<Result<AdminUserRow>> {
   return ok(admin);
 }
 
-/** Login admin memakai USERNAME + kata sandi (dipetakan ke email Supabase Auth). */
+/**
+ * Login admin memakai USERNAME + kata sandi. Sandi dicocokkan di database
+ * lewat pgcrypto crypt() terhadap hash bcrypt di admin_users.password_hash,
+ * lalu sesi disimpan sebagai cookie bertanda tangan (lihat lib/sesi.ts).
+ */
 export async function signInAdmin(
   username: string,
   password: string,
@@ -99,47 +74,39 @@ export async function signInAdmin(
     return fail<AdminUserRow>(first, "VALIDATION");
   }
 
-  if (!isSupabaseConfigured()) {
+  if (!isDbConfigured() || !isAuthConfigured()) {
     return fail<AdminUserRow>(
-      "Supabase belum dikonfigurasi. Salin .env.example ke .env.local dan isi kredensialnya.",
+      "Database belum dikonfigurasi. Salin .env.example ke .env.local dan isi DATABASE_URL serta AUTH_SECRET.",
       "NO_CONFIG",
     );
   }
 
-  const email = usernameToAdminEmail(parsed.data.username);
-  const supabase = await createServerSupabase();
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password: parsed.data.password,
-  });
-
-  if (error || !data.user) {
+  const { data: admin, error } = await cobaSatu(sql<AdminUserRow[]>`
+    select ${kolomAdmin()} from admin_users
+     where username = ${parsed.data.username.trim().toLowerCase()}
+       and password_hash = crypt(${parsed.data.password}, password_hash)`);
+  if (error) console.warn(`[auth] login gagal diperiksa: ${error.message}`);
+  const sesi = admin ? await buatSesi(admin.id) : null;
+  if (!admin || !sesi) {
     return fail<AdminUserRow>("Username atau kata sandi salah.", "INVALID_CREDENTIALS");
   }
 
-  const admin = await ambilAdminById(data.user.id);
-  if (!admin) {
-    // Punya akun auth tapi bukan admin pameran: sesinya langsung dicabut.
-    // Pesan sengaja disamakan dengan kredensial salah supaya tidak bisa dipakai
-    // memastikan sepasang username+password valid (user enumeration).
-    await supabase.auth.signOut();
-    console.warn(`[auth] login ditolak: ${parsed.data.username} bukan baris admin_users.`);
-    return fail<AdminUserRow>("Username atau kata sandi salah.", "NOT_ADMIN");
-  }
-
+  (await cookies()).set(SESI_COOKIE, sesi, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: SESI_UMUR_DETIK,
+  });
   return ok(admin);
 }
 
 /** Keluar dari sesi admin. */
 export async function signOutAdmin(): Promise<Result<null>> {
-  if (!isSupabaseConfigured()) return ok(null);
-
   try {
-    const supabase = await createServerSupabase();
-    const { error } = await supabase.auth.signOut();
-    if (error) return fail<null>("Gagal keluar dari sesi admin.", "SIGN_OUT_FAILED");
-    return ok(null);
+    (await cookies()).delete(SESI_COOKIE);
   } catch {
-    return ok(null);
+    // Dipanggil di luar Server Action: cookie tidak bisa dihapus, biarkan kedaluwarsa.
   }
+  return ok(null);
 }

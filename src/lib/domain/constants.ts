@@ -147,10 +147,10 @@ export const SLOT_SELECTED_STYLE = {
   text: "#0a0a0a",
 } as const;
 
-/** Bucket publik Supabase Storage untuk bukti transfer. */
+/** Folder penyimpanan (privat) untuk bukti transfer, lihat lib/storage.ts. */
 export const STORAGE_BUCKET_BUKTI = "bukti-transfer";
 
-/** Bucket publik Supabase Storage untuk foto kendaraan di katalog. */
+/** Folder penyimpanan (publik) untuk foto kendaraan di katalog. */
 export const STORAGE_BUCKET_FOTO_KENDARAAN = "foto-kendaraan";
 
 /** Batas ukuran unggahan bukti transfer: 2 MB (jaring pengaman di server). */

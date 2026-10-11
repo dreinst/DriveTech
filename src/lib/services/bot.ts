@@ -1,11 +1,11 @@
 import { timingSafeEqual } from "node:crypto";
 
+import { coba, cobaSatu, sql } from "@/lib/db";
 import { totalBayar } from "@/lib/domain/harga";
 import { batasPembayaran } from "@/lib/domain/tenggat";
 import { fail, ok, type Result } from "@/lib/result";
 import { getBookingDetail } from "@/lib/services/booking";
 import { getSiteUrl } from "@/lib/site-url";
-import { createAdminSupabase } from "@/lib/supabase/admin";
 import type { BookingDetail } from "@/lib/types/database";
 import { formatRupiah, formatTanggal, formatTanggalWaktu, slotDisplayName } from "@/lib/utils";
 
@@ -27,7 +27,7 @@ export function botAuthorized(request: Request): boolean {
 export async function bookingByCode(code: string): Promise<Result<BookingDetail>> {
   const kode = code.trim().toUpperCase();
   if (!BOOKING_CODE_RE.test(kode)) return fail("Kode booking tidak valid.", "VALIDATION");
-  const cari = await createAdminSupabase().from("bookings").select("id").eq("booking_code", kode).maybeSingle();
+  const cari = await cobaSatu(sql<{ id: string }[]>`select id from bookings where booking_code = ${kode}`);
   if (cari.error) return fail("Gagal memuat booking.", "DB");
   if (!cari.data) return fail("Booking tidak ditemukan.", "NOT_FOUND");
   return getBookingDetail(cari.data.id);
@@ -62,18 +62,14 @@ export function ringkasanBot(b: BookingDetail) {
 
 /** Catat chat WhatsApp penyewa; bot hanya mengirim kabar ke chat yang pernah menghubungi nomor kantor. */
 export async function simpanChat(paymentId: string, chat: string): Promise<void> {
-  await createAdminSupabase().from("admin_fee_payments").update({ wa_chat: chat }).eq("id", paymentId);
+  await coba(sql`update admin_fee_payments set wa_chat = ${chat} where id = ${paymentId}`);
 }
 
 /** Akun admin yang dicatat sebagai pemverifikasi saat superadmin menyetujui lewat Discord. */
 export async function adminPenyetuju(): Promise<Result<string>> {
-  const r = await createAdminSupabase()
-    .from("admin_users")
-    .select("id")
-    .eq("role", "admin")
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
+  const r = await cobaSatu(
+    sql<{ id: string }[]>`select id from admin_users where role = 'admin' order by created_at limit 1`,
+  );
   if (r.error || !r.data) return fail("Akun admin DriveTech tidak ditemukan.", "NO_ADMIN");
   return ok(r.data.id);
 }
@@ -85,21 +81,21 @@ const JAM_PENGINGAT = 3;
  * JAM_PENGINGAT jam, dan hanya kalau penyewa sudah pernah chat bot.
  */
 export async function antrePengingat(): Promise<number> {
-  const supabase = createAdminSupabase();
-  const r = await supabase
-    .from("admin_fee_payments")
-    .select("id, amount, unique_code, wa_chat, booking:bookings!inner(id, booking_code, status, created_at, tenant:tenants(name, phone))")
-    .eq("status", "unpaid")
-    .is("reminded_at", null)
-    .not("wa_chat", "is", null)
-    .eq("booking.status", "pending_payment");
-  if (r.error || !r.data) return 0;
-
-  let jumlah = 0;
-  for (const p of r.data as unknown as {
+  type Baris = {
     id: string; amount: number; unique_code: number | null; wa_chat: string;
     booking: { booking_code: string; status: "pending_payment"; created_at: string; tenant: { name: string; phone: string | null } | null };
-  }[]) {
+  };
+  const r = await coba(sql<Baris[]>`
+    select p.id, p.amount, p.unique_code, p.wa_chat,
+           jsonb_build_object('booking_code', b.booking_code, 'status', b.status, 'created_at', b.created_at,
+             'tenant', (select jsonb_build_object('name', t.name, 'phone', t.phone) from tenants t where t.id = b.tenant_id)) as booking
+      from admin_fee_payments p
+      join bookings b on b.id = p.booking_id
+     where p.status = 'unpaid' and p.reminded_at is null and p.wa_chat is not null
+       and b.status = 'pending_payment'`);
+  if (r.error) return 0;
+  let jumlah = 0;
+  for (const p of r.data) {
     const batas = batasPembayaran(p.booking, { status: "unpaid", updated_at: p.booking.created_at });
     if (!batas) continue;
     const sisa = batas.getTime() - Date.now();
@@ -109,19 +105,17 @@ export async function antrePengingat(): Promise<number> {
       `Halo ${nama}, kami mengingatkan pembayaran booking DriveTech *${p.booking.booking_code}* sebesar ` +
       `*${formatRupiah(totalBayar(p))}* kami tunggu sebelum *${formatTanggalWaktu(batas)} WIB*. ` +
       `Kalau sudah membayar, mohon kirimkan screenshot buktinya di chat ini ya. Terima kasih 🙏`;
-    const tandai = await supabase
-      .from("admin_fee_payments")
-      .update({ reminded_at: new Date().toISOString() })
-      .eq("id", p.id)
-      .is("reminded_at", null)
-      .select("id");
-    if (tandai.error || !tandai.data?.length) continue;
-    await supabase.from("notification_outbox").insert({
-      recipient: p.booking.tenant?.phone ?? "-",
-      body,
-      kind: "pengingat",
-      booking_code: p.booking.booking_code,
-    });
+    const tandai = await coba(sql`
+      update admin_fee_payments set reminded_at = now()
+       where id = ${p.id} and reminded_at is null returning id`);
+    if (tandai.error || tandai.data.length === 0) continue;
+    await coba(sql`
+      insert into notification_outbox ${sql({
+        recipient: p.booking.tenant?.phone ?? "-",
+        body,
+        kind: "pengingat",
+        booking_code: p.booking.booking_code,
+      })}`);
     jumlah += 1;
   }
   return jumlah;

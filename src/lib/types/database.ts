@@ -1,8 +1,5 @@
 /**
- * Tipe Database ala supabase-gen, DITULIS TANGAN agar cocok 100% dengan
- * supabase/migrations/20260826090000_init.sql,
- * supabase/migrations/20260827120000_per_tanggal.sql, dan
- * supabase/migrations/20260827150000_harga_per_slot.sql.
+ * Tipe baris database, DITULIS TANGAN agar cocok 100% dengan db/skema.sql.
  * Perbarui bersamaan kalau skema berubah.
  */
 
@@ -27,15 +24,6 @@ export type Database = {
           is_active: boolean;
           created_at: string;
         };
-        Insert: {
-          id?: string;
-          name: string;
-          location?: string | null;
-          start_date?: string | null;
-          end_date?: string | null;
-          is_active?: boolean;
-          created_at?: string;
-        };
         Update: {
           id?: string;
           name?: string;
@@ -45,7 +33,6 @@ export type Database = {
           is_active?: boolean;
           created_at?: string;
         };
-        Relationships: [];
       };
       zones: {
         Row: {
@@ -59,17 +46,6 @@ export type Database = {
           display_order: number;
           created_at: string;
         };
-        Insert: {
-          id?: string;
-          event_id: string;
-          name: string;
-          zone_type: Database["public"]["Enums"]["zone_type"];
-          svg_group_id?: string | null;
-          admin_fee?: number;
-          description?: string | null;
-          display_order?: number;
-          created_at?: string;
-        };
         Update: {
           id?: string;
           event_id?: string;
@@ -81,15 +57,6 @@ export type Database = {
           display_order?: number;
           created_at?: string;
         };
-        Relationships: [
-          {
-            foreignKeyName: "zones_event_id_fkey";
-            columns: ["event_id"];
-            isOneToOne: false;
-            referencedRelation: "events";
-            referencedColumns: ["id"];
-          },
-        ];
       };
       slots: {
         Row: {
@@ -104,18 +71,6 @@ export type Database = {
           created_at: string;
           updated_at: string;
         };
-        Insert: {
-          id?: string;
-          zone_id: string;
-          slot_number?: number | null;
-          slot_label?: string | null;
-          status?: Database["public"]["Enums"]["slot_status"];
-          svg_element_id?: string | null;
-          admin_fee_override?: number | null;
-          peruntukan?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
         Update: {
           id?: string;
           zone_id?: string;
@@ -128,15 +83,6 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
         };
-        Relationships: [
-          {
-            foreignKeyName: "slots_zone_id_fkey";
-            columns: ["zone_id"];
-            isOneToOne: false;
-            referencedRelation: "zones";
-            referencedColumns: ["id"];
-          },
-        ];
       };
       tenants: {
         Row: {
@@ -148,15 +94,6 @@ export type Database = {
           detail: Json;
           created_at: string;
         };
-        Insert: {
-          id?: string;
-          name: string;
-          phone?: string | null;
-          email?: string | null;
-          tenant_type: Database["public"]["Enums"]["tenant_type"];
-          detail?: Json;
-          created_at?: string;
-        };
         Update: {
           id?: string;
           name?: string;
@@ -166,7 +103,6 @@ export type Database = {
           detail?: Json;
           created_at?: string;
         };
-        Relationships: [];
       };
       bookings: {
         Row: {
@@ -179,16 +115,6 @@ export type Database = {
           created_at: string | null;
           updated_at: string;
         };
-        Insert: {
-          id?: string;
-          slot_id: string;
-          tenant_id: string;
-          status?: Database["public"]["Enums"]["booking_status"];
-          booking_code?: string;
-          notes?: string | null;
-          created_at?: string | null;
-          updated_at?: string;
-        };
         Update: {
           id?: string;
           slot_id?: string;
@@ -199,22 +125,6 @@ export type Database = {
           created_at?: string | null;
           updated_at?: string;
         };
-        Relationships: [
-          {
-            foreignKeyName: "bookings_slot_id_fkey";
-            columns: ["slot_id"];
-            isOneToOne: false;
-            referencedRelation: "slots";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "bookings_tenant_id_fkey";
-            columns: ["tenant_id"];
-            isOneToOne: false;
-            referencedRelation: "tenants";
-            referencedColumns: ["id"];
-          },
-        ];
       };
       admin_fee_payments: {
         Row: {
@@ -234,23 +144,6 @@ export type Database = {
           created_at: string;
           updated_at: string;
         };
-        Insert: {
-          id?: string;
-          booking_id: string;
-          amount: number;
-          unique_code?: number | null;
-          wa_chat?: string | null;
-          reminded_at?: string | null;
-          method: Database["public"]["Enums"]["payment_method"];
-          status?: Database["public"]["Enums"]["payment_status"];
-          proof_url?: string | null;
-          verified_by?: string | null;
-          verified_at?: string | null;
-          reject_reason?: string | null;
-          submitted_at?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
         Update: {
           id?: string;
           booking_id?: string;
@@ -268,15 +161,6 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
         };
-        Relationships: [
-          {
-            foreignKeyName: "admin_fee_payments_booking_id_fkey";
-            columns: ["booking_id"];
-            isOneToOne: true;
-            referencedRelation: "bookings";
-            referencedColumns: ["id"];
-          },
-        ];
       };
       leasing_partners: {
         Row: {
@@ -287,14 +171,6 @@ export type Database = {
           is_active: boolean;
           created_at: string;
         };
-        Insert: {
-          id?: string;
-          name: string;
-          contact?: string | null;
-          commission_rate?: number | null;
-          is_active?: boolean;
-          created_at?: string;
-        };
         Update: {
           id?: string;
           name?: string;
@@ -303,7 +179,6 @@ export type Database = {
           is_active?: boolean;
           created_at?: string;
         };
-        Relationships: [];
       };
       purchase_transactions: {
         Row: {
@@ -320,20 +195,6 @@ export type Database = {
           created_at: string | null;
           updated_at: string;
         };
-        Insert: {
-          id?: string;
-          slot_id: string;
-          buyer_name: string;
-          buyer_phone?: string | null;
-          payment_method: Database["public"]["Enums"]["purchase_payment_method"];
-          unit_description?: string | null;
-          unit_price?: number | null;
-          status?: Database["public"]["Enums"]["purchase_status"];
-          transaction_code?: string;
-          notes?: string | null;
-          created_at?: string | null;
-          updated_at?: string;
-        };
         Update: {
           id?: string;
           slot_id?: string;
@@ -348,15 +209,6 @@ export type Database = {
           created_at?: string | null;
           updated_at?: string;
         };
-        Relationships: [
-          {
-            foreignKeyName: "purchase_transactions_slot_id_fkey";
-            columns: ["slot_id"];
-            isOneToOne: false;
-            referencedRelation: "slots";
-            referencedColumns: ["id"];
-          },
-        ];
       };
       leasing_applications: {
         Row: {
@@ -372,19 +224,6 @@ export type Database = {
           created_at: string;
           updated_at: string;
         };
-        Insert: {
-          id?: string;
-          purchase_transaction_id: string;
-          leasing_partner_id: string;
-          dp_amount?: number | null;
-          tenor_bulan?: number | null;
-          status?: Database["public"]["Enums"]["leasing_status"];
-          commission_amount?: number | null;
-          commission_paid?: boolean | null;
-          notes?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
         Update: {
           id?: string;
           purchase_transaction_id?: string;
@@ -398,22 +237,6 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
         };
-        Relationships: [
-          {
-            foreignKeyName: "leasing_applications_purchase_transaction_id_fkey";
-            columns: ["purchase_transaction_id"];
-            isOneToOne: true;
-            referencedRelation: "purchase_transactions";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "leasing_applications_leasing_partner_id_fkey";
-            columns: ["leasing_partner_id"];
-            isOneToOne: false;
-            referencedRelation: "leasing_partners";
-            referencedColumns: ["id"];
-          },
-        ];
       };
       event_dates: {
         Row: {
@@ -423,13 +246,6 @@ export type Database = {
           is_active: boolean;
           created_at: string;
         };
-        Insert: {
-          id?: string;
-          event_id?: string | null;
-          event_date: string;
-          is_active?: boolean;
-          created_at?: string;
-        };
         Update: {
           id?: string;
           event_id?: string | null;
@@ -437,15 +253,6 @@ export type Database = {
           is_active?: boolean;
           created_at?: string;
         };
-        Relationships: [
-          {
-            foreignKeyName: "event_dates_event_id_fkey";
-            columns: ["event_id"];
-            isOneToOne: false;
-            referencedRelation: "events";
-            referencedColumns: ["id"];
-          },
-        ];
       };
       booking_dates: {
         Row: {
@@ -456,14 +263,6 @@ export type Database = {
           is_active: boolean;
           created_at: string;
         };
-        Insert: {
-          id?: string;
-          booking_id: string;
-          slot_id: string;
-          event_date: string;
-          is_active?: boolean;
-          created_at?: string;
-        };
         Update: {
           id?: string;
           booking_id?: string;
@@ -472,22 +271,6 @@ export type Database = {
           is_active?: boolean;
           created_at?: string;
         };
-        Relationships: [
-          {
-            foreignKeyName: "booking_dates_booking_id_fkey";
-            columns: ["booking_id"];
-            isOneToOne: false;
-            referencedRelation: "bookings";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "booking_dates_slot_id_fkey";
-            columns: ["slot_id"];
-            isOneToOne: false;
-            referencedRelation: "slots";
-            referencedColumns: ["id"];
-          },
-        ];
       };
       vehicle_listings: {
         Row: {
@@ -509,25 +292,6 @@ export type Database = {
           created_at: string;
           updated_at: string;
         };
-        Insert: {
-          id?: string;
-          booking_id: string;
-          slot_id: string;
-          vehicle_name: string;
-          vehicle_kind?: "mobil" | "motor";
-          plate_number?: string | null;
-          price: number;
-          year?: number | null;
-          mileage_km?: number | null;
-          transmission?: string | null;
-          color?: string | null;
-          description?: string | null;
-          photo_url: string;
-          photo_thumb_url?: string | null;
-          is_visible?: boolean;
-          created_at?: string;
-          updated_at?: string;
-        };
         Update: {
           id?: string;
           booking_id?: string;
@@ -547,46 +311,25 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
         };
-        Relationships: [
-          {
-            foreignKeyName: "vehicle_listings_booking_id_fkey";
-            columns: ["booking_id"];
-            isOneToOne: true;
-            referencedRelation: "bookings";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "vehicle_listings_slot_id_fkey";
-            columns: ["slot_id"];
-            isOneToOne: false;
-            referencedRelation: "slots";
-            referencedColumns: ["id"];
-          },
-        ];
       };
       admin_users: {
         Row: {
           id: string;
           email: string;
+          /** Nama login (huruf kecil). Kolom password_hash sengaja tidak ada di tipe ini. */
+          username: string | null;
           full_name: string | null;
           role: Database["public"]["Enums"]["admin_role"];
           created_at: string;
         };
-        Insert: {
-          id: string;
-          email: string;
-          full_name?: string | null;
-          role?: Database["public"]["Enums"]["admin_role"];
-          created_at?: string;
-        };
         Update: {
           id?: string;
           email?: string;
+          username?: string | null;
           full_name?: string | null;
           role?: Database["public"]["Enums"]["admin_role"];
           created_at?: string;
         };
-        Relationships: [];
       };
       notification_outbox: {
         Row: {
@@ -602,19 +345,6 @@ export type Database = {
           created_at: string;
           sent_at: string | null;
         };
-        Insert: {
-          id?: string;
-          channel?: string;
-          recipient: string;
-          body: string;
-          kind?: string;
-          booking_code?: string | null;
-          status?: string;
-          attempts?: number;
-          last_error?: string | null;
-          created_at?: string;
-          sent_at?: string | null;
-        };
         Update: {
           id?: string;
           channel?: string;
@@ -628,20 +358,15 @@ export type Database = {
           created_at?: string;
           sent_at?: string | null;
         };
-        Relationships: [];
       };
       rate_limit_events: {
         Row: { id: number; key: string; created_at: string };
-        Insert: { id?: number; key: string; created_at?: string };
         Update: { id?: number; key?: string; created_at?: string };
-        Relationships: [];
       };
       /** Catatan scan QR dari halaman /go (migrasi 20260904100000). Tanpa data pribadi. */
       qr_scans: {
         Row: { id: number; media: string; platform: string; created_at: string };
-        Insert: { id?: number; media: string; platform?: string; created_at?: string };
         Update: { id?: number; media?: string; platform?: string; created_at?: string };
-        Relationships: [];
       };
       email_verifications: {
         Row: {
@@ -654,16 +379,6 @@ export type Database = {
           used_at: string | null;
           created_at: string;
         };
-        Insert: {
-          id?: string;
-          email: string;
-          code_hash: string;
-          expires_at: string;
-          attempts?: number;
-          verified_at?: string | null;
-          used_at?: string | null;
-          created_at?: string;
-        };
         Update: {
           id?: string;
           email?: string;
@@ -674,7 +389,6 @@ export type Database = {
           used_at?: string | null;
           created_at?: string;
         };
-        Relationships: [];
       };
     };
     Views: {
@@ -688,19 +402,6 @@ export type Database = {
           event_date: string;
           status: Database["public"]["Enums"]["booking_status"];
         };
-        Relationships: [];
-      };
-    };
-    Functions: {
-      /** Pembatas laju bersama lintas instance (lihat migrasi 20260903121000). true = masih boleh. */
-      rate_limit_hit: {
-        Args: { p_key: string; p_limit: number; p_window_seconds: number };
-        Returns: boolean;
-      };
-      /** Kode unik 350..500 untuk nominal transfer QRIS (migrasi 20260929130000). null = kode habis. */
-      alokasi_kode_unik: {
-        Args: { p_payment: string };
-        Returns: number | null;
       };
     };
     Enums: {
@@ -729,7 +430,6 @@ export type Database = {
       leasing_status: "submitted" | "verifying" | "approved" | "rejected" | "completed";
       admin_role: "admin" | "verifikator";
     };
-    CompositeTypes: Record<string, never>;
   };
 };
 
@@ -737,8 +437,6 @@ export type Database = {
 
 export type Tables<T extends keyof Database["public"]["Tables"]> =
   Database["public"]["Tables"][T]["Row"];
-export type TablesInsert<T extends keyof Database["public"]["Tables"]> =
-  Database["public"]["Tables"][T]["Insert"];
 export type TablesUpdate<T extends keyof Database["public"]["Tables"]> =
   Database["public"]["Tables"][T]["Update"];
 

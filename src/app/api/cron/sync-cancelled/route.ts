@@ -1,8 +1,7 @@
 import type { NextResponse } from "next/server";
 
 import { syncToSheet } from "@/lib/sheets";
-import { createAdminSupabase } from "@/lib/supabase/admin";
-import { isServiceRoleConfigured } from "@/lib/supabase/config";
+import { coba, isDbConfigured, sql } from "@/lib/db";
 import { handleRoute, jsonError, jsonOk } from "@/app/api/_lib/respond";
 
 export const runtime = "nodejs";
@@ -13,9 +12,9 @@ const LOOKBACK_MS = 25 * 60 * 60 * 1000;
 
 /**
  * GET /api/cron/sync-cancelled — rekonsiliasi Google Sheets untuk booking yang
- * dibatalkan otomatis oleh expire_unpaid_bookings() (pg_cron menulis langsung
- * ke database tanpa lewat aplikasi, jadi sheet tidak pernah diberi tahu dan
- * barisnya membeku di "pending_payment").
+ * dibatalkan otomatis oleh expire_unpaid_bookings() (fungsi itu mengubah baris
+ * langsung di database, lihat /api/cron/rutin, jadi sheet tidak pernah diberi
+ * tahu dan barisnya membeku di "pending_payment").
  *
  * Dipicu timer systemd di VPS (drivetech-cron-sync-cancelled) sekali sehari. Aman dipanggil ulang:
  * Apps Script meng-upsert per bookingCode.
@@ -37,22 +36,17 @@ export async function GET(request: Request): Promise<NextResponse> {
     } else if (request.headers.get("authorization") !== `Bearer ${secret}`) {
       return jsonError("Tidak diizinkan.", 401, { code: "UNAUTHORIZED" });
     }
-    if (!isServiceRoleConfigured()) {
-      return jsonError("Supabase belum dikonfigurasi.", 503, { code: "NO_CONFIG" });
+    if (!isDbConfigured()) {
+      return jsonError("Database belum dikonfigurasi.", 503, { code: "NO_CONFIG" });
     }
 
     const sejak = new Date(Date.now() - LOOKBACK_MS).toISOString();
-    const supabase = createAdminSupabase();
-    const { data, error } = await supabase
-      .from("bookings")
-      .select("booking_code")
-      .eq("status", "cancelled")
-      .gte("updated_at", sejak);
+    const { data: rows, error } = await coba(sql<{ booking_code: string }[]>`
+      select booking_code from bookings where status = 'cancelled' and updated_at >= ${sejak}`);
     if (error) {
       return jsonError("Gagal memuat booking yang dibatalkan.", 502, { code: "DB_ERROR" });
     }
 
-    const rows = (data ?? []) as Array<{ booking_code: string }>;
     for (const row of rows) {
       void syncToSheet("booking", { bookingCode: row.booking_code, status: "cancelled" });
     }

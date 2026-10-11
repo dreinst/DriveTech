@@ -25,7 +25,7 @@ import type { SlotRow, ZoneType, ZoneWithSlots } from "@/lib/types/database";
 import { cn, formatRupiah } from "@/lib/utils";
 
 // Dirender ulang paling lama tiap 30 detik (ISR). Status lapak tetap segar karena
-// FloorPlanBoard berlangganan realtime, dan aksi booking memanggil revalidatePath("/").
+// FloorPlanBoard menyegarkan status lewat polling, dan aksi booking memanggil revalidatePath("/").
 export const revalidate = 30;
 
 export const metadata: Metadata = { alternates: { canonical: "/" } };
@@ -372,7 +372,7 @@ export default async function BerandaPage() {
             <div className="mt-6">
               <Alert tone={noConfig ? "info" : "warning"}>
                 {noConfig
-                  ? "Supabase belum dikonfigurasi. Denah di bawah hanya contoh dan lapak belum bisa dipesan."
+                  ? "Database belum dikonfigurasi. Denah di bawah hanya contoh dan lapak belum bisa dipesan."
                   : `Denah gagal dimuat (${errorMessage}). Sementara ditampilkan denah contoh.`}
               </Alert>
             </div>

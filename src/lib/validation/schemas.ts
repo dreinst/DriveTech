@@ -282,9 +282,9 @@ export const submitLeasingSchema = z.object({
 
 /**
  * Login admin memakai USERNAME (mis. "Administrator"), bukan email — form sengaja
- * disederhanakan (keputusan pemilik). Username dipetakan ke email internal
- * Supabase Auth di services/auth.ts (usernameToAdminEmail). Karakter dibatasi
- * huruf/angka/titik/underscore/strip agar aman menjadi bagian local-part email.
+ * disederhanakan (keputusan pemilik). Username dicocokkan (huruf kecil) ke kolom
+ * admin_users.username di services/auth.ts. Karakter dibatasi
+ * huruf/angka/titik/underscore/strip.
  */
 export const adminLoginSchema = z.object({
   username: z

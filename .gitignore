@@ -21,10 +21,8 @@ coverage/
 # typescript
 *.tsbuildinfo
 
-# supabase lokal
-supabase/.branches/
-supabase/.temp/
-
+# berkas unggahan lokal (UPLOAD_DIR bawaan)
+/data/
 # misc
 .DS_Store
 *.pem

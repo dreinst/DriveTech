@@ -13,12 +13,8 @@ COPY . .
 # Public runtime env needed at build time for Next.js static optimization.
 # Server-only secrets are NOT baked in here; they're injected at runtime
 # via Coolify's environment variables (see docker-compose env_file).
-ARG NEXT_PUBLIC_SUPABASE_URL
-ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
 ARG NEXT_PUBLIC_SITE_URL
 ARG NEXT_PUBLIC_SENTRY_DSN
-ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
-ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
 ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
 ENV NEXT_PUBLIC_SENTRY_DSN=$NEXT_PUBLIC_SENTRY_DSN
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -36,6 +32,10 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
+# Folder berkas unggahan (UPLOAD_DIR bawaan). Pasang volume di sini supaya
+# foto kendaraan dan bukti bayar tidak hilang saat container diganti.
+RUN mkdir -p /app/data/unggahan && chown nextjs:nodejs /app/data/unggahan
+VOLUME /app/data/unggahan
 USER nextjs
 EXPOSE 3000
 ENV PORT=3000

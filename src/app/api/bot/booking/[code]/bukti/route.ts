@@ -4,8 +4,7 @@ import { handleRoute, jsonError, jsonOk, mapResultToResponse } from "@/app/api/_
 import { MAX_PROOF_BYTES, STORAGE_BUCKET_BUKTI } from "@/lib/domain/constants";
 import { submitPayment } from "@/lib/services/booking";
 import { bookingByCode, botAuthorized, ringkasanBot } from "@/lib/services/bot";
-import { createAdminSupabase } from "@/lib/supabase/admin";
-
+import { simpanBerkas } from "@/lib/storage";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -16,7 +15,7 @@ const EKSTENSI: Record<string, string> = { "image/jpeg": "jpg", "image/png": "pn
 /**
  * POST /api/bot/booking/{kode}/bukti (khusus bot, header x-bot-key)
  * Body = berkas gambar bukti bayar yang dikirim penyewa lewat WhatsApp (Content-Type image/jpeg|png|webp).
- * Berkas disimpan di bucket privat bukti-transfer lalu pembayaran ditandai "submitted", sama seperti unggahan
+ * Berkas disimpan di folder privat bukti-transfer lalu pembayaran ditandai "submitted", sama seperti unggahan
  * dari halaman bayar. Membalas ringkasan booking terbaru.
  */
 export async function POST(request: Request, { params }: RouteContext): Promise<NextResponse> {
@@ -38,11 +37,8 @@ export async function POST(request: Request, { params }: RouteContext): Promise<
       return jsonError("Ukuran bukti tidak wajar.", 413, { code: "PROOF_TOO_LARGE" });
     }
 
-    const supabase = createAdminSupabase();
-    const nama = `${booking.id}-wa-${Date.now()}.${ext}`;
-    const unggah = await supabase.storage.from(STORAGE_BUCKET_BUKTI).upload(nama, data, { contentType: mime, upsert: false });
-    if (unggah.error) return jsonError("Bukti gagal disimpan.", 502, { code: "UPLOAD_FAILED" });
-    const proofUrl = supabase.storage.from(STORAGE_BUCKET_BUKTI).getPublicUrl(nama).data.publicUrl;
+    const proofUrl = await simpanBerkas(STORAGE_BUCKET_BUKTI, `${booking.id}-wa-${Date.now()}.${ext}`, data);
+    if (!proofUrl) return jsonError("Bukti gagal disimpan.", 502, { code: "UPLOAD_FAILED" });
 
     const hasil = await submitPayment({ bookingId: booking.id, method: "qris", proofUrl });
     if (!hasil.ok) return mapResultToResponse(hasil);

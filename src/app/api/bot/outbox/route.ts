@@ -1,9 +1,8 @@
 import type { NextResponse } from "next/server";
 
 import { handleRoute, jsonError, jsonOk, readJsonObject } from "@/app/api/_lib/respond";
+import { coba, sql } from "@/lib/db";
 import { antrePengingat, botAuthorized } from "@/lib/services/bot";
-import { createAdminSupabase } from "@/lib/supabase/admin";
-
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -21,23 +20,24 @@ export async function GET(request: Request): Promise<NextResponse> {
     if (!botAuthorized(request)) return jsonError("Tidak diizinkan.", 401, { code: "UNAUTHORIZED" });
     await antrePengingat();
 
-    const supabase = createAdminSupabase();
-    const antre = await supabase
-      .from("notification_outbox")
-      .select("id, body, kind, booking_code")
-      .eq("status", "pending")
-      .order("created_at", { ascending: true })
-      .limit(20);
+    const antre = await coba(
+      sql<{ id: string; body: string; kind: string; booking_code: string | null }[]>`
+        select id, body, kind, booking_code from notification_outbox
+         where status = 'pending' order by created_at limit 20`,
+    );
     if (antre.error) return jsonError("Gagal membaca antrean.", 502, { code: "DB" });
 
     const kode = [...new Set(antre.data.map((m) => m.booking_code).filter((k): k is string => Boolean(k)))];
     const chats = new Map<string, string>();
     const sudahBayar = new Set<string>(); // pengingat yang antre sebelum bukti masuk atau ditolak tidak dikirim lagi
     if (kode.length > 0) {
-      const r = await supabase.from("bookings").select("booking_code, payment:admin_fee_payments(wa_chat, status)").in("booking_code", kode);
-      for (const b of (r.data ?? []) as unknown as { booking_code: string; payment: { wa_chat: string | null; status: string } | null }[]) {
-        if (b.payment?.wa_chat) chats.set(b.booking_code, b.payment.wa_chat);
-        if (b.payment && b.payment.status !== "unpaid") sudahBayar.add(b.booking_code);
+      const r = await coba(sql<{ booking_code: string; wa_chat: string | null; status: string }[]>`
+        select b.booking_code, p.wa_chat, p.status
+          from bookings b join admin_fee_payments p on p.booking_id = b.id
+         where b.booking_code in ${sql(kode)}`);
+      for (const b of r.data ?? []) {
+        if (b.wa_chat) chats.set(b.booking_code, b.wa_chat);
+        if (b.status !== "unpaid") sudahBayar.add(b.booking_code);
       }
     }
 
@@ -51,10 +51,10 @@ export async function GET(request: Request): Promise<NextResponse> {
       else lewati.push(m.id);
     }
     if (lewati.length > 0) {
-      await supabase
-        .from("notification_outbox")
-        .update({ status: "skipped", last_error: "dilewati: belum pernah chat bot, atau pesan created" })
-        .in("id", lewati);
+      await coba(sql`
+        update notification_outbox
+           set status = 'skipped', last_error = 'dilewati: belum pernah chat bot, atau pesan created'
+         where id in ${sql(lewati)}`);
     }
     return jsonOk({ pesan: kirim });
   });
@@ -66,16 +66,15 @@ export async function POST(request: Request): Promise<NextResponse> {
     if (!botAuthorized(request)) return jsonError("Tidak diizinkan.", 401, { code: "UNAUTHORIZED" });
     const body = (await readJsonObject(request)) ?? {};
     if (typeof body.id !== "string") return jsonError("id wajib diisi.", 400, { code: "VALIDATION" });
-    const supabase = createAdminSupabase();
     if (body.ok === true) {
-      await supabase.from("notification_outbox").update({ status: "sent", sent_at: new Date().toISOString() }).eq("id", body.id);
+      await coba(sql`update notification_outbox set status = 'sent', sent_at = now() where id = ${body.id}`);
     } else {
-      const lama = await supabase.from("notification_outbox").select("attempts").eq("id", body.id).maybeSingle();
-      const attempts = (lama.data?.attempts ?? 0) + 1;
-      await supabase
-        .from("notification_outbox")
-        .update({ attempts, last_error: String(body.error ?? "gagal").slice(0, 300), status: attempts >= MAKS_PERCOBAAN ? "failed" : "pending" })
-        .eq("id", body.id);
+      await coba(sql`
+        update notification_outbox
+           set attempts = attempts + 1,
+               last_error = ${String(body.error ?? "gagal").slice(0, 300)},
+               status = case when attempts + 1 >= ${MAKS_PERCOBAAN} then 'failed' else 'pending' end
+         where id = ${body.id}`);
     }
     return jsonOk({ ok: true });
   });

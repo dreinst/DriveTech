@@ -4,11 +4,11 @@ import { FLOOR_PLAN_ZONES } from "@/lib/domain/layout";
 /**
  * Denah cadangan (fallback) yang dibangun murni dari geometri di domain/layout.ts.
  *
- * Dipakai halaman publik saat Supabase belum dikonfigurasi atau query gagal:
+ * Dipakai halaman publik saat database belum dikonfigurasi atau query gagal:
  * pengunjung tetap melihat denah lengkap (semua slot dianggap "available"),
  * hanya saja tombol pemesanan dimatikan karena id-nya bukan uuid database.
  *
- * Nilai admin_fee di bawah harus sama dengan supabase/seed.sql.
+ * Nilai admin_fee di bawah harus sama dengan db/seed.sql.
  */
 
 export const ADMIN_FEE_BY_ZONE_TYPE: Record<ZoneType, number> = {

@@ -186,7 +186,7 @@ export default async function AdminDashboardPage() {
 
           {zonaDisewakan.length === 0 ? (
             <p className="mt-4 text-sm text-muted">
-              Belum ada zona yang terdaftar. Jalankan supabase/seed.sql lebih dulu.
+              Belum ada zona yang terdaftar. Jalankan db/seed.sql lebih dulu.
             </p>
           ) : (
             <ul className="mt-5 space-y-4">

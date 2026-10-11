@@ -3,9 +3,8 @@ import { createHash, randomInt } from "node:crypto";
 import { bantuanEmailText, sendEmailNow } from "@/lib/notifications";
 import { rateLimitShared } from "@/lib/rate-limit";
 import { fail, ok, type Result } from "@/lib/result";
-import { createAdminSupabase } from "@/lib/supabase/admin";
-import { isServiceRoleConfigured } from "@/lib/supabase/config";
-import { dbFail, NO_CONFIG_MESSAGE, type PgError } from "./slots";
+import { coba, isDbConfigured, sql } from "@/lib/db";
+import { dbFail, NO_CONFIG_MESSAGE } from "./slots";
 
 // Modul KHUSUS SERVER (lihat catatan "server-only" di services/slots.ts).
 if (typeof window !== "undefined") {
@@ -19,8 +18,7 @@ if (typeof window !== "undefined") {
  * jalur pengiriman kode booking, jadi alamat yang salah langsung ketahuan.
  *
  * Kode tidak pernah disimpan mentah: hanya sha256(email:kode:pepper). Pepper =
- * env OTP_PEPPER, fallback SUPABASE_SERVICE_ROLE_KEY (rahasia server yang
- * sudah ada). Masa berlaku 10 menit, maksimal 5 percobaan per kode.
+ * env OTP_PEPPER, fallback AUTH_SECRET (rahasia server yang sudah ada). Masa berlaku 10 menit, maksimal 5 percobaan per kode.
  */
 
 const MASA_BERLAKU_MENIT = 10;
@@ -31,7 +29,7 @@ function normalisasiEmail(email: string): string {
 }
 
 function pepper(): string {
-  return (process.env.OTP_PEPPER ?? "").trim() || (process.env.SUPABASE_SERVICE_ROLE_KEY ?? "");
+  return (process.env.OTP_PEPPER ?? "").trim() || (process.env.AUTH_SECRET ?? "");
 }
 
 function hashKode(email: string, code: string): string {
@@ -56,7 +54,7 @@ export async function requestEmailCode(
   email: string,
   ip: string,
 ): Promise<Result<RequestEmailCodeOut>> {
-  if (!isServiceRoleConfigured()) return fail<RequestEmailCodeOut>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<RequestEmailCodeOut>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
   const alamat = normalisasiEmail(email);
   if (!(await rateLimitShared(`otp:email:${alamat}`, 3, 600))) {
@@ -85,15 +83,15 @@ export async function requestEmailCode(
   }
 
   const kode = buatKode();
-  const supabase = createAdminSupabase();
   const kedaluwarsa = new Date(Date.now() + MASA_BERLAKU_MENIT * 60 * 1000).toISOString();
-  const inserted = await supabase.from("email_verifications").insert({
-    email: alamat,
-    code_hash: hashKode(alamat, kode),
-    expires_at: kedaluwarsa,
-  });
+  const inserted = await coba(sql`
+    insert into email_verifications ${sql({
+      email: alamat,
+      code_hash: hashKode(alamat, kode),
+      expires_at: kedaluwarsa,
+    })}`);
   if (inserted.error) {
-    return dbFail<RequestEmailCodeOut>(inserted.error as PgError, "Gagal menyimpan kode verifikasi");
+    return dbFail<RequestEmailCodeOut>(inserted.error, "Gagal menyimpan kode verifikasi");
   }
 
   const hasil = await sendEmailNow(
@@ -143,42 +141,29 @@ const KODE_AKTIF_DIPERIKSA = 3;
  * Mengembalikan null bila tidak cocok. Tidak pernah melempar.
  */
 export async function verifyEmailCode(email: string, code: string): Promise<string | null> {
-  if (!isServiceRoleConfigured()) return null;
+  if (!isDbConfigured()) return null;
   const alamat = normalisasiEmail(email);
   const kode = code.trim();
   if (!/^\d{6}$/.test(kode)) return null;
 
   try {
-    const supabase = createAdminSupabase();
-    const now = new Date().toISOString();
-    const aktif = await supabase
-      .from("email_verifications")
-      .select("id, code_hash, attempts, expires_at")
-      .eq("email", alamat)
-      .is("used_at", null)
-      .gt("expires_at", now)
-      .order("created_at", { ascending: false })
-      .limit(KODE_AKTIF_DIPERIKSA);
-    if (aktif.error || !aktif.data || aktif.data.length === 0) return null;
+    const rows = await sql<{ id: string; code_hash: string; attempts: number }[]>`
+      select id, code_hash, attempts from email_verifications
+       where email = ${alamat} and used_at is null and expires_at > now()
+       order by created_at desc limit ${KODE_AKTIF_DIPERIKSA}`;
+    if (rows.length === 0) return null;
 
-    const rows = aktif.data as { id: string; code_hash: string; attempts: number; expires_at: string }[];
     const hash = hashKode(alamat, kode);
     const cocok = rows.find((r) => r.attempts < MAKS_PERCOBAAN && r.code_hash === hash);
 
     if (!cocok) {
-      const terbaru = rows[0];
-      await supabase
-        .from("email_verifications")
-        .update({ attempts: terbaru.attempts + 1 })
-        .eq("id", terbaru.id);
+      await sql`update email_verifications set attempts = attempts + 1 where id = ${rows[0].id}`;
       return null;
     }
 
-    await supabase
-      .from("email_verifications")
-      .update({ verified_at: now })
-      .eq("id", cocok.id)
-      .is("verified_at", null);
+    await sql`
+      update email_verifications set verified_at = now()
+       where id = ${cocok.id} and verified_at is null`;
     return cocok.id;
   } catch {
     return null;
@@ -191,14 +176,9 @@ export async function verifyEmailCode(email: string, code: string): Promise<stri
  * bisa dipakai sampai kedaluwarsa (10 menit).
  */
 export async function consumeEmailCode(id: string): Promise<void> {
-  if (!isServiceRoleConfigured()) return;
+  if (!isDbConfigured()) return;
   try {
-    const supabase = createAdminSupabase();
-    await supabase
-      .from("email_verifications")
-      .update({ used_at: new Date().toISOString() })
-      .eq("id", id)
-      .is("used_at", null);
+    await sql`update email_verifications set used_at = now() where id = ${id} and used_at is null`;
   } catch {
     /* diabaikan, lihat catatan di atas */
   }

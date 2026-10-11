@@ -1,8 +1,7 @@
 import type { OccupancyRow } from "@/lib/domain/ketersediaan";
 import { suggestAlternatives as pickAlternatives } from "@/lib/domain/suggestions";
 import { fail, ok, type Result } from "@/lib/result";
-import { createAdminSupabase } from "@/lib/supabase/admin";
-import { isServiceRoleConfigured } from "@/lib/supabase/config";
+import { coba, cobaSatu, isDbConfigured, sql, type Potongan } from "@/lib/db";
 import type {
   BookingRow,
   EventRow,
@@ -17,7 +16,7 @@ import type {
 // Modul KHUSUS SERVER.
 // Catatan: paket npm "server-only" tidak ada di dependencies proyek (package.json
 // milik agen A), jadi `import "server-only"` akan menggagalkan build. Penjagaannya
-// dibuat runtime — konsisten dengan src/lib/supabase/admin.ts.
+// dibuat runtime, konsisten dengan src/lib/db.ts.
 if (typeof window !== "undefined") {
   throw new Error("src/lib/services/slots.ts hanya boleh dipakai di server.");
 }
@@ -26,11 +25,11 @@ if (typeof window !== "undefined") {
 /* Utilitas bersama lapisan service                                    */
 /* ------------------------------------------------------------------ */
 
-/** Pesan seragam kalau env service role belum diisi. */
+/** Pesan seragam kalau DATABASE_URL belum diisi. */
 export const NO_CONFIG_MESSAGE =
-  "Supabase belum dikonfigurasi. Salin .env.example ke .env.local dan isi kredensialnya.";
+  "Database belum dikonfigurasi. Salin .env.example ke .env.local dan isi DATABASE_URL.";
 
-/** Bentuk error PostgREST yang kita pakai. */
+/** Bentuk error database yang kita pakai (`code` = kode galat Postgres). */
 export type PgError = { message?: string; code?: string; details?: string } | null | undefined;
 
 /** Bungkus error database jadi Result gagal berbahasa Indonesia. */
@@ -39,18 +38,24 @@ export function dbFail<T>(error: PgError, konteks: string): Result<T> {
   return fail<T>(`${konteks}: ${pesan}`, error?.code);
 }
 
-/** PostgREST kadang mengembalikan objek, kadang array, untuk relasi 1:1. */
+/** Relasi 1:1 bisa datang sebagai objek atau array; ambil satu. */
 export function pickOne<T>(value: T | T[] | null | undefined): T | null {
   if (value === null || value === undefined) return null;
   return Array.isArray(value) ? (value[0] ?? null) : value;
 }
 
-/** Select standar untuk slot + zona induknya. */
-export const SLOT_WITH_ZONE_SELECT = "*, zone:zones(*)";
+/** Select standar untuk slot + zona induknya (alias tabel slot: `s`). */
+export const slotWithZone = () =>
+  sql`select s.*, to_jsonb(z) as zone from slots s left join zones z on z.id = s.zone_id`;
+
+/** Subquery JSON slot + zona untuk baris induk yang punya kolom slot_id. */
+export const slotJson = (slotId: Potongan) =>
+  sql`(select to_jsonb(s) || jsonb_build_object('zone', to_jsonb(z))
+         from slots s left join zones z on z.id = s.zone_id where s.id = ${slotId})`;
 
 type RawSlotWithZone = SlotRow & { zone: ZoneRow | ZoneRow[] | null };
 
-/** Ubah baris mentah PostgREST menjadi SlotDetail; null kalau zona tidak ikut. */
+/** Ubah baris mentah hasil query menjadi SlotDetail; null kalau zona tidak ikut. */
 export function normalizeSlotDetail(raw: unknown): SlotDetail | null {
   if (!raw || typeof raw !== "object") return null;
   const row = raw as RawSlotWithZone;
@@ -88,72 +93,48 @@ export function tanggalHariIniJakarta(): string {
  * slotnya, ditambah (model per tanggal):
  *   - eventDates: tanggal gelaran aktif >= hari ini (WIB), urut naik;
  *   - occupancy : baris view slot_date_status untuk tanggal-tanggal tersebut.
- * Dipakai halaman "/" dan sebagai basis langganan realtime (slots + booking_dates).
+ * Dipakai halaman "/" dan sebagai data awal denah (penyegarannya lewat getSlotStatus).
  */
 export async function getFloorPlan(): Promise<Result<FloorPlanData>> {
-  if (!isServiceRoleConfigured()) return fail<FloorPlanData>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<FloorPlanData>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
-  const supabase = createAdminSupabase();
-
-  const eventQuery = await supabase
-    .from("events")
-    .select("*")
-    .eq("is_active", true)
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-
+  const eventQuery = await cobaSatu(
+    sql<EventRow[]>`select * from events where is_active order by created_at limit 1`,
+  );
   if (eventQuery.error) {
-    return dbFail<FloorPlanData>(eventQuery.error as PgError, "Gagal memuat data event");
+    return dbFail<FloorPlanData>(eventQuery.error, "Gagal memuat data event");
   }
-  const event = (eventQuery.data ?? null) as EventRow | null;
+  const event = eventQuery.data;
 
-  // Satu query berelasi: zona beserta seluruh slotnya.
-  const zoneSelect = "*, slots(*)";
-  const zoneQuery = event
-    ? await supabase
-        .from("zones")
-        .select(zoneSelect)
-        .eq("event_id", event.id)
-        .order("display_order", { ascending: true })
-    : await supabase.from("zones").select(zoneSelect).order("display_order", { ascending: true });
-
+  // Satu query: zona beserta seluruh slotnya.
+  const zoneQuery = await coba(sql<Array<ZoneRow & { slots: SlotRow[] }>>`
+    select z.*,
+           (select coalesce(jsonb_agg(to_jsonb(s)), '[]') from slots s where s.zone_id = z.id) as slots
+      from zones z
+     where ${event ? sql`z.event_id = ${event.id}` : sql`true`}
+     order by z.display_order`);
   if (zoneQuery.error) {
-    return dbFail<FloorPlanData>(zoneQuery.error as PgError, "Gagal memuat data zona");
+    return dbFail<FloorPlanData>(zoneQuery.error, "Gagal memuat data zona");
   }
 
-  const rawZones = (zoneQuery.data ?? []) as unknown as Array<ZoneRow & { slots: SlotRow[] | null }>;
-  const zones: ZoneWithSlots[] = rawZones
+  const zones: ZoneWithSlots[] = zoneQuery.data
     .map((zone) => ({ ...zone, slots: [...(zone.slots ?? [])].sort(compareSlots) }))
     .sort((a, b) => a.display_order - b.display_order || a.name.localeCompare(b.name, "id-ID"));
 
   // Tanggal gelaran aktif mendatang (>= hari ini WIB), urut naik.
   const today = tanggalHariIniJakarta();
-  const datesQuery = await supabase
-    .from("event_dates")
-    .select("id, event_date")
-    .eq("is_active", true)
-    .gte("event_date", today)
-    .order("event_date", { ascending: true });
-
-  if (datesQuery.error) {
-    return dbFail<FloorPlanData>(datesQuery.error as PgError, "Gagal memuat tanggal gelaran");
-  }
-  const eventDates = (datesQuery.data ?? []) as { id: string; event_date: string }[];
+  const datesQuery = await getActiveEventDates();
+  if (!datesQuery.ok) return fail<FloorPlanData>(datesQuery.error, datesQuery.code);
+  const eventDates = datesQuery.data;
 
   // Okupansi per (slot, tanggal) untuk tanggal aktif mendatang saja.
   const aktif = new Set(eventDates.map((d) => d.event_date));
-  const occupancyQuery = await supabase
-    .from("slot_date_status")
-    .select("slot_id, event_date, status")
-    .gte("event_date", today);
-
+  const occupancyQuery = await coba(sql<FloorPlanData["occupancy"]>`
+    select slot_id, event_date, status from slot_date_status where event_date >= ${today}`);
   if (occupancyQuery.error) {
-    return dbFail<FloorPlanData>(occupancyQuery.error as PgError, "Gagal memuat okupansi slot");
+    return dbFail<FloorPlanData>(occupancyQuery.error, "Gagal memuat okupansi slot");
   }
-  const occupancy = ((occupancyQuery.data ?? []) as FloorPlanData["occupancy"]).filter((row) =>
-    aktif.has(row.event_date),
-  );
+  const occupancy = occupancyQuery.data.filter((row) => aktif.has(row.event_date));
 
   return ok<FloorPlanData>({ event, zones, eventDates, occupancy });
 }
@@ -163,22 +144,19 @@ export async function getFloorPlan(): Promise<Result<FloorPlanData>> {
  * untuk halaman yang tidak butuh zona/slot (mis. /booking/[slotId]).
  */
 export async function getActiveEventDates(): Promise<Result<{ id: string; event_date: string }[]>> {
-  if (!isServiceRoleConfigured()) {
+  if (!isDbConfigured()) {
     return fail<{ id: string; event_date: string }[]>(NO_CONFIG_MESSAGE, "NO_CONFIG");
   }
 
-  const supabase = createAdminSupabase();
-  const { data, error } = await supabase
-    .from("event_dates")
-    .select("id, event_date")
-    .eq("is_active", true)
-    .gte("event_date", tanggalHariIniJakarta())
-    .order("event_date", { ascending: true });
+  const { data, error } = await coba(sql<{ id: string; event_date: string }[]>`
+    select id, event_date from event_dates
+     where is_active and event_date >= ${tanggalHariIniJakarta()}
+     order by event_date`);
 
   if (error) {
-    return dbFail<{ id: string; event_date: string }[]>(error as PgError, "Gagal memuat tanggal gelaran");
+    return dbFail<{ id: string; event_date: string }[]>(error, "Gagal memuat tanggal gelaran");
   }
-  return ok((data ?? []) as { id: string; event_date: string }[]);
+  return ok([...data]);
 }
 
 /**
@@ -188,31 +166,45 @@ export async function getActiveEventDates(): Promise<Result<{ id: string; event_
  * sumber kebenaran terakhir.
  */
 export async function getSlotOccupancy(slotId: string): Promise<Result<OccupancyRow[]>> {
-  if (!isServiceRoleConfigured()) return fail<OccupancyRow[]>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<OccupancyRow[]>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
-  const supabase = createAdminSupabase();
-  const { data, error } = await supabase
-    .from("slot_date_status")
-    .select("slot_id, event_date, status")
-    .eq("slot_id", slotId)
-    .gte("event_date", tanggalHariIniJakarta());
+  const { data, error } = await coba(sql<OccupancyRow[]>`
+    select slot_id, event_date, status from slot_date_status
+     where slot_id = ${slotId} and event_date >= ${tanggalHariIniJakarta()}`);
 
-  if (error) return dbFail<OccupancyRow[]>(error as PgError, "Gagal memuat okupansi slot");
-  return ok((data ?? []) as OccupancyRow[]);
+  if (error) return dbFail<OccupancyRow[]>(error, "Gagal memuat okupansi slot");
+  return ok([...data]);
+}
+
+/** Status terkini denah untuk polling browser (GET /api/slots/status). */
+export type SlotStatusData = {
+  /** Okupansi per (slot, tanggal) untuk tanggal >= hari ini (WIB). */
+  occupancy: OccupancyRow[];
+  /** Status blokir panitia tiap slot. */
+  slots: Pick<SlotRow, "id" | "status">[];
+};
+
+export async function getSlotStatus(): Promise<Result<SlotStatusData>> {
+  if (!isDbConfigured()) return fail<SlotStatusData>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+
+  const occupancy = await coba(sql<OccupancyRow[]>`
+    select slot_id, event_date, status from slot_date_status
+     where event_date >= ${tanggalHariIniJakarta()}`);
+  if (occupancy.error) return dbFail<SlotStatusData>(occupancy.error, "Gagal memuat okupansi slot");
+
+  const slots = await coba(sql<SlotStatusData["slots"]>`select id, status from slots`);
+  if (slots.error) return dbFail<SlotStatusData>(slots.error, "Gagal memuat status slot");
+
+  return ok({ occupancy: [...occupancy.data], slots: [...slots.data] });
 }
 
 /** Satu slot beserta zona induknya (untuk halaman booking / beli). */
 export async function getSlotDetail(slotId: string): Promise<Result<SlotDetail>> {
-  if (!isServiceRoleConfigured()) return fail<SlotDetail>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<SlotDetail>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
-  const supabase = createAdminSupabase();
-  const { data, error } = await supabase
-    .from("slots")
-    .select(SLOT_WITH_ZONE_SELECT)
-    .eq("id", slotId)
-    .maybeSingle();
+  const { data, error } = await cobaSatu(sql`${slotWithZone()} where s.id = ${slotId}`);
 
-  if (error) return dbFail<SlotDetail>(error as PgError, "Gagal memuat data slot");
+  if (error) return dbFail<SlotDetail>(error, "Gagal memuat data slot");
 
   const slot = normalizeSlotDetail(data);
   if (!slot) return fail<SlotDetail>("Slot tidak ditemukan.", "NOT_FOUND");
@@ -221,16 +213,13 @@ export async function getSlotDetail(slotId: string): Promise<Result<SlotDetail>>
 
 /** Cari slot lewat id elemen SVG denah (mis. "slot-umkm-07"). */
 export async function getSlotBySvgId(svgElementId: string): Promise<Result<SlotDetail>> {
-  if (!isServiceRoleConfigured()) return fail<SlotDetail>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<SlotDetail>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
-  const supabase = createAdminSupabase();
-  const { data, error } = await supabase
-    .from("slots")
-    .select(SLOT_WITH_ZONE_SELECT)
-    .eq("svg_element_id", svgElementId)
-    .maybeSingle();
+  const { data, error } = await cobaSatu(
+    sql`${slotWithZone()} where s.svg_element_id = ${svgElementId}`,
+  );
 
-  if (error) return dbFail<SlotDetail>(error as PgError, "Gagal memuat data slot");
+  if (error) return dbFail<SlotDetail>(error, "Gagal memuat data slot");
 
   const slot = normalizeSlotDetail(data);
   if (!slot) return fail<SlotDetail>("Slot tidak ditemukan.", "NOT_FOUND");
@@ -239,27 +228,22 @@ export async function getSlotBySvgId(svgElementId: string): Promise<Result<SlotD
 
 /**
  * Saran slot pengganti saat slot pilihan sudah tidak tersedia.
- * Aturan urutannya ada di src/lib/domain/suggestions.ts (murni, tanpa Supabase).
+ * Aturan urutannya ada di src/lib/domain/suggestions.ts (murni, tanpa database).
  */
 export async function suggestAlternatives(
   slotId: string,
   limit?: number,
 ): Promise<Result<SlotDetail[]>> {
-  if (!isServiceRoleConfigured()) return fail<SlotDetail[]>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<SlotDetail[]>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
   const target = await getSlotDetail(slotId);
   if (!target.ok) return fail<SlotDetail[]>(target.error, target.code);
 
-  const supabase = createAdminSupabase();
-  const { data, error } = await supabase
-    .from("slots")
-    .select(SLOT_WITH_ZONE_SELECT)
-    .eq("status", "available");
+  const { data, error } = await coba(sql`${slotWithZone()} where s.status = 'available'`);
 
-  if (error) return dbFail<SlotDetail[]>(error as PgError, "Gagal memuat slot alternatif");
+  if (error) return dbFail<SlotDetail[]>(error, "Gagal memuat slot alternatif");
 
-  const rows = (data ?? []) as unknown[];
-  const allSlots = rows
+  const allSlots = data
     .map(normalizeSlotDetail)
     .filter((slot): slot is SlotDetail => slot !== null);
 
@@ -284,22 +268,18 @@ export type SlotTenant = {
  * (terlama) — mengembalikan ok(null) kalau lapak belum ada penyewanya.
  */
 export async function getSlotTenant(slotId: string): Promise<Result<SlotTenant | null>> {
-  if (!isServiceRoleConfigured()) return fail<SlotTenant | null>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<SlotTenant | null>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
-  const supabase = createAdminSupabase();
-  const { data, error } = await supabase
-    .from("bookings")
-    .select("id, status, booking_code, tenant:tenants(*)")
-    .eq("slot_id", slotId)
-    .in("status", ["pending_payment", "confirmed"])
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
+  type Baris = { id: string; status: BookingRow["status"]; booking_code: string; tenant: TenantRow | null };
+  const { data: row, error } = await cobaSatu(sql<Baris[]>`
+    select b.id, b.status, b.booking_code, to_jsonb(t) as tenant
+      from bookings b left join tenants t on t.id = b.tenant_id
+     where b.slot_id = ${slotId} and b.status in ('pending_payment', 'confirmed')
+     order by b.created_at limit 1`);
 
-  if (error) return dbFail<SlotTenant | null>(error as PgError, "Gagal memuat data tenant lapak");
-  if (!data) return ok(null);
+  if (error) return dbFail<SlotTenant | null>(error, "Gagal memuat data tenant lapak");
+  if (!row) return ok(null);
 
-  const row = data as { id: string; status: BookingRow["status"]; booking_code: string; tenant: TenantRow | TenantRow[] | null };
   const tenant = pickOne(row.tenant);
   if (!tenant) return ok(null);
 

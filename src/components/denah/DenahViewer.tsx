@@ -27,7 +27,7 @@ export type DenahViewerProps = {
  * pinch supaya tata letak & urutan slot bisa dipelajari — tetapi TANPA
  * onSelectSlot, jadi tidak ada slot yang bisa diklik dan tidak ada pemesanan
  * dari sini. Pemesanan hanya lewat alur per zona di beranda, yang petanya
- * terkunci pada zona terpilih. Warna status ikut realtime bila terhubung.
+ * terkunci pada zona terpilih. Warna status ikut diperbarui berkala bila terhubung.
  */
 export function DenahViewer({
   zones: initialZones,

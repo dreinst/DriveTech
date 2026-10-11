@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 export type ProofThumbProps = {
-  /** URL (signed) bukti pembayaran QRIS di Supabase Storage. */
+  /** URL bertanda tangan bukti pembayaran QRIS (lihat lib/storage.ts). */
   url: string | null;
   /** Teks alternatif gambar. */
   alt?: string;
@@ -11,8 +11,8 @@ export type ProofThumbProps = {
  * Pratinjau kecil bukti pembayaran beserta tautan ke ukuran penuh.
  *
  * Server-safe (tanpa "use client"). Sengaja memakai <img> biasa, bukan
- * next/image: host bukti pembayaran berasal dari Supabase Storage yang belum
- * tentu terdaftar di images.remotePatterns, dan ukurannya memang kecil.
+ * next/image: URL bukti bertanda tangan dan berumur pendek, dan ukurannya
+ * memang kecil.
  */
 export function ProofThumb({ url, alt = "Bukti pembayaran" }: ProofThumbProps) {
   if (!url) {

@@ -12,7 +12,7 @@ const TEKS_MAKS = 40;
 
 /**
  * GET /api/admin/qr?dari=<slug>&variant=branded|plain&caption=1|0&teks=<...>&download=1
- * Mengembalikan SVG kode QR promosi. Khusus admin (sesi Supabase Auth +
+ * Mengembalikan SVG kode QR promosi. Khusus admin (cookie sesi +
  * baris admin_users) — dipakai halaman /admin/qr sebagai <img src> dan
  * sumber unduhan SVG/PNG.
  */

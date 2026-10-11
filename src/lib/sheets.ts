@@ -13,7 +13,7 @@
  *
  * Modul KHUSUS SERVER. Kontrak menyebut `import "server-only"`, tetapi paket
  * npm "server-only" tidak ada di dependencies proyek ini (lihat catatan di
- * src/lib/supabase/admin.ts) — penjagaannya dilakukan runtime, konsisten
+ * src/lib/db.ts) — penjagaannya dilakukan runtime, konsisten
  * dengan seluruh lapisan service.
  */
 import { after } from "next/server";

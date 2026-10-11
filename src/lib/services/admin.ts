@@ -1,7 +1,6 @@
 import { fail, ok, type Result } from "@/lib/result";
 import { syncToSheet } from "@/lib/sheets";
-import { createAdminSupabase } from "@/lib/supabase/admin";
-import { isServiceRoleConfigured } from "@/lib/supabase/config";
+import { coba, cobaSatu, isDbConfigured, sql } from "@/lib/db";
 import { isBookableZoneType, isVehicleZoneType } from "@/lib/domain/constants";
 import type {
   AdminFeePaymentRow,
@@ -30,23 +29,22 @@ import {
   type UpsertPartnerInput,
 } from "@/lib/validation/schemas";
 import {
-  BOOKING_SELECT,
+  bookingSelect,
   createBooking,
   getBookingDetail,
   kirimNotifikasiBooking,
   normalizeBookingRow,
 } from "./booking";
-import { normalizePurchaseRow, PURCHASE_SELECT } from "./purchase";
+import { normalizePurchaseRow, purchaseSelect } from "./purchase";
 import {
   compareSlots,
   dbFail,
   getSlotDetail,
   NO_CONFIG_MESSAGE,
   normalizeSlotDetail,
-  pickOne,
-  SLOT_WITH_ZONE_SELECT,
+  slotJson,
+  slotWithZone,
   tanggalHariIniJakarta,
-  type PgError,
 } from "./slots";
 import type { CreateBookingInput } from "@/lib/validation/schemas";
 
@@ -130,70 +128,53 @@ const LEASING_MASUK = ["submitted", "verifying"];
  * view slot_date_status. Dipakai dashboard & analitik supaya okupansi punya
  * makna jelas pada model per tanggal: "per <tanggal>".
  */
-async function ambilOkupansiTanggalTerdekat(
-  supabase: ReturnType<typeof createAdminSupabase>,
-): Promise<Result<{ tanggal: string | null; occupancy: SlotDateStatusRow[] }>> {
+async function ambilOkupansiTanggalTerdekat(): Promise<
+  Result<{ tanggal: string | null; occupancy: SlotDateStatusRow[] }>
+> {
   type Out = { tanggal: string | null; occupancy: SlotDateStatusRow[] };
 
-  const today = tanggalHariIniJakarta();
-  const dateQuery = await supabase
-    .from("event_dates")
-    .select("event_date")
-    .eq("is_active", true)
-    .gte("event_date", today)
-    .order("event_date", { ascending: true })
-    .limit(1)
-    .maybeSingle();
+  const dateQuery = await cobaSatu(sql<{ event_date: string }[]>`
+    select event_date from event_dates
+     where is_active and event_date >= ${tanggalHariIniJakarta()}
+     order by event_date limit 1`);
   if (dateQuery.error) {
-    return dbFail<Out>(dateQuery.error as PgError, "Gagal memuat tanggal gelaran");
+    return dbFail<Out>(dateQuery.error, "Gagal memuat tanggal gelaran");
   }
 
-  const tanggal = ((dateQuery.data ?? null) as { event_date: string } | null)?.event_date ?? null;
+  const tanggal = dateQuery.data?.event_date ?? null;
   if (!tanggal) return ok<Out>({ tanggal: null, occupancy: [] });
 
-  const occQuery = await supabase
-    .from("slot_date_status")
-    .select("slot_id, event_date, status")
-    .eq("event_date", tanggal);
+  const occQuery = await coba(sql<SlotDateStatusRow[]>`
+    select slot_id, event_date, status from slot_date_status where event_date = ${tanggal}`);
   if (occQuery.error) {
-    return dbFail<Out>(occQuery.error as PgError, "Gagal memuat okupansi slot");
+    return dbFail<Out>(occQuery.error, "Gagal memuat okupansi slot");
   }
 
-  return ok<Out>({ tanggal, occupancy: (occQuery.data ?? []) as SlotDateStatusRow[] });
+  return ok<Out>({ tanggal, occupancy: [...occQuery.data] });
 }
 
 /** Ringkasan angka untuk /admin. */
 export async function getDashboardStats(): Promise<Result<DashboardStats>> {
-  if (!isServiceRoleConfigured()) return fail<DashboardStats>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<DashboardStats>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
-  const supabase = createAdminSupabase();
-
-  const zonesQuery = await supabase
-    .from("zones")
-    .select("id, name, zone_type, display_order")
-    .order("display_order", { ascending: true });
+  type ZonaRingkas = { id: string; name: string; zone_type: ZoneType; display_order: number };
+  const zonesQuery = await coba(sql<ZonaRingkas[]>`
+    select id, name, zone_type, display_order from zones order by display_order`);
   if (zonesQuery.error) {
-    return dbFail<DashboardStats>(zonesQuery.error as PgError, "Gagal memuat zona");
+    return dbFail<DashboardStats>(zonesQuery.error, "Gagal memuat zona");
   }
-  const zones = (zonesQuery.data ?? []) as Array<{
-    id: string;
-    name: string;
-    zone_type: ZoneType;
-    display_order: number;
-  }>;
+  const zones = zonesQuery.data;
 
-  const slotsQuery = await supabase.from("slots").select("id, zone_id, status");
+  const slotsQuery = await coba(
+    sql<{ id: string; zone_id: string; status: SlotStatus }[]>`select id, zone_id, status from slots`,
+  );
   if (slotsQuery.error) {
-    return dbFail<DashboardStats>(slotsQuery.error as PgError, "Gagal memuat slot");
+    return dbFail<DashboardStats>(slotsQuery.error, "Gagal memuat slot");
   }
-  const slots = (slotsQuery.data ?? []) as Array<{
-    id: string;
-    zone_id: string;
-    status: SlotStatus;
-  }>;
+  const slots = slotsQuery.data;
 
   // Okupansi dihitung untuk tanggal gelaran aktif terdekat (model per tanggal).
-  const okupansiResult = await ambilOkupansiTanggalTerdekat(supabase);
+  const okupansiResult = await ambilOkupansiTanggalTerdekat();
   if (!okupansiResult.ok) {
     return fail<DashboardStats>(okupansiResult.error, okupansiResult.code);
   }
@@ -227,30 +208,23 @@ export async function getDashboardStats(): Promise<Result<DashboardStats>> {
     };
   });
 
-  const paymentsQuery = await supabase.from("admin_fee_payments").select("amount, status");
-  const paymentRows = paymentsQuery.error
-    ? []
-    : ((paymentsQuery.data ?? []) as Array<{ amount: number; status: PaymentStatus }>);
+  // Tiga angka pelengkap di bawah tidak fatal: kalau query gagal, dihitung nol.
+  const paymentRows =
+    (await coba(sql<{ amount: number; status: PaymentStatus }[]>`
+      select amount, status from admin_fee_payments`)).data ?? [];
 
-  const bookingsQuery = await supabase
-    .from("bookings")
-    .select("id, status")
-    .in("status", BOOKING_AKTIF);
-  const bookingAktif = bookingsQuery.error
-    ? 0
-    : ((bookingsQuery.data ?? []) as unknown[]).length;
+  const bookingAktif =
+    (await coba(sql`select id from bookings where status in ${sql(BOOKING_AKTIF)}`)).data?.length ?? 0;
 
-  const leasingQuery = await supabase
-    .from("leasing_applications")
-    .select("id, status, commission_amount, commission_paid");
-  const leasingRows = leasingQuery.error
-    ? []
-    : ((leasingQuery.data ?? []) as Array<{
-        id: string;
-        status: string;
-        commission_amount: number | null;
-        commission_paid: boolean | null;
-      }>);
+  type LeasingRingkas = {
+    id: string;
+    status: string;
+    commission_amount: number | null;
+    commission_paid: boolean | null;
+  };
+  const leasingRows =
+    (await coba(sql<LeasingRingkas[]>`
+      select id, status, commission_amount, commission_paid from leasing_applications`)).data ?? [];
 
   const totalKomisiPotensial = leasingRows
     .filter((row) => row.commission_paid !== true && row.status !== "rejected")
@@ -276,17 +250,16 @@ export async function getDashboardStats(): Promise<Result<DashboardStats>> {
 
 /** Daftar booking untuk /admin/bookings. Filter turunan dikerjakan di memori. */
 export async function listBookings(filter?: BookingFilter): Promise<Result<BookingDetail[]>> {
-  if (!isServiceRoleConfigured()) return fail<BookingDetail[]>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<BookingDetail[]>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
-  const supabase = createAdminSupabase();
-  let query = supabase.from("bookings").select(BOOKING_SELECT);
-  if (filter?.status) query = query.eq("status", filter.status);
-
-  const { data, error } = await query.order("created_at", { ascending: false });
-  if (error) return dbFail<BookingDetail[]>(error as PgError, "Gagal memuat daftar booking");
+  const { data, error } = await coba(sql`
+    ${bookingSelect()}
+    where ${filter?.status ? sql`b.status = ${filter.status}` : sql`true`}
+    order by b.created_at desc`);
+  if (error) return dbFail<BookingDetail[]>(error, "Gagal memuat daftar booking");
 
   const keyword = filter?.q?.trim().toLowerCase() ?? "";
-  const rows = ((data ?? []) as unknown[])
+  const rows = data
     .map(normalizeBookingRow)
     .filter((row): row is BookingDetail => row !== null)
     .filter((row) => (filter?.zoneId ? row.slot.zone_id === filter.zoneId : true))
@@ -311,32 +284,18 @@ export async function listBookings(filter?: BookingFilter): Promise<Result<Booki
 
 /** Daftar tenant + jumlah bookingnya. */
 export async function listTenants(): Promise<Result<TenantListItem[]>> {
-  if (!isServiceRoleConfigured()) return fail<TenantListItem[]>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<TenantListItem[]>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
-  const supabase = createAdminSupabase();
-  const tenantsQuery = await supabase
-    .from("tenants")
-    .select("*")
-    .order("created_at", { ascending: false });
+  const tenantsQuery = await coba(sql<TenantListItem[]>`
+    select t.*,
+           (select count(*)::int from bookings b
+             where b.tenant_id = t.id and b.status <> 'cancelled') as "bookingCount"
+      from tenants t
+     order by t.created_at desc`);
   if (tenantsQuery.error) {
-    return dbFail<TenantListItem[]>(tenantsQuery.error as PgError, "Gagal memuat daftar tenant");
+    return dbFail<TenantListItem[]>(tenantsQuery.error, "Gagal memuat daftar tenant");
   }
-
-  const bookingsQuery = await supabase.from("bookings").select("tenant_id, status");
-  const bookings = bookingsQuery.error
-    ? []
-    : ((bookingsQuery.data ?? []) as Array<{ tenant_id: string; status: BookingStatus }>);
-
-  const hitung = new Map<string, number>();
-  for (const booking of bookings) {
-    if (booking.status === "cancelled") continue;
-    hitung.set(booking.tenant_id, (hitung.get(booking.tenant_id) ?? 0) + 1);
-  }
-
-  const tenants = ((tenantsQuery.data ?? []) as TenantRow[]).map((tenant) => ({
-    ...tenant,
-    bookingCount: hitung.get(tenant.id) ?? 0,
-  }));
+  const tenants = [...tenantsQuery.data];
 
   return ok(tenants);
 }
@@ -347,18 +306,16 @@ export async function listTenants(): Promise<Result<TenantListItem[]>> {
 
 /** Daftar slot + zona untuk /admin/slots. */
 export async function listSlots(filter?: SlotFilter): Promise<Result<SlotDetail[]>> {
-  if (!isServiceRoleConfigured()) return fail<SlotDetail[]>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<SlotDetail[]>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
-  const supabase = createAdminSupabase();
-  let query = supabase.from("slots").select(SLOT_WITH_ZONE_SELECT);
-  if (filter?.zoneId) query = query.eq("zone_id", filter.zoneId);
-  if (filter?.status) query = query.eq("status", filter.status);
-
-  const { data, error } = await query;
-  if (error) return dbFail<SlotDetail[]>(error as PgError, "Gagal memuat daftar slot");
+  const { data, error } = await coba(sql`
+    ${slotWithZone()}
+    where ${filter?.zoneId ? sql`s.zone_id = ${filter.zoneId}` : sql`true`}
+      and ${filter?.status ? sql`s.status = ${filter.status}` : sql`true`}`);
+  if (error) return dbFail<SlotDetail[]>(error, "Gagal memuat daftar slot");
 
   const keyword = filter?.q?.trim().toLowerCase() ?? "";
-  const rows = ((data ?? []) as unknown[])
+  const rows = data
     .map(normalizeSlotDetail)
     .filter((row): row is SlotDetail => row !== null)
     .filter((row) => {
@@ -389,19 +346,14 @@ export async function overrideSlotStatus(
   slotId: string,
   status: SlotStatus,
 ): Promise<Result<SlotRow>> {
-  if (!isServiceRoleConfigured()) return fail<SlotRow>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<SlotRow>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
-  const supabase = createAdminSupabase();
-  const { data, error } = await supabase
-    .from("slots")
-    .update({ status, updated_at: new Date().toISOString() })
-    .eq("id", slotId)
-    .select("*")
-    .maybeSingle();
+  const { data, error } = await cobaSatu(sql<SlotRow[]>`
+    update slots set status = ${status}, updated_at = now() where id = ${slotId} returning *`);
 
-  if (error) return dbFail<SlotRow>(error as PgError, "Gagal mengubah status slot");
+  if (error) return dbFail<SlotRow>(error, "Gagal mengubah status slot");
   if (!data) return fail<SlotRow>("Slot tidak ditemukan.", "NOT_FOUND");
-  return ok(data as SlotRow);
+  return ok(data);
 }
 
 /* ------------------------------------------------------------------ */
@@ -411,16 +363,12 @@ export async function overrideSlotStatus(
 type PaymentLite = Pick<AdminFeePaymentRow, "id" | "booking_id" | "status">;
 
 async function ambilPayment(paymentId: string): Promise<Result<PaymentLite>> {
-  const supabase = createAdminSupabase();
-  const { data, error } = await supabase
-    .from("admin_fee_payments")
-    .select("id, booking_id, status")
-    .eq("id", paymentId)
-    .maybeSingle();
+  const { data, error } = await cobaSatu(sql<PaymentLite[]>`
+    select id, booking_id, status from admin_fee_payments where id = ${paymentId}`);
 
-  if (error) return dbFail<PaymentLite>(error as PgError, "Gagal memuat data pembayaran");
+  if (error) return dbFail<PaymentLite>(error, "Gagal memuat data pembayaran");
   if (!data) return fail<PaymentLite>("Data pembayaran tidak ditemukan.", "NOT_FOUND");
-  return ok(data as PaymentLite);
+  return ok(data);
 }
 
 /**
@@ -429,10 +377,10 @@ async function ambilPayment(paymentId: string): Promise<Result<PaymentLite>> {
  * sync_booking_dates_active menjaga baris booking_dates tetap aktif, dan
  * peta membaca okupansi dari view slot_date_status.
  * Tanpa transaksi: ada kompensasi manual kalau langkah lanjutan gagal.
- * SARAN PRODUKSI: jadikan satu Postgres function (rpc) supaya atomik.
+ * SARAN PRODUKSI: bungkus dalam satu transaksi (sql.begin) supaya atomik.
  */
 export async function verifyPayment(paymentId: string, adminId: string): Promise<Result<null>> {
-  if (!isServiceRoleConfigured()) return fail<null>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<null>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
   const paymentResult = await ambilPayment(paymentId);
   if (!paymentResult.ok) return fail<null>(paymentResult.error, paymentResult.code);
@@ -457,50 +405,42 @@ export async function verifyPayment(paymentId: string, adminId: string): Promise
     );
   }
 
-  const supabase = createAdminSupabase();
   const now = new Date().toISOString();
 
-  const bookingQuery = await supabase
-    .from("bookings")
-    .select("id, booking_code, status")
-    .eq("id", payment.booking_id)
-    .maybeSingle();
+  const bookingQuery = await cobaSatu(
+    sql<{ id: string; booking_code: string; status: BookingStatus }[]>`
+      select id, booking_code, status from bookings where id = ${payment.booking_id}`,
+  );
   if (bookingQuery.error) {
-    return dbFail<null>(bookingQuery.error as PgError, "Gagal memuat booking");
+    return dbFail<null>(bookingQuery.error, "Gagal memuat booking");
   }
-  const booking = (bookingQuery.data ?? null) as
-    | { id: string; booking_code: string; status: BookingStatus }
-    | null;
+  const booking = bookingQuery.data;
   if (!booking) return fail<null>("Booking terkait tidak ditemukan.", "NOT_FOUND");
   if (booking.status === "cancelled") {
     return fail<null>("Booking sudah dibatalkan, pembayaran tidak bisa diverifikasi.", "CANCELLED");
   }
 
-  const paymentUpdate = await supabase
-    .from("admin_fee_payments")
-    .update({
+  const paymentUpdate = await coba(sql`
+    update admin_fee_payments set ${sql({
       status: "verified",
       verified_by: adminId,
       verified_at: now,
       reject_reason: null,
       updated_at: now,
-    })
-    .eq("id", payment.id);
+    })} where id = ${payment.id}`);
   if (paymentUpdate.error) {
-    return dbFail<null>(paymentUpdate.error as PgError, "Gagal memverifikasi pembayaran");
+    return dbFail<null>(paymentUpdate.error, "Gagal memverifikasi pembayaran");
   }
 
-  const bookingUpdate = await supabase
-    .from("bookings")
-    .update({ status: "confirmed", updated_at: now })
-    .eq("id", booking.id);
+  const bookingUpdate = await coba(sql`
+    update bookings set status = 'confirmed', updated_at = ${now} where id = ${booking.id}`);
   if (bookingUpdate.error) {
     // Kompensasi: kembalikan pembayaran ke status sebelumnya.
-    await supabase
-      .from("admin_fee_payments")
-      .update({ status: payment.status, verified_by: null, verified_at: null })
-      .eq("id", payment.id);
-    return dbFail<null>(bookingUpdate.error as PgError, "Gagal mengonfirmasi booking");
+    await coba(sql`
+      update admin_fee_payments
+         set status = ${payment.status}, verified_by = null, verified_at = null
+       where id = ${payment.id}`);
+    return dbFail<null>(bookingUpdate.error, "Gagal mengonfirmasi booking");
   }
 
   void syncToSheet("payment", {
@@ -514,15 +454,12 @@ export async function verifyPayment(paymentId: string, adminId: string): Promise
   });
 
   // Booking confirmed = kendaraannya (bila ada) mulai tampil di /katalog.
-  const listing = await supabase
-    .from("vehicle_listings")
-    .select("id, is_visible")
-    .eq("booking_id", booking.id)
-    .maybeSingle();
-  if (!listing.error && listing.data) {
+  const listing = await cobaSatu(sql<{ is_visible: boolean }[]>`
+    select is_visible from vehicle_listings where booking_id = ${booking.id}`);
+  if (listing.data) {
     void syncToSheet("vehicle", {
       bookingCode: booking.booking_code,
-      tampil: (listing.data as { is_visible: boolean }).is_visible ? "ya" : "disembunyikan-admin",
+      tampil: listing.data.is_visible ? "ya" : "disembunyikan-admin",
     });
   }
 
@@ -541,7 +478,7 @@ export async function rejectPayment(
   adminId: string,
   reason: string,
 ): Promise<Result<null>> {
-  if (!isServiceRoleConfigured()) return fail<null>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<null>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
   const alasan = reason.trim();
   if (alasan.length < 3) {
@@ -551,29 +488,21 @@ export async function rejectPayment(
   const paymentResult = await ambilPayment(paymentId);
   if (!paymentResult.ok) return fail<null>(paymentResult.error, paymentResult.code);
 
-  const supabase = createAdminSupabase();
-  const now = new Date().toISOString();
-  const { error } = await supabase
-    .from("admin_fee_payments")
-    .update({
+  const { error } = await coba(sql`
+    update admin_fee_payments set ${sql({
       status: "rejected",
       reject_reason: alasan,
       verified_by: adminId,
       verified_at: null,
-      updated_at: now,
-    })
-    .eq("id", paymentResult.data.id);
+      updated_at: new Date().toISOString(),
+    })} where id = ${paymentResult.data.id}`);
 
-  if (error) return dbFail<null>(error as PgError, "Gagal menolak pembayaran");
+  if (error) return dbFail<null>(error, "Gagal menolak pembayaran");
 
   // Kode booking hanya untuk sinkron sheet — kegagalan query tidak menggagalkan operasi.
-  const bookingQuery = await supabase
-    .from("bookings")
-    .select("booking_code")
-    .eq("id", paymentResult.data.booking_id)
-    .maybeSingle();
-  const bookingCode =
-    ((bookingQuery.data ?? null) as { booking_code: string } | null)?.booking_code ?? null;
+  const bookingQuery = await cobaSatu(sql<{ booking_code: string }[]>`
+    select booking_code from bookings where id = ${paymentResult.data.booking_id}`);
+  const bookingCode = bookingQuery.data?.booking_code ?? null;
   if (bookingCode) {
     void syncToSheet("payment", {
       bookingCode,
@@ -599,7 +528,7 @@ export async function adminCreateBooking(
   opts: { autoConfirm: boolean; adminId: string },
 ): Promise<Result<{ bookingId: string; bookingCode: string }>> {
   type Out = { bookingId: string; bookingCode: string };
-  if (!isServiceRoleConfigured()) return fail<Out>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<Out>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
   const slotResult = await getSlotDetail(input.slotId);
   if (!slotResult.ok) return fail<Out>(slotResult.error, slotResult.code);
@@ -616,32 +545,21 @@ export async function adminCreateBooking(
   if (!created.ok) return created;
 
   if (opts.autoConfirm) {
-    const supabase = createAdminSupabase();
     const now = new Date().toISOString();
     // Tandai lunas: pembayaran dikumpulkan panitia di luar sistem (tanpa bukti),
     // jadi dicatat sebagai 'cash' — bukan 'qris' yang khusus alur publik.
-    const payQ = await supabase
-      .from("admin_fee_payments")
-      .select("id")
-      .eq("booking_id", created.data.bookingId)
-      .maybeSingle();
-    if (!payQ.error && payQ.data) {
-      await supabase
-        .from("admin_fee_payments")
-        .update({
-          status: "verified",
-          method: "cash",
-          verified_by: opts.adminId,
-          verified_at: now,
-          reject_reason: null,
-          updated_at: now,
-        })
-        .eq("id", (payQ.data as { id: string }).id);
-    }
-    await supabase
-      .from("bookings")
-      .update({ status: "confirmed", updated_at: now })
-      .eq("id", created.data.bookingId);
+    await coba(sql`
+      update admin_fee_payments set ${sql({
+        status: "verified",
+        method: "cash",
+        verified_by: opts.adminId,
+        verified_at: now,
+        reject_reason: null,
+        updated_at: now,
+      })} where booking_id = ${created.data.bookingId}`);
+    await coba(sql`
+      update bookings set status = 'confirmed', updated_at = ${now}
+       where id = ${created.data.bookingId}`);
 
     void syncToSheet("booking", {
       bookingCode: created.data.bookingCode,
@@ -663,7 +581,7 @@ export async function adminMoveBookingSlot(
   bookingId: string,
   targetSlotId: string,
 ): Promise<Result<null>> {
-  if (!isServiceRoleConfigured()) return fail<null>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<null>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
   const bookingResult = await getBookingDetail(bookingId);
   if (!bookingResult.ok) return fail<null>(bookingResult.error, bookingResult.code);
@@ -691,51 +609,39 @@ export async function adminMoveBookingSlot(
     return fail<null>("Slot tujuan harus di zona dengan tipe yang sama.", "ZONE_MISMATCH");
   }
 
-  const supabase = createAdminSupabase();
-
   // Slot tujuan harus bebas pada SEMUA tanggal aktif booking ini.
-  const bentrok = await supabase
-    .from("booking_dates")
-    .select("event_date")
-    .eq("slot_id", targetSlotId)
-    .eq("is_active", true)
-    .in("event_date", booking.dates);
+  const bentrok = await coba(sql`
+    select event_date from booking_dates
+     where slot_id = ${targetSlotId} and is_active and event_date in ${sql(booking.dates)}`);
   if (bentrok.error) {
-    return dbFail<null>(bentrok.error as PgError, "Gagal memeriksa ketersediaan slot tujuan");
+    return dbFail<null>(bentrok.error, "Gagal memeriksa ketersediaan slot tujuan");
   }
-  if ((bentrok.data ?? []).length > 0) {
+  if (bentrok.data.length > 0) {
     return fail<null>(
       "Slot tujuan sudah terisi pada sebagian tanggal booking ini.",
       "DATE_TAKEN",
     );
   }
 
-  const now = new Date().toISOString();
-  const updBooking = await supabase
-    .from("bookings")
-    .update({ slot_id: targetSlotId, updated_at: now })
-    .eq("id", booking.id);
+  const updBooking = await coba(sql`
+    update bookings set slot_id = ${targetSlotId}, updated_at = now() where id = ${booking.id}`);
   if (updBooking.error) {
-    return dbFail<null>(updBooking.error as PgError, "Gagal memindahkan booking");
+    return dbFail<null>(updBooking.error, "Gagal memindahkan booking");
   }
 
-  const updDates = await supabase
-    .from("booking_dates")
-    .update({ slot_id: targetSlotId })
-    .eq("booking_id", booking.id)
-    .eq("is_active", true);
+  const updDates = await coba(sql`
+    update booking_dates set slot_id = ${targetSlotId}
+     where booking_id = ${booking.id} and is_active`);
   if (updDates.error) {
     // Kompensasi: kembalikan slot_id booking ke asal.
-    await supabase.from("bookings").update({ slot_id: booking.slot_id }).eq("id", booking.id);
-    return dbFail<null>(updDates.error as PgError, "Gagal memindahkan tanggal booking");
+    await coba(sql`update bookings set slot_id = ${booking.slot_id} where id = ${booking.id}`);
+    return dbFail<null>(updDates.error, "Gagal memindahkan tanggal booking");
   }
 
   if (booking.listing) {
     // Listing katalog ikut pindah slot; kegagalan di sini tidak fatal.
-    await supabase
-      .from("vehicle_listings")
-      .update({ slot_id: targetSlotId })
-      .eq("booking_id", booking.id);
+    await coba(sql`
+      update vehicle_listings set slot_id = ${targetSlotId} where booking_id = ${booking.id}`);
   }
 
   void syncToSheet("booking", {
@@ -758,35 +664,27 @@ export async function adminCancelBooking(
   bookingId: string,
   reason: string,
 ): Promise<Result<null>> {
-  if (!isServiceRoleConfigured()) return fail<null>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<null>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
   const alasan = reason.trim();
   if (alasan.length < 3) return fail<null>("Alasan pembatalan minimal 3 karakter.", "VALIDATION");
 
-  const supabase = createAdminSupabase();
-  const current = await supabase
-    .from("bookings")
-    .select("id, booking_code, status")
-    .eq("id", bookingId)
-    .maybeSingle();
-  if (current.error) return dbFail<null>(current.error as PgError, "Gagal memuat data booking");
+  const current = await cobaSatu(
+    sql<{ id: string; booking_code: string; status: BookingStatus }[]>`
+      select id, booking_code, status from bookings where id = ${bookingId}`,
+  );
+  if (current.error) return dbFail<null>(current.error, "Gagal memuat data booking");
 
-  const booking = (current.data ?? null) as
-    | { id: string; booking_code: string; status: BookingStatus }
-    | null;
+  const booking = current.data;
   if (!booking) return fail<null>("Booking tidak ditemukan.", "NOT_FOUND");
   if (booking.status === "cancelled") return ok(null); // idempoten
 
-  const now = new Date().toISOString();
-  const updated = await supabase
-    .from("bookings")
-    .update({ status: "cancelled", updated_at: now })
-    .eq("id", booking.id)
-    .neq("status", "cancelled")
-    .select("id")
-    .maybeSingle();
+  const updated = await cobaSatu(sql<{ id: string }[]>`
+    update bookings set status = 'cancelled', updated_at = now()
+     where id = ${booking.id} and status <> 'cancelled'
+    returning id`);
 
-  if (updated.error) return dbFail<null>(updated.error as PgError, "Gagal membatalkan booking");
+  if (updated.error) return dbFail<null>(updated.error, "Gagal membatalkan booking");
   if (!updated.data) return ok(null); // sudah dibatalkan proses lain — idempoten
 
   void syncToSheet("booking", {
@@ -805,71 +703,42 @@ export async function adminCancelBooking(
 
 /** Semua transaksi pembelian unit (terbaru dulu). */
 export async function listPurchases(): Promise<Result<PurchaseDetail[]>> {
-  if (!isServiceRoleConfigured()) return fail<PurchaseDetail[]>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<PurchaseDetail[]>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
-  const supabase = createAdminSupabase();
-  const { data, error } = await supabase
-    .from("purchase_transactions")
-    .select(PURCHASE_SELECT)
-    .order("created_at", { ascending: false });
+  const { data, error } = await coba(sql`${purchaseSelect()} order by p.created_at desc`);
 
-  if (error) return dbFail<PurchaseDetail[]>(error as PgError, "Gagal memuat transaksi pembelian");
+  if (error) return dbFail<PurchaseDetail[]>(error, "Gagal memuat transaksi pembelian");
 
-  const rows = ((data ?? []) as unknown[])
+  const rows = data
     .map(normalizePurchaseRow)
     .filter((row): row is PurchaseDetail => row !== null);
   return ok(rows);
 }
 
-type RawAdminLeasing = LeasingApplicationRow & {
-  partner: LeasingPartnerRow | LeasingPartnerRow[] | null;
-  purchase:
-    | (PurchaseTransactionRow & { slot: unknown })
-    | Array<PurchaseTransactionRow & { slot: unknown }>
-    | null;
-};
-
 /** Semua pengajuan leasing + partner + transaksi pembelian (terbaru dulu). */
 export async function listLeasingApplications(): Promise<Result<AdminLeasingItem[]>> {
-  if (!isServiceRoleConfigured()) return fail<AdminLeasingItem[]>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<AdminLeasingItem[]>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
-  const supabase = createAdminSupabase();
-  const { data, error } = await supabase
-    .from("leasing_applications")
-    .select(
-      "*, partner:leasing_partners(*), purchase:purchase_transactions(*, slot:slots(*, zone:zones(*)))",
-    )
-    .order("created_at", { ascending: false });
+  type Baris = LeasingApplicationRow & {
+    partner: LeasingPartnerRow | null;
+    purchase: (PurchaseTransactionRow & { slot: unknown }) | null;
+  };
+  const { data, error } = await coba(sql<Baris[]>`
+    select la.*,
+           (select to_jsonb(lp) from leasing_partners lp where lp.id = la.leasing_partner_id) as partner,
+           (select to_jsonb(p) || jsonb_build_object('slot', ${slotJson(sql`p.slot_id`)})
+              from purchase_transactions p where p.id = la.purchase_transaction_id) as purchase
+      from leasing_applications la
+     order by la.created_at desc`);
 
   if (error) {
-    return dbFail<AdminLeasingItem[]>(error as PgError, "Gagal memuat pengajuan leasing");
+    return dbFail<AdminLeasingItem[]>(error, "Gagal memuat pengajuan leasing");
   }
 
-  const rows = ((data ?? []) as unknown[]).map((raw): AdminLeasingItem => {
-    const row = raw as RawAdminLeasing;
-    const { partner: _partner, purchase: _purchase, ...applicationOnly } = row;
-    void _partner;
-    void _purchase;
-
-    const rawPurchase = pickOne<PurchaseTransactionRow & { slot: unknown }>(row.purchase);
-    let purchase: AdminLeasingItem["purchase"] = null;
-    if (rawPurchase) {
-      const { slot: _slot, ...purchaseOnly } = rawPurchase;
-      void _slot;
-      purchase = {
-        ...(purchaseOnly as PurchaseTransactionRow),
-        slot: normalizeSlotDetail(
-          Array.isArray(rawPurchase.slot) ? rawPurchase.slot[0] : rawPurchase.slot,
-        ),
-      };
-    }
-
-    return {
-      ...(applicationOnly as LeasingApplicationRow),
-      partner: pickOne<LeasingPartnerRow>(row.partner),
-      purchase,
-    };
-  });
+  const rows = data.map((row): AdminLeasingItem => ({
+    ...row,
+    purchase: row.purchase && { ...row.purchase, slot: normalizeSlotDetail(row.purchase.slot) },
+  }));
 
   return ok(rows);
 }
@@ -879,7 +748,7 @@ export async function updateLeasingApplication(
   id: string,
   patch: LeasingApplicationPatch,
 ): Promise<Result<LeasingApplicationRow>> {
-  if (!isServiceRoleConfigured()) {
+  if (!isDbConfigured()) {
     return fail<LeasingApplicationRow>(NO_CONFIG_MESSAGE, "NO_CONFIG");
   }
 
@@ -891,20 +760,15 @@ export async function updateLeasingApplication(
   }
   bersih.updated_at = new Date().toISOString();
 
-  const supabase = createAdminSupabase();
-  const { data, error } = await supabase
-    .from("leasing_applications")
-    .update(bersih)
-    .eq("id", id)
-    .select("*")
-    .maybeSingle();
+  const { data, error } = await cobaSatu(sql<LeasingApplicationRow[]>`
+    update leasing_applications set ${sql(bersih)} where id = ${id} returning *`);
 
   if (error) {
-    return dbFail<LeasingApplicationRow>(error as PgError, "Gagal memperbarui pengajuan leasing");
+    return dbFail<LeasingApplicationRow>(error, "Gagal memperbarui pengajuan leasing");
   }
   if (!data) return fail<LeasingApplicationRow>("Pengajuan leasing tidak ditemukan.", "NOT_FOUND");
 
-  const row = data as LeasingApplicationRow;
+  const row = data;
   void syncToSheet("leasing", {
     leasingId: row.id,
     purchaseTransactionId: row.purchase_transaction_id,
@@ -921,23 +785,21 @@ export async function updateLeasingApplication(
 
 /** Semua partner leasing (aktif maupun tidak) untuk pengelolaan admin. */
 export async function listPartners(): Promise<Result<LeasingPartnerRow[]>> {
-  if (!isServiceRoleConfigured()) return fail<LeasingPartnerRow[]>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<LeasingPartnerRow[]>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
-  const supabase = createAdminSupabase();
-  const { data, error } = await supabase
-    .from("leasing_partners")
-    .select("*")
-    .order("name", { ascending: true });
+  const { data, error } = await coba(
+    sql<LeasingPartnerRow[]>`select * from leasing_partners order by name`,
+  );
 
-  if (error) return dbFail<LeasingPartnerRow[]>(error as PgError, "Gagal memuat partner leasing");
-  return ok((data ?? []) as LeasingPartnerRow[]);
+  if (error) return dbFail<LeasingPartnerRow[]>(error, "Gagal memuat partner leasing");
+  return ok([...data]);
 }
 
 /** Tambah partner baru atau perbarui yang sudah ada (kalau input.id diisi). */
 export async function upsertPartner(
   input: UpsertPartnerInput,
 ): Promise<Result<LeasingPartnerRow>> {
-  if (!isServiceRoleConfigured()) return fail<LeasingPartnerRow>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<LeasingPartnerRow>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
   const parsed = upsertPartnerSchema.safeParse(input);
   if (!parsed.success) {
@@ -960,43 +822,36 @@ export async function upsertPartner(
     is_active: isActiveDikirim ? (data.isActive ?? false) : true,
   };
 
-  const supabase = createAdminSupabase();
-
   if (data.id) {
-    const diperbarui = await supabase
-      .from("leasing_partners")
-      .update(payload)
-      .eq("id", data.id)
-      .select("*")
-      .maybeSingle();
+    const diperbarui = await cobaSatu(sql<LeasingPartnerRow[]>`
+      update leasing_partners set ${sql(payload)} where id = ${data.id} returning *`);
 
     if (diperbarui.error) {
-      return dbFail<LeasingPartnerRow>(diperbarui.error as PgError, "Gagal menyimpan partner leasing");
+      return dbFail<LeasingPartnerRow>(diperbarui.error, "Gagal menyimpan partner leasing");
     }
     if (!diperbarui.data) {
       return fail<LeasingPartnerRow>("Partner leasing tidak ditemukan.", "NOT_FOUND");
     }
-    return ok(diperbarui.data as LeasingPartnerRow);
+    return ok(diperbarui.data);
   }
 
-  const dibuat = await supabase.from("leasing_partners").insert(payload).select("*").single();
+  const dibuat = await cobaSatu(
+    sql<LeasingPartnerRow[]>`insert into leasing_partners ${sql(payload)} returning *`,
+  );
   if (dibuat.error || !dibuat.data) {
-    return dbFail<LeasingPartnerRow>(dibuat.error as PgError, "Gagal menyimpan partner leasing");
+    return dbFail<LeasingPartnerRow>(dibuat.error, "Gagal menyimpan partner leasing");
   }
-  return ok(dibuat.data as LeasingPartnerRow);
+  return ok(dibuat.data);
 }
 
 /** Tandai komisi platform sudah / belum dibayarkan partner. */
 export async function setCommissionPaid(id: string, paid: boolean): Promise<Result<null>> {
-  if (!isServiceRoleConfigured()) return fail<null>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<null>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
-  const supabase = createAdminSupabase();
-  const { error } = await supabase
-    .from("leasing_applications")
-    .update({ commission_paid: paid, updated_at: new Date().toISOString() })
-    .eq("id", id);
+  const { error } = await coba(sql`
+    update leasing_applications set commission_paid = ${paid}, updated_at = now() where id = ${id}`);
 
-  if (error) return dbFail<null>(error as PgError, "Gagal memperbarui status komisi");
+  if (error) return dbFail<null>(error, "Gagal memperbarui status komisi");
   return ok(null);
 }
 
@@ -1006,36 +861,27 @@ export async function setCommissionPaid(id: string, paid: boolean): Promise<Resu
 
 /** Semua zona (urut display_order) untuk halaman pengaturan admin. */
 export async function listZonesAdmin(): Promise<Result<ZoneRow[]>> {
-  if (!isServiceRoleConfigured()) return fail<ZoneRow[]>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<ZoneRow[]>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
-  const supabase = createAdminSupabase();
-  const { data, error } = await supabase
-    .from("zones")
-    .select("*")
-    .order("display_order", { ascending: true });
+  const { data, error } = await coba(sql<ZoneRow[]>`select * from zones order by display_order`);
 
-  if (error) return dbFail<ZoneRow[]>(error as PgError, "Gagal memuat daftar zona");
-  return ok((data ?? []) as ZoneRow[]);
+  if (error) return dbFail<ZoneRow[]>(error, "Gagal memuat daftar zona");
+  return ok([...data]);
 }
 
 /** Ubah biaya admin satu zona (dipakai /admin/pengaturan). */
 export async function updateZoneFee(zoneId: string, adminFee: number): Promise<Result<ZoneRow>> {
-  if (!isServiceRoleConfigured()) return fail<ZoneRow>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<ZoneRow>(NO_CONFIG_MESSAGE, "NO_CONFIG");
   if (!Number.isFinite(adminFee) || adminFee < 0) {
     return fail<ZoneRow>("Biaya admin tidak boleh negatif.", "VALIDATION");
   }
 
-  const supabase = createAdminSupabase();
-  const { data, error } = await supabase
-    .from("zones")
-    .update({ admin_fee: adminFee })
-    .eq("id", zoneId)
-    .select("*")
-    .maybeSingle();
+  const { data, error } = await cobaSatu(sql<ZoneRow[]>`
+    update zones set admin_fee = ${adminFee} where id = ${zoneId} returning *`);
 
-  if (error) return dbFail<ZoneRow>(error as PgError, "Gagal menyimpan biaya admin zona");
+  if (error) return dbFail<ZoneRow>(error, "Gagal menyimpan biaya admin zona");
   if (!data) return fail<ZoneRow>("Zona tidak ditemukan.", "NOT_FOUND");
-  return ok(data as ZoneRow);
+  return ok(data);
 }
 
 /* ------------------------------------------------------------------ */
@@ -1044,21 +890,19 @@ export async function updateZoneFee(zoneId: string, adminFee: number): Promise<R
 
 /** Semua tanggal gelaran (aktif maupun tidak), urut naik. */
 export async function listEventDates(): Promise<Result<EventDateRow[]>> {
-  if (!isServiceRoleConfigured()) return fail<EventDateRow[]>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<EventDateRow[]>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
-  const supabase = createAdminSupabase();
-  const { data, error } = await supabase
-    .from("event_dates")
-    .select("*")
-    .order("event_date", { ascending: true });
+  const { data, error } = await coba(
+    sql<EventDateRow[]>`select * from event_dates order by event_date`,
+  );
 
-  if (error) return dbFail<EventDateRow[]>(error as PgError, "Gagal memuat tanggal gelaran");
-  return ok((data ?? []) as EventDateRow[]);
+  if (error) return dbFail<EventDateRow[]>(error, "Gagal memuat tanggal gelaran");
+  return ok([...data]);
 }
 
 /** Tambah satu tanggal gelaran baru (YYYY-MM-DD). */
 export async function addEventDate(date: string): Promise<Result<EventDateRow>> {
-  if (!isServiceRoleConfigured()) return fail<EventDateRow>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<EventDateRow>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
   const parsed = addEventDateSchema.safeParse({ date });
   if (!parsed.success) {
@@ -1066,35 +910,19 @@ export async function addEventDate(date: string): Promise<Result<EventDateRow>> 
     return fail<EventDateRow>(first, "VALIDATION");
   }
 
-  const supabase = createAdminSupabase();
-
   // Tanggal ditautkan ke event aktif (satu event saja di sistem ini).
-  const eventQuery = await supabase
-    .from("events")
-    .select("id")
-    .eq("is_active", true)
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-  if (eventQuery.error) {
-    return dbFail<EventDateRow>(eventQuery.error as PgError, "Gagal memuat data event");
-  }
-  const eventId = ((eventQuery.data ?? null) as { id: string } | null)?.id ?? null;
-
-  const inserted = await supabase
-    .from("event_dates")
-    .insert({ event_id: eventId, event_date: parsed.data.date, is_active: true })
-    .select("*")
-    .single();
+  const inserted = await cobaSatu(sql<EventDateRow[]>`
+    insert into event_dates (event_id, event_date, is_active)
+    values ((select id from events where is_active order by created_at limit 1), ${parsed.data.date}, true)
+    returning *`);
 
   if (inserted.error || !inserted.data) {
-    const err = inserted.error as PgError;
-    if (err?.code === "23505") {
+    if (inserted.error?.code === "23505") {
       return fail<EventDateRow>("Tanggal tersebut sudah terdaftar.", "ALREADY_EXISTS");
     }
-    return dbFail<EventDateRow>(err, "Gagal menambah tanggal gelaran");
+    return dbFail<EventDateRow>(inserted.error, "Gagal menambah tanggal gelaran");
   }
-  return ok(inserted.data as EventDateRow);
+  return ok(inserted.data);
 }
 
 /** Aktifkan / nonaktifkan satu tanggal gelaran. */
@@ -1102,19 +930,14 @@ export async function setEventDateActive(
   id: string,
   active: boolean,
 ): Promise<Result<EventDateRow>> {
-  if (!isServiceRoleConfigured()) return fail<EventDateRow>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<EventDateRow>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
-  const supabase = createAdminSupabase();
-  const { data, error } = await supabase
-    .from("event_dates")
-    .update({ is_active: active })
-    .eq("id", id)
-    .select("*")
-    .maybeSingle();
+  const { data, error } = await cobaSatu(sql<EventDateRow[]>`
+    update event_dates set is_active = ${active} where id = ${id} returning *`);
 
-  if (error) return dbFail<EventDateRow>(error as PgError, "Gagal memperbarui tanggal gelaran");
+  if (error) return dbFail<EventDateRow>(error, "Gagal memperbarui tanggal gelaran");
   if (!data) return fail<EventDateRow>("Tanggal gelaran tidak ditemukan.", "NOT_FOUND");
-  return ok(data as EventDateRow);
+  return ok(data);
 }
 
 /* ------------------------------------------------------------------ */
@@ -1183,36 +1006,26 @@ const LEASING_STATUS_URUT: readonly LeasingStatus[] = [
  * kosong supaya halaman bisa menampilkan EmptyState per kartu.
  */
 export async function getAnalyticsData(): Promise<Result<AnalyticsData>> {
-  if (!isServiceRoleConfigured()) return fail<AnalyticsData>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<AnalyticsData>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
-  const supabase = createAdminSupabase();
-
-  const zonesQuery = await supabase
-    .from("zones")
-    .select("id, name, zone_type, display_order")
-    .order("display_order", { ascending: true });
+  type ZonaRingkas = { id: string; name: string; zone_type: ZoneType; display_order: number };
+  const zonesQuery = await coba(sql<ZonaRingkas[]>`
+    select id, name, zone_type, display_order from zones order by display_order`);
   if (zonesQuery.error) {
-    return dbFail<AnalyticsData>(zonesQuery.error as PgError, "Gagal memuat zona");
+    return dbFail<AnalyticsData>(zonesQuery.error, "Gagal memuat zona");
   }
-  const zones = (zonesQuery.data ?? []) as Array<{
-    id: string;
-    name: string;
-    zone_type: ZoneType;
-    display_order: number;
-  }>;
+  const zones = zonesQuery.data;
 
-  const slotsQuery = await supabase.from("slots").select("id, zone_id, status");
+  const slotsQuery = await coba(
+    sql<{ id: string; zone_id: string; status: SlotStatus }[]>`select id, zone_id, status from slots`,
+  );
   if (slotsQuery.error) {
-    return dbFail<AnalyticsData>(slotsQuery.error as PgError, "Gagal memuat slot");
+    return dbFail<AnalyticsData>(slotsQuery.error, "Gagal memuat slot");
   }
-  const slots = (slotsQuery.data ?? []) as Array<{
-    id: string;
-    zone_id: string;
-    status: SlotStatus;
-  }>;
+  const slots = slotsQuery.data;
 
   // (a) Okupansi per zona bookable pada tanggal aktif terdekat (model per tanggal).
-  const okupansiResult = await ambilOkupansiTanggalTerdekat(supabase);
+  const okupansiResult = await ambilOkupansiTanggalTerdekat();
   if (!okupansiResult.ok) {
     return fail<AnalyticsData>(okupansiResult.error, okupansiResult.code);
   }
@@ -1245,12 +1058,12 @@ export async function getAnalyticsData(): Promise<Result<AnalyticsData>> {
     .filter((zone) => zone.terisi + zone.menunggu + zone.tersedia + zone.diblokir > 0);
 
   // (b) Booking per hari dari created_at (dikelompokkan di server, hari kosong diisi 0).
-  const bookingsQuery = await supabase.from("bookings").select("created_at");
+  const bookingsQuery = await coba(sql<{ created_at: string }[]>`select created_at from bookings`);
   if (bookingsQuery.error) {
-    return dbFail<AnalyticsData>(bookingsQuery.error as PgError, "Gagal memuat booking");
+    return dbFail<AnalyticsData>(bookingsQuery.error, "Gagal memuat booking");
   }
   const perTanggal = new Map<string, number>();
-  for (const row of (bookingsQuery.data ?? []) as Array<{ created_at: string }>) {
+  for (const row of bookingsQuery.data) {
     const kunci = kunciTanggal(row.created_at);
     if (!kunci) continue;
     perTanggal.set(kunci, (perTanggal.get(kunci) ?? 0) + 1);
@@ -1274,11 +1087,13 @@ export async function getAnalyticsData(): Promise<Result<AnalyticsData>> {
   }
 
   // (c) Leasing per status.
-  const leasingQuery = await supabase.from("leasing_applications").select("status");
+  const leasingQuery = await coba(
+    sql<{ status: LeasingStatus }[]>`select status from leasing_applications`,
+  );
   if (leasingQuery.error) {
-    return dbFail<AnalyticsData>(leasingQuery.error as PgError, "Gagal memuat pengajuan leasing");
+    return dbFail<AnalyticsData>(leasingQuery.error, "Gagal memuat pengajuan leasing");
   }
-  const leasingRows = (leasingQuery.data ?? []) as Array<{ status: LeasingStatus }>;
+  const leasingRows = leasingQuery.data;
   const leasingPerStatus: LeasingStatusPoint[] =
     leasingRows.length === 0
       ? []
@@ -1289,11 +1104,13 @@ export async function getAnalyticsData(): Promise<Result<AnalyticsData>> {
 
   // (d) Metode pembayaran biaya admin: qris (alur publik sejak 2026-09-02),
   //     plus data lama transfer/cash.
-  const paymentsQuery = await supabase.from("admin_fee_payments").select("method");
+  const paymentsQuery = await coba(
+    sql<{ method: PaymentMethod }[]>`select method from admin_fee_payments`,
+  );
   if (paymentsQuery.error) {
-    return dbFail<AnalyticsData>(paymentsQuery.error as PgError, "Gagal memuat pembayaran");
+    return dbFail<AnalyticsData>(paymentsQuery.error, "Gagal memuat pembayaran");
   }
-  const paymentRows = (paymentsQuery.data ?? []) as Array<{ method: PaymentMethod }>;
+  const paymentRows = paymentsQuery.data;
   const metodePembayaran: PaymentMethodPoint[] = (["qris", "transfer", "cash"] as const)
     .map((metode) => ({
       metode,

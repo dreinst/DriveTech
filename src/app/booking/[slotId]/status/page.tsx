@@ -194,8 +194,8 @@ export default async function StatusBookingPage({ params }: PageProps) {
                     title="Buka bukti pembayaran di tab baru"
                     className="group inline-flex items-center gap-2"
                   >
-                    {/* <img> biasa (bukan next/image): URL Storage bisa berasal dari host
-                        Supabase lokal maupun cloud, jadi tidak selalu cocok dengan remotePatterns. */}
+                    {/* <img> biasa (bukan next/image): URL bukti bertanda tangan dan
+                        berumur pendek, jadi tidak perlu dioptimasi atau di-cache. */}
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={buktiUrl}

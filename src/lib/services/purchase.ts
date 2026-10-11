@@ -1,7 +1,6 @@
 import { fail, ok, type Result } from "@/lib/result";
 import { syncToSheet } from "@/lib/sheets";
-import { createAdminSupabase } from "@/lib/supabase/admin";
-import { isServiceRoleConfigured } from "@/lib/supabase/config";
+import { cobaSatu, isDbConfigured, sql } from "@/lib/db";
 import type {
   LeasingApplicationRow,
   LeasingDetail,
@@ -16,16 +15,22 @@ import {
   zodFieldErrors,
   type CreatePurchaseInput,
 } from "@/lib/validation/schemas";
-import { dbFail, getSlotDetail, NO_CONFIG_MESSAGE, pickOne, type PgError } from "./slots";
+import { dbFail, getSlotDetail, NO_CONFIG_MESSAGE, pickOne, slotJson } from "./slots";
 
 // Modul KHUSUS SERVER (lihat catatan "server-only" di services/slots.ts).
 if (typeof window !== "undefined") {
   throw new Error("src/lib/services/purchase.ts hanya boleh dipakai di server.");
 }
 
-/** Select standar transaksi pembelian + slot penjual + pengajuan leasingnya. */
-export const PURCHASE_SELECT =
-  "*, slot:slots(*, zone:zones(*)), leasing:leasing_applications(*, partner:leasing_partners(*))";
+/** Select standar transaksi pembelian + slot penjual + pengajuan leasingnya (alias tabel: `p`). */
+export const purchaseSelect = () => sql`
+  select p.*,
+         ${slotJson(sql`p.slot_id`)} as slot,
+         (select to_jsonb(la) || jsonb_build_object('partner', to_jsonb(lp))
+            from leasing_applications la
+            left join leasing_partners lp on lp.id = la.leasing_partner_id
+           where la.purchase_transaction_id = p.id) as leasing
+    from purchase_transactions p`;
 
 type RawSlotWithZone = SlotRow & { zone: ZoneRow | ZoneRow[] | null };
 type RawLeasing = LeasingApplicationRow & {
@@ -36,7 +41,7 @@ type RawPurchase = PurchaseTransactionRow & {
   leasing: RawLeasing | RawLeasing[] | null;
 };
 
-/** Rapikan baris mentah PostgREST jadi PurchaseDetail. Dipakai juga services/admin.ts. */
+/** Rapikan baris mentah hasil query jadi PurchaseDetail. Dipakai juga services/admin.ts. */
 export function normalizePurchaseRow(raw: unknown): PurchaseDetail | null {
   if (!raw || typeof raw !== "object") return null;
   const row = raw as RawPurchase;
@@ -77,19 +82,16 @@ export function normalizePurchaseRow(raw: unknown): PurchaseDetail | null {
  * booking per tanggal, kolom itu tetap "available" walau lapak sudah disewa.
  */
 export async function slotHasMarketedUnit(slotId: string): Promise<Result<boolean>> {
-  if (!isServiceRoleConfigured()) return fail<boolean>(NO_CONFIG_MESSAGE, "NO_CONFIG");
-  const supabase = createAdminSupabase();
-  const listingQuery = await supabase
-    .from("vehicle_listings")
-    .select("id, booking:bookings!inner(status)")
-    .eq("slot_id", slotId)
-    .eq("is_visible", true)
-    .eq("booking.status", "confirmed")
-    .limit(1);
+  if (!isDbConfigured()) return fail<boolean>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  const listingQuery = await cobaSatu(sql<{ ada: boolean }[]>`
+    select exists (
+      select 1 from vehicle_listings l join bookings b on b.id = l.booking_id
+       where l.slot_id = ${slotId} and l.is_visible and b.status = 'confirmed') as ada`);
+
   if (listingQuery.error) {
-    return dbFail<boolean>(listingQuery.error as PgError, "Gagal memeriksa unit di slot ini");
+    return dbFail<boolean>(listingQuery.error, "Gagal memeriksa unit di slot ini");
   }
-  return ok((listingQuery.data ?? []).length > 0);
+  return ok(listingQuery.data?.ada === true);
 }
 
 /**
@@ -100,7 +102,7 @@ export async function createPurchase(
   input: CreatePurchaseInput,
 ): Promise<Result<{ purchaseId: string; transactionCode: string }>> {
   type Out = { purchaseId: string; transactionCode: string };
-  if (!isServiceRoleConfigured()) return fail<Out>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<Out>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
   const parsed = createPurchaseSchema.safeParse(input);
   if (!parsed.success) {
@@ -118,8 +120,6 @@ export async function createPurchase(
     return fail<Out>("Fasilitas umum bukan lapak penjualan.", "NOT_BOOKABLE");
   }
 
-  const supabase = createAdminSupabase();
-
   // Prospek hanya boleh dibuat untuk slot yang memang MEMASARKAN unit
   // (temuan audit 2026-09-03): tanpa ini endpoint publik bisa dipakai
   // menumpuk prospek palsu ke slot kosong.
@@ -129,9 +129,8 @@ export async function createPurchase(
     return fail<Out>("Slot ini belum memiliki unit yang dipasarkan.", "NO_LISTING");
   }
 
-  const inserted = await supabase
-    .from("purchase_transactions")
-    .insert({
+  const inserted = await cobaSatu(sql<{ id: string; transaction_code: string }[]>`
+    insert into purchase_transactions ${sql({
       slot_id: slot.id,
       buyer_name: data.buyerName,
       buyer_phone: data.buyerPhone,
@@ -140,15 +139,13 @@ export async function createPurchase(
       unit_price: data.unitPrice ?? null,
       status: "new",
       notes: data.notes ?? null,
-    })
-    .select("id, transaction_code")
-    .single();
+    })} returning id, transaction_code`);
 
   if (inserted.error || !inserted.data) {
-    return dbFail<Out>(inserted.error as PgError, "Gagal menyimpan transaksi pembelian");
+    return dbFail<Out>(inserted.error, "Gagal menyimpan transaksi pembelian");
   }
 
-  const row = inserted.data as { id: string; transaction_code: string };
+  const row = inserted.data;
 
   // Sinkron ke Google Sheets — fire-and-forget, tidak menahan respons.
   void syncToSheet("purchase", {
@@ -168,16 +165,11 @@ export async function createPurchase(
 
 /** Transaksi pembelian lengkap berdasarkan id. */
 export async function getPurchaseDetail(id: string): Promise<Result<PurchaseDetail>> {
-  if (!isServiceRoleConfigured()) return fail<PurchaseDetail>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<PurchaseDetail>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
-  const supabase = createAdminSupabase();
-  const { data, error } = await supabase
-    .from("purchase_transactions")
-    .select(PURCHASE_SELECT)
-    .eq("id", id)
-    .maybeSingle();
+  const { data, error } = await cobaSatu(sql`${purchaseSelect()} where p.id = ${id}`);
 
-  if (error) return dbFail<PurchaseDetail>(error as PgError, "Gagal memuat transaksi pembelian");
+  if (error) return dbFail<PurchaseDetail>(error, "Gagal memuat transaksi pembelian");
 
   const detail = normalizePurchaseRow(data);
   if (!detail) return fail<PurchaseDetail>("Transaksi tidak ditemukan.", "NOT_FOUND");
@@ -186,21 +178,18 @@ export async function getPurchaseDetail(id: string): Promise<Result<PurchaseDeta
 
 /** Transaksi pembelian lengkap berdasarkan kode transaksi (mis. "TX-A1B2C3"). */
 export async function getPurchaseByCode(code: string): Promise<Result<PurchaseDetail>> {
-  if (!isServiceRoleConfigured()) return fail<PurchaseDetail>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<PurchaseDetail>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
   const normalized = code.trim().toUpperCase();
   if (normalized.length === 0) {
     return fail<PurchaseDetail>("Kode transaksi wajib diisi.", "VALIDATION");
   }
 
-  const supabase = createAdminSupabase();
-  const { data, error } = await supabase
-    .from("purchase_transactions")
-    .select(PURCHASE_SELECT)
-    .eq("transaction_code", normalized)
-    .maybeSingle();
+  const { data, error } = await cobaSatu(
+    sql`${purchaseSelect()} where p.transaction_code = ${normalized}`,
+  );
 
-  if (error) return dbFail<PurchaseDetail>(error as PgError, "Gagal memuat transaksi pembelian");
+  if (error) return dbFail<PurchaseDetail>(error, "Gagal memuat transaksi pembelian");
 
   const detail = normalizePurchaseRow(data);
   if (!detail) {

@@ -3,9 +3,9 @@ import { redirect } from "next/navigation";
 
 import { LoginForm } from "@/components/admin/LoginForm";
 import { Alert } from "@/components/ui/Alert";
+import { isDbConfigured } from "@/lib/db";
 import { EVENT_INFO } from "@/lib/domain/constants";
 import { getCurrentAdmin } from "@/lib/services/auth";
-import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { tujuanAdminAman } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -24,7 +24,7 @@ export default async function AdminLoginPage({ searchParams }: PageProps) {
   if (admin) redirect("/admin"); // redirect() melempar NEXT_REDIRECT
 
   const { next } = await searchParams;
-  const terkonfigurasi = isSupabaseConfigured();
+  const terkonfigurasi = isDbConfigured();
 
   return (
     <div className="flex min-h-[calc(100dvh-4rem)] items-center justify-center bg-app px-4 py-10">
@@ -45,8 +45,8 @@ export default async function AdminLoginPage({ searchParams }: PageProps) {
           {terkonfigurasi ? (
             <LoginForm next={tujuanAdminAman(next)} />
           ) : (
-            <Alert tone="warning" title="Supabase belum dikonfigurasi">
-              Isi kredensial Supabase di{" "}
+            <Alert tone="warning" title="Database belum dikonfigurasi">
+              Isi DATABASE_URL dan AUTH_SECRET di{" "}
               <code className="rounded bg-surface-3 px-1 py-0.5 text-xs">.env.local</code> (contoh di{" "}
               <code className="rounded bg-surface-3 px-1 py-0.5 text-xs">.env.example</code>), lalu
               jalankan ulang server.
@@ -55,8 +55,8 @@ export default async function AdminLoginPage({ searchParams }: PageProps) {
         </div>
 
         <p className="mt-5 text-center text-xs leading-relaxed text-muted">
-          Akun admin dibuat panitia lewat Supabase Auth — langkahnya ada di{" "}
-          <code className="font-mono">supabase/README.md</code>.
+          Akun admin dibuat panitia langsung di database. Langkahnya ada di{" "}
+          <code className="font-mono">README.md</code>.
         </p>
       </div>
     </div>

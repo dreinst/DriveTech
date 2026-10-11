@@ -3,7 +3,7 @@ import type { BookingStatus, SlotRow, ZoneType } from "@/lib/types/database";
 import { isBookableZoneType } from "./constants";
 
 /**
- * Aturan ketersediaan model "per tanggal" — modul MURNI (tanpa Supabase/DOM)
+ * Aturan ketersediaan model "per tanggal" — modul MURNI (tanpa database/DOM)
  * supaya bisa dipakai server (services) maupun komponen client (denah).
  *
  * Semantik (kontrak Drive Tech per tanggal), diberi pilihan tanggal S (>= 1) dan

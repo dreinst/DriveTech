@@ -25,29 +25,6 @@ const nextConfig = {
   images: {
     // Hasil optimasi gambar disimpan 31 hari supaya sharp tidak mengolah ulang tiap jam.
     minimumCacheTTL: 2678400,
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "*.supabase.co",
-        pathname: "/storage/v1/object/public/**",
-      },
-      {
-        // Self-hosted Supabase on the dreinst VPS (own Postgres, no
-        // external vendor dependency) -- storage is served from the
-        // gateway at this host, not *.supabase.co.
-        protocol: "http",
-        hostname: "187.53.129.205",
-        port: "8020",
-        pathname: "/storage/v1/object/public/**",
-      },
-      {
-        // Endpoint HTTPS publik Supabase VPS (Traefik + Let's Encrypt) — dipakai
-        // produksi; http di atas hanya untuk akses internal/staging.
-        protocol: "https",
-        hostname: "supabase.187.53.129.205.sslip.io",
-        pathname: "/storage/v1/object/public/**",
-      },
-    ],
   },
   async headers() {
     return [

@@ -125,7 +125,7 @@ function verdictToSlotStatus(verdict: SlotDateVerdict): SlotStatus {
   return "confirmed";
 }
 
-/* ---------- Chip indikator realtime (mengambang di atas peta) ---------- */
+/* ---------- Chip indikator pembaruan langsung (mengambang di atas peta) ---------- */
 
 function RealtimeIndicator({ connected }: { connected: boolean }) {
   return (
@@ -467,7 +467,7 @@ function SlotDetailPanel({
  * Denah lengkap yang bebas dijelajahi (tanpa pemesanan) ada di halaman /denah.
  * Peta selalu ter-mount (langkah 2 hanya disembunyikan dengan display:none)
  * supaya zoom otomatis tinggal dianimasikan saat langkahnya terbuka. Tersinkron
- * realtime dengan tabel slots (blokir panitia) dan booking_dates (okupansi per
+ * berkala dengan tabel slots (blokir panitia) dan booking_dates (okupansi per
  * tanggal).
  */
 export function FloorPlanBoard({
@@ -646,7 +646,7 @@ export function FloorPlanBoard({
     );
   }, []);
 
-  // Realtime: kalau tanggal terpilih keburu diambil orang lain, buang dari pilihan.
+  // Pembaruan langsung: kalau tanggal terpilih keburu diambil orang lain, buang dari pilihan.
   useEffect(() => {
     if (!selectedSlotId) return;
     const free = new Set(freeDatesForSlot({ slotId: selectedSlotId, activeDates, occupancy }));

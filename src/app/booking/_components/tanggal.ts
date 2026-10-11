@@ -1,6 +1,6 @@
 /**
  * Util tanggal kecil untuk alur booking per tanggal (model Drive Tech).
- * Modul MURNI (tanpa Supabase/DOM) sehingga aman diimpor server maupun client.
+ * Modul MURNI (tanpa database/DOM) sehingga aman diimpor server maupun client.
  */
 
 const TANGGAL_POLOS = /^\d{4}-\d{2}-\d{2}$/;

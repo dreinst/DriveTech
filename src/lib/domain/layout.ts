@@ -12,7 +12,7 @@ import type { ZoneType } from "@/lib/types/database";
  * membuat ulang public/denah.svg (tools/generate-denah-svg.ts).
  *
  * svgElementId WAJIB identik dengan kolom slots.svg_element_id di database
- * (supabase/seed.sql dan migrasi 20261009120000_denah_area_a_h.sql).
+ * (db/seed.sql).
  *
  * Jumlah lapak yang bisa dipesan: mobil baru 10 (Area A), mobil bekas 60
  * (Area B, C, D), otomotif 15 (Area D), motor baru 5 dan motor bekas 20

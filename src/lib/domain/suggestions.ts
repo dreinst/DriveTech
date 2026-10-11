@@ -3,7 +3,7 @@ import type { SlotDetail } from "@/lib/types/database";
 
 /**
  * Logika "Slot Penuh -> Saran Slot Lain" (bagian 4 "Sistem Pameran Arsitektur.md").
- * MURNI: tanpa Supabase, gampang diuji. Service tinggal menyuplai daftar slot.
+ * MURNI: tanpa database, gampang diuji. Service tinggal menyuplai daftar slot.
  *
  * Aturan:
  * 1. Slot available di zone_id yang sama, urut jarak |slot_number - target| lalu nomor naik.

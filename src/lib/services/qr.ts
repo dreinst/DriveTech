@@ -1,7 +1,6 @@
 import { fail, ok, type Result } from "@/lib/result";
-import { createAdminSupabase } from "@/lib/supabase/admin";
-import { isServiceRoleConfigured } from "@/lib/supabase/config";
-import { dbFail, NO_CONFIG_MESSAGE, tanggalHariIniJakarta, type PgError } from "./slots";
+import { coba, isDbConfigured, sql } from "@/lib/db";
+import { dbFail, NO_CONFIG_MESSAGE, tanggalHariIniJakarta } from "./slots";
 
 /**
  * Pencatatan scan QR promosi (tabel public.qr_scans, migrasi 20260904100000).
@@ -48,16 +47,11 @@ function peringatkanSekali(pesan: string): void {
  * tidak boleh menghalangi pengunjung masuk ke situs.
  */
 export async function catatScanQr(input: { media: string; platform: QrPlatform }): Promise<void> {
-  if (!isServiceRoleConfigured()) return;
-  try {
-    const supabase = createAdminSupabase();
-    const { error } = await supabase
-      .from("qr_scans")
-      .insert({ media: input.media, platform: input.platform });
-    if (error) peringatkanSekali(`insert qr_scans gagal: ${error.message}`);
-  } catch (err) {
-    peringatkanSekali(`insert qr_scans exception: ${err instanceof Error ? err.message : String(err)}`);
-  }
+  if (!isDbConfigured()) return;
+  const { error } = await coba(
+    sql`insert into qr_scans (media, platform) values (${input.media}, ${input.platform})`,
+  );
+  if (error) peringatkanSekali(`insert qr_scans gagal: ${error.message}`);
 }
 
 export type RingkasanScanMedia = {
@@ -84,16 +78,15 @@ const MAKS_BARIS = 50_000;
 
 /** Statistik scan per media untuk panel admin, dihitung di server dari baris mentah. */
 export async function ringkasanScanQr(): Promise<Result<RingkasanScanQr>> {
-  if (!isServiceRoleConfigured()) return fail<RingkasanScanQr>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<RingkasanScanQr>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
-  const supabase = createAdminSupabase();
-  const { data, error } = await supabase
-    .from("qr_scans")
-    .select("media, platform, created_at")
-    .order("created_at", { ascending: false })
-    .limit(MAKS_BARIS);
+  const { data, error } = await coba(
+    sql<{ media: string; platform: string; created_at: string }[]>`
+      select media, platform, created_at from qr_scans
+       order by created_at desc limit ${MAKS_BARIS}`,
+  );
 
-  if (error) return dbFail<RingkasanScanQr>(error as PgError, "Gagal memuat statistik scan QR");
+  if (error) return dbFail<RingkasanScanQr>(error, "Gagal memuat statistik scan QR");
 
   // Batas hari mengikuti WIB, sama dengan tanggal gelaran.
   const awalHariIni = new Date(`${tanggalHariIniJakarta()}T00:00:00+07:00`).getTime();
@@ -104,7 +97,7 @@ export async function ringkasanScanQr(): Promise<Result<RingkasanScanQr>> {
   let tujuhHari = 0;
   let hariIni = 0;
 
-  for (const row of data ?? []) {
+  for (const row of data) {
     const waktu = new Date(row.created_at).getTime();
     const entri = perMedia.get(row.media) ?? {
       media: row.media,

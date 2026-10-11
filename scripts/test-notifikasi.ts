@@ -11,7 +11,7 @@
  *   SMTP_HOST=smtp.gmail.com SMTP_PORT=465 SMTP_USER=… SMTP_PASS=… SMTP_FROM="Drive Tech <…>" \
  *     node scripts/test-notifikasi.ts
  * Mode WhatsApp bawaan = off. Untuk mengantre sungguhan ke satu nomor uji:
- *   NEXT_PUBLIC_SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… WA_OVERRIDE_RECIPIENT=628xxxx \
+ *   WA_PROVIDER=outbox DATABASE_URL=… WA_OVERRIDE_RECIPIENT=628xxxx \
  *     node scripts/test-notifikasi.ts
  * Untuk mode Fonnte langsung:
  *   WA_PROVIDER=fonnte WA_API_TOKEN=xxxx WA_OVERRIDE_RECIPIENT=628xxxx node scripts/test-notifikasi.ts

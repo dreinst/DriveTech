@@ -102,7 +102,7 @@ export default async function AdminPengaturanPage() {
         ) : tanggalMendatang.length === 0 ? (
           <p className="px-6 py-8 text-center text-sm text-muted">
             Belum ada tanggal gelaran mendatang. Tambahkan lewat form di bawah, atau jalankan
-            supabase/seed.sql untuk mengisi akhir pekan 8 minggu ke depan.
+            db/seed.sql untuk mengisi akhir pekan 8 minggu ke depan.
           </p>
         ) : (
           <ul className="divide-y divide-line">
@@ -167,7 +167,7 @@ export default async function AdminPengaturanPage() {
           </div>
         ) : zonaBookable.length === 0 ? (
           <p className="px-6 py-8 text-center text-sm text-muted">
-            Belum ada zona yang disewakan. Jalankan supabase/seed.sql lebih dulu.
+            Belum ada zona yang disewakan. Jalankan db/seed.sql lebih dulu.
           </p>
         ) : (
           <ul className="divide-y divide-line">

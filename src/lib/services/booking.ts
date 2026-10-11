@@ -14,13 +14,11 @@ import { fail, ok, type Result } from "@/lib/result";
 import { syncToSheet } from "@/lib/sheets";
 import { getSiteUrl } from "@/lib/site-url";
 import { formatTanggalWaktu, slotDisplayName } from "@/lib/utils";
-import { createAdminSupabase } from "@/lib/supabase/admin";
-import { isServiceRoleConfigured } from "@/lib/supabase/config";
+import { coba, cobaSatu, isDbConfigured, sql } from "@/lib/db";
 import type {
   AdminFeePaymentRow,
   BookingDetail,
   BookingRow,
-  Json,
   SlotRow,
   TenantRow,
   VehicleListingRow,
@@ -38,8 +36,8 @@ import {
   getSlotDetail,
   NO_CONFIG_MESSAGE,
   pickOne,
+  slotJson,
   tanggalHariIniJakarta,
-  type PgError,
 } from "./slots";
 import { consumeEmailCode, verifyEmailCode } from "./otp";
 
@@ -52,12 +50,20 @@ if (typeof window !== "undefined") {
 const UNIQUE_VIOLATION = "23505";
 
 /**
- * Select standar booking + slot + zona + tenant + pembayaran (1:1) + tanggal sewa.
+ * Select standar booking + slot + zona + tenant + pembayaran (1:1) + tanggal sewa
+ * (alias tabel booking: `b`).
  * booking_dates ikut diambil mentah (event_date + is_active); baris nonaktif
  * disaring di normalizeBookingRow sesuai kontrak (BookingDetail.dates = aktif saja).
  */
-export const BOOKING_SELECT =
-  "*, slot:slots(*, zone:zones(*)), tenant:tenants(*), payment:admin_fee_payments(*), booking_dates(event_date, is_active), listing:vehicle_listings(*)";
+export const bookingSelect = () => sql`
+  select b.*,
+         ${slotJson(sql`b.slot_id`)} as slot,
+         (select to_jsonb(t) from tenants t where t.id = b.tenant_id) as tenant,
+         (select to_jsonb(p) from admin_fee_payments p where p.booking_id = b.id) as payment,
+         (select coalesce(jsonb_agg(jsonb_build_object('event_date', d.event_date, 'is_active', d.is_active)), '[]')
+            from booking_dates d where d.booking_id = b.id) as booking_dates,
+         (select to_jsonb(l) from vehicle_listings l where l.booking_id = b.id) as listing
+    from bookings b`;
 
 type RawSlotWithZone = SlotRow & { zone: ZoneRow | ZoneRow[] | null };
 type RawBookingDate = { event_date: string; is_active: boolean };
@@ -69,7 +75,7 @@ type RawBooking = BookingRow & {
   listing: VehicleListingRow | VehicleListingRow[] | null;
 };
 
-/** Rapikan baris mentah PostgREST jadi BookingDetail. Dipakai juga oleh services/admin.ts. */
+/** Rapikan baris mentah hasil query jadi BookingDetail. Dipakai juga oleh services/admin.ts. */
 export function normalizeBookingRow(raw: unknown): BookingDetail | null {
   if (!raw || typeof raw !== "object") return null;
   const row = raw as RawBooking;
@@ -113,8 +119,8 @@ export function normalizeBookingRow(raw: unknown): BookingDetail | null {
 /**
  * Buat booking baru untuk satu slot pada >= 1 tanggal weekend (model per tanggal).
  *
- * PENTING — tidak ada transaksi lintas-request di supabase-js, jadi langkah-langkah
- * di bawah dijalankan berurutan dengan KOMPENSASI MANUAL kalau langkah lanjutan gagal:
+ * PENTING: langkah-langkah di bawah belum dibungkus satu transaksi, jadi
+ * dijalankan berurutan dengan KOMPENSASI MANUAL kalau langkah lanjutan gagal:
  *   1. insert bookings           -> gagal: berhenti
  *   2. insert booking_dates      -> unique violation: hapus booking (kompensasi)
  *                                   lalu laporkan DATE_TAKEN (tanggal baru terisi)
@@ -123,7 +129,7 @@ export function normalizeBookingRow(raw: unknown): BookingDetail | null {
  * slots.status TIDAK disentuh lagi — kolom itu kini berarti blokir panitia.
  * Pengaman utamanya tetap di database: unique index parsial
  * booking_dates_active_slot_date_idx (slot_id, event_date) where is_active.
- * SARAN PRODUKSI: pindahkan langkah-langkah ini ke satu Postgres function (rpc)
+ * SARAN PRODUKSI: bungkus langkah-langkah ini dalam satu transaksi (sql.begin)
  * agar benar-benar atomik.
  */
 /** Peringatan "OTP dilewati" cukup sekali per instance supaya log tidak banjir. */
@@ -134,7 +140,7 @@ export async function createBooking(
   opts?: { skipPendingLimit?: boolean; skipEmailOtp?: boolean },
 ): Promise<Result<{ bookingId: string; bookingCode: string }>> {
   type Out = { bookingId: string; bookingCode: string };
-  if (!isServiceRoleConfigured()) return fail<Out>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<Out>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
   const parsed = createBookingSchema.safeParse(input);
   if (!parsed.success) {
@@ -184,8 +190,6 @@ export async function createBooking(
     return fail<Out>("Nomor plat wajib diisi untuk kendaraan bekas.", "VALIDATION");
   }
 
-  const supabase = createAdminSupabase();
-
   /* --- Validasi tanggal: unik, terdaftar aktif di event_dates, dan >= hari ini --- */
   const today = tanggalHariIniJakarta();
   const dates = Array.from(new Set(data.eventDates)).sort();
@@ -194,18 +198,12 @@ export async function createBooking(
     return fail<Out>("Tanggal yang dipilih sudah lewat.", "VALIDATION");
   }
 
-  const validDatesQuery = await supabase
-    .from("event_dates")
-    .select("event_date")
-    .eq("is_active", true)
-    .in("event_date", dates);
-
+  const validDatesQuery = await coba(sql<{ event_date: string }[]>`
+    select event_date from event_dates where is_active and event_date in ${sql(dates)}`);
   if (validDatesQuery.error) {
-    return dbFail<Out>(validDatesQuery.error as PgError, "Gagal memeriksa tanggal gelaran");
+    return dbFail<Out>(validDatesQuery.error, "Gagal memeriksa tanggal gelaran");
   }
-  const terdaftar = new Set(
-    ((validDatesQuery.data ?? []) as Array<{ event_date: string }>).map((d) => d.event_date),
-  );
+  const terdaftar = new Set(validDatesQuery.data.map((d) => d.event_date));
   if (dates.some((d) => !terdaftar.has(d))) {
     return fail<Out>(
       "Sebagian tanggal yang dipilih bukan tanggal gelaran yang tersedia.",
@@ -219,30 +217,20 @@ export async function createBooking(
      tanpa pernah membayar. Booking manual oleh admin (skipPendingLimit) lewat
      dari batas ini karena admin tepercaya. */
   if (!opts?.skipPendingLimit) {
-    const tenantSemuaTipe = await supabase
-      .from("tenants")
-      .select("id")
-      .eq("phone", data.tenantPhone);
-    if (tenantSemuaTipe.error) {
-      return dbFail<Out>(tenantSemuaTipe.error as PgError, "Gagal memeriksa data tenant");
+    const pendingCount = await cobaSatu(sql<{ jumlah: number }[]>`
+      select count(*)::int as jumlah
+        from bookings b join tenants t on t.id = b.tenant_id
+       where t.phone = ${data.tenantPhone} and b.status = 'pending_payment'`);
+    if (pendingCount.error) {
+      return dbFail<Out>(pendingCount.error, "Gagal memeriksa booking berjalan");
     }
-    const tenantIds = ((tenantSemuaTipe.data ?? []) as Array<{ id: string }>).map((t) => t.id);
-    if (tenantIds.length > 0) {
-      const pendingCount = await supabase
-        .from("bookings")
-        .select("id", { count: "exact", head: true })
-        .in("tenant_id", tenantIds)
-        .eq("status", "pending_payment");
-      if (pendingCount.error) {
-        return dbFail<Out>(pendingCount.error as PgError, "Gagal memeriksa booking berjalan");
-      }
-      if ((pendingCount.count ?? 0) >= MAX_PENDING_BOOKINGS_PER_PHONE) {
-        return fail<Out>(
-          `Nomor telepon ini masih punya ${pendingCount.count} booking menunggu pembayaran. ` +
-            "Selesaikan pembayarannya (atau batalkan) dulu sebelum membuat booking baru.",
-          "TOO_MANY_PENDING",
-        );
-      }
+    const jumlahPending = pendingCount.data?.jumlah ?? 0;
+    if (jumlahPending >= MAX_PENDING_BOOKINGS_PER_PHONE) {
+      return fail<Out>(
+        `Nomor telepon ini masih punya ${jumlahPending} booking menunggu pembayaran. ` +
+          "Selesaikan pembayarannya (atau batalkan) dulu sebelum membuat booking baru.",
+        "TOO_MANY_PENDING",
+      );
     }
   }
 
@@ -276,55 +264,41 @@ export async function createBooking(
   }
 
   /* --- Langkah 0: temukan atau buat tenant (dikunci pada nomor telepon) --- */
-  const existingTenant = await supabase
-    .from("tenants")
-    .select("*")
-    .eq("phone", data.tenantPhone)
-    .eq("tenant_type", tenantType)
-    .limit(1)
-    .maybeSingle();
+  const cariTenant = () =>
+    cobaSatu(sql<TenantRow[]>`
+      select * from tenants
+       where phone = ${data.tenantPhone} and tenant_type = ${tenantType} limit 1`);
+  const existingTenant = await cariTenant();
 
   if (existingTenant.error) {
-    return dbFail<Out>(existingTenant.error as PgError, "Gagal memeriksa data tenant");
+    return dbFail<Out>(existingTenant.error, "Gagal memeriksa data tenant");
   }
 
-  let tenant = (existingTenant.data ?? null) as TenantRow | null;
+  let tenant = existingTenant.data;
   let tenantBaru = false;
   if (!tenant) {
-    const inserted = await supabase
-      .from("tenants")
-      .insert({
+    const inserted = await cobaSatu(sql<TenantRow[]>`
+      insert into tenants ${sql({
         name: data.tenantName,
         phone: data.tenantPhone,
         email: data.tenantEmail ?? null,
         tenant_type: tenantType,
-        detail: (data.detail ?? {}) as unknown as Json,
-      })
-      .select("*")
-      .single();
+        detail: sql.json((data.detail ?? {}) as Parameters<typeof sql.json>[0]),
+      })} returning *`);
 
     if (inserted.error || !inserted.data) {
-      if ((inserted.error as PgError)?.code !== UNIQUE_VIOLATION) {
-        return dbFail<Out>(inserted.error as PgError, "Gagal menyimpan data tenant");
+      if (inserted.error?.code !== UNIQUE_VIOLATION) {
+        return dbFail<Out>(inserted.error, "Gagal menyimpan data tenant");
       }
       // Kena index unik tenants_phone_type_uidx: request lain baru saja membuat
       // tenant dengan (telepon, jenis) yang sama — pakai baris itu, jangan ganda.
-      const ulang = await supabase
-        .from("tenants")
-        .select("*")
-        .eq("phone", data.tenantPhone)
-        .eq("tenant_type", tenantType)
-        .limit(1)
-        .maybeSingle();
+      const ulang = await cariTenant();
       if (ulang.error || !ulang.data) {
-        return dbFail<Out>(
-          (ulang.error ?? inserted.error) as PgError,
-          "Gagal menyimpan data tenant",
-        );
+        return dbFail<Out>(ulang.error ?? inserted.error, "Gagal menyimpan data tenant");
       }
-      tenant = ulang.data as TenantRow;
+      tenant = ulang.data;
     } else {
-      tenant = inserted.data as TenantRow;
+      tenant = inserted.data;
       tenantBaru = true;
     }
   }
@@ -335,78 +309,75 @@ export async function createBooking(
   const tenantId = tenant.id;
   const hapusTenantYatim = async (): Promise<void> => {
     if (!tenantBaru) return;
-    await supabase.from("tenants").delete().eq("id", tenantId);
+    await coba(sql`delete from tenants where id = ${tenantId}`);
   };
+  const hapusBooking = (id: string) => coba(sql`delete from bookings where id = ${id}`);
 
   /* --- Langkah 1: insert booking --- */
-  const bookingInsert = await supabase
-    .from("bookings")
-    .insert({
+  const bookingInsert = await cobaSatu(sql<{ id: string; booking_code: string }[]>`
+    insert into bookings ${sql({
       slot_id: slot.id,
       tenant_id: tenant.id,
       status: "pending_payment",
       notes: data.notes ?? null,
-    })
-    .select("id, booking_code")
-    .single();
+    })} returning id, booking_code`);
 
   if (bookingInsert.error || !bookingInsert.data) {
     await hapusTenantYatim();
-    const error = bookingInsert.error as PgError;
+    const error = bookingInsert.error;
     if (error?.code === UNIQUE_VIOLATION) {
       return fail<Out>("Slot ini baru saja dibooking orang lain.", "SLOT_TAKEN");
     }
     return dbFail<Out>(error, "Gagal membuat booking");
   }
-  const booking = bookingInsert.data as { id: string; booking_code: string };
+  const booking = bookingInsert.data;
 
   /* --- Langkah 2: kunci pasangan (slot, tanggal) lewat booking_dates --- */
-  const datesInsert = await supabase.from("booking_dates").insert(
-    dates.map((event_date) => ({
-      booking_id: booking.id,
-      slot_id: slot.id,
-      event_date,
-    })),
-  );
+  const datesInsert = await coba(sql`
+    insert into booking_dates ${sql(
+      dates.map((event_date) => ({ booking_id: booking.id, slot_id: slot.id, event_date })),
+    )}`);
 
   if (datesInsert.error) {
     // Kompensasi: booking batal dibuat (cascade menghapus baris booking_dates
     // yang mungkin sempat masuk).
-    await supabase.from("bookings").delete().eq("id", booking.id);
+    await hapusBooking(booking.id);
     await hapusTenantYatim();
-    if ((datesInsert.error as PgError)?.code === UNIQUE_VIOLATION) {
+    if (datesInsert.error.code === UNIQUE_VIOLATION) {
       return fail<Out>(
         "Sebagian tanggal yang dipilih baru saja terisi. Silakan pilih tanggal lain.",
         "DATE_TAKEN",
       );
     }
-    return dbFail<Out>(datesInsert.error as PgError, "Gagal menyimpan tanggal booking");
+    return dbFail<Out>(datesInsert.error, "Gagal menyimpan tanggal booking");
   }
 
   /* --- Langkah 3: insert tagihan admin fee = biaya per tanggal x jumlah tanggal ---
      Harga per tanggal diresolusi lewat slotAdminFee (override slot > harga zona). */
   const amount = hitungTotalBiaya(slotAdminFee(slot, slot.zone), dates.length);
-  const paymentInsert = await supabase.from("admin_fee_payments").insert({
-    booking_id: booking.id,
-    amount,
-    // QRIS-only (sejak 2026-09-02): tagihan langsung memakai metode qris;
-    // booking yang tidak kunjung membayar dibatalkan otomatis
-    // expire_unpaid_bookings().
-    method: "qris",
-    status: "unpaid",
-  }).select("id").single();
+  // QRIS-only (sejak 2026-09-02): tagihan langsung memakai metode qris;
+  // booking yang tidak kunjung membayar dibatalkan otomatis
+  // expire_unpaid_bookings().
+  const paymentInsert = await cobaSatu(sql<{ id: string }[]>`
+    insert into admin_fee_payments ${sql({
+      booking_id: booking.id,
+      amount,
+      method: "qris",
+      status: "unpaid",
+    })} returning id`);
 
-  if (paymentInsert.error) {
+  if (paymentInsert.error || !paymentInsert.data) {
     // Kompensasi: booking batal dibuat (booking_dates ikut terhapus lewat cascade).
-    await supabase.from("bookings").delete().eq("id", booking.id);
+    await hapusBooking(booking.id);
     await hapusTenantYatim();
-    return dbFail<Out>(paymentInsert.error as PgError, "Gagal membuat tagihan biaya admin");
+    return dbFail<Out>(paymentInsert.error, "Gagal membuat tagihan biaya admin");
   }
 
   /* --- Langkah 3b: kode unik 350..500 supaya nominal transfer QRIS berbeda dari tagihan hidup lain
      (DriveTech dan KUWERA masuk ke merchant GoPay yang sama; KUWERA memakai 1..499). Kalau gagal,
      tagihan tetap sah dan panitia bisa mencocokkan manual, jadi booking tidak dibatalkan. --- */
-  const kode = await supabase.rpc("alokasi_kode_unik", { p_payment: paymentInsert.data.id });
+  const kode = await cobaSatu(sql<{ kode: number | null }[]>`
+    select alokasi_kode_unik(${paymentInsert.data.id}) as kode`);
   if (kode.error) console.warn("[booking] alokasi kode unik gagal:", kode.error.message);
 
   /* --- Langkah 4: simpan data kendaraan untuk katalog (khusus zona kendaraan) --- */
@@ -416,28 +387,29 @@ export async function createBooking(
     // 2026-08-29: zona motor khusus motor; 2026-09-02: ditambah zona motor_baru)
     // — v.kind diabaikan agar pemanggil API tidak bisa menaruh "mobil" di zona motor.
     const jenisDariZona = vehicleKindForZoneType(slot.zone.zone_type);
-    const listingInsert = await supabase.from("vehicle_listings").insert({
-      booking_id: booking.id,
-      slot_id: slot.id,
-      vehicle_name: v.vehicleName,
-      vehicle_kind: jenisDariZona,
-      plate_number: v.plateNumber ?? null,
-      price: v.price,
-      year: v.year ?? null,
-      mileage_km: v.mileageKm ?? null,
-      transmission: v.transmission ?? null,
-      color: v.color ?? null,
-      description: v.description ?? null,
-      photo_url: v.photoUrl,
-      photo_thumb_url: v.photoThumbUrl ?? null,
-    });
+    const listingInsert = await coba(sql`
+      insert into vehicle_listings ${sql({
+        booking_id: booking.id,
+        slot_id: slot.id,
+        vehicle_name: v.vehicleName,
+        vehicle_kind: jenisDariZona,
+        plate_number: v.plateNumber ?? null,
+        price: v.price,
+        year: v.year ?? null,
+        mileage_km: v.mileageKm ?? null,
+        transmission: v.transmission ?? null,
+        color: v.color ?? null,
+        description: v.description ?? null,
+        photo_url: v.photoUrl,
+        photo_thumb_url: v.photoThumbUrl ?? null,
+      })}`);
 
     if (listingInsert.error) {
       // Kompensasi penuh: tanpa listing, katalog kehilangan unitnya — batalkan
       // seluruh booking supaya penyewa mengulang dengan bersih.
-      await supabase.from("bookings").delete().eq("id", booking.id);
+      await hapusBooking(booking.id);
       await hapusTenantYatim();
-      return dbFail<Out>(listingInsert.error as PgError, "Gagal menyimpan data kendaraan");
+      return dbFail<Out>(listingInsert.error, "Gagal menyimpan data kendaraan");
     }
 
     void syncToSheet("vehicle", {
@@ -482,7 +454,7 @@ export async function createBooking(
     zoneName: slot.zone.name,
     dates,
     // Nominal transfer = tagihan + kode unik, sama dengan yang tampil di halaman bayar dan kartu QRIS.
-    amount: amount + (kode.data ?? 0),
+    amount: amount + (kode.data?.kode ?? 0),
     deadlineText: `${formatTanggalWaktu(tenggat)} WIB`,
     statusUrl: `${getSiteUrl()}/booking/${booking.id}/status`,
   });
@@ -535,16 +507,11 @@ export async function kirimNotifikasiBooking(
 
 /** Booking lengkap berdasarkan id. */
 export async function getBookingDetail(bookingId: string): Promise<Result<BookingDetail>> {
-  if (!isServiceRoleConfigured()) return fail<BookingDetail>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<BookingDetail>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
-  const supabase = createAdminSupabase();
-  const { data, error } = await supabase
-    .from("bookings")
-    .select(BOOKING_SELECT)
-    .eq("id", bookingId)
-    .maybeSingle();
+  const { data, error } = await cobaSatu(sql`${bookingSelect()} where b.id = ${bookingId}`);
 
-  if (error) return dbFail<BookingDetail>(error as PgError, "Gagal memuat data booking");
+  if (error) return dbFail<BookingDetail>(error, "Gagal memuat data booking");
 
   const detail = normalizeBookingRow(data);
   if (!detail) return fail<BookingDetail>("Booking tidak ditemukan.", "NOT_FOUND");
@@ -553,21 +520,18 @@ export async function getBookingDetail(bookingId: string): Promise<Result<Bookin
 
 /** Booking lengkap berdasarkan kode booking (mis. "BK-A1B2C3"). */
 export async function getBookingByCode(code: string): Promise<Result<BookingDetail>> {
-  if (!isServiceRoleConfigured()) return fail<BookingDetail>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<BookingDetail>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
   const normalized = code.trim().toUpperCase();
   if (normalized.length === 0) {
     return fail<BookingDetail>("Kode booking wajib diisi.", "VALIDATION");
   }
 
-  const supabase = createAdminSupabase();
-  const { data, error } = await supabase
-    .from("bookings")
-    .select(BOOKING_SELECT)
-    .eq("booking_code", normalized)
-    .maybeSingle();
+  const { data, error } = await cobaSatu(
+    sql`${bookingSelect()} where b.booking_code = ${normalized}`,
+  );
 
-  if (error) return dbFail<BookingDetail>(error as PgError, "Gagal memuat data booking");
+  if (error) return dbFail<BookingDetail>(error, "Gagal memuat data booking");
 
   const detail = normalizeBookingRow(data);
   if (!detail) {
@@ -585,7 +549,7 @@ export async function submitPayment(
   input: SubmitPaymentInput,
 ): Promise<Result<{ bookingId: string }>> {
   type Out = { bookingId: string };
-  if (!isServiceRoleConfigured()) return fail<Out>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<Out>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
   const parsed = submitPaymentSchema.safeParse(input);
   if (!parsed.success) {
@@ -606,7 +570,6 @@ export async function submitPayment(
     return fail<Out>("Pembayaran booking ini sudah terverifikasi.", "ALREADY_VERIFIED");
   }
 
-  const supabase = createAdminSupabase();
   const now = new Date().toISOString();
 
   // Tagihan seharusnya sudah dibuat createBooking; kalau hilang, buat ulang
@@ -617,16 +580,17 @@ export async function submitPayment(
       slotAdminFee(booking.slot, booking.slot.zone),
       Math.max(booking.dates.length, 1),
     );
-    const inserted = await supabase.from("admin_fee_payments").insert({
-      booking_id: booking.id,
-      amount,
-      method: data.method,
-      status: "submitted",
-      proof_url: data.proofUrl ?? null,
-      submitted_at: now,
-    });
+    const inserted = await coba(sql`
+      insert into admin_fee_payments ${sql({
+        booking_id: booking.id,
+        amount,
+        method: data.method,
+        status: "submitted",
+        proof_url: data.proofUrl ?? null,
+        submitted_at: now,
+      })}`);
     if (inserted.error) {
-      return dbFail<Out>(inserted.error as PgError, "Gagal menyimpan pembayaran");
+      return dbFail<Out>(inserted.error, "Gagal menyimpan pembayaran");
     }
 
     void syncToSheet("payment", {
@@ -641,20 +605,18 @@ export async function submitPayment(
     return ok<Out>({ bookingId: booking.id });
   }
 
-  const updated = await supabase
-    .from("admin_fee_payments")
-    .update({
+  const updated = await coba(sql`
+    update admin_fee_payments set ${sql({
       method: data.method,
       status: "submitted",
       proof_url: data.proofUrl ?? booking.payment.proof_url ?? null,
       submitted_at: now,
       reject_reason: null,
       updated_at: now,
-    })
-    .eq("id", booking.payment.id);
+    })} where id = ${booking.payment.id}`);
 
   if (updated.error) {
-    return dbFail<Out>(updated.error as PgError, "Gagal menyimpan pembayaran");
+    return dbFail<Out>(updated.error, "Gagal menyimpan pembayaran");
   }
 
   void syncToSheet("payment", {
@@ -685,30 +647,23 @@ export async function cancelBooking(
   bookingId: string,
   phoneLast4: string,
 ): Promise<Result<null>> {
-  if (!isServiceRoleConfigured()) return fail<null>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<null>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
-  const supabase = createAdminSupabase();
-  const current = await supabase
-    .from("bookings")
-    .select("id, booking_code, status, tenant:tenants(phone)")
-    .eq("id", bookingId)
-    .maybeSingle();
+  const current = await cobaSatu(
+    sql<{ id: string; booking_code: string; status: BookingRow["status"]; phone: string | null }[]>`
+      select b.id, b.booking_code, b.status, t.phone
+        from bookings b left join tenants t on t.id = b.tenant_id
+       where b.id = ${bookingId}`,
+  );
 
-  if (current.error) return dbFail<null>(current.error as PgError, "Gagal memuat data booking");
+  if (current.error) return dbFail<null>(current.error, "Gagal memuat data booking");
 
-  const booking = (current.data ?? null) as
-    | {
-        id: string;
-        booking_code: string;
-        status: BookingRow["status"];
-        tenant: { phone: string | null } | { phone: string | null }[] | null;
-      }
-    | null;
+  const booking = current.data;
   if (!booking) return fail<null>("Booking tidak ditemukan.", "NOT_FOUND");
 
   // Bukti kepemilikan ringan: 4 digit terakhir nomor HP pemesan. Kode booking
   // saja tidak cukup karena bisa terusan lewat WhatsApp ke orang lain.
-  const telepon = pickOne(booking.tenant)?.phone ?? "";
+  const telepon = booking.phone ?? "";
   const empatDigit = telepon.replace(/\D/g, "").slice(-4);
   if (empatDigit.length < 4 || empatDigit !== phoneLast4) {
     return fail<null>(
@@ -731,16 +686,13 @@ export async function cancelBooking(
   // saja memverifikasi (pending -> confirmed) di antara SELECT dan UPDATE ini,
   // update tidak mengenai baris apa pun dan pembatalan ditolak, bukan diam-diam
   // membatalkan booking yang sudah sah.
-  const bookingUpdate = await supabase
-    .from("bookings")
-    .update({ status: "cancelled", updated_at: now })
-    .eq("id", booking.id)
-    .eq("status", "pending_payment")
-    .select("id")
-    .maybeSingle();
+  const bookingUpdate = await cobaSatu(sql<{ id: string }[]>`
+    update bookings set status = 'cancelled', updated_at = ${now}
+     where id = ${booking.id} and status = 'pending_payment'
+    returning id`);
 
   if (bookingUpdate.error) {
-    return dbFail<null>(bookingUpdate.error as PgError, "Gagal membatalkan booking");
+    return dbFail<null>(bookingUpdate.error, "Gagal membatalkan booking");
   }
   if (!bookingUpdate.data) {
     return fail<null>(

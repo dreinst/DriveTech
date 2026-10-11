@@ -1,7 +1,6 @@
 import { fail, ok, type Result } from "@/lib/result";
 import { syncToSheet } from "@/lib/sheets";
-import { createAdminSupabase } from "@/lib/supabase/admin";
-import { isServiceRoleConfigured } from "@/lib/supabase/config";
+import { coba, cobaSatu, isDbConfigured, sql } from "@/lib/db";
 import type {
   BookingStatus,
   CatalogItem,
@@ -13,8 +12,8 @@ import {
   dbFail,
   NO_CONFIG_MESSAGE,
   pickOne,
+  slotJson,
   tanggalHariIniJakarta,
-  type PgError,
 } from "./slots";
 
 // Modul KHUSUS SERVER (lihat catatan "server-only" di services/slots.ts).
@@ -23,12 +22,20 @@ if (typeof window !== "undefined") {
 }
 
 /**
- * Select standar item katalog. Join bookings!inner supaya bisa memfilter
- * status confirmed; kolom tenant SENGAJA tidak pernah ikut — halaman katalog
+ * Select standar item katalog: hanya listing yang tampil (is_visible) milik
+ * booking confirmed. Kolom tenant SENGAJA tidak pernah ikut: halaman katalog
  * publik hanya boleh melihat kendaraan + slot, bukan identitas penyewa.
  */
-const CATALOG_SELECT =
-  "*, slot:slots(*, zone:zones(*)), booking:bookings!inner(status, booking_dates(event_date, is_active))";
+const catalogSelect = () => sql`
+  select l.*,
+         ${slotJson(sql`l.slot_id`)} as slot,
+         jsonb_build_object(
+           'status', b.status,
+           'booking_dates', (select coalesce(jsonb_agg(jsonb_build_object('event_date', d.event_date, 'is_active', d.is_active)), '[]')
+                               from booking_dates d where d.booking_id = b.id)) as booking
+    from vehicle_listings l
+    join bookings b on b.id = l.booking_id
+   where l.is_visible and b.status = 'confirmed'`;
 
 type RawSlotWithZone = SlotRow & { zone: ZoneRow | ZoneRow[] | null };
 type RawCatalogBooking = {
@@ -85,34 +92,25 @@ export async function listCatalog(
   tanggal?: string,
   jenis?: "mobil" | "motor",
 ): Promise<Result<CatalogData>> {
-  if (!isServiceRoleConfigured()) return fail<CatalogData>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<CatalogData>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
-  const supabase = createAdminSupabase();
-
-  const datesQuery = await supabase
-    .from("event_dates")
-    .select("event_date")
-    .eq("is_active", true)
-    .gte("event_date", tanggalHariIniJakarta())
-    .order("event_date", { ascending: true });
+  const datesQuery = await coba(sql<{ event_date: string }[]>`
+    select event_date from event_dates
+     where is_active and event_date >= ${tanggalHariIniJakarta()}
+     order by event_date`);
   if (datesQuery.error) {
-    return dbFail<CatalogData>(datesQuery.error as PgError, "Gagal memuat tanggal gelaran");
+    return dbFail<CatalogData>(datesQuery.error, "Gagal memuat tanggal gelaran");
   }
-  const dates = ((datesQuery.data ?? []) as { event_date: string }[]).map((d) => d.event_date);
-
+  const dates = datesQuery.data.map((d) => d.event_date);
   const selectedDate = tanggal && dates.includes(tanggal) ? tanggal : (dates[0] ?? null);
   if (!selectedDate) return ok<CatalogData>({ dates, selectedDate: null, items: [] });
 
-  const listingQuery = await supabase
-    .from("vehicle_listings")
-    .select(CATALOG_SELECT)
-    .eq("is_visible", true)
-    .eq("booking.status", "confirmed");
+  const listingQuery = await coba(catalogSelect());
   if (listingQuery.error) {
-    return dbFail<CatalogData>(listingQuery.error as PgError, "Gagal memuat katalog kendaraan");
+    return dbFail<CatalogData>(listingQuery.error, "Gagal memuat katalog kendaraan");
   }
 
-  const items = ((listingQuery.data ?? []) as unknown[])
+  const items = listingQuery.data
     .map(normalizeCatalogRow)
     .filter((item): item is CatalogItem => item !== null)
     .filter((item) => item.dates.includes(selectedDate))
@@ -129,18 +127,11 @@ export async function listCatalog(
 
 /** Satu item katalog untuk halaman detail; 404 bila tak tampil publik. */
 export async function getCatalogItem(id: string): Promise<Result<CatalogItem>> {
-  if (!isServiceRoleConfigured()) return fail<CatalogItem>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<CatalogItem>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
-  const supabase = createAdminSupabase();
-  const { data, error } = await supabase
-    .from("vehicle_listings")
-    .select(CATALOG_SELECT)
-    .eq("id", id)
-    .eq("is_visible", true)
-    .eq("booking.status", "confirmed")
-    .maybeSingle();
+  const { data, error } = await cobaSatu(sql`${catalogSelect()} and l.id = ${id}`);
 
-  if (error) return dbFail<CatalogItem>(error as PgError, "Gagal memuat detail kendaraan");
+  if (error) return dbFail<CatalogItem>(error, "Gagal memuat detail kendaraan");
 
   const item = normalizeCatalogRow(data);
   if (!item) return fail<CatalogItem>("Kendaraan tidak ditemukan di katalog.", "NOT_FOUND");
@@ -152,33 +143,18 @@ export async function setVehicleVisibility(
   listingId: string,
   visible: boolean,
 ): Promise<Result<null>> {
-  if (!isServiceRoleConfigured()) return fail<null>(NO_CONFIG_MESSAGE, "NO_CONFIG");
+  if (!isDbConfigured()) return fail<null>(NO_CONFIG_MESSAGE, "NO_CONFIG");
 
-  const supabase = createAdminSupabase();
-  const existing = await supabase
-    .from("vehicle_listings")
-    .select("id, booking:bookings(booking_code)")
-    .eq("id", listingId)
-    .maybeSingle();
-  if (existing.error) {
-    return dbFail<null>(existing.error as PgError, "Gagal memuat data kendaraan");
-  }
-  if (!existing.data) return fail<null>("Listing kendaraan tidak ditemukan.", "NOT_FOUND");
-
-  const updated = await supabase
-    .from("vehicle_listings")
-    .update({ is_visible: visible })
-    .eq("id", listingId);
+  const updated = await cobaSatu(sql<{ booking_code: string | null }[]>`
+    update vehicle_listings l set is_visible = ${visible}
+     where l.id = ${listingId}
+    returning (select b.booking_code from bookings b where b.id = l.booking_id) as booking_code`);
   if (updated.error) {
-    return dbFail<null>(updated.error as PgError, "Gagal memperbarui visibilitas katalog");
+    return dbFail<null>(updated.error, "Gagal memperbarui visibilitas katalog");
   }
+  if (!updated.data) return fail<null>("Listing kendaraan tidak ditemukan.", "NOT_FOUND");
 
-  const bookingCode = pickOne<{ booking_code: string }>(
-    (existing.data as { booking: unknown }).booking as
-      | { booking_code: string }
-      | { booking_code: string }[]
-      | null,
-  )?.booking_code;
+  const bookingCode = updated.data.booking_code;
   if (bookingCode) {
     void syncToSheet("vehicle", {
       bookingCode,

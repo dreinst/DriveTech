@@ -68,8 +68,8 @@ function parseStatusFilter(nilai: string | null): SlotStatus | null | "invalid" 
  * aktif mendatang) dan `occupancy` (baris view untuk tanggal-tanggal itu)
  * supaya integrasi eksternal bisa menghitung ketersediaan per tanggal.
  *
- * Ditujukan untuk integrasi eksternal yang ingin polling ketersediaan tanpa
- * memakai Realtime. Filter opsional lewat query string:
+ * Ditujukan untuk integrasi eksternal yang ingin polling ketersediaan.
+ * Filter opsional lewat query string:
  *   ?status=available|pending|confirmed   (filter kolom slots.status mentah)
  *   ?zone=<svg_group_id>   mis. zone-umkm
  *   ?bookable=true         hanya slot yang bisa dibooking (bukan fasilitas)
@@ -166,7 +166,7 @@ export async function GET(request: Request): Promise<NextResponse> {
  * disewa; slot harus bebas di SEMUA tanggal tersebut.
  * Sukses 201: { bookingId, bookingCode }
  * Gagal: 400 (validasi / OTP_REQUIRED / OTP_INVALID), 409 SLOT_TAKEN (slot
- * diblokir) / DATE_TAKEN (sebagian tanggal baru saja terisi), 503 (Supabase
+ * diblokir) / DATE_TAKEN (sebagian tanggal baru saja terisi), 503 (database
  * belum dikonfigurasi).
  */
 export async function POST(request: Request): Promise<NextResponse> {

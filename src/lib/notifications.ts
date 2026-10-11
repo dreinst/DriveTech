@@ -17,8 +17,8 @@
  *
  *   WhatsApp punya TIGA mode lewat env WA_PROVIDER (DEFAULT kini `off`):
  *     off     — tidak dikirim (dicatat ke log saja).
- *     outbox  — pesan ditulis ke tabel public.notification_outbox (PostgREST +
- *               service_role) lalu dikirim worker VPS (tools/vps/
+ *     outbox  — pesan ditulis ke tabel public.notification_outbox (lewat
+ *               lib/db.ts) lalu dikirim worker VPS (tools/vps/
  *               drivetech-wa-outbox.py) lewat `hermes send` bila ada nomor bot.
  *     fonnte  — kirim langsung ke API Fonnte: WA_API_TOKEN (wajib), WA_API_URL.
  *     WA_OVERRIDE_RECIPIENT mengalihkan SEMUA WA ke satu nomor (mode uji).
@@ -157,35 +157,17 @@ async function antrekanWhatsApp(
   message: string,
   meta: WaMeta,
 ): Promise<NotifChannelResult> {
-  const baseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").trim().replace(/\/+$/, "");
-  const serviceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY ?? "").trim();
-
-  if (baseUrl.length === 0 || serviceKey.length === 0) {
+  if ((process.env.DATABASE_URL ?? "").length === 0) {
     console.info(`[notif][wa][outbox][dry-run] -> ${tujuan}\n${message}`);
-    return { channel: "whatsapp", delivered: false, dryRun: true, to: tujuan, info: "outbox: Supabase belum dikonfigurasi" };
+    return { channel: "whatsapp", delivered: false, dryRun: true, to: tujuan, info: "outbox: database belum dikonfigurasi" };
   }
 
   try {
-    const response = await fetch(`${baseUrl}/rest/v1/notification_outbox`, {
-      method: "POST",
-      headers: {
-        apikey: serviceKey,
-        Authorization: `Bearer ${serviceKey}`,
-        "Content-Type": "application/json",
-        Prefer: "return=minimal",
-      },
-      body: JSON.stringify({
-        recipient: tujuan,
-        body: message,
-        kind: meta.kind ?? "other",
-        booking_code: meta.bookingCode ?? null,
-      }),
-      signal: AbortSignal.timeout(NOTIF_TIMEOUT_MS),
-    });
-    if (!response.ok) {
-      console.warn(`[notif][wa][outbox] Supabase membalas ${response.status}`);
-      return { channel: "whatsapp", delivered: false, dryRun: false, queued: false, to: tujuan, info: `HTTP ${response.status}` };
-    }
+    // Impor dinamis supaya modul ini tetap bisa dimuat tanpa klien database.
+    const { sql } = await import("./db.ts");
+    await sql`
+      insert into notification_outbox (recipient, body, kind, booking_code)
+      values (${tujuan}, ${message}, ${meta.kind ?? "other"}, ${meta.bookingCode ?? null})`;
     return { channel: "whatsapp", delivered: false, dryRun: false, queued: true, to: tujuan };
   } catch (error) {
     console.warn("[notif][wa][outbox] gagal antre:", error);
