@@ -321,6 +321,15 @@ export const gantiSandiSendiriSchema = z.object({
   sandiBaru,
 });
 
+export const tambahPenarikanSchema = z.object({
+  tanggal,
+  nominal: z.coerce
+    .number({ error: "Nominal harus berupa angka." })
+    .int("Nominal harus bilangan bulat.")
+    .positive("Nominal harus lebih dari Rp0."),
+  catatan: z.string().trim().max(200, "Catatan maksimal 200 karakter."),
+});
+
 export const overrideSlotSchema = z.object({
   slotId: uuid("ID slot"),
   status: z.enum(["available", "pending", "confirmed"], { error: "Status slot tidak valid." }),

@@ -6,10 +6,12 @@ import { rateLimitShared } from "@/lib/rate-limit";
 import { buatAkun, gantiSandiSendiri, setAkunAktif, setSandiAkun } from "@/lib/services/akun";
 import { requireAdmin, requireFullAdmin } from "@/lib/services/auth";
 import { catatLog } from "@/lib/services/log";
+import { hapusPenarikan, tambahPenarikan } from "@/lib/services/penarikan";
 import {
   buatAkunSchema,
   gantiSandiAkunSchema,
   gantiSandiSendiriSchema,
+  tambahPenarikanSchema,
   zodFieldErrors,
 } from "@/lib/validation/schemas";
 import type { z } from "zod";
@@ -108,4 +110,49 @@ export async function gantiSandiSendiriAction(
   await catatLog(admin.id, "ganti_sandi_sendiri");
 
   return successState("Sandi diganti.");
+}
+
+/* ------------------------------------------------------------------ */
+/* Penarikan saldo                                                     */
+/* ------------------------------------------------------------------ */
+
+/** Catat penarikan saldo di /drivetechadmin/penarikan (khusus superadmin). */
+export async function tambahPenarikanAction(_prev: ActionState, form: FormData): Promise<ActionState> {
+  const gate = await requireFullAdmin();
+  if (!gate.ok) return errorState(gate.error);
+
+  const parsed = tambahPenarikanSchema.safeParse({
+    tanggal: teks(form, "tanggal"),
+    nominal: teks(form, "nominal"),
+    catatan: teks(form, "catatan"),
+  });
+  if (!parsed.success) return galatPertama(parsed.error);
+
+  const result = await tambahPenarikan(parsed.data, gate.data.id);
+  if (!result.ok) return errorState(result.error);
+  await catatLog(
+    gate.data.id,
+    "catat_penarikan",
+    `Rp${parsed.data.nominal} tanggal ${parsed.data.tanggal} ${parsed.data.catatan}`.trim(),
+  );
+
+  revalidatePath("/drivetechadmin/penarikan");
+  return successState("Penarikan dicatat.");
+}
+
+/** Hapus satu catatan penarikan (khusus superadmin). */
+export async function hapusPenarikanAction(_prev: ActionState, form: FormData): Promise<ActionState> {
+  const gate = await requireFullAdmin();
+  if (!gate.ok) return errorState(gate.error);
+
+  const result = await hapusPenarikan(teks(form, "id"));
+  if (!result.ok) return errorState(result.error);
+  await catatLog(
+    gate.data.id,
+    "hapus_penarikan",
+    `Rp${result.data.nominal} tanggal ${result.data.tanggal}`,
+  );
+
+  revalidatePath("/drivetechadmin/penarikan");
+  return successState("Catatan dihapus.");
 }

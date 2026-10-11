@@ -1272,3 +1272,20 @@ CREATE TABLE public.admin_log (
 COMMENT ON TABLE public.admin_log IS 'Log aksi admin yang mengubah data. Tidak pernah memuat sandi.';
 
 CREATE INDEX admin_log_waktu_idx ON public.admin_log USING btree (waktu DESC);
+
+
+--
+-- Name: penarikan_saldo; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.penarikan_saldo (
+    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    tanggal date NOT NULL,
+    nominal numeric NOT NULL,
+    catatan text DEFAULT ''::text NOT NULL,
+    dicatat_oleh text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT penarikan_saldo_nominal_check CHECK ((nominal > (0)::numeric))
+);
+
+COMMENT ON TABLE public.penarikan_saldo IS 'Catatan penarikan saldo QRIS ke rekening, diisi superadmin.';

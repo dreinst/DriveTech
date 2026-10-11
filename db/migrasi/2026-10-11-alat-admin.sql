@@ -28,4 +28,17 @@ ALTER TABLE public.admin_users ADD COLUMN IF NOT EXISTS aktif boolean DEFAULT tr
 
 COMMENT ON COLUMN public.admin_users.aktif IS 'false = akun dinonaktifkan: tidak bisa login dan sesi berjalan ditolak.';
 
+-- Penarikan saldo.
+CREATE TABLE IF NOT EXISTS public.penarikan_saldo (
+    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    tanggal date NOT NULL,
+    nominal numeric NOT NULL,
+    catatan text DEFAULT ''::text NOT NULL,
+    dicatat_oleh text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT penarikan_saldo_nominal_check CHECK ((nominal > (0)::numeric))
+);
+
+COMMENT ON TABLE public.penarikan_saldo IS 'Catatan penarikan saldo QRIS ke rekening, diisi superadmin.';
+
 COMMIT;
