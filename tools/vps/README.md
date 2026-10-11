@@ -13,9 +13,15 @@ hasil verifikasi, dan pembatalan dari nomor itu.
 | `drivetech-wa-outbox.service` | Unit oneshot yang menjalankan worker (HOME=/root agar `hermes` menemukan `~/.hermes`). |
 | `drivetech-wa-outbox.timer` | Pemicu tiap menit. |
 
-Prasyarat di VPS: migrasi `20260903120000_notification_outbox.sql` sudah
-dijalankan, container `supabase-db` jalan, gateway Hermes aktif dengan
-WhatsApp terhubung (`hermes send --list whatsapp`).
+Prasyarat di VPS: container Postgres DriveTech jalan (skema `db/skema.sql`),
+gateway Hermes aktif dengan WhatsApp terhubung (`hermes send --list whatsapp`).
+
+Worker dan skrip backup menjangkau database lewat `docker exec <container> psql`.
+Nama container, user, dan database diatur lewat env `DRIVETECH_DB_CONTAINER`
+(bawaan `drivetech-db`), `DRIVETECH_DB_USER` (bawaan `postgres`), dan
+`DRIVETECH_DB_NAME` (bawaan `drivetech`); skrip backup juga membaca
+`DRIVETECH_UPLOAD_DIR` (folder host dari volume `UPLOAD_DIR` aplikasi). Isi
+lewat baris `Environment=` di unit systemd kalau nilainya berbeda.
 
 ## Pasang / perbarui
 
@@ -37,7 +43,7 @@ systemctl list-timers drivetech-wa-outbox.timer
 ```bash
 tail -f /var/log/drivetech-wa-outbox.log          # hasil per pesan (nomor disamarkan)
 journalctl -u drivetech-wa-outbox.service -n 50   # galat unit
-docker exec supabase-db psql -U postgres -d postgres -c \
+docker exec drivetech-db psql -U postgres -d drivetech -c \
   "select status, count(*) from public.notification_outbox group by 1;"
 ```
 
@@ -61,5 +67,28 @@ WhatsApp dapat memblokir nomor yang mengirim banyak pesan ke kontak baru.
 Karena itu worker memberi jeda acak antar pesan, hanya mengirim pesan
 transaksional ke nomor yang diisi penyewa sendiri, dan berhenti setelah 50
 detik per run. Bila nomor kantor terblokir, pesan menumpuk di antrean
-(`pending`/`failed`), pindahkan ke `WA_PROVIDER=fonnte` di env aplikasi sebagai
+(`pending`/`failed`) — pindahkan ke `WA_PROVIDER=fonnte` di env aplikasi sebagai
 cadangan, lalu antre ulang seperti di atas.
+
+## Tugas rutin database (pengganti pg_cron)
+
+Tiga tugas rutin (membatalkan booking yang lewat tenggat bayar, membersihkan
+`rate_limit_events` dan `email_verifications` yang lebih tua dari 1 hari)
+dijalankan aplikasi lewat `GET /api/cron/rutin`. Pemicunya timer systemd:
+
+| Berkas | Fungsi |
+| --- | --- |
+| `drivetech-cron-rutin.service` | Unit oneshot: `curl` ke `/api/cron/rutin` dengan `Authorization: Bearer $CRON_SECRET`. |
+| `drivetech-cron-rutin.timer` | Pemicu tiap 15 menit. |
+
+`CRON_SECRET` dibaca dari `/etc/drivetech-cron.env` (mode 600, satu baris
+`CRON_SECRET=...`, nilainya sama dengan env aplikasi).
+
+```bash
+# di VPS
+install -m 600 /dev/null /etc/drivetech-cron.env   # lalu isi CRON_SECRET=...
+install -m 644 /tmp/drivetech-cron-rutin.service /tmp/drivetech-cron-rutin.timer /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable --now drivetech-cron-rutin.timer
+journalctl -u drivetech-cron-rutin.service -n 20
+```

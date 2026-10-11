@@ -1,0 +1,9 @@
+[Unit]
+Description=Tugas rutin database Drive Tech (batalkan booking lewat tenggat, bersihkan tabel sementara)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/drivetech-cron.env
+ExecStart=/usr/bin/curl -fsS --max-time 60 -H "Authorization: Bearer ${CRON_SECRET}" https://drivetech.dpro.events/api/cron/rutin

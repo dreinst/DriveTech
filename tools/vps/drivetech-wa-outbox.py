@@ -10,8 +10,9 @@ worker ini membaca baris berstatus pending lalu mengirimnya lewat
 6282232999900. Sukses -> status 'sent'; gagal -> attempts+1, dan setelah
 MAX_ATTEMPTS kali jadi 'failed' (bisa diantre ulang dengan set status='pending').
 
-Hanya stdlib Python 3. Akses database lewat `docker exec supabase-db psql`
-(tanpa driver tambahan). Jeda acak antar pesan untuk mengurangi risiko
+Hanya stdlib Python 3. Akses database lewat `docker exec <container> psql`
+(tanpa driver tambahan; container, user, dan nama database dari env
+DRIVETECH_DB_CONTAINER, DRIVETECH_DB_USER, DRIVETECH_DB_NAME). Jeda acak antar pesan untuk mengurangi risiko
 pemblokiran WhatsApp (koneksi Baileys tidak resmi). Isi pesan TIDAK pernah
 ditulis ke log; nomor penerima disamarkan kecuali 4 digit terakhir.
 """
@@ -26,7 +27,9 @@ import time
 from datetime import datetime, timedelta, timezone
 
 HERMES = "/usr/local/bin/hermes"
-DB_CONTAINER = "supabase-db"
+DB_CONTAINER = os.environ.get("DRIVETECH_DB_CONTAINER", "drivetech-db")
+DB_USER = os.environ.get("DRIVETECH_DB_USER", "postgres")
+DB_NAME = os.environ.get("DRIVETECH_DB_NAME", "drivetech")
 LOG = "/var/log/drivetech-wa-outbox.log"
 LOCK = "/run/lock/drivetech-wa-outbox.lock"
 
@@ -62,7 +65,7 @@ def esc(value: str) -> str:
 
 def psql(sql: str) -> subprocess.CompletedProcess:
     return subprocess.run(
-        ["docker", "exec", "-i", DB_CONTAINER, "psql", "-U", "postgres", "-d", "postgres",
+        ["docker", "exec", "-i", DB_CONTAINER, "psql", "-U", DB_USER, "-d", DB_NAME,
          "-At", "-v", "ON_ERROR_STOP=1"],
         input=sql, text=True, capture_output=True, timeout=30,
     )

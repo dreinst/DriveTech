@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # =============================================================================
-# Backup mingguan database Drive Tech (Supabase self-hosted di VPS) ke NAS UGREEN
+# Backup mingguan database Drive Tech (Postgres di VPS) ke NAS UGREEN
 # — dengan PENGULANGAN OTOMATIS bila NAS/Tailscale mati dan NOTIFIKASI WhatsApp.
 #
 # Hasil di NAS (modul rsync VPS-BACKUP):
 #   VPS-BACKUP/DRIVE TECH/Database Minggu <N>/
 #     drivetech-db-<tgl>.dump         dump penuh (pg_dump -Fc, untuk pg_restore)
 #     drivetech-db-<tgl>.sql.gz       skema public dalam SQL teks (mudah dibaca)
-#     drivetech-storage-<tgl>.tar.gz  berkas Storage (foto kendaraan, bukti QRIS)
+#     drivetech-storage-<tgl>.tar.gz  berkas unggahan (foto kendaraan, bukti QRIS)
 #     INFO-<tgl>.txt                  ringkasan isi backup
 #
 # Penomoran minggu mengikuti Musim 1 Drive Tech: pekan pembukaan 7-8 Nov 2026
@@ -38,8 +38,10 @@ PASS_FILE="/root/.rsync-nas.pass"
 TOP="DRIVE TECH"
 ROOT_LOCAL="/root/backups/drivetech"
 PENDING="$ROOT_LOCAL/.pending-upload"              # ada = upload ke NAS belum berhasil
-DB_CONTAINER="supabase-db"
-STORAGE_DIR="/root/supabase-selfhost/volumes/storage"
+DB_CONTAINER="${DRIVETECH_DB_CONTAINER:-drivetech-db}"   # container Postgres DriveTech
+DB_USER="${DRIVETECH_DB_USER:-postgres}"
+DB_NAME="${DRIVETECH_DB_NAME:-drivetech}"
+STORAGE_DIR="${DRIVETECH_UPLOAD_DIR:-/root/drivetech-unggahan}"   # folder host dari volume UPLOAD_DIR aplikasi
 LOG="/var/log/drivetech-backup.log"
 KEEP_LOCAL=4
 SEASON_MONDAY="2026-11-02"
@@ -110,14 +112,14 @@ mkdir -p "$DEST"
 log "mulai: '$TOP/$FOLDER' (tanggal $NOW, pekan ke-$week)"
 
 # 1. Dump penuh (semua skema) format custom -> pg_restore
-docker exec "$DB_CONTAINER" pg_dump -U postgres -d postgres -Fc \
+docker exec "$DB_CONTAINER" pg_dump -U "$DB_USER" -d "$DB_NAME" -Fc \
   > "$DEST/drivetech-db-$TS.dump"
 
 # 2. Skema public sebagai SQL teks terkompresi (untuk dibaca/grep tanpa restore)
-docker exec "$DB_CONTAINER" pg_dump -U postgres -d postgres --schema=public --no-owner --no-privileges \
+docker exec "$DB_CONTAINER" pg_dump -U "$DB_USER" -d "$DB_NAME" --schema=public --no-owner --no-privileges \
   | gzip -9 > "$DEST/drivetech-db-$TS.sql.gz"
 
-# 3. Berkas Storage (foto kendaraan & bukti pembayaran)
+# 3. Berkas unggahan (foto kendaraan & bukti pembayaran)
 if [ -d "$STORAGE_DIR" ]; then
   tar -czf "$DEST/drivetech-storage-$TS.tar.gz" -C "$STORAGE_DIR" .
 else
@@ -125,19 +127,18 @@ else
 fi
 
 # 4. Ringkasan isi
-q() { docker exec "$DB_CONTAINER" psql -U postgres -d postgres -At -c "$1"; }
+q() { docker exec "$DB_CONTAINER" psql -U "$DB_USER" -d "$DB_NAME" -At -c "$1"; }
 BOOKING=$(q 'select count(*) from public.bookings;'); TENANT=$(q 'select count(*) from public.tenants;')
 {
   echo "Drive Tech — backup database $NOW ($FOLDER)"
   echo "Sumber      : VPS dreinst, container $DB_CONTAINER (PostgreSQL $(q 'show server_version;'))"
-  echo "Migrasi     : $(q 'select max(version) from supabase_migrations.schema_migrations;')"
   echo "Zona        : $(q 'select count(*) from public.zones;')   Slot: $(q 'select count(*) from public.slots;')   Tanggal event aktif: $(q 'select count(*) from public.event_dates where is_active;')"
   echo "Booking     : $BOOKING (terkonfirmasi $(q "select count(*) from public.bookings where status='confirmed';"), menunggu $(q "select count(*) from public.bookings where status='pending_payment';"), batal $(q "select count(*) from public.bookings where status='cancelled';"))"
   echo "Tenant      : $TENANT   Pembayaran: $(q 'select count(*) from public.admin_fee_payments;')   Listing katalog: $(q 'select count(*) from public.vehicle_listings;')"
-  echo "Objek storage: $(q 'select count(*) from storage.objects;')"
+  echo "Berkas unggahan: $(find "$STORAGE_DIR" -type f 2>/dev/null | wc -l | tr -d ' ')"
   echo
-  echo "Pulihkan database : pg_restore -U postgres -d postgres --clean --if-exists drivetech-db-$TS.dump"
-  echo "Pulihkan storage  : tar -xzf drivetech-storage-$TS.tar.gz -C /root/supabase-selfhost/volumes/storage"
+  echo "Pulihkan database : pg_restore -U $DB_USER -d $DB_NAME --clean --if-exists drivetech-db-$TS.dump"
+  echo "Pulihkan unggahan : tar -xzf drivetech-storage-$TS.tar.gz -C $STORAGE_DIR"
   echo
   echo "Berkas:"; ls -l --time-style=long-iso "$DEST" | tail -n +2
 } > "$DEST/INFO-$TS.txt"

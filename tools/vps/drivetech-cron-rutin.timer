@@ -1,0 +1,10 @@
+[Unit]
+Description=Tiap 15 menit: tugas rutin database Drive Tech lewat /api/cron/rutin
+
+[Timer]
+OnCalendar=*-*-* *:00/15:00
+AccuracySec=1min
+Persistent=false
+
+[Install]
+WantedBy=timers.target

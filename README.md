@@ -3,7 +3,7 @@
 Aplikasi web untuk **Drive Tech** — pasar otomotif akhir pekan di **Kampung Tentara, Singosari, Malang**,
 Musim 1 dibuka **Sabtu–Minggu 7–8 November 2026**, lalu digelar **setiap hari Minggu sampai 27 Desember 2026** (8 pekan),
 untuk mobil & motor baru, mobil & motor bekas, UMKM, otomotif & leasing, dan kuliner.
-Pengunjung dan calon tenant melihat **denah interaktif** yang sinkron *realtime* dengan
+Pengunjung dan calon tenant melihat **denah interaktif** yang disegarkan tiap 10 detik dari
 database, lalu memesan lapak sendiri **per tanggal**: pilih satu atau beberapa tanggal
 weekend, dan slot yang sama bisa disewa orang berbeda di tanggal yang berbeda.
 
@@ -14,7 +14,7 @@ tetapi seluruh keputusannya sudah dirangkum di README ini (§9 Keputusan yang Di
 yang ikut disertakan.
 
 **Stack:** Next.js 15 (App Router) · React 19 · TypeScript strict · Tailwind CSS v4 ·
-Supabase (Postgres + Auth + Realtime + Storage) · zod. Tanpa dependency UI eksternal —
+Postgres (paket `postgres`) · zod. Tanpa dependency UI eksternal —
 semua ikon adalah SVG inline.
 
 ---
@@ -67,8 +67,8 @@ Komisi platform = `(harga unit − DP) × commission_rate mitra`.
 | --- | --- | --- |
 | Node.js | **22+** | Versi terkunci di `.nvmrc` (`nvm use`). |
 | npm | 10+ | Ikut Node 22. |
-| [Supabase CLI](https://supabase.com/docs/guides/cli) | terbaru | Untuk database lokal & migrasi. |
-| Docker Desktop | berjalan | Dibutuhkan `supabase start`. |
+| PostgreSQL | **16+** | Postgres polos dengan ekstensi `pgcrypto` (ikut bawaan image `postgres`). |
+| `psql` | sesuai server | Untuk memuat `db/skema.sql` dan `db/seed.sql`. |
 
 ---
 
@@ -81,16 +81,10 @@ npm install
 # 2) Environment
 cp .env.example .env.local
 
-# 3a) Database lokal (butuh Docker)
-supabase start          # menyalakan Postgres, Auth, Storage, Studio
-supabase db reset       # menjalankan migrasi + seed.sql dari nol
-supabase status         # salin anon key & service_role key ke .env.local
-
-# 3b) ATAU pakai project Supabase cloud
-supabase login
-supabase link --project-ref <project-ref>
-supabase db push                                   # migrasi saja
-psql "<connection-string>" -f supabase/seed.sql    # seed dijalankan manual
+# 3) Database lokal (contoh memakai Docker)
+docker run -d --name drivetech-pg -e POSTGRES_PASSWORD=lokal -p 127.0.0.1:5432:5432 postgres:16
+export DATABASE_URL=postgres://postgres:lokal@127.0.0.1:5432/postgres
+npm run db:muat         # memuat db/skema.sql + db/seed.sql ke database kosong
 
 # 4) Jalankan
 npm run dev             # http://localhost:3000
@@ -99,15 +93,15 @@ npm run dev             # http://localhost:3000
 Isi `.env.local`:
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
-NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon key>
-SUPABASE_SERVICE_ROLE_KEY=<service role key>   # RAHASIA — server saja
+DATABASE_URL=postgres://postgres:lokal@127.0.0.1:5432/postgres   # RAHASIA, server saja
+AUTH_SECRET=<openssl rand -hex 32>                               # RAHASIA, server saja
+UPLOAD_DIR=./data/unggahan                                       # folder berkas unggahan
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
 
 > Aplikasi **tetap bisa di-`next build` dan dibuka tanpa env terisi**. Dalam mode itu
 > denah ditampilkan dari data cadangan (`src/lib/domain/fallback.ts`) dan tombol
-> pemesanan dinonaktifkan. Helper `isSupabaseConfigured()` yang menentukan, bukan
+> pemesanan dinonaktifkan. Helper `isDbConfigured()` yang menentukan, bukan
 > `throw` saat modul diimpor.
 
 Skrip npm yang tersedia:
@@ -118,7 +112,7 @@ Skrip npm yang tersedia:
 | `npm run build` / `npm start` | Build produksi & menjalankannya. |
 | `npm run lint` | ESLint (config Next). |
 | `npm run typecheck` | `tsc --noEmit`. |
-| `npm run db:reset` / `npm run db:push` | Pintasan Supabase CLI. |
+| `npm run db:muat` | Memuat `db/skema.sql` + `db/seed.sql` ke database kosong di `DATABASE_URL`. |
 
 ---
 
@@ -158,21 +152,20 @@ Perilakunya:
 
 ## 5. Membuat Admin Pertama
 
-Tabel `admin_users` mengacu ke `auth.users(id)`, jadi user Auth harus dibuat lebih dulu
-dan barisnya tidak bisa ikut di-seed. Pendaftaran mandiri sengaja dimatikan.
+Baris admin tidak ikut di-seed supaya tidak ada sandi bawaan di repo, dan pendaftaran
+mandiri sengaja dimatikan. Sandi disimpan sebagai hash bcrypt (pgcrypto).
 
-1. Buka **Supabase Dashboard → Authentication → Users → Add user**
-   (lokal: `http://127.0.0.1:54323`). Isi email + password, centang **Auto Confirm User**.
-2. Jalankan di **SQL Editor** (ganti email dan namanya):
+1. Jalankan lewat `psql "$DATABASE_URL"` (ganti username, nama, dan sandinya; username
+   harus huruf kecil):
 
 ```sql
-insert into public.admin_users (id, email, full_name, role)
-select u.id, u.email, 'Nama Admin', 'admin'
-from auth.users u
-where u.email = 'admin@example.com'
-on conflict (id) do nothing;
+insert into public.admin_users (email, username, full_name, role, password_hash)
+values ('administrator@drivetech.local', 'administrator', 'Nama Admin', 'admin',
+        crypt('sandi-yang-kuat', gen_salt('bf', 10)));
 ```
 
+2. Ganti sandi kapan pun dengan
+   `update public.admin_users set password_hash = crypt('sandi-baru', gen_salt('bf', 10)) where username = '...'`.
 3. Login di `/admin/login`.
 
 Peran yang tersedia: `admin` (akses penuh) dan `verifikator` (fokus verifikasi pembayaran).
@@ -201,7 +194,7 @@ Peran yang tersedia: `admin` (akses penuh) dan `verifikator` (fokus verifikasi p
 > segmen `[slotId]` walau nilainya adalah id booking / id transaksi. Bentuk URL-nya
 > tetap persis seperti tabel di atas.
 
-### Admin (butuh sesi Supabase Auth + baris `admin_users`)
+### Admin (butuh cookie sesi + baris `admin_users`)
 
 | Rute | Isi |
 | --- | --- |
@@ -246,8 +239,8 @@ Peta status HTTP (`src/app/api/_lib/respond.ts`):
 | `PROOF_TOO_LARGE` | 413 | Bukti transfer > 2 MB. |
 | `PROOF_TYPE` | 415 | Bukti transfer bukan JPG/PNG/WEBP. |
 | `NOT_BOOKABLE`, `NOT_CREDIT`, `INACTIVE_PARTNER` | 422 | Aturan bisnis dilanggar. |
-| `UPLOAD_FAILED` | 502 | Storage Supabase menolak unggahan. |
-| `NO_CONFIG` | 503 | Env Supabase belum diisi. |
+| `UPLOAD_FAILED` | 502 | Berkas gagal disimpan ke `UPLOAD_DIR`. |
+| `NO_CONFIG` | 503 | `DATABASE_URL` belum diisi. |
 | lainnya / tak dikenal | 500 | Kesalahan internal, pesan digenerikkan. |
 
 ### 7.1 `GET /api/bookings` — polling ketersediaan slot
@@ -296,9 +289,9 @@ curl -s "http://localhost:3000/api/bookings?status=available&zone=zone-umkm"
 Model per tanggal: `slots[].status` adalah kondisi slotnya sendiri (`available` = normal,
 selain itu = diblokir panitia), sedangkan ketersediaan per tanggal dihitung dari
 `eventDates` (tanggal gelaran aktif mendatang) + `occupancy` (baris view
-`slot_date_status`). Halaman publik sendiri tidak memakai endpoint ini — ia berlangganan
-Realtime tabel `slots` dan `booking_dates`. Endpoint ini disediakan untuk integrasi
-eksternal (papan info, bot WhatsApp, dsb.) yang lebih mudah melakukan polling.
+`slot_date_status`). Halaman publik sendiri tidak memakai endpoint ini, ia melakukan
+polling ke `GET /api/slots/status` (okupansi + status blokir saja) tiap 10 detik.
+Endpoint ini disediakan untuk integrasi eksternal (papan info, bot WhatsApp, dsb.).
 
 ### 7.2 `POST /api/bookings` — buat booking
 
@@ -361,22 +354,22 @@ dan belum lewat; slot harus bebas di **semua** tanggal itu. Tagihan yang terbit 
 Env belum diisi — `503`
 
 ```json
-{ "error": "Supabase belum dikonfigurasi. Salin .env.example ke .env.local dan isi kredensialnya.", "code": "NO_CONFIG" }
+{ "error": "Database belum dikonfigurasi. Salin .env.example ke .env.local dan isi DATABASE_URL.", "code": "NO_CONFIG" }
 ```
 
 ### 7.3 `POST /api/bookings/{bookingId}/payment` — submit pembayaran
 
 Menerima **dua bentuk body**, dideteksi lewat header `Content-Type`.
 
-**JSON** (bukti sudah diunggah sendiri, kirim URL-nya):
+**JSON** (bukti sudah diunggah lewat sistem ini, kirim URL identitasnya; tautan luar ditolak):
 
 ```bash
 curl -s -X POST http://localhost:3000/api/bookings/7a10c2f6-…/payment \
   -H "Content-Type: application/json" \
-  -d '{ "method": "qris", "proofUrl": "https://supabase.187.53.129.205.sslip.io/storage/v1/object/public/bukti-transfer/bukti.jpg" }'
+  -d '{ "method": "qris", "proofUrl": "http://localhost:3000/unggahan/bukti-transfer/7a10c2f6-…-api.jpg" }'
 ```
 
-**multipart/form-data** (unggah berkas langsung; disimpan ke bucket `bukti-transfer`):
+**multipart/form-data** (unggah berkas langsung; disimpan ke folder `bukti-transfer` di `UPLOAD_DIR`):
 
 ```bash
 curl -s -X POST http://localhost:3000/api/bookings/7a10c2f6-…/payment \
@@ -386,7 +379,7 @@ curl -s -X POST http://localhost:3000/api/bookings/7a10c2f6-…/payment \
 
 Metode `cash` (2026-08-28) dan `transfer` (2026-09-02) sudah tidak diterima: satu-satunya
 metode adalah `qris` + bukti, dan booking yang tidak membayar dalam 24 jam dibatalkan
-otomatis oleh `expire_unpaid_bookings()` (pg_cron, tiap 15 menit). Nilai enum lama tetap
+otomatis oleh `expire_unpaid_bookings()` (lewat `/api/cron/rutin`, tiap 15 menit). Nilai enum lama tetap
 ada di database untuk data historis.
 
 `200 OK`
@@ -475,12 +468,11 @@ Tenor yang diterima: `12, 18, 24, 36, 48, 60`. Komisi platform dihitung otomatis
 ├── layout-venue-v2.jpeg  Denah asli event (Layout v2, 2026-09-02) — sumber kebenaran tata letak
 ├── public/denah.svg               Denah statis hasil generator (fallback & pratinjau)
 ├── tools/                         Skrip bantu: generator SVG denah + webhook Google Sheets (.gs)
-├── supabase/
-│   ├── migrations/                Skema: enum, tabel, index, trigger, RLS, Realtime, Storage
-│   ├── seed.sql                   1 event, 9 tanggal Musim 1 (7-8 Nov, lalu tiap Minggu s.d. 27 Des 2026), 8 zona, 107 slot, 3 mitra leasing
-│   └── README.md                  Panduan database (lokal, cloud, RLS, Storage)
+├── db/
+│   ├── skema.sql                  Skema lengkap: enum, tabel, index, trigger, fungsi
+│   └── seed.sql                   1 event, 9 tanggal Musim 1 (7-8 Nov, lalu tiap Minggu s.d. 27 Des 2026), 8 zona, 107 slot, 3 mitra leasing
 └── src/
-    ├── middleware.ts              Refresh sesi Supabase di setiap request
+    ├── middleware.ts              Penjaga rute /admin (cek tanda tangan cookie sesi)
     ├── app/
     │   ├── page.tsx               Landing + denah interaktif
     │   ├── booking/               Alur sewa lapak (data tenant → bayar → status)
@@ -490,14 +482,16 @@ Tenor yang diterima: `12, 18, 24, 36, 48, 60`. Komisi platform dihitung otomatis
     ├── components/
     │   ├── ui/                    Kit dasar: Button, Card, Badge, Field, Alert, Stepper…
     │   ├── layout/                Header & footer situs
-    │   ├── denah/                 Denah SVG, legenda, langganan Realtime, saran slot
+    │   ├── denah/                 Denah SVG, legenda, polling status, saran slot
     │   ├── forms/                 Form publik (booking, pembayaran, pembelian, leasing)
     │   └── admin/                 Komponen khusus panel admin
     └── lib/
         ├── domain/                Konstanta, label Indonesia, geometri denah, saran slot
-        ├── services/              Akses database (service role) — semua kembalikan Result<T>
+        ├── services/              Akses database (SQL), semua mengembalikan Result<T>
         ├── actions/               Server Action ("use server") pembungkus service
-        ├── supabase/              Klien browser / server / admin / middleware + cek env
+        ├── db.ts                  Klien Postgres + pembantu query
+        ├── sesi.ts                Tanda tangan HMAC cookie sesi admin & URL bukti
+        ├── storage.ts             Berkas unggahan di disk + URL bukti bertanda tangan
         ├── validation/            Skema zod semua input
         ├── types/database.ts      Tipe hasil skema Postgres
         ├── result.ts              Tipe Result<T> + helper ok() / fail()
@@ -511,18 +505,19 @@ Tenor yang diterima: `12, 18, 24, 36, 48, 60`. Komisi platform dihitung otomatis
 
 Menjawab tiga pertanyaan terbuka di bagian 6 rencana teknis.
 
-### (a) Auth admin — Supabase Auth + tabel `admin_users` dengan peran
+### (a) Auth admin: tabel `admin_users` dengan peran
 
-Memakai **Supabase Auth email/password**, ditambah tabel `admin_users` yang mengacu
-`auth.users(id)` dan menyimpan kolom `role` bertipe enum `admin_role`:
+Login memakai **username + kata sandi** yang dicocokkan ke `admin_users`
+(`password_hash` bcrypt, diperiksa lewat pgcrypto `crypt()`). Sesi berupa cookie
+bertanda tangan HMAC (`AUTH_SECRET`), httpOnly, berumur 12 jam. Kolom `role` bertipe
+enum `admin_role`:
 
 | Role | Maksud |
 | --- | --- |
 | `admin` | Akses penuh seluruh menu admin. |
 | `verifikator` | Fokus verifikasi pembayaran biaya admin. |
 
-Ini sengaja dipilih sebagai **superset**: punya user Auth saja belum cukup, harus ada
-barisnya di `admin_users`. Kalau ternyata pembagian peran tidak dibutuhkan, cukup beri
+Kalau ternyata pembagian peran tidak dibutuhkan, cukup beri
 semua orang role `admin` — tidak ada migrasi yang perlu dibatalkan. Sebaliknya, menambah
 role baru nanti hanya perlu `alter type admin_role add value`.
 
@@ -530,7 +525,7 @@ role baru nanti hanya perlu `alter type admin_role add value`.
 
 Biaya admin disimpan **satu angka per zona** (kolom `zones.admin_fee`, `numeric`), bukan
 per slot dan bukan tabel tarif terpisah. Panitia bisa mengubahnya lewat SQL tanpa deploy
-ulang. Nilai default di `supabase/seed.sql`:
+ulang. Nilai default di `db/seed.sql`:
 
 | Zona | `zone_type` | Biaya admin |
 | --- | --- | ---: |
@@ -550,12 +545,12 @@ kemudian hari tidak mengubah tagihan yang sudah terbit.
 ### (c) Bukti transfer — dikompresi di klien sebelum diunggah
 
 Ya, perlu. Foto layar m-banking dari ponsel modern rutin 4–8 MB, terlalu besar untuk
-Server Action maupun bucket. `src/lib/image.ts` mengompresi di **browser** memakai
+Server Action maupun penyimpanan. `src/lib/image.ts` mengompresi di **browser** memakai
 `<canvas>` sebelum berkas dikirim:
 
 * sisi terpanjang maksimum **1600 px**;
 * encode ulang **JPEG kualitas 0.8**, diturunkan bertahap sampai 0.4 bila masih besar;
-* target akhir **≤ 2 MB** (`MAX_PROOF_BYTES`), sama dengan `file_size_limit` bucket;
+* target akhir **≤ 2 MB** (`MAX_PROOF_BYTES`), sama dengan batas yang diperiksa server;
 * kalau kompresi gagal (format aneh, canvas ter-*taint*, lingkungan tanpa DOM), berkas
   **asli** dipakai apa adanya — pengguna tidak pernah melihat error karena ini.
 
@@ -614,7 +609,7 @@ gambar Layout v2 (4 baru + 8 bekas, keputusan pemilik 2026-09-03); teks Deck v4
 menyebut 3 + 14.
 
 Sepuluh warung bernomor tetap diberi `slot_label` (`"Warung 1"` … `"Warung 10"`) di
-`supabase/seed.sql`, dan `slotDisplayName()` mendahulukan label di atas nomor — supaya
+`db/seed.sql`, dan `slotDisplayName()` mendahulukan label di atas nomor — supaya
 nama lapak di halaman booking sama persis dengan yang tertulis di denah. Zona bernomor
 lain (`slot_label` NULL) tetap tampil sebagai `"Slot 07"`.
 
@@ -622,7 +617,7 @@ lain (`slot_label` NULL) tetap tampil sebagai `"Slot 07"`.
 
 | | Dipakai untuk | Sumber |
 | --- | --- | --- |
-| `src/components/denah/FloorPlan.tsx` | denah **interaktif** di aplikasi: klik slot, warna ikut status, langganan Supabase Realtime | `FLOOR_PLAN_ZONES` di `layout.ts` |
+| `src/components/denah/FloorPlan.tsx` | denah **interaktif** di aplikasi: klik slot, warna ikut status (polling 10 detik) | `FLOOR_PLAN_ZONES` di `layout.ts` |
 | `public/denah.svg` | denah **statis**: cetak, PDF, embed, dan fallback `<noscript>` di `FloorPlanBoard.tsx` | `tools/generate-denah-svg.ts` — mengimpor `layout.ts` langsung, tidak ada koordinat ganda |
 
 Berkas statisnya berdiri sendiri (tanpa aset eksternal) dan setiap kotak punya
@@ -655,7 +650,7 @@ Setiap slot di kedua render membawa penunjuk langsung ke form bookingnya:
 Id elemen adalah perekat antara gambar, kode, dan database — **ketiganya harus tetap sinkron**:
 
 1. `src/lib/domain/layout.ts` — koordinat, ukuran kotak, warna aksen zona, dekor, anotasi.
-2. `supabase/seed.sql` — baris `zones.svg_group_id` dan `slots.svg_element_id`.
+2. `db/seed.sql` — baris `zones.svg_group_id` dan `slots.svg_element_id`.
 3. `tools/generate-denah-svg.ts` → `public/denah.svg` — denah statis yang dibangun
    langsung dari `layout.ts` (jalankan `npm run denah` setelah mengubah koordinat —
    butuh Node ≥ 22.6, skrip memakai `--experimental-strip-types`; `npm run denah:check`
@@ -664,7 +659,7 @@ Id elemen adalah perekat antara gambar, kode, dan database — **ketiganya harus
 Aturannya: `slots.svg_element_id` di database **wajib** sama persis dengan id kotak di
 `layout.ts` (`slot-<zoneSlug>-<NN>`, dua digit mulai `01`). Slot yang idnya tidak cocok
 akan tetap tergambar, tetapi tidak akan ikut berubah warna saat statusnya berganti.
-Setelah mengubah seed, jalankan `supabase db reset`.
+Setelah mengubah seed, muat ulang ke database kosong dengan `npm run db:muat`.
 
 ---
 
@@ -676,23 +671,20 @@ Hal-hal yang perlu diketahui sebelum dipakai sungguhan.
   insert tenant → insert booking → insert booking_dates → insert tagihan secara berurutan
   dengan *kompensasi manual* bila salah satu langkah gagal. Pengaman sebenarnya ada di
   unique index `booking_dates_active_slot_date_idx` (satu penyewa aktif per pasangan
-  slot-tanggal). Untuk produksi, pindahkan rangkaian ini ke satu **Postgres function
-  (RPC)** agar benar-benar berjalan dalam satu transaksi. Hal yang sama berlaku untuk
+  slot-tanggal). Untuk produksi, bungkus rangkaian ini dalam satu **transaksi**
+  (`sql.begin`) agar benar-benar atomik. Hal yang sama berlaku untuk
   `verifyPayment` dan `cancelBooking`.
-* **RLS hanya membuka `select` publik** untuk `events`, `zones`, `slots`, dan
-  `leasing_partners` (baris `is_active` saja). Tabel lain **tanpa policy sama sekali**,
-  jadi hanya `service_role` yang bisa mengaksesnya.
-* **`SUPABASE_SERVICE_ROLE_KEY` wajib server-side.** Kunci itu mem-bypass seluruh RLS.
-  Jangan pernah diberi prefix `NEXT_PUBLIC_`, jangan di-commit, dan jangan diimpor dari
-  komponen klien — `src/lib/supabase/admin.ts` serta modul `services/*` menolak berjalan
-  di browser.
-* **Bucket `bukti-transfer` bersifat publik.** Siapa pun yang memegang URL bisa membuka
-  bukti transfer tanpa autentikasi (disengaja agar admin cepat memeriksa). Untuk
-  produksi, ubah bucket jadi privat dan ganti URL publik dengan **signed URL** berumur pendek.
+* **Database hanya diakses dari server.** Tidak ada RLS; satu-satunya jalan masuk
+  adalah `DATABASE_URL` yang dipakai `src/lib/db.ts`. `DATABASE_URL` dan `AUTH_SECRET`
+  jangan pernah diberi prefix `NEXT_PUBLIC_` dan jangan di-commit; `src/lib/db.ts`
+  serta modul `services/*` menolak berjalan di browser.
+* **Folder `bukti-transfer` bersifat privat.** Bukti bayar hanya bisa dibuka lewat URL
+  bertanda tangan berumur 1 jam (`resolveProofUrl` di `src/lib/storage.ts`). Folder
+  `foto-kendaraan` terbuka untuk publik (foto katalog). Keduanya ada di `UPLOAD_DIR`,
+  yang di produksi harus berupa volume supaya tidak hilang saat container diganti.
 * **Rate limiting dua lapis (sejak 2026-09-03).** `src/lib/rate-limit.ts`: lapis
   in-memory per instance, plus pembatas **bersama** lintas instance lewat fungsi
-  `public.rate_limit_hit` (tabel `rate_limit_events`, migrasi
-  `20260903121000_rate_limit_bersama.sql`). Dipakai form booking dan `POST /api/bookings`
+  `public.rate_limit_hit` (tabel `rate_limit_events`, lihat `db/skema.sql`). Dipakai form booking dan `POST /api/bookings`
   (5/menit per IP tiap kiriman, 20/24 jam per IP untuk kiriman valid — satu Wi-Fi
   lokasi = satu IP, angkanya konstanta di `actions/booking.ts`), pembatalan mandiri
   (5/jam per booking, 20/jam per IP), login admin (10/10 menit per IP, 5/10 menit
@@ -705,9 +697,11 @@ Hal-hal yang perlu diketahui sebelum dipakai sungguhan.
   saja; pembatas laju di atas menahan penimbunan massal dari satu jaringan, tetapi
   booking iseng memakai nomor palsu satuan belum tersaring otomatis (OTP WhatsApp
   adalah langkah berikutnya).
-* **Tidak ada kedaluwarsa booking otomatis.** Booking `pending_payment` mengunci
-  tanggal-tanggal sewanya sampai admin memverifikasi atau membatalkannya. Pertimbangkan
-  cron (`pg_cron`) yang membatalkan booking `pending_payment` yang lewat N jam.
+* **Tugas rutin lewat `/api/cron/rutin`.** `expire_unpaid_bookings()` (membatalkan
+  booking yang lewat tenggat bayar) dan pembersihan `rate_limit_events` serta
+  `email_verifications` dipicu timer systemd di VPS tiap 15 menit
+  (`tools/vps/drivetech-cron-rutin.*`). Kalau timer mati, booking yang tidak dibayar
+  tetap mengunci tanggalnya.
 
 ---
 
