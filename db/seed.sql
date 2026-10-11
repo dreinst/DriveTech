@@ -12,10 +12,10 @@
 -- Yang bisa dibooking = 96 (semua kecuali 8 fasilitas).
 --
 -- Seluruh insert memakai "on conflict do nothing" / "where not exists"
--- sehingga aman dijalankan berulang kali (mis. setelah `supabase db reset`).
+-- sehingga aman dijalankan berulang kali.
 -- =============================================================================
 
-set search_path = public, extensions;
+set search_path = public;
 
 -- -----------------------------------------------------------------------------
 -- 1. Event (satu event saja, id di-hardcode agar seed idempotent)
@@ -228,31 +228,22 @@ where not exists (
 -- =============================================================================
 -- CATATAN: MENDAFTARKAN ADMIN PERTAMA  (komentar saja, BUKAN SQL aktif)
 -- =============================================================================
--- Baris admin TIDAK di-seed otomatis karena admin_users.id harus mengacu ke
--- auth.users(id) yang baru ada setelah user dibuat di Supabase Auth.
+-- Baris admin TIDAK di-seed otomatis supaya tidak ada sandi bawaan di repo.
+-- Jalankan sendiri lewat psql (ganti username, nama, dan sandinya):
 --
--- Langkah:
---   1) Buat user di Supabase Studio: Authentication > Users > "Add user"
---      (email + password, centang "Auto Confirm User").
---      Atau via CLI/API admin dengan service role key.
---   2) Salin UUID user tersebut, lalu jalankan di SQL Editor:
---
---        insert into public.admin_users (id, email, full_name, role)
+--        insert into public.admin_users (email, username, full_name, role, password_hash)
 --        values (
---          '00000000-0000-0000-0000-000000000000',  -- ganti dengan UUID user
---          'admin@example.com',                     -- ganti dengan email user
+--          'administrator@drivetech.local',         -- identitas internal, tidak dikirimi email
+--          'administrator',                         -- nama login, HURUF KECIL
 --          'Nama Admin',
---          'admin'                                  -- 'admin' atau 'verifikator'
+--          'admin',                                 -- 'admin' atau 'verifikator'
+--          crypt('sandi-yang-kuat', gen_salt('bf', 10))
 --        );
 --
---   3) Cara lain tanpa menyalin UUID manual (email harus sudah terdaftar
---      di Supabase Auth):
---
---        insert into public.admin_users (id, email, full_name, role)
---        select u.id, u.email, 'Nama Admin', 'admin'
---        from auth.users u
---        where u.email = 'admin@example.com'
---        on conflict (id) do nothing;
+-- Ganti sandi:
+--        update public.admin_users
+--           set password_hash = crypt('sandi-baru', gen_salt('bf', 10))
+--         where username = 'administrator';
 --
 -- Role 'admin' bisa semua hal; 'verifikator' ditujukan untuk verifikasi
 -- pembayaran admin fee saja.
