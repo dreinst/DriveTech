@@ -330,6 +330,12 @@ export const tambahPenarikanSchema = z.object({
   catatan: z.string().trim().max(200, "Catatan maksimal 200 karakter."),
 });
 
+export const setHadirSchema = z.object({
+  bookingId: uuid("ID booking"),
+  tanggal,
+  hadir: z.enum(["0", "1"]),
+});
+
 export const overrideSlotSchema = z.object({
   slotId: uuid("ID slot"),
   status: z.enum(["available", "pending", "confirmed"], { error: "Status slot tidak valid." }),

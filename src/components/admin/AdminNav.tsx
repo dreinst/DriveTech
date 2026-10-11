@@ -141,6 +141,15 @@ function IconCocok() {
   );
 }
 
+function IconHadir() {
+  return (
+    <svg {...ICON_PROPS}>
+      <circle cx="10" cy="10" r="7.5" />
+      <path d="M6.8 10.2 9 12.4l4.2-4.6" />
+    </svg>
+  );
+}
+
 function IconLog() {
   return (
     <svg {...ICON_PROPS}>
@@ -189,6 +198,12 @@ const NAV_ITEMS: readonly NavItem[] = [
     label: "Cocokkan Bayar",
     icon: IconCocok,
     match: (pathname) => pathname === "/drivetechadmin/cocok",
+  },
+  {
+    href: "/drivetechadmin/regulang",
+    label: "Reg Ulang",
+    icon: IconHadir,
+    match: (pathname) => pathname === "/drivetechadmin/regulang",
   },
   {
     href: "/drivetechadmin/slots",

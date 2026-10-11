@@ -1289,3 +1289,19 @@ CREATE TABLE public.penarikan_saldo (
 );
 
 COMMENT ON TABLE public.penarikan_saldo IS 'Catatan penarikan saldo QRIS ke rekening, diisi superadmin.';
+
+
+--
+-- Name: kehadiran; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.kehadiran (
+    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    booking_id uuid NOT NULL REFERENCES public.bookings(id) ON DELETE CASCADE,
+    tanggal date NOT NULL,
+    dicatat_oleh text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT kehadiran_booking_id_tanggal_key UNIQUE (booking_id, tanggal)
+);
+
+COMMENT ON TABLE public.kehadiran IS 'Registrasi ulang hari-H: satu baris per booking per tanggal gelaran yang hadir.';

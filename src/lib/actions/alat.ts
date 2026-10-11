@@ -7,10 +7,12 @@ import { buatAkun, gantiSandiSendiri, setAkunAktif, setSandiAkun } from "@/lib/s
 import { requireAdmin, requireFullAdmin } from "@/lib/services/auth";
 import { catatLog } from "@/lib/services/log";
 import { hapusPenarikan, tambahPenarikan } from "@/lib/services/penarikan";
+import { setHadir } from "@/lib/services/regulang";
 import {
   buatAkunSchema,
   gantiSandiAkunSchema,
   gantiSandiSendiriSchema,
+  setHadirSchema,
   tambahPenarikanSchema,
   zodFieldErrors,
 } from "@/lib/validation/schemas";
@@ -155,4 +157,32 @@ export async function hapusPenarikanAction(_prev: ActionState, form: FormData): 
 
   revalidatePath("/drivetechadmin/penarikan");
   return successState("Catatan dihapus.");
+}
+
+/* ------------------------------------------------------------------ */
+/* Registrasi ulang hari-H                                             */
+/* ------------------------------------------------------------------ */
+
+/** Tandai hadir atau batalkan tandanya di /drivetechadmin/regulang (admin dan superadmin). */
+export async function setHadirAction(_prev: ActionState, form: FormData): Promise<ActionState> {
+  const admin = await requireAdmin();
+
+  const parsed = setHadirSchema.safeParse({
+    bookingId: teks(form, "bookingId"),
+    tanggal: teks(form, "tanggal"),
+    hadir: teks(form, "hadir"),
+  });
+  if (!parsed.success) return galatPertama(parsed.error);
+
+  const hadir = parsed.data.hadir === "1";
+  const result = await setHadir(parsed.data.bookingId, parsed.data.tanggal, hadir, admin.id);
+  if (!result.ok) return errorState(result.error);
+  await catatLog(
+    admin.id,
+    hadir ? "tandai_hadir" : "batal_hadir",
+    `${result.data} tanggal ${parsed.data.tanggal}`,
+  );
+
+  revalidatePath("/drivetechadmin/regulang");
+  return successState(hadir ? "Ditandai hadir." : "Tanda hadir dibatalkan.");
 }

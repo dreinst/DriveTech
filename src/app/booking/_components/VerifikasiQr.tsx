@@ -9,14 +9,14 @@ export type VerifikasiQrProps = {
 };
 
 /**
- * QR verifikasi untuk PANITIA (server component). Isinya URL panel admin
- * yang sudah terfilter kode booking ini: /drivetechadmin/bookings?q=<kode>. Panitia
- * memindai dari layar HP penyewa saat registrasi -> panel admin (butuh login)
- * menampilkan bukti QRIS, nominal, dan waktu kirim (submitted_at) untuk
- * dicocokkan dengan waktu pembayaran pada bukti. Bukan QR pembayaran.
+ * QR verifikasi untuk PANITIA (server component). Isinya URL halaman
+ * registrasi ulang dengan kode booking ini terisi: /drivetechadmin/regulang?q=<kode>.
+ * Panitia memindai dari layar HP penyewa saat registrasi di lokasi, lalu panel
+ * admin (butuh login) menampilkan booking itu untuk ditandai hadir; booking yang
+ * belum lunas diberi tautan ke halaman Pemesanan. Bukan QR pembayaran.
  */
 export async function VerifikasiQr({ bookingCode, bookingId, className }: VerifikasiQrProps) {
-  const url = new URL("/drivetechadmin/bookings", getSiteUrl());
+  const url = new URL("/drivetechadmin/regulang", getSiteUrl());
   url.searchParams.set("q", bookingCode);
   const svg = await qrSvg(url.toString());
 
@@ -45,9 +45,8 @@ export async function VerifikasiQr({ bookingCode, bookingId, className }: Verifi
             {bookingCode}
           </p>
           <p className="mt-2 text-xs leading-relaxed text-muted">
-            Tunjukkan QR ini ke panitia saat registrasi di lokasi. Pindaian membuka data booking
-            ini di panel admin (bukti, nominal, waktu kirim) untuk dicocokkan dengan waktu
-            pembayaran pada bukti.
+            Tunjukkan QR ini ke panitia saat registrasi ulang di lokasi. Pindaian membuka data
+            booking ini di panel admin supaya panitia bisa langsung menandai Anda hadir.
           </p>
         </div>
       </div>
