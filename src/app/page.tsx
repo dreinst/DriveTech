@@ -23,6 +23,7 @@ import { getFloorPlan } from "@/lib/services/slots";
 import { getSiteUrl } from "@/lib/site-url";
 import type { SlotRow, ZoneType, ZoneWithSlots } from "@/lib/types/database";
 import { cn, formatRupiah } from "@/lib/utils";
+import { LogoBarisDrive, LogoBarisTech } from "@/components/brand/LogoDriveTech";
 
 // Dirender ulang paling lama tiap 30 detik (ISR). Status lapak tetap segar karena
 // FloorPlanBoard menyegarkan status lewat polling, dan aksi booking memanggil revalidatePath("/").
@@ -49,12 +50,12 @@ const PITA_TANGGAL = ["Sabtu 07 November 2026", "Minggu 08 November 2026"] as co
 function tanyaJawab(lokasi: string, hargaTermurah: number) {
   return [
     {
-      tanya: "Drive Tech itu acara apa?",
-      jawab: `Drive Tech adalah pameran dan pasar otomotif akhir pekan di Malang. Mobil dan motor, baru maupun bekas, dipajang dan dijual langsung di ${lokasi}.`,
+      tanya: "DriveTech itu acara apa?",
+      jawab: `DriveTech adalah pameran dan pasar otomotif akhir pekan di Malang. Mobil dan motor, baru maupun bekas, dipajang dan dijual langsung di ${lokasi}.`,
     },
     {
-      tanya: "Kapan dan di mana Drive Tech diadakan?",
-      jawab: `Pembukaan Sabtu dan Minggu, 7 dan 8 November 2026, di ${lokasi}. Setelah itu Drive Tech buka setiap hari Minggu sampai 29 November 2026.`,
+      tanya: "Kapan dan di mana DriveTech diadakan?",
+      jawab: `Pembukaan Sabtu dan Minggu, 7 dan 8 November 2026, di ${lokasi}. Setelah itu DriveTech buka setiap hari Minggu sampai 29 November 2026.`,
     },
     {
       tanya: "Apakah pengunjung harus membayar?",
@@ -71,7 +72,7 @@ function dataTerstrukturAcara(siteUrl: string) {
   return {
     "@context": "https://schema.org",
     "@type": "Event",
-    name: "Drive Tech Malang 2026",
+    name: "DriveTech Malang 2026",
     description: EVENT_INFO.description,
     startDate: "2026-11-07",
     endDate: "2026-11-08",
@@ -191,12 +192,13 @@ export default async function BerandaPage() {
               Musim 1 <span aria-hidden="true">/</span> 07 + 08 Nov 2026{" "}
               <span aria-hidden="true">/</span> {lokasi}
             </p>
-            <h1 className="judul mt-3 text-[34vw] leading-[0.8] md:text-[clamp(11rem,27vw,21rem)]">
+            <h1 className="mt-5 w-full max-w-[52rem] md:mt-8">
+              <span className="sr-only">DriveTech</span>
               <span className="baris-naik text-ink">
-                <span>Drive</span>
+                <LogoBarisDrive className="block h-auto w-full" />
               </span>
               <span className="baris-naik text-accent">
-                <span>Tech</span>
+                <LogoBarisTech className="block h-auto w-full" />
               </span>
             </h1>
           </div>
@@ -548,7 +550,7 @@ export default async function BerandaPage() {
           <div className="h-72 w-full border border-ink/25 lg:col-span-3 lg:h-96">
             <iframe
               src={EVENT_INFO.mapsEmbedUrl}
-              title="Peta lokasi Drive Tech di Rest Area Singosari Malang (Kampung Tentara)"
+              title="Peta lokasi DriveTech di Rest Area Singosari Malang (Kampung Tentara)"
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
               allowFullScreen

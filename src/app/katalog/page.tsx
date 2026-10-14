@@ -22,7 +22,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Katalog mobil dan motor dijual di Malang",
   description:
-    "Daftar mobil dan motor yang dijual di Drive Tech, Singosari, Malang. Lihat harga, plat, dan nomor lapaknya per tanggal gelaran.",
+    "Daftar mobil dan motor yang dijual di DriveTech, Singosari, Malang. Lihat harga, plat, dan nomor lapaknya per tanggal gelaran.",
   alternates: { canonical: "/katalog" },
 };
 

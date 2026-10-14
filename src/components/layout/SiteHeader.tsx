@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { buttonClass } from "@/components/ui/Button";
-import { EVENT_INFO } from "@/lib/domain/constants";
+import { LogoTulisan } from "@/components/brand/LogoDriveTech";
 
 type NavItem = { href: string; label: string };
 
@@ -25,7 +25,7 @@ export function SiteHeader() {
         <Link href="/" className="flex min-w-0 items-center gap-3 text-ink">
           {/* eslint-disable-next-line @next/next/no-img-element -- emblem kecil 10 KB, tanpa optimasi */}
           <img src="/gambar/emblem.webp" alt="" aria-hidden="true" width={36} height={36} className="h-9 w-9 shrink-0" />
-          <span className="judul truncate text-[1.6rem] leading-none">{EVENT_INFO.name}</span>
+          <LogoTulisan className="h-5 w-auto min-w-0 text-ink sm:h-6" />
         </Link>
 
         <div className="flex shrink-0 items-center gap-1 sm:gap-3">

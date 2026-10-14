@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { buttonClass } from "@/components/ui/Button";
 import { EVENT_INFO } from "@/lib/domain/constants";
 import { cn } from "@/lib/utils";
+import { LogoTulisan } from "@/components/brand/LogoDriveTech";
 
 /** Lama splash sebelum otomatis pindah. Keyframe go-mobil di globals.css = 2,3 s. */
 const DURASI_MS = 2600;
@@ -56,7 +57,7 @@ export function SplashMobil({ tujuan }: { tujuan: string }) {
           aria-hidden="true"
           className="h-20 w-20 sm:h-24 sm:w-24"
         />
-        <p className="text-3xl font-semibold tracking-[-0.02em] sm:text-4xl">{EVENT_INFO.name}</p>
+        <LogoTulisan className="h-8 w-auto text-ink sm:h-10" />
         <p className="text-sm text-muted">{EVENT_INFO.location}</p>
       </div>
 

@@ -4,9 +4,9 @@ import { redirect } from "next/navigation";
 import { LoginForm } from "@/components/admin/LoginForm";
 import { Alert } from "@/components/ui/Alert";
 import { isDbConfigured } from "@/lib/db";
-import { EVENT_INFO } from "@/lib/domain/constants";
 import { getCurrentAdmin } from "@/lib/services/auth";
 import { tujuanAdminAman } from "@/lib/utils";
+import { LogoTulisan } from "@/components/brand/LogoDriveTech";
 
 export const dynamic = "force-dynamic";
 
@@ -31,9 +31,7 @@ export default async function AdminLoginPage({ searchParams }: PageProps) {
       <div className="w-full max-w-sm">
         {/* Wordmark oranye */}
         <div className="mb-8 text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-accent">
-            {EVENT_INFO.name}
-          </p>
+          <LogoTulisan className="mx-auto h-5 w-auto text-accent" />
           <h1 className="mt-2 text-2xl font-semibold tracking-[-0.01em] text-ink sm:text-3xl">
             Panel Admin
           </h1>
