@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Barlow_Condensed, Inter } from "next/font/google";
+import { Barlow_Condensed, Inter, Saira } from "next/font/google";
 import type { ReactNode } from "react";
 import "./globals.css";
 import { SiteFooter } from "@/components/layout/SiteFooter";
@@ -19,6 +19,15 @@ const barlow = Barlow_Condensed({
   weight: ["600", "700", "900"],
   style: ["normal", "italic"],
   variable: "--font-barlow",
+  display: "swap",
+});
+
+/* Saira miring tebal: font tagline pada logo resmi DriveTech. */
+const saira = Saira({
+  subsets: ["latin"],
+  weight: ["700"],
+  style: ["italic"],
+  variable: "--font-saira",
   display: "swap",
 });
 
@@ -73,7 +82,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="id" className={`${inter.variable} ${barlow.variable}`}>
+    <html lang="id" className={`${inter.variable} ${barlow.variable} ${saira.variable}`}>
       <body className="flex min-h-dvh flex-col bg-app font-sans text-ink antialiased">
         <a
           href="#konten-utama"

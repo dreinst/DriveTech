@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { buttonClass } from "@/components/ui/Button";
 import { EVENT_INFO } from "@/lib/domain/constants";
 import { cn } from "@/lib/utils";
-import { LogoTulisan } from "@/components/brand/LogoDriveTech";
+import { LogoLengkap } from "@/components/brand/LogoDriveTech";
 
 /** Lama splash sebelum otomatis pindah. Keyframe go-mobil di globals.css = 2,3 s. */
 const DURASI_MS = 2600;
@@ -50,14 +50,7 @@ export function SplashMobil({ tujuan }: { tujuan: string }) {
     >
       {/* Logo + nama: muncul setelah mobil masuk */}
       <div className="go-logo flex flex-col items-center gap-3 px-6 text-center">
-        {/* eslint-disable-next-line @next/next/no-img-element -- SVG statis di public/ */}
-        <img
-          src="/logo-drivetech.svg"
-          alt=""
-          aria-hidden="true"
-          className="h-20 w-20 sm:h-24 sm:w-24"
-        />
-        <LogoTulisan className="h-8 w-auto text-ink sm:h-10" />
+        <LogoLengkap tagline className="text-[2rem] sm:text-[2.5rem]" />
         <p className="text-sm text-muted">{EVENT_INFO.location}</p>
       </div>
 

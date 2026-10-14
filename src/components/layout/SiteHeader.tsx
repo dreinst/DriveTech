@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { buttonClass } from "@/components/ui/Button";
-import { LogoTulisan } from "@/components/brand/LogoDriveTech";
+import { LogoLengkap } from "@/components/brand/LogoDriveTech";
 
 type NavItem = { href: string; label: string };
 
@@ -23,9 +23,7 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 border-b border-line bg-[#0a0a0a]/90 backdrop-blur">
       <div className="mx-auto flex h-16 w-full max-w-[90rem] items-center justify-between gap-4 px-4 sm:px-8">
         <Link href="/" className="flex min-w-0 items-center gap-3 text-ink">
-          {/* eslint-disable-next-line @next/next/no-img-element -- emblem kecil 10 KB, tanpa optimasi */}
-          <img src="/gambar/emblem.webp" alt="" aria-hidden="true" width={36} height={36} className="h-9 w-9 shrink-0" />
-          <LogoTulisan className="h-5 w-auto min-w-0 text-ink sm:h-6" />
+          <LogoLengkap className="text-[1.05rem] sm:text-[1.2rem]" />
         </Link>
 
         <div className="flex shrink-0 items-center gap-1 sm:gap-3">

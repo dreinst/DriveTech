@@ -194,10 +194,10 @@ export default async function BerandaPage() {
             </p>
             <h1 className="mt-5 w-full max-w-[52rem] md:mt-8">
               <span className="sr-only">DriveTech</span>
-              <span className="baris-naik text-ink">
+              <span className="baris-naik text-logo">
                 <LogoBarisDrive className="block h-auto w-full" />
               </span>
-              <span className="baris-naik text-accent">
+              <span className="baris-naik text-logo">
                 <LogoBarisTech className="block h-auto w-full" />
               </span>
             </h1>

@@ -85,6 +85,7 @@
   --color-line: var(--line);
   --color-line-strong: var(--line-strong);
   --color-accent: var(--accent);
+  --color-logo: #f04f23;
   --color-accent-soft: var(--accent-soft);
   --color-surface-3: var(--surface-3);
   --color-map-canvas: var(--map-canvas);
@@ -120,6 +121,7 @@
 
   /* Judul: Barlow Condensed miring tebal. Isi: Inter. Keduanya lewat next/font. */
   --font-display: var(--font-barlow), "Arial Narrow", sans-serif;
+  --font-tagline: var(--font-saira), sans-serif;
   --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
 }
 

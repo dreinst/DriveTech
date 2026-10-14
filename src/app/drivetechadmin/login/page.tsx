@@ -6,7 +6,7 @@ import { Alert } from "@/components/ui/Alert";
 import { isDbConfigured } from "@/lib/db";
 import { getCurrentAdmin } from "@/lib/services/auth";
 import { tujuanAdminAman } from "@/lib/utils";
-import { LogoTulisan } from "@/components/brand/LogoDriveTech";
+import { LogoLengkap } from "@/components/brand/LogoDriveTech";
 
 export const dynamic = "force-dynamic";
 
@@ -31,7 +31,7 @@ export default async function AdminLoginPage({ searchParams }: PageProps) {
       <div className="w-full max-w-sm">
         {/* Wordmark oranye */}
         <div className="mb-8 text-center">
-          <LogoTulisan className="mx-auto h-5 w-auto text-accent" />
+          <LogoLengkap className="justify-center text-[1.1rem]" />
           <h1 className="mt-2 text-2xl font-semibold tracking-[-0.01em] text-ink sm:text-3xl">
             Panel Admin
           </h1>

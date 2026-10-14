@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { buttonClass } from "@/components/ui/Button";
 import { EVENT_INFO, waHref } from "@/lib/domain/constants";
-import { LogoTulisan } from "@/components/brand/LogoDriveTech";
+import { LogoLengkap } from "@/components/brand/LogoDriveTech";
 
 export const metadata: Metadata = {
   title: "Tautan",
@@ -27,10 +27,8 @@ const LINKS = [
 export default function BioPage() {
   return (
     <div className="mx-auto flex min-h-[calc(100dvh-8rem)] w-full max-w-md flex-col items-center gap-8 px-4 py-16 text-center">
-      {/* eslint-disable-next-line @next/next/no-img-element -- SVG statis, tanpa optimasi */}
-      <img src="/logo-drivetech.svg" alt="" aria-hidden="true" className="h-16 w-auto" />
       <div>
-        <h1><LogoTulisan className="h-6 w-auto text-ink" /></h1>
+        <h1><LogoLengkap tagline className="justify-center text-[1.6rem]" /></h1>
         <p className="mt-1 text-sm text-muted">{EVENT_INFO.location}</p>
       </div>
 

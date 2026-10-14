@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { EVENT_INFO, WA_BOT_PHONE, WA_KANTOR_TAMPIL, waHref } from "@/lib/domain/constants";
-import { LogoTulisan } from "@/components/brand/LogoDriveTech";
+import { LogoLengkap } from "@/components/brand/LogoDriveTech";
 
 const FOOTER_LINKS = [
   { href: "/katalog", label: "Katalog" },
@@ -16,9 +16,7 @@ export function SiteFooter() {
       <div className="mx-auto w-full max-w-[90rem] px-4 pt-16 pb-8 sm:px-8">
         <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:justify-between">
           <Link href="/" className="flex items-center gap-4 text-ink">
-            {/* eslint-disable-next-line @next/next/no-img-element -- emblem kecil 10 KB, tanpa optimasi */}
-            <img src="/gambar/emblem.webp" alt="" aria-hidden="true" width={56} height={56} className="h-14 w-14" />
-            <LogoTulisan className="h-9 w-auto text-ink sm:h-11" />
+            <LogoLengkap tagline className="text-[2rem] sm:text-[2.5rem]" />
           </Link>
 
           <div className="grid gap-8 sm:grid-cols-3 sm:gap-14">
