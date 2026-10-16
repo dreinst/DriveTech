@@ -193,7 +193,7 @@ export default async function BerandaPage() {
         <div className="mx-auto grid w-full max-w-[90rem] gap-6 px-4 pt-8 sm:px-8 md:min-h-[46rem] md:grid-cols-[1fr_17rem] md:content-between md:gap-8 md:pt-10 md:pb-10">
           <div>
             <p className="label text-sm text-ink/70 sm:text-base">
-              Musim 1 <span aria-hidden="true">/</span> 07 + 08 Nov 2026{" "}
+              Phase 1 <span aria-hidden="true">/</span> 07 + 08 Nov 2026{" "}
               <span aria-hidden="true">/</span> {lokasi}
             </p>
             <h1 className="mt-5 w-full max-w-[52rem] md:mt-8">
@@ -421,7 +421,7 @@ export default async function BerandaPage() {
               <h2 className="judul mt-2 text-[clamp(4rem,12vw,10.5rem)]">
                 Paket sponsor
                 <br />
-                <span className="text-accent">Musim 1</span>
+                <span className="text-accent">Phase 1</span>
               </h2>
             </Muncul>
             <Muncul className="max-w-sm" delay={0.1}>

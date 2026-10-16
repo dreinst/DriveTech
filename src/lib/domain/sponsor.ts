@@ -34,7 +34,7 @@ export type NamingRight = {
 
 /** Pengantar section sponsor (Deck v4 slide 1 & 15). */
 export const SPONSOR_INTRO = {
-  title: "Paket Sponsor Musim 1",
+  title: "Paket Sponsor Phase 1",
   points: [
     "Merek Anda tampil setiap akhir pekan di depan orang yang datang untuk membeli kendaraan.",
     "Pengunjung masuk gratis, jadi acara terbuka untuk semua kalangan.",
@@ -109,4 +109,4 @@ export const CATEGORY_EXCLUSIVITY: NamingRight & { futureNote: string } = {
 };
 
 /** Teks awal pesan WhatsApp untuk tombol CTA sponsor. */
-export const SPONSOR_WA_TEXT = "Halo Panitia Drive Tech, saya tertarik dengan paket sponsor Musim 1.";
+export const SPONSOR_WA_TEXT = "Halo Panitia Drive Tech, saya tertarik dengan paket sponsor Phase 1.";
