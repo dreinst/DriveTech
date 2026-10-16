@@ -18,12 +18,16 @@ import {
   SPONSOR_TIERS,
   SPONSOR_WA_TEXT,
 } from "@/lib/domain/sponsor";
+
 import { listActivePartners } from "@/lib/services/leasing";
 import { getFloorPlan } from "@/lib/services/slots";
 import { getSiteUrl } from "@/lib/site-url";
 import type { SlotRow, ZoneType, ZoneWithSlots } from "@/lib/types/database";
 import { cn, formatRupiah } from "@/lib/utils";
 import { LogoBarisDrive, LogoBarisTech } from "@/components/brand/LogoDriveTech";
+
+// Harga sponsor di situs belum sama dengan proposal, jadi disembunyikan dulu.
+const TAMPILKAN_HARGA_SPONSOR = false;
 
 // Dirender ulang paling lama tiap 30 detik (ISR). Status lapak tetap segar karena
 // FloorPlanBoard menyegarkan status lewat polling, dan aksi booking memanggil revalidatePath("/").
@@ -437,6 +441,8 @@ export default async function BerandaPage() {
             </Muncul>
           </div>
 
+          {TAMPILKAN_HARGA_SPONSOR ? (
+          <>
           <div className="mt-14 grid md:grid-cols-2 lg:grid-cols-4">
             {SPONSOR_TIERS.map((tier, index) => (
               <Muncul key={tier.id} delay={index * 0.06} className="h-full">
@@ -495,7 +501,8 @@ export default async function BerandaPage() {
               {NAMING_BUNDLE_NOTE} {CATEGORY_EXCLUSIVITY.futureNote} {SPONSOR_INTRO.note}
             </p>
           </Muncul>
-
+          </>
+          ) : null}
           <Muncul className="mt-10 flex flex-wrap gap-3">
             <a
               href={waHref(KONTAK_SPONSOR.phone, SPONSOR_WA_TEXT)}
