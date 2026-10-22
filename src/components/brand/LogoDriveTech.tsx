@@ -1,17 +1,18 @@
 /*
  * Logo tulisan DriveTech dari aset resmi (folder "DRIVETECH - DESIGN", Logo Asset/SVG).
  * Sesuai arahan Om Don 14 Okt 2026: tulisan merek memakai logo dan font aslinya, bukan font situs.
- * Pilihan Om Don 14 Okt 21.25: ikon DT dalam lingkaran + DRIVE / EAST JAVA TECH bertumpuk
+ * Pilihan Om Don 14 Okt 21.25: ikon DT dalam lingkaran + DRIVE / TECH bertumpuk
  * + "AUTO & TECHNO SHOW * 2026". Ikon DT disusun dari huruf DT logo "OPT 1" (angka 2025 dibuang)
- * karena folder aset belum punya versi lingkarannya. Warna mengikuti currentColor.
+ * karena folder aset belum punya versi lingkarannya. Tulisan EAST JAVA dibuang 22 Okt supaya logo
+ * sama di seluruh situs. Warna mengikuti currentColor.
  */
 
 type Props = { className?: string; title?: string };
 
-/** Satu baris: DRIVETECH + EAST JAVA (logo secondary). */
+/** Satu baris: DRIVETECH (logo secondary). */
 export function LogoTulisan({ className, title = "DriveTech" }: Props) {
   return (
-    <svg viewBox="0 0 268.97 20.52" fill="currentColor" role="img" aria-label={title} className={className}>
+    <svg viewBox="0 0 213.98 20.52" fill="currentColor" role="img" aria-label={title} className={className}>
     <path d="M23.97,0H5.66l-1.51,5.47h2.24l-2.65,9.56H1.5l-1.5,5.43h20.23l4.56-3.3,3.23-13.21-4.05-3.96ZM14.7,15.03h-5.29l3.48-2.51,1.94-7.05h2.48l-2.62,9.56Z" />
     <path d="M54.71,3.91L50.71,0h-19.08l-1.51,5.48h15.72l-6.67,4.49.55-2h-10.3l-3.47,12.55h10.94l1.52-5.49h2.52l-1.53,5.49h10.71l2.31-8.33-4.32-1.58,5.3-1.93,1.31-4.77Z" />
     <path d="M68.09,0l-5.7,20.52h-10.23L57.83,0h10.26Z" />
@@ -21,15 +22,6 @@ export function LogoTulisan({ className, title = "DriveTech" }: Props) {
     <path d="M161.45,12.54l1.25-4.57h-21.73v-.53l-3.62,13.08h21.9l1.5-5.49h-11.61l.67-2.49h11.64ZM143.03,0l-1.51,5.48h21.88L164.93,0h-21.9Z" />
     <path d="M161.31,20.52l5.67-20.52h23.48l-2.45,8.88h-10.73l.95-3.4h-2.52l-2.62,9.56h2.49l1.02-3.64h10.7l-1.58,5.8-4.57,3.31h-19.85Z" />
     <path d="M192.52,0h10.73l-2.23,7.97h2.52l2.2-7.97h10.73l-5.67,20.52h-10.73l2.2-7.97h-2.49l-2.2,7.97h-10.73l5.67-20.52Z" />
-    <path d="M219.19,9.33l2.54-9.17h9.79l-.68,2.45h-5.2l-.3,1.11h5.19l-.56,2.04h-5.2l-.3,1.11h5.19l-.67,2.45h-9.79Z" />
-    <path d="M234.6.15l-2.77,2.16-1.94,7.01h4.8l.67-2.45h1.13l-.69,2.45h4.8l2.54-9.17h-8.54ZM237.48,3.23c-.07.24-.13.48-.19.71-.07.26-.15.53-.22.8h-1.11l.59-2.14h1.11c-.05.18-.11.39-.18.63Z" />
-    <polygon points="234.6 .15 231.83 2.32 232.43 .15 234.6 .15" />
-    <path d="M247.97,2.6l-.31,1.11h5.71l-1.13,4.13-2.04,1.48h-8.68l.68-2.44h5.71l.3-1.13h-5.7l1.13-4.08,2.05-1.53h8.66l-.67,2.45h-5.71Z" />
-    <path d="M254.59,2.6l.68-2.45h9.47l-.67,2.45h-1.85l-1.85,6.72h-5.81l1.85-6.72h-1.83Z" />
-    <path d="M229.28,10.91h4.78l-2.12,7.69-2.04,1.48h-7.85l.67-2.45h4.69l1.87-6.72Z" />
-    <path d="M234.98,10.91h10.71l-2.54,9.17h-4.8l.68-2.45h-1.13l-.67,2.45h-4.8l2.54-9.17ZM239.62,15.5c.07-.27.15-.54.22-.8.06-.23.12-.46.19-.71.07-.24.13-.45.18-.63h-1.11l-.59,2.14h1.11Z" />
-    <path d="M246.64,10.91h4.8l-1.55,5.61h1.13l1.54-5.61h4.8l-1.55,5.61-4.85,3.56h-2.95l-2.91-3.56,1.55-5.61Z" />
-    <path d="M258.26,10.91h10.71l-2.54,9.17h-4.8l.68-2.45h-1.13l-.67,2.45h-4.8l2.54-9.17ZM262.91,15.5c.07-.27.15-.54.22-.8.06-.23.12-.46.19-.71.07-.24.13-.45.18-.63h-1.11l-.59,2.14h1.11Z" />
     </svg>
   );
 }
@@ -52,14 +44,6 @@ const BENTUK_TECH = (
   <polygon points="119.2 71.57 142.04 71.57 144.49 62.4 122.15 62.4 121.71 62.4 101.86 62.4 101.86 61.29 94.76 87.57 137.73 87.57 140.67 76.57 117.88 76.57 119.2 71.57" />
   <polygon points="171.78 69.28 169.78 76.57 164.89 76.57 170.03 57.39 174.98 57.39 173.11 64.22 194.17 64.22 198.97 46.39 152.89 46.39 141.76 87.57 180.71 87.57 189.68 80.93 192.78 69.28 171.78 69.28" />
   <polygon points="228.94 46.39 224.63 62.4 219.68 62.4 224.05 46.39 203 46.39 191.87 87.57 212.93 87.57 217.24 71.57 222.13 71.57 217.82 87.57 238.87 87.57 250 46.39 228.94 46.39" />
-  <polygon points="11.44 56.27 5.76 56.27 6.09 55.02 11.78 55.02 12.39 52.73 6.72 52.73 7.04 51.49 12.74 51.49 13.48 48.75 2.77 48.75 0 59.01 10.71 59.01 11.44 56.27" />
-  <path d="M23.42,59.01l2.77-10.26h-9.34l-3.03,2.42-2.12,7.84h5.25l.73-2.74h1.23l-.75,2.74h5.25ZM18.34,53.88l.64-2.39h1.22c-.05.2-.12.43-.19.71s-.14.54-.21.79c-.08.3-.16.59-.24.89h-1.22Z" />
-  <polygon points="37.73 51.49 38.46 48.75 28.99 48.75 26.74 50.46 25.51 55.02 31.75 55.02 31.42 56.28 25.17 56.28 24.43 59.01 33.91 59.01 36.15 57.35 37.39 52.73 31.14 52.73 31.48 51.49 37.73 51.49" />
-  <polygon points="45.05 59.01 47.08 51.49 49.1 51.49 49.83 48.75 39.47 48.75 38.72 51.49 40.73 51.49 38.7 59.01 45.05 59.01" />
-  <polygon points="11.03 60.78 8.99 68.3 3.86 68.3 3.13 71.04 11.72 71.04 13.95 69.39 16.27 60.78 11.03 60.78" />
-  <path d="M17.27,60.78l-2.77,10.26h5.25l.73-2.74h1.23l-.75,2.74h5.25l2.77-10.26h-11.71ZM22.8,64.23c-.08.27-.14.54-.21.79-.08.29-.16.59-.24.89h-1.22l.64-2.39h1.22c-.05.2-.12.43-.19.7Z" />
-  <polygon points="41.74 60.78 36.49 60.78 34.81 67.06 33.57 67.06 35.27 60.78 30.03 60.78 28.33 67.06 31.51 71.04 34.74 71.04 40.04 67.06 41.74 60.78" />
-  <path d="M39.97,71.04h5.25l.73-2.74h1.23l-.75,2.74h5.25l2.77-10.26h-11.71l-2.77,10.26ZM47.24,63.52h1.22c-.05.2-.12.43-.19.7-.08.27-.15.54-.21.79-.08.29-.16.59-.24.89h-1.22l.64-2.39Z" />
   </>
 );
 
@@ -72,7 +56,7 @@ export function LogoBarisDrive({ className }: { className?: string }) {
   );
 }
 
-/** Baris bawah logo primary: EAST JAVA + TECH. */
+/** Baris bawah logo primary: TECH. */
 export function LogoBarisTech({ className }: { className?: string }) {
   return (
     <svg viewBox="0 46.27 250 41.42" fill="currentColor" aria-hidden="true" className={className}>
@@ -94,7 +78,7 @@ export function LogoIkon({ className }: { className?: string }) {
   );
 }
 
-/** Logo lengkap: ikon DT + DRIVE / EAST JAVA TECH bertumpuk, tagline opsional di bawahnya. */
+/** Logo lengkap: ikon DT + DRIVE / TECH bertumpuk, tagline opsional di bawahnya. */
 export function LogoLengkap({ className, tagline = false }: { className?: string; tagline?: boolean }) {
   return (
     <span role="img" aria-label="DriveTech" className={`flex items-center gap-[0.35em] text-logo ${className ?? ""}`}>
