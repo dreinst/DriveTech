@@ -190,7 +190,9 @@ export default async function BerandaPage() {
           className="absolute inset-0 -z-10 hidden bg-white md:block md:[clip-path:polygon(68.8%_0,69.9%_0,51.9%_100%,50.8%_100%)]"
         />
 
-        <div className="mx-auto grid w-full max-w-[90rem] gap-6 px-4 pt-8 sm:px-8 md:min-h-[46rem] md:grid-cols-[1fr_17rem] md:content-between md:gap-8 md:pt-10 md:pb-10">
+        {/* Tinggi motor ikut lebar layar (lebar 30%, rasio 1100:978, kira-kira 27vw), jadi tinggi
+            minimum hero ikut membesar supaya motor selalu mendarat di bawah fakta singkat (27rem). */}
+        <div className="mx-auto grid w-full max-w-[90rem] gap-6 px-4 pt-8 sm:px-8 md:min-h-[max(46rem,calc(27rem+27.5vw))] md:grid-cols-[1fr_17rem] md:content-between md:gap-8 md:pt-10 md:pb-10">
           <div>
             <p className="label text-sm text-ink/70 sm:text-base">
               Phase 1 <span aria-hidden="true">/</span> 07 + 08 Nov 2026{" "}
