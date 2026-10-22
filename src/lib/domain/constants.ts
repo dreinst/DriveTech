@@ -28,7 +28,7 @@ export const EVENT_INFO = {
   organizer: "Panitia Drive Tech",
   /**
    * Kontak bantuan (WhatsApp) untuk kendala pemesanan dan urusan admin.
-   * Keputusan pemilik 9 Oktober 2026: bantuan hanya ke 9900, sponsor ke 474
+   * Sejak 22 Oktober 2026 bantuan dan sponsor sama-sama ke nomor kantor 9900
    * (lihat KONTAK_SPONSOR). Tautan bantuan memakai waHref() dengan WA_BANTUAN_TEXT.
    */
   contacts: [{ label: "WhatsApp", phone: "0822-3299-9900" }],
@@ -39,7 +39,7 @@ export const EVENT_INFO = {
 export type ContactInfo = (typeof EVENT_INFO.contacts)[number];
 
 /** Kontak khusus calon sponsor. Jangan dipakai untuk bantuan pemesanan. */
-export const KONTAK_SPONSOR = { label: "Panitia", phone: "0888-4089-474" } as const;
+export const KONTAK_SPONSOR = { label: "Panitia", phone: "0822-3299-9900" } as const;
 
 /**
  * Tanggal gelaran Musim 1 (ISO "YYYY-MM-DD") — cermin seed.sql & migrasi
