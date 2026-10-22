@@ -190,9 +190,10 @@ export default async function BerandaPage() {
           className="absolute inset-0 -z-10 hidden bg-white md:block md:[clip-path:polygon(68.8%_0,69.9%_0,51.9%_100%,50.8%_100%)]"
         />
 
-        {/* Desktop: logo, fakta singkat sebaris, lalu paragraf, tanpa ruang kosong di antaranya.
-            Motor sendirian di bidang oranye; tinggi minimum ikut tinggi motor (kira-kira 27vw). */}
-        <div className="mx-auto grid w-full max-w-[90rem] gap-6 px-4 pt-8 sm:px-8 md:min-h-[max(40rem,calc(27.5vw+6rem))] md:content-start md:gap-y-10 md:pt-10 md:pb-12">
+        {/* Desktop: paragraf langsung di bawah logo. Fakta singkat di bidang oranye di atas motor;
+            di bawah xl fakta bertumpuk dan kolom 15rem menjaga logo tidak menabraknya. Tinggi
+            minimum cukup untuk fakta ditambah motor (kira-kira 27vw). */}
+        <div className="mx-auto grid w-full max-w-[90rem] gap-6 px-4 pt-8 sm:px-8 md:min-h-[max(38rem,calc(27.5vw+12rem))] md:grid-cols-[1fr_15rem] md:content-start xl:grid-cols-1 md:gap-y-8 md:pt-10 md:pb-12">
           <div>
             <p className="label text-sm text-ink/70 sm:text-base">
               Phase 1 <span aria-hidden="true">/</span> 07 + 08 Nov 2026{" "}
@@ -224,27 +225,27 @@ export default async function BerandaPage() {
             </picture>
           </div>
 
-          {/* Fakta singkat. Desktop: sebaris di bawah logo. Mobile: pita oranye miring di bawah. */}
-          <dl className="order-last -mx-4 flex gap-6 bg-accent px-4 pt-12 pb-7 text-[#0a0a0a] [clip-path:polygon(0_26%,100%_0,100%_100%,0_100%)] sm:-mx-8 sm:px-8 md:order-none md:mx-0 md:gap-10 md:bg-transparent md:p-0 md:text-ink md:[clip-path:none] xl:gap-14">
+          {/* Fakta singkat. Desktop: di bidang oranye di atas motor, sebaris mulai layar xl. Mobile: pita oranye miring di bawah. */}
+          <dl className="order-last -mx-4 flex gap-6 bg-accent px-4 pt-12 pb-7 text-[#0a0a0a] [clip-path:polygon(0_26%,100%_0,100%_100%,0_100%)] sm:-mx-8 sm:px-8 md:absolute md:top-[13%] md:right-[3.5%] md:order-none md:m-0 md:flex-col md:gap-4 md:bg-transparent md:p-0 md:[clip-path:none] xl:flex-row xl:gap-6 2xl:gap-10">
             <div>
-              <dd className="judul text-5xl md:text-6xl xl:text-7xl">
+              <dd className="judul text-5xl md:text-4xl xl:text-5xl 2xl:text-6xl">
                 <Hitung nilai={totalLapak} />
               </dd>
-              <dt className="label mt-1 text-xs md:text-sm">Lapak di {JUMLAH_AREA} area</dt>
+              <dt className="label mt-1 text-xs xl:max-w-[7.5rem] xl:leading-snug 2xl:max-w-none">Lapak di {JUMLAH_AREA} area</dt>
             </div>
             <div>
-              <dd className="judul text-5xl md:text-6xl xl:text-7xl">
+              <dd className="judul text-5xl md:text-4xl xl:text-5xl 2xl:text-6xl">
                 7 + 8
               </dd>
-              <dt className="label mt-1 text-xs md:text-sm">November 2026</dt>
+              <dt className="label mt-1 text-xs xl:max-w-[7.5rem] xl:leading-snug 2xl:max-w-none">November 2026</dt>
             </div>
             <div>
-              <dd className="judul text-5xl md:text-6xl xl:text-7xl">Gratis</dd>
-              <dt className="label mt-1 text-xs md:text-sm">Masuk untuk pengunjung</dt>
+              <dd className="judul text-5xl md:text-4xl xl:text-5xl 2xl:text-6xl">Gratis</dd>
+              <dt className="label mt-1 text-xs xl:max-w-[7.5rem] xl:leading-snug 2xl:max-w-none">Masuk untuk pengunjung</dt>
             </div>
           </dl>
 
-          <div className="anim-fade-up max-w-sm">
+          <div className="anim-fade-up max-w-sm md:col-start-1">
             <p className="text-base leading-relaxed text-ink/80">
               Sabtu dan Minggu, 7 dan 8 November, mobil dan motor baru maupun bekas kumpul di
               Kampung Tentara, Rest Area Singosari. Pengunjung masuk gratis. Punya unit yang mau dijual? Lapak
