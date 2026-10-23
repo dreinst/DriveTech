@@ -16,8 +16,8 @@ import type { ZoneType } from "@/lib/types/database";
  *
  * Jumlah lapak yang bisa dipesan: mobil baru 13 (Area A 1-10, Area C 11-13),
  * mobil bekas 20 (Area C), motor baru 8 (Area C), motor bekas 14 (Area C),
- * otomotif 16 (Area B), UMKM 37 (Area B 1-7, F 8-9, G 10-19, H 20-37).
- * Total 108. Deret motor bekas di Area E pada Figma tidak dijual (keputusan
+ * otomotif 16 (Area B), UMKM 9 (Area B 1-7, F 8-9). Total 80. Deret motor
+ * bekas Area E dan UMKM Area G serta H pada Figma tidak dijual (keputusan
  * 23 Oktober 2026).
  *
  * Catatan render:
@@ -45,7 +45,7 @@ export type LayoutSlot = Rect & {
   labelOrientation: LabelOrientation;
   /**
    * Derajat rotasi KOTAK (searah jarum jam) mengelilingi titik tengahnya,
-   * dipakai lapak UMKM Area G yang miring. Teks nomor
+   * dipakai lapak yang miring. Teks nomor
    * tetap tegak.
    */
   rotate?: number;
@@ -136,28 +136,6 @@ function deret(
   );
 }
 
-/**
- * Lapak miring: titik tengah dari bounding box Figma (pojok kiri atas bx, by,
- * ukuran bw x bh), kotak asli width x height diputar `rotate` derajat.
- */
-function miring(
-  zoneSlug: string,
-  slotNumber: number,
-  bbox: [number, number, number, number],
-  ukuran: { width: number; height: number },
-  rotate: number,
-): LayoutSlot {
-  const [bx, by, bw, bh] = bbox;
-  const cx = bx + bw / 2;
-  const cy = by + bh / 2;
-  return numberedSlot(
-    zoneSlug,
-    slotNumber,
-    kotak(cx - ukuran.width / 2, cy - ukuran.height / 2, ukuran.width, ukuran.height),
-    rotate,
-  );
-}
-
 /* ---------- Mobil Baru: tenda 5 x 5 m, Area A 1-10 dan Area C 11-13 ---------- */
 
 const mobilBaruSlots: LayoutSlot[] = [
@@ -200,26 +178,12 @@ const mobilMotorSlots: LayoutSlot[] = deret(
   1,
 );
 
-/* ---------- UMKM: Area B 1-7, F 8-9, G 10-19 (miring), H 20-37 ---------- */
-
-const UMKM_G = { width: 28, height: 30 };
+/* ---------- UMKM: Area B 1-7, F 8-9 ---------- */
 
 const umkmSlots: LayoutSlot[] = [
   ...deret("umkm", 7, { x: 882.5, y: 634.5, width: 30, height: 30 }, { dx: 0, dy: 30 }, 1),
   numberedSlot("umkm", 8, kotak(753, 1651.5, 30, 30)),
   numberedSlot("umkm", 9, kotak(970, 1651.5, 30, 30)),
-  ...(
-    [
-      [2149.8, 1098.8], [2156.5, 1129], [2163.2, 1159.3], [2169.9, 1189.6], [2176.6, 1219.8],
-    ] as [number, number][]
-  ).map(([x, y], i) => miring("umkm", 10 + i, [x, y, 33.8, 35.3], UMKM_G, -12)),
-  ...(
-    [
-      [2157.1, 1255.3], [2130.3, 1270.9], [2103.5, 1286.5], [2076.7, 1302.1], [2049.9, 1317.7],
-    ] as [number, number][]
-  ).map(([x, y], i) => miring("umkm", 15 + i, [x, y, 40, 39.3], UMKM_G, 60)),
-  ...deret("umkm", 10, { x: 2157.1, y: 615.5, width: 30, height: 30 }, { dx: 0, dy: 30 }, 20),
-  ...deret("umkm", 8, { x: 2277.1, y: 675.5, width: 30, height: 30 }, { dx: 0, dy: 30 }, 30),
 ];
 
 /* ---------- Fasilitas & zona pendukung (TIDAK bisa dipesan) ---------- */
@@ -270,10 +234,7 @@ export const FLOOR_PLAN_ZONES: LayoutZone[] = [
   },
   {
     svgGroupId: "zone-umkm", name: "Area UMKM", zoneType: "umkm", accent: "#8f887b", container: null,
-    sections: [
-      { area: "B", nomorAwal: 1, nomorAkhir: 7 }, { area: "F", nomorAwal: 8, nomorAkhir: 9 },
-      { area: "G", nomorAwal: 10, nomorAkhir: 19 }, { area: "H", nomorAwal: 20, nomorAkhir: 37 },
-    ],
+    sections: [{ area: "B", nomorAwal: 1, nomorAkhir: 7 }, { area: "F", nomorAwal: 8, nomorAkhir: 9 }],
     slots: umkmSlots,
   },
   {
@@ -298,7 +259,7 @@ export const DECOR_STYLE: Record<DecorItem["kind"], { fill: string; stroke: stri
 export const FLOOR_PLAN_ANNOTATIONS: { x: number; y: number; text: string }[] = (
   [
     [1036, 391, "AREA A"], [928, 693, "AREA B"], [1089, 548, "AREA C"], [706, 450, "AREA D"],
-    [1101, 1176, "AREA E"], [754, 1232, "AREA F"], [2047, 1096, "AREA G"], [2108, 620, "AREA H"],
+    [1101, 1176, "AREA E"], [754, 1232, "AREA F"],
     [1366, 391, "GERBANG MASUK"],
   ] as [number, number, string][]
 ).map(([x, y, text]) => ({ x: x - ASAL, y: y - ASAL, text }));
@@ -320,7 +281,7 @@ export function findLayoutSlot(svgElementId: string): LayoutSlot | undefined {
   return SLOT_INDEX.get(svgElementId);
 }
 
-/** Total kotak di denah: 121 (108 bisa dipesan + 13 fasilitas). */
+/** Total kotak di denah: 93 (80 bisa dipesan + 13 fasilitas). */
 export function layoutSlotCount(): number {
   return SLOT_INDEX.size;
 }

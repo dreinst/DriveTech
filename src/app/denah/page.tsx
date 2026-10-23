@@ -17,7 +17,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Denah lokasi pameran",
-  description: `Denah lengkap ${EVENT_INFO.name} di Kampung Tentara, Rest Area Singosari, Malang: Area A mobil baru, Area B otomotif dan UMKM, Area C mobil bekas, motor bekas, dan dealer motor baru, Area D panggung dan slalom, Area E service dan ganti oli gratis, Area F, G, dan H UMKM, dan fasilitas umum.`,
+  description: `Denah lengkap ${EVENT_INFO.name} di Kampung Tentara, Rest Area Singosari, Malang: Area A mobil baru, Area B otomotif dan UMKM, Area C mobil bekas, motor bekas, dan dealer motor baru, Area D panggung dan slalom, Area E service dan ganti oli gratis, Area F playground dan UMKM, dan fasilitas umum.`,
   alternates: { canonical: "/denah" },
 };
 
@@ -60,7 +60,7 @@ export default async function DenahPage() {
     <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6">
       <PageHeader
         title="Denah Lokasi"
-        description={`Tata letak lengkap ${EVENT_INFO.name}, ${EVENT_INFO.location}: Area A mobil baru, Area B otomotif dan UMKM, Area C mobil bekas, motor bekas, dan dealer motor baru, Area D panggung dan slalom, Area E service dan ganti oli gratis, Area F, G, dan H UMKM, dan fasilitas umum. Gulir untuk zoom, seret untuk menggeser. Halaman ini hanya untuk melihat. Pemesanan dilakukan per zona lewat tombol Pesan Lapak.`}
+        description={`Tata letak lengkap ${EVENT_INFO.name}, ${EVENT_INFO.location}: Area A mobil baru, Area B otomotif dan UMKM, Area C mobil bekas, motor bekas, dan dealer motor baru, Area D panggung dan slalom, Area E service dan ganti oli gratis, Area F playground dan UMKM, dan fasilitas umum. Gulir untuk zoom, seret untuk menggeser. Halaman ini hanya untuk melihat. Pemesanan dilakukan per zona lewat tombol Pesan Lapak.`}
         backHref="/"
         backLabel="Beranda"
         action={

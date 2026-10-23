@@ -34,10 +34,9 @@ import {
   type SlotDateVerdict,
 } from "@/lib/domain/ketersediaan";
 import {
+  findLayoutSlot,
+  FLOOR_PLAN_VIEWBOX,
   FLOOR_PLAN_ZONES,
-  slotsInSection,
-  unionRect,
-  zoneBoundingRect,
   type LayoutZone,
   type Rect,
   type ZoneSection,
@@ -106,21 +105,6 @@ function layoutZoneFor(zone: ZoneWithSlots): LayoutZone | undefined {
     (zone.svg_group_id ? LAYOUT_BY_GROUP_ID.get(zone.svg_group_id) : undefined) ??
     LAYOUT_BY_TYPE.get(zone.zone_type)
   );
-}
-
-/**
- * Kotak target zoom sebuah zona: gabungan seluruh container-nya (zona UMKM
- * punya dua kolom terpisah), atau bounding box slotnya.
- */
-function zoneRectFor(zone: ZoneWithSlots): Rect | null {
-  const layout = layoutZoneFor(zone);
-  return layout ? zoneBoundingRect(layout) : null;
-}
-
-/** Kotak target zoom satu bagian zona (gabungan kotak lapak bernomor di rentang bagian itu). */
-function sectionRectFor(zone: ZoneWithSlots, section: ZoneSection): Rect | null {
-  const layout = layoutZoneFor(zone);
-  return layout ? unionRect(slotsInSection(layout, section)) : null;
 }
 
 function sectionLabel(section: ZoneSection): string {
@@ -280,8 +264,8 @@ function ZoneStep({ cards, onPick }: ZoneStepProps) {
       </div>
 
       <p className="mt-4 text-xs text-muted">
-        Setelah memilih zona atau areanya, peta terbuka langsung ter-zoom dan terkunci ke lapak
-        itu. Hanya slot yang dipilih yang bisa diketuk. Biaya admin dihitung per tanggal. Mau lihat tata
+        Setelah memilih zona atau areanya, denah tampil utuh dan hanya lapak pilihan itu yang
+        bisa diketuk. Peta otomatis memperbesar lapak yang Anda ketuk. Biaya admin dihitung per tanggal. Mau lihat tata
         letak seluruh area dulu?{" "}
         <Link
           href="/denah"
@@ -303,9 +287,9 @@ function InfoPanel({ stats }: { stats: VerdictStats }) {
     <div className="rounded-2xl border border-line bg-card p-6 shadow-[var(--shadow-sm)]">
       <h2 className="text-2xl font-semibold tracking-[-0.01em] text-ink">Tata Letak Lokasi</h2>
       <p className="mt-2 text-sm leading-relaxed text-muted">
-        Peta terkunci pada zona pilihanmu — hanya slot zona ini yang bisa diketuk. Ketuk slot
-        hijau untuk melihat tanggal yang masih kosong; mau pindah zona, kembali lewat tombol
-        &ldquo;Pilih Zona&rdquo;.
+        Denah tampil utuh. Hanya lapak zona pilihanmu yang bisa diketuk, dan peta otomatis
+        memperbesar lapak yang kamu ketuk untuk melihat tanggal yang masih kosong. Mau pindah
+        zona, kembali lewat tombol &ldquo;Pilih Zona&rdquo;.
       </p>
 
       <div className="mt-5 grid grid-cols-2 gap-3">
@@ -656,11 +640,22 @@ export function FloorPlanBoard({
     return layoutZoneFor(selectedZone)?.sections?.find((section) => section.area === area) ?? null;
   }, [selectedZone, area]);
 
-  // Rect target zoom stabil: bagian area terpilih, atau seluruh zona.
+  // Denah tampil utuh dan diam; peta baru zoom otomatis ke lapak yang diketuk,
+  // lalu kembali utuh saat panel lapak ditutup.
   const zoomTargetRect = useMemo<Rect | null>(() => {
     if (!selectedZone) return null;
-    return (selectedSection && sectionRectFor(selectedZone, selectedSection)) ?? zoneRectFor(selectedZone);
-  }, [selectedZone, selectedSection]);
+    const slot = selectedSlotId ? selectedZone.slots.find((item) => item.id === selectedSlotId) : undefined;
+    const layoutSlot = slot?.svg_element_id ? findLayoutSlot(slot.svg_element_id) : undefined;
+    if (!layoutSlot) return { x: 0, y: 0, width: FLOOR_PLAN_VIEWBOX.width, height: FLOOR_PLAN_VIEWBOX.height };
+    const width = Math.max(layoutSlot.width * 6, 360);
+    const height = Math.max(layoutSlot.height * 6, 260);
+    return {
+      x: layoutSlot.x + layoutSlot.width / 2 - width / 2,
+      y: layoutSlot.y + layoutSlot.height / 2 - height / 2,
+      width,
+      height,
+    };
+  }, [selectedZone, selectedSlotId]);
 
   // Pembatas peta terkunci: hanya slot milik zona terpilih (baris DB) yang bisa
   // diklik; slot & container zona lain diredupkan oleh FloorPlan.
