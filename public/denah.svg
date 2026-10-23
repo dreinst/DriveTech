@@ -594,6 +594,10 @@
     <text x="845.8" y="905" fill="#ffffff" font-size="11" font-weight="700" text-anchor="middle" dominant-baseline="middle">AREA E</text>
     <rect x="474" y="952" width="49.6" height="17" fill="#0a0a0a"/>
     <text x="498.8" y="961" fill="#ffffff" font-size="11" font-weight="700" text-anchor="middle" dominant-baseline="middle">AREA F</text>
+    <rect x="1767" y="816" width="49.6" height="17" fill="#0a0a0a"/>
+    <text x="1791.8" y="825" fill="#ffffff" font-size="11" font-weight="700" text-anchor="middle" dominant-baseline="middle">AREA G</text>
+    <rect x="1828" y="340" width="49.6" height="17" fill="#0a0a0a"/>
+    <text x="1852.8" y="349" fill="#ffffff" font-size="11" font-weight="700" text-anchor="middle" dominant-baseline="middle">AREA H</text>
     <rect x="1086" y="111" width="95.8" height="17" fill="#0a0a0a"/>
     <text x="1133.9" y="120" fill="#ffffff" font-size="11" font-weight="700" text-anchor="middle" dominant-baseline="middle">GERBANG MASUK</text>
   </g>

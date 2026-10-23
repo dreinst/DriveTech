@@ -259,7 +259,7 @@ export const DECOR_STYLE: Record<DecorItem["kind"], { fill: string; stroke: stri
 export const FLOOR_PLAN_ANNOTATIONS: { x: number; y: number; text: string }[] = (
   [
     [1036, 391, "AREA A"], [928, 693, "AREA B"], [1089, 548, "AREA C"], [706, 450, "AREA D"],
-    [1101, 1176, "AREA E"], [754, 1232, "AREA F"],
+    [1101, 1176, "AREA E"], [754, 1232, "AREA F"], [2047, 1096, "AREA G"], [2108, 620, "AREA H"],
     [1366, 391, "GERBANG MASUK"],
   ] as [number, number, string][]
 ).map(([x, y, text]) => ({ x: x - ASAL, y: y - ASAL, text }));
