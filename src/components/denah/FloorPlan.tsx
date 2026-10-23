@@ -396,7 +396,7 @@ export function FloorPlan({
       <desc>
         Denah interaktif DriveTech di Kampung Tentara, Rest Area Singosari: Area A mobil baru, Area B
         otomotif dan UMKM, Area C mobil bekas, motor bekas, mobil baru, dan dealer motor baru, Area D
-        panggung dan slalom, Area E motor bekas serta service dan ganti oli gratis, Area F, G, dan H
+        panggung dan slalom, Area E service dan ganti oli gratis, Area F, G, dan H
         UMKM. Kotak putih berarti lapak tersedia, oranye muda menunggu pembayaran, hitam sudah
         terisi, krem adalah fasilitas yang tidak disewakan online.
       </desc>

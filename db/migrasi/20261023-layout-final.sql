@@ -1,8 +1,9 @@
 -- =============================================================================
 -- Migrasi denah ke Layout Final 23 Oktober 2026 (Figma "Layout Konstrad").
--- Dari 153 lapak (Area A sampai H versi 9 Oktober) menjadi 136 lapak:
+-- Dari 153 lapak (Area A sampai H versi 9 Oktober) menjadi 108 lapak:
 --   mobil baru 10 -> 13, mobil bekas 60 -> 20, motor baru 5 -> 8,
---   motor bekas 20 -> 42, UMKM 43 -> 37, otomotif 15 -> 16.
+--   motor bekas 20 -> 14 (hanya Area C; deret Area E di Figma tidak dijual),
+--   UMKM 43 -> 37, otomotif 15 -> 16.
 -- Warung dihapus (tidak ada di Layout Final). Fasilitas diganti daftar baru.
 --
 -- Booking yang ada (mobil bekas 01-03, motor bekas 01-04) tetap di slotnya,
@@ -32,6 +33,7 @@ from public.slots s
 join public.zones z on z.id = s.zone_id
 where (z.svg_group_id = 'zone-mobil-bekas' and s.slot_number > 20)
    or (z.svg_group_id = 'zone-umkm' and s.slot_number > 37)
+   or (z.svg_group_id = 'zone-mobil-motor' and s.slot_number > 14)
    or z.svg_group_id in ('zone-warung', 'zone-fasilitas');
 
 do $$
@@ -57,7 +59,6 @@ select z.id, i, null, v.slug || lpad(i::text, 2, '0')
 from (values
   ('zone-mobil-baru', 'slot-mobil-baru-', 13),
   ('zone-motor-baru', 'slot-motor-baru-', 8),
-  ('zone-mobil-motor', 'slot-mobil-motor-', 42),
   ('zone-booth-khusus', 'slot-otomotif-', 16)
 ) as v(grup, slug, jumlah)
 join public.zones z on z.svg_group_id = v.grup
@@ -91,7 +92,7 @@ from (values
   ('zone-mobil-baru',   'Area A dan Area C, tenda pameran mobil baru 5 x 5 m, 13 lapak.', 1),
   ('zone-mobil-bekas',  'Area C, slot 4,5 x 2,5 m untuk perorangan dan dealer, 20 lapak.', 2),
   ('zone-motor-baru',   'Area C, tenda dealer motor baru 3 x 3 m, 8 lapak.', 3),
-  ('zone-mobil-motor',  'Area C dan Area E, pameran motor bekas, 42 lapak.', 4),
+  ('zone-mobil-motor',  'Area C, pameran motor bekas, 14 lapak.', 4),
   ('zone-umkm',         'Area B, F, G, dan H, tenant UMKM 3 x 3 m, 37 lapak.', 5),
   ('zone-booth-khusus', 'Area B, tenant otomotif 3 x 3 m, 16 lapak.', 6),
   ('zone-fasilitas',    'Fasilitas non-sewa: tampil di denah tetapi tidak bisa dibooking.', 7)
@@ -103,7 +104,7 @@ do $$
 declare n int;
 begin
   select count(*) into n from public.slots s join public.zones z on z.id = s.zone_id where z.zone_type <> 'facility';
-  if n <> 136 then raise exception 'Jumlah lapak bisa dipesan % (seharusnya 136)', n; end if;
+  if n <> 108 then raise exception 'Jumlah lapak bisa dipesan % (seharusnya 108)', n; end if;
   select count(*) into n from public.slots s join public.zones z on z.id = s.zone_id where z.zone_type = 'facility';
   if n <> 13 then raise exception 'Jumlah fasilitas % (seharusnya 13)', n; end if;
 end $$;

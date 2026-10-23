@@ -15,9 +15,10 @@ import type { ZoneType } from "@/lib/types/database";
  * (db/seed.sql).
  *
  * Jumlah lapak yang bisa dipesan: mobil baru 13 (Area A 1-10, Area C 11-13),
- * mobil bekas 20 (Area C), motor baru 8 (Area C), motor bekas 42 (Area C 1-14,
- * Area E 15-42), otomotif 16 (Area B), UMKM 37 (Area B 1-7, F 8-9, G 10-19,
- * H 20-37). Total 136.
+ * mobil bekas 20 (Area C), motor baru 8 (Area C), motor bekas 14 (Area C),
+ * otomotif 16 (Area B), UMKM 37 (Area B 1-7, F 8-9, G 10-19, H 20-37).
+ * Total 108. Deret motor bekas di Area E pada Figma tidak dijual (keputusan
+ * 23 Oktober 2026).
  *
  * Catatan render:
  * - `label` adalah teks di dalam kotak. Zona bernomor berisi angka lapak,
@@ -44,7 +45,7 @@ export type LayoutSlot = Rect & {
   labelOrientation: LabelOrientation;
   /**
    * Derajat rotasi KOTAK (searah jarum jam) mengelilingi titik tengahnya,
-   * dipakai lapak yang miring (UMKM Area G, motor bekas Area E). Teks nomor
+   * dipakai lapak UMKM Area G yang miring. Teks nomor
    * tetap tegak.
    */
   rotate?: number;
@@ -189,21 +190,15 @@ const motorBaruSlots: LayoutSlot[] = deret(
   1,
 );
 
-/* ---------- Motor Bekas: Area C 1-14 (satu kolom), Area E 15-42 (miring 45 derajat) ---------- */
+/* ---------- Motor Bekas: Area C, satu kolom 14 lapak ---------- */
 
-const MOTOR_E = { width: 11, height: 24 };
-const motorEKolom = (x: number, y0: number, awal: number, rotate: number) =>
-  Array.from({ length: 7 }, (_, i) =>
-    miring("mobil-motor", awal + i, [x, y0 + i * 23.5, 23.7, 23.7], MOTOR_E, rotate),
-  );
-
-const mobilMotorSlots: LayoutSlot[] = [
-  ...deret("mobil-motor", 14, { x: 1040, y: 746.8, width: 24, height: 11 }, { dx: 0, dy: 12 }, 1),
-  ...motorEKolom(1101.5, 1276.8, 15, 45),
-  ...motorEKolom(1159.8, 1276.8, 22, -45),
-  ...motorEKolom(1101.5, 1472.8, 29, 45),
-  ...motorEKolom(1159.8, 1472.8, 36, -45),
-];
+const mobilMotorSlots: LayoutSlot[] = deret(
+  "mobil-motor",
+  14,
+  { x: 1040, y: 746.8, width: 24, height: 11.5 },
+  { dx: 0, dy: 12 },
+  1,
+);
 
 /* ---------- UMKM: Area B 1-7, F 8-9, G 10-19 (miring), H 20-37 ---------- */
 
@@ -270,7 +265,7 @@ export const FLOOR_PLAN_ZONES: LayoutZone[] = [
   },
   {
     svgGroupId: "zone-mobil-motor", name: "Area Motor Bekas", zoneType: "mobil_motor_bekas", accent: "#ffc892", container: null,
-    sections: [{ area: "C", nomorAwal: 1, nomorAkhir: 14 }, { area: "E", nomorAwal: 15, nomorAkhir: 42 }],
+    sections: [{ area: "C", nomorAwal: 1, nomorAkhir: 14 }],
     slots: mobilMotorSlots,
   },
   {
@@ -325,7 +320,7 @@ export function findLayoutSlot(svgElementId: string): LayoutSlot | undefined {
   return SLOT_INDEX.get(svgElementId);
 }
 
-/** Total kotak di denah: 149 (136 bisa dipesan + 13 fasilitas). */
+/** Total kotak di denah: 121 (108 bisa dipesan + 13 fasilitas). */
 export function layoutSlotCount(): number {
   return SLOT_INDEX.size;
 }

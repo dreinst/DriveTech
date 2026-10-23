@@ -5,9 +5,9 @@
 -- (23 Oktober 2026), sama dengan src/lib/domain/layout.ts.
 --
 -- Total baris slots = 13 (mobil baru) + 20 (mobil bekas) + 8 (motor baru)
---                   + 42 (motor bekas) + 37 (UMKM) + 16 (otomotif)
---                   + 13 (fasilitas) = 149 baris.
--- Yang bisa dibooking = 136 (semua kecuali 13 fasilitas).
+--                   + 14 (motor bekas) + 37 (UMKM) + 16 (otomotif)
+--                   + 13 (fasilitas) = 121 baris.
+-- Yang bisa dibooking = 108 (semua kecuali 13 fasilitas).
 --
 -- Seluruh insert memakai "on conflict do nothing" / "where not exists"
 -- sehingga aman dijalankan berulang kali.
@@ -67,7 +67,7 @@ values
    'Area C, tenda dealer motor baru 3 x 3 m, 8 lapak.',                                           3),
   ('11111111-1111-4111-8111-111111111111', 'Area Motor Bekas',
    'mobil_motor_bekas', 'zone-mobil-motor',   25000,
-   'Area C dan Area E, pameran motor bekas, 42 lapak.',                                         4),
+   'Area C, pameran motor bekas, 14 lapak.',                                         4),
   ('11111111-1111-4111-8111-111111111111', 'Area UMKM',
    'umkm',              'zone-umkm',         250000,
    'Area B, F, G, dan H, tenant UMKM 3 x 3 m, 37 lapak.', 5),
@@ -80,7 +80,7 @@ values
 on conflict (svg_group_id) do nothing;
 
 -- -----------------------------------------------------------------------------
--- 3. Slot zona bernomor (generate_series) — 13 + 20 + 8 + 42 + 37 + 16 = 136 baris
+-- 3. Slot zona bernomor (generate_series) — 13 + 20 + 8 + 14 + 37 + 16 = 108 baris
 --    (Layout Final 23 Oktober 2026, Figma "Layout Konstrad")
 --    svg_element_id = 'slot-<zoneSlug>-<NN>' dengan NN dua digit mulai 01.
 -- -----------------------------------------------------------------------------
@@ -109,11 +109,11 @@ cross join generate_series(1, 8) as i
 where z.svg_group_id = 'zone-motor-baru'
 on conflict (svg_element_id) do nothing;
 
--- 3c. zone-mobil-motor : slot 1..42 -> slot-mobil-motor-01 .. slot-mobil-motor-42 (Area C 1-14, Area E 15-42)
+-- 3c. zone-mobil-motor : slot 1..14 -> slot-mobil-motor-01 .. slot-mobil-motor-14 (Area C)
 insert into public.slots (zone_id, slot_number, slot_label, svg_element_id)
 select z.id, i, null, 'slot-mobil-motor-' || lpad(i::text, 2, '0')
 from public.zones z
-cross join generate_series(1, 42) as i
+cross join generate_series(1, 14) as i
 where z.svg_group_id = 'zone-mobil-motor'
 on conflict (svg_element_id) do nothing;
 
@@ -190,10 +190,10 @@ where not exists (
 --     zone-fasilitas    13
 --     zone-mobil-baru   13
 --     zone-mobil-bekas  20
---     zone-mobil-motor  42
+--     zone-mobil-motor  14
 --     zone-motor-baru    8
 --     zone-umkm         37
---   Total 149 baris; 136 di antaranya bisa dibooking (semua kecuali fasilitas).
+--   Total 121 baris; 108 di antaranya bisa dibooking (semua kecuali fasilitas).
 -- -----------------------------------------------------------------------------
 
 -- =============================================================================
