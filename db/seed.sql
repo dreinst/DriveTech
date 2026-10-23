@@ -1,15 +1,13 @@
 -- =============================================================================
 -- Drive Tech — Data Awal (seed)
 -- =============================================================================
--- Sumber kebenaran inventaris: gambar denah "layout-venue.jpeg" di root
--- proyek. Di mana pun gambar berbeda dari "Sistem Pameran Arsitektur.md",
--- GAMBAR YANG MENANG. Perbedaan yang diketahui:
---   * Warung  : 12 unit di gambar (dokumen menulis "~9")
---   * Fasilitas: 8 unit di gambar (dokumen menyebut 6)
+-- Sumber kebenaran inventaris: Figma "Layout Konstrad" frame "Layout Final"
+-- (23 Oktober 2026), sama dengan src/lib/domain/layout.ts.
 --
--- Total baris slots = 10 (mobil baru) + 30 (mobil bekas) + 14 (mobil & motor)
---                   + 30 (UMKM) + 12 (warung) + 8 (fasilitas) = 104 baris.
--- Yang bisa dibooking = 96 (semua kecuali 8 fasilitas).
+-- Total baris slots = 13 (mobil baru) + 20 (mobil bekas) + 8 (motor baru)
+--                   + 42 (motor bekas) + 37 (UMKM) + 16 (otomotif)
+--                   + 13 (fasilitas) = 149 baris.
+-- Yang bisa dibooking = 136 (semua kecuali 13 fasilitas).
 --
 -- Seluruh insert memakai "on conflict do nothing" / "where not exists"
 -- sehingga aman dijalankan berulang kali.
@@ -54,115 +52,88 @@ from (values
 on conflict (event_date) do nothing;
 
 -- -----------------------------------------------------------------------------
--- 2. Zona (8 zona) — nama sesuai Deck v4 slide 7, admin_fee flat per zona (rupiah)
+-- 2. Zona (7 zona) — nama sesuai Deck v4 slide 7, admin_fee flat per zona (rupiah)
 -- -----------------------------------------------------------------------------
 insert into public.zones (event_id, name, zone_type, svg_group_id, admin_fee, description, display_order)
 values
   ('11111111-1111-4111-8111-111111111111', 'Area Mobil Baru',
    'mobil_baru',        'zone-mobil-baru',  1000000,
-   'Area A, tenda pameran mobil baru di dekat gerbang masuk, 10 lapak.',                                    1),
+   'Area A dan Area C, tenda pameran mobil baru 5 x 5 m, 13 lapak.',                                    1),
   ('11111111-1111-4111-8111-111111111111', 'Area Mobil Bekas',
    'mobil_bekas',       'zone-mobil-bekas',   50000,
-   'Area B, C, dan D, terbuka untuk perorangan dan dealer, 60 lapak.',            2),
+   'Area C, slot 4,5 x 2,5 m untuk perorangan dan dealer, 20 lapak.',            2),
   ('11111111-1111-4111-8111-111111111111', 'Area Motor Baru',
    'motor_baru',        'zone-motor-baru',   500000,
-   'Area E, tenda pameran motor baru, 5 lapak.',                                           3),
+   'Area C, tenda dealer motor baru 3 x 3 m, 8 lapak.',                                           3),
   ('11111111-1111-4111-8111-111111111111', 'Area Motor Bekas',
    'mobil_motor_bekas', 'zone-mobil-motor',   25000,
-   'Area E, pameran motor bekas, 20 lapak.',                                         4),
+   'Area C dan Area E, pameran motor bekas, 42 lapak.',                                         4),
   ('11111111-1111-4111-8111-111111111111', 'Area UMKM',
    'umkm',              'zone-umkm',         250000,
-   'Area F, G, dan H, tenant UMKM, 43 lapak.', 5),
+   'Area B, F, G, dan H, tenant UMKM 3 x 3 m, 37 lapak.', 5),
   ('11111111-1111-4111-8111-111111111111', 'Area Otomotif',
    'booth_khusus',      'zone-booth-khusus', 500000,
-   'Area D, di tengah pameran mobil bekas, 15 lapak.', 6),
-  ('11111111-1111-4111-8111-111111111111', 'Warung',
-   'warung',            'zone-warung',       500000,
-   'Unit warung/kuliner, 12 unit termasuk unit bernama.',                                 7),
+   'Area B, tenant otomotif 3 x 3 m, 16 lapak.', 6),
   ('11111111-1111-4111-8111-111111111111', 'Fasilitas Umum',
    'facility',          'zone-fasilitas',          0,
-   'Fasilitas non-sewa: tampil di denah tetapi tidak bisa dibooking.',                    8)
+   'Fasilitas non-sewa: tampil di denah tetapi tidak bisa dibooking.',                    7)
 on conflict (svg_group_id) do nothing;
 
 -- -----------------------------------------------------------------------------
--- 3. Slot zona bernomor (generate_series) — 10 + 60 + 5 + 20 + 43 + 15 = 153 baris
+-- 3. Slot zona bernomor (generate_series) — 13 + 20 + 8 + 42 + 37 + 16 = 136 baris
+--    (Layout Final 23 Oktober 2026, Figma "Layout Konstrad")
 --    svg_element_id = 'slot-<zoneSlug>-<NN>' dengan NN dua digit mulai 01.
 -- -----------------------------------------------------------------------------
 
--- 3a. zone-mobil-baru : slot 1..10  -> slot-mobil-baru-01 .. slot-mobil-baru-10
+-- 3a. zone-mobil-baru : slot 1..13  -> slot-mobil-baru-01 .. slot-mobil-baru-13 (Area A 1-10, Area C 11-13)
 insert into public.slots (zone_id, slot_number, slot_label, svg_element_id)
 select z.id, i, null, 'slot-mobil-baru-' || lpad(i::text, 2, '0')
 from public.zones z
-cross join generate_series(1, 10) as i
+cross join generate_series(1, 13) as i
 where z.svg_group_id = 'zone-mobil-baru'
 on conflict (svg_element_id) do nothing;
 
--- 3b. zone-mobil-bekas : slot 1..60 -> slot-mobil-bekas-01 .. slot-mobil-bekas-60
+-- 3b. zone-mobil-bekas : slot 1..20 -> slot-mobil-bekas-01 .. slot-mobil-bekas-20 (Area C)
 insert into public.slots (zone_id, slot_number, slot_label, svg_element_id)
 select z.id, i, null, 'slot-mobil-bekas-' || lpad(i::text, 2, '0')
 from public.zones z
-cross join generate_series(1, 60) as i
+cross join generate_series(1, 20) as i
 where z.svg_group_id = 'zone-mobil-bekas'
 on conflict (svg_element_id) do nothing;
 
--- 3c0. zone-motor-baru : slot 1..5 -> slot-motor-baru-01 .. slot-motor-baru-05
---      (4 + 8 mengikuti gambar Layout v2, keputusan pemilik 2026-09-03)
+-- 3c0. zone-motor-baru : slot 1..8 -> slot-motor-baru-01 .. slot-motor-baru-08 (Area C, tenda dealer)
 insert into public.slots (zone_id, slot_number, slot_label, svg_element_id)
 select z.id, i, null, 'slot-motor-baru-' || lpad(i::text, 2, '0')
 from public.zones z
-cross join generate_series(1, 5) as i
+cross join generate_series(1, 8) as i
 where z.svg_group_id = 'zone-motor-baru'
 on conflict (svg_element_id) do nothing;
 
--- 3c. zone-mobil-motor : slot 1..20 -> slot-mobil-motor-01 .. slot-mobil-motor-20
+-- 3c. zone-mobil-motor : slot 1..42 -> slot-mobil-motor-01 .. slot-mobil-motor-42 (Area C 1-14, Area E 15-42)
 insert into public.slots (zone_id, slot_number, slot_label, svg_element_id)
 select z.id, i, null, 'slot-mobil-motor-' || lpad(i::text, 2, '0')
 from public.zones z
-cross join generate_series(1, 20) as i
+cross join generate_series(1, 42) as i
 where z.svg_group_id = 'zone-mobil-motor'
 on conflict (svg_element_id) do nothing;
 
--- 3d. zone-umkm : slot 1..43 -> slot-umkm-01 .. slot-umkm-43 (Area F, G, H)
+-- 3d. zone-umkm : slot 1..37 -> slot-umkm-01 .. slot-umkm-37 (Area B 1-7, F 8-9, G 10-19, H 20-37)
 insert into public.slots (zone_id, slot_number, slot_label, svg_element_id)
 select z.id, i, null, 'slot-umkm-' || lpad(i::text, 2, '0')
 from public.zones z
-cross join generate_series(1, 43) as i
+cross join generate_series(1, 37) as i
 where z.svg_group_id = 'zone-umkm'
 on conflict (svg_element_id) do nothing;
 
--- 3e. zone-booth-khusus (Area Otomotif) : slot 1..15 -> slot-otomotif-01 .. slot-otomotif-15
+-- 3e. zone-booth-khusus (Area Otomotif) : slot 1..16 -> slot-otomotif-01 .. slot-otomotif-16 (Area B)
 insert into public.slots (zone_id, slot_number, slot_label, svg_element_id)
 select z.id, i, null, 'slot-otomotif-' || lpad(i::text, 2, '0')
 from public.zones z
-cross join generate_series(1, 15) as i
+cross join generate_series(1, 16) as i
 where z.svg_group_id = 'zone-booth-khusus'
 on conflict (svg_element_id) do nothing;
 
--- -----------------------------------------------------------------------------
--- 4. Warung — 12 unit, ditulis eksplisit sesuai urutan pada denah.
---    KEPUTUSAN: di gambar hanya dua unit yang bernama (Warmindo dan
---    "Warung Sate & Gule"); sepuluh kotak "WARUNG" polos lainnya KITA beri
---    nomor 1..10 supaya bisa dibooking lewat sistem.
--- -----------------------------------------------------------------------------
-insert into public.slots (zone_id, slot_number, slot_label, svg_element_id)
-select z.id, v.slot_number, v.slot_label, v.svg_element_id
-from public.zones z
-cross join (values
-  (null::int, 'Warmindo'::text,            'slot-warung-warmindo'::text),
-  (1,          'Warung 1',                 'slot-warung-01'),
-  (2,          'Warung 2',                 'slot-warung-02'),
-  (3,          'Warung 3',                 'slot-warung-03'),
-  (4,          'Warung 4',                 'slot-warung-04'),
-  (5,          'Warung 5',                 'slot-warung-05'),
-  (6,          'Warung 6',                 'slot-warung-06'),
-  (7,          'Warung 7',                 'slot-warung-07'),
-  (8,          'Warung 8',                 'slot-warung-08'),
-  (9,          'Warung 9',                 'slot-warung-09'),
-  (10,         'Warung 10',                'slot-warung-10'),
-  (null,      'Warung Sate & Gule',        'slot-warung-sate-gule')
-) as v(slot_number, slot_label, svg_element_id)
-where z.svg_group_id = 'zone-warung'
-on conflict (svg_element_id) do nothing;
+-- 4. Warung: tidak ada di Layout Final 23 Oktober 2026, zona warung dihapus.
 
 -- -----------------------------------------------------------------------------
 -- 5. Fasilitas umum — 13 unit, slot_number NULL, TIDAK BISA DIBOOKING.
@@ -172,20 +143,19 @@ insert into public.slots (zone_id, slot_number, slot_label, svg_element_id)
 select z.id, null::int, v.slot_label, v.svg_element_id
 from public.zones z
 cross join (values
-  ('Sekretariat'::text, 'slot-fasilitas-kantor-sekretariat'::text),
-  ('Panggung',                                  'slot-fasilitas-stage-utama'),
-  ('Cuci Mobil & Motor',                    'slot-fasilitas-tempat-cuci'),
-  ('Area Zumba',                                   'slot-fasilitas-area-zumba'),
-  ('Mushola',                                     'slot-fasilitas-musholah'),
-  ('Lapangan Tembak',                              'slot-fasilitas-lapangan-tembak'),
-  ('Kolam Renang',                    'slot-fasilitas-kolam-renang'),
-  ('Kolam Pemancingan',                            'slot-fasilitas-kolam-pemancingan'),
-  -- Layout v2 (2026-09-02): hanya gambar di denah, tidak bisa dibooking
-  ('Tempat Gym',                                   'slot-fasilitas-tempat-gym'),
-  ('Layar LED',                                          'slot-fasilitas-led'),
-  ('Tenda VIP',                                    'slot-fasilitas-tenda-vip'),
-  ('Playground',                                  'slot-fasilitas-area-wahana'),
-  ('Toilet',                                       'slot-fasilitas-toilet')
+  ('Playground'::text,       'slot-fasilitas-playground'::text),
+  ('Parkir Mobil',            'slot-fasilitas-parkir-mobil'),
+  ('Parkir Mobil Bekas',      'slot-fasilitas-parkir-mobil-bekas'),
+  ('Parkir Motor Bekas',      'slot-fasilitas-parkir-motor-bekas'),
+  ('Area Slalom',             'slot-fasilitas-area-slalom'),
+  ('Mushola',                 'slot-fasilitas-mushola'),
+  ('Stage LED',               'slot-fasilitas-stage'),
+  ('Tenda VIP',               'slot-fasilitas-tenda-vip'),
+  ('Wahana',                  'slot-fasilitas-wahana'),
+  ('Photobooth',              'slot-fasilitas-photobooth'),
+  ('Service Gratis',          'slot-fasilitas-service-gratis'),
+  ('Ganti Oli Gratis',        'slot-fasilitas-ganti-oli'),
+  ('Gerbang',                 'slot-fasilitas-gerbang')
 ) as v(slot_label, svg_element_id)
 where z.svg_group_id = 'zone-fasilitas'
 on conflict (svg_element_id) do nothing;
@@ -216,13 +186,14 @@ where not exists (
 --   group by z.svg_group_id order by z.svg_group_id;
 --
 --   Hasil yang diharapkan:
---     zone-fasilitas    8
---     zone-mobil-baru  10
---     zone-mobil-bekas 30
---     zone-mobil-motor 14
---     zone-umkm        30
---     zone-warung      12
---   Total 104 baris; 96 di antaranya bisa dibooking (semua kecuali fasilitas).
+--     zone-booth-khusus 16
+--     zone-fasilitas    13
+--     zone-mobil-baru   13
+--     zone-mobil-bekas  20
+--     zone-mobil-motor  42
+--     zone-motor-baru    8
+--     zone-umkm         37
+--   Total 149 baris; 136 di antaranya bisa dibooking (semua kecuali fasilitas).
 -- -----------------------------------------------------------------------------
 
 -- =============================================================================

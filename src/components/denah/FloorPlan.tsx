@@ -5,6 +5,7 @@ import { useMemo, type CSSProperties, type KeyboardEvent } from "react";
 import { isBookableZoneType, SLOT_SELECTED_STYLE, SLOT_STATUS_STYLE } from "@/lib/domain/constants";
 import type { SlotDateVerdict } from "@/lib/domain/ketersediaan";
 import { SLOT_LEGEND_LABEL } from "@/lib/domain/labels";
+import { DENAH_DASAR_PATH } from "@/lib/domain/denah-dasar";
 import {
   DECOR_STYLE,
   FLOOR_PLAN_ANNOTATIONS,
@@ -167,15 +168,15 @@ function Decor({ item }: { item: DecorItem }) {
 /* ---------- Sub-komponen: label area (kotak hitam, teks putih) ---------- */
 
 function AreaTag({ x, y, text }: { x: number; y: number; text: string }) {
-  const width = text.length * 8.2 + 14;
+  const width = text.length * 6.6 + 10;
   return (
     <g aria-hidden="true" style={{ pointerEvents: "none" }}>
-      <rect x={x} y={y} width={width} height={22} fill="#0a0a0a" />
+      <rect x={x} y={y} width={width} height={17} fill="#0a0a0a" />
       <text
         x={x + width / 2}
-        y={y + 12}
+        y={y + 9}
         fill="#ffffff"
-        fontSize={14}
+        fontSize={11}
         fontWeight={700}
         fontStyle="italic"
         letterSpacing={1}
@@ -393,17 +394,20 @@ export function FloorPlan({
     >
       <title>Denah lokasi pameran</title>
       <desc>
-        Denah interaktif DriveTech di Kampung Tentara, Rest Area Singosari: Area A mobil baru, Area B, C,
-        dan D mobil bekas serta otomotif, Area E motor baru dan motor bekas, Area F, G, dan H UMKM,
-        deretan warung, dan fasilitas umum. Kotak putih berarti lapak tersedia, oranye muda
-        menunggu pembayaran, hitam sudah terisi, krem adalah fasilitas dan warung yang tidak
-        disewakan online.
+        Denah interaktif DriveTech di Kampung Tentara, Rest Area Singosari: Area A mobil baru, Area B
+        otomotif dan UMKM, Area C mobil bekas, motor bekas, mobil baru, dan dealer motor baru, Area D
+        panggung dan slalom, Area E motor bekas serta service dan ganti oli gratis, Area F, G, dan H
+        UMKM. Kotak putih berarti lapak tersedia, oranye muda menunggu pembayaran, hitam sudah
+        terisi, krem adalah fasilitas yang tidak disewakan online.
       </desc>
 
       {/* (a) Batas lokasi */}
       <path d={FLOOR_PLAN_OUTLINE} fill="#ffffff" stroke="#0a0a0a" strokeWidth={2.5} />
 
-      {/* (b) Dekor: taman, bangunan, gerbang */}
+      {/* (b) Garis gedung, jalan, dan kolam dari DWG */}
+      <path d={DENAH_DASAR_PATH} fill="none" stroke="#9a948a" strokeWidth={1.2} aria-hidden="true" />
+
+      {/* (c) Dekor: taman, bangunan, gerbang */}
       {FLOOR_PLAN_DECOR.map((item) => (
         <Decor key={item.id} item={item} />
       ))}

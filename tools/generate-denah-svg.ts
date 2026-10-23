@@ -20,6 +20,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { isBookableZoneType, SLOT_STATUS_STYLE } from "../src/lib/domain/constants.ts";
+import { DENAH_DASAR_PATH } from "../src/lib/domain/denah-dasar.ts";
 import {
   DECOR_STYLE,
   FLOOR_PLAN_ANNOTATIONS,
@@ -154,9 +155,9 @@ A(
 );
 A('  <title id="denah-title">Denah Drive Tech, Kampung Tentara, Singosari, Malang</title>');
 A(
-  '  <desc id="denah-desc">Denah lokasi pameran: Area A mobil baru, Area B, C, dan D mobil bekas serta otomotif, ' +
-    'Area E motor baru dan motor bekas, Area F, G, dan H UMKM, deretan warung (belum dibuka untuk pemesanan online), ' +
-    'dan fasilitas umum. Setiap lapak punya id yang sama dengan kolom svg_element_id di database dan atribut ' +
+  '  <desc id="denah-desc">Denah lokasi pameran: Area A mobil baru, Area B otomotif dan UMKM, ' +
+    'Area C mobil bekas, motor bekas, mobil baru, dan dealer motor baru, Area D panggung dan slalom, ' +
+    'Area E motor bekas serta service dan ganti oli gratis, Area F, G, dan H UMKM, dan fasilitas umum. Setiap lapak punya id yang sama dengan kolom svg_element_id di database dan atribut ' +
     'data-status yang menentukan warnanya (available, pending, confirmed, facility). Lapak yang dapat disewa online ' +
     'adalah tautan menuju /booking/by-svg/&lt;id&gt; (atribut data-form berisi URL yang sama).</desc>',
 );
@@ -178,6 +179,7 @@ A(`  <style>
 A(`  <rect width="${W}" height="${H}" fill="#f2eee6"/>`);
 A(`  <path d="${FLOOR_PLAN_OUTLINE}" fill="#ffffff" stroke="#0a0a0a" stroke-width="2.5"/>`);
 
+A(`  <path d="${DENAH_DASAR_PATH}" fill="none" stroke="#9a948a" stroke-width="1.2" aria-hidden="true"/>`);
 A('  <g id="denah-dekor" aria-hidden="true" pointer-events="none">');
 for (const item of FLOOR_PLAN_DECOR) dekor(item);
 A("  </g>");
@@ -192,9 +194,9 @@ for (const zone of FLOOR_PLAN_ZONES) {
 
 A('  <g id="denah-anotasi" aria-hidden="true" pointer-events="none">');
 for (const ann of FLOOR_PLAN_ANNOTATIONS) {
-  const w = ann.text.length * 8.2 + 14;
-  A(`    <rect x="${g(ann.x)}" y="${g(ann.y)}" width="${g(w)}" height="22" fill="#0a0a0a"/>`);
-  A(`    <text x="${g(ann.x + w / 2)}" y="${g(ann.y + 12)}" fill="#ffffff" font-size="13" font-weight="700" text-anchor="middle" dominant-baseline="middle">${esc(ann.text)}</text>`);
+  const w = ann.text.length * 6.6 + 10;
+  A(`    <rect x="${g(ann.x)}" y="${g(ann.y)}" width="${g(w)}" height="17" fill="#0a0a0a"/>`);
+  A(`    <text x="${g(ann.x + w / 2)}" y="${g(ann.y + 9)}" fill="#ffffff" font-size="11" font-weight="700" text-anchor="middle" dominant-baseline="middle">${esc(ann.text)}</text>`);
 }
 A("  </g>");
 A(`  <!-- ${layoutSlotCount()} kotak, ${bookableCount} dapat disewa online. id tiap kotak = kolom svg_element_id di database. -->`);

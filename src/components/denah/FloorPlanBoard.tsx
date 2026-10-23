@@ -35,9 +35,12 @@ import {
 } from "@/lib/domain/ketersediaan";
 import {
   FLOOR_PLAN_ZONES,
+  slotsInSection,
+  unionRect,
   zoneBoundingRect,
   type LayoutZone,
   type Rect,
+  type ZoneSection,
 } from "@/lib/domain/layout";
 import { suggestAlternatives } from "@/lib/domain/suggestions";
 import type { SlotDetail, SlotStatus, ZoneType, ZoneWithSlots } from "@/lib/types/database";
@@ -114,6 +117,18 @@ function zoneRectFor(zone: ZoneWithSlots): Rect | null {
   return layout ? zoneBoundingRect(layout) : null;
 }
 
+/** Kotak target zoom satu bagian zona (gabungan kotak lapak bernomor di rentang bagian itu). */
+function sectionRectFor(zone: ZoneWithSlots, section: ZoneSection): Rect | null {
+  const layout = layoutZoneFor(zone);
+  return layout ? unionRect(slotsInSection(layout, section)) : null;
+}
+
+function sectionLabel(section: ZoneSection): string {
+  return section.nomorAwal === section.nomorAkhir
+    ? `Area ${section.area}, nomor ${section.nomorAwal}`
+    : `Area ${section.area}, nomor ${section.nomorAwal} sampai ${section.nomorAkhir}`;
+}
+
 function zoneAccentFor(zone: ZoneWithSlots): string {
   return layoutZoneFor(zone)?.accent ?? "#808080";
 }
@@ -153,11 +168,14 @@ type ZoneCardData = {
   hargaMulai: number;
   /** True bila ada slot dengan harga override berbeda -> tampilkan "mulai Rp X". */
   hargaBeragam: boolean;
+  /** Pembagian lapak zona per area denah, dengan hitungan slot kosong dari database. */
+  bagian: (ZoneSection & { available: number; total: number })[];
 };
 
 type ZoneStepProps = {
   cards: ZoneCardData[];
-  onPick: (zoneId: string) => void;
+  /** `area` null = seluruh zona; selain itu peta ter-zoom ke bagian area itu saja. */
+  onPick: (zoneId: string, area: string | null) => void;
 };
 
 function ZoneStep({ cards, onPick }: ZoneStepProps) {
@@ -170,17 +188,17 @@ function ZoneStep({ cards, onPick }: ZoneStepProps) {
       </p>
 
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
-        {cards.map(({ zone, accent, available, total, hargaMulai, hargaBeragam }) => {
+        {cards.map(({ zone, accent, available, total, hargaMulai, hargaBeragam, bagian }) => {
           const penuh = available === 0;
           const labelHarga = hargaBeragam
             ? `mulai ${formatRupiah(hargaMulai)}`
             : formatRupiah(hargaMulai);
           return (
+            <div key={zone.id} className="flex flex-col gap-2">
             <button
-              key={zone.id}
               type="button"
               disabled={penuh}
-              onClick={() => onPick(zone.id)}
+              onClick={() => onPick(zone.id, bagian.length === 1 ? bagian[0].area : null)}
               aria-label={
                 penuh
                   ? `${zone.name} — penuh di semua tanggal`
@@ -227,14 +245,43 @@ function ZoneStep({ cards, onPick }: ZoneStepProps) {
               >
                 {penuh ? "Penuh di semua tanggal" : `${available} dari ${total} tersedia`}
               </span>
+              {bagian.length === 1 ? (
+                <span className="text-xs text-muted">{sectionLabel(bagian[0])}</span>
+              ) : null}
             </button>
+            {bagian.length > 1 ? (
+              <div className="flex flex-wrap gap-1.5" role="group" aria-label={`Pilih area ${zone.name}`}>
+                {bagian.map((b) => (
+                  <button
+                    key={b.area}
+                    type="button"
+                    disabled={b.available === 0}
+                    onClick={() => onPick(zone.id, b.area)}
+                    aria-label={`${zone.name}, ${sectionLabel(b)}, ${b.available} dari ${b.total} tersedia. Buka peta area ini.`}
+                    className={cn(
+                      "rounded-none border px-2.5 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]",
+                      b.available === 0
+                        ? "border-line bg-surface-2 text-subtle"
+                        : "border-line bg-card text-ink hover:border-accent hover:text-accent",
+                    )}
+                  >
+                    Area {b.area}{" "}
+                    <span className="tabular text-muted">
+                      {b.nomorAwal === b.nomorAkhir ? b.nomorAwal : `${b.nomorAwal}-${b.nomorAkhir}`}
+                    </span>{" "}
+                    <span className={b.available === 0 ? "text-danger" : "text-ok"}>{b.available} kosong</span>
+                  </button>
+                ))}
+              </div>
+            ) : null}
+            </div>
           );
         })}
       </div>
 
       <p className="mt-4 text-xs text-muted">
-        Setelah memilih zona, peta terbuka langsung ter-zoom dan terkunci ke zona itu — hanya
-        slot zona tersebut yang bisa diketuk. Biaya admin dihitung per tanggal. Mau lihat tata
+        Setelah memilih zona atau areanya, peta terbuka langsung ter-zoom dan terkunci ke lapak
+        itu. Hanya slot yang dipilih yang bisa diketuk. Biaya admin dihitung per tanggal. Mau lihat tata
         letak seluruh area dulu?{" "}
         <Link
           href="/denah"
@@ -481,6 +528,8 @@ export function FloorPlanBoard({
 
   const [step, setStep] = useState<Step>("zona");
   const [zoneId, setZoneId] = useState<string | null>(null);
+  /** Area denah yang dipilih di dalam zona (null = seluruh zona). */
+  const [area, setArea] = useState<string | null>(null);
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
   /** Tanggal terpilih untuk slot yang sedang dibuka di panel (bukan global). */
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
@@ -554,8 +603,20 @@ export function FloorPlanBoard({
           for (const slot of zone.slots) {
             if ((verdicts.get(slot.id) ?? "available") === "available") available += 1;
           }
+          const sections = layoutZoneFor(zone)?.sections ?? [];
+          const bagian = sections.map((section) => {
+            const isi = zone.slots.filter(
+              (slot) =>
+                slot.slot_number !== null &&
+                slot.slot_number >= section.nomorAwal &&
+                slot.slot_number <= section.nomorAkhir,
+            );
+            const kosong = isi.filter((slot) => (verdicts.get(slot.id) ?? "available") === "available").length;
+            return { ...section, available: kosong, total: isi.length };
+          });
           return {
             zone,
+            bagian,
             accent: zoneAccentFor(zone),
             available,
             total: zone.slots.length,
@@ -570,8 +631,9 @@ export function FloorPlanBoard({
 
   /* ---------- Navigasi langkah ---------- */
 
-  const pickZone = useCallback((id: string) => {
+  const pickZone = useCallback((id: string, pilihanArea: string | null) => {
     setZoneId(id);
+    setArea(pilihanArea);
     setSelectedSlotId(null);
     setSelectedDates([]);
     setStep("peta");
@@ -589,21 +651,34 @@ export function FloorPlanBoard({
     [zones, zoneId],
   );
 
-  // Rect target zoom stabil: container layout adalah objek modul yang tetap.
-  const zoomTargetRect = useMemo<Rect | null>(
-    () => (selectedZone ? zoneRectFor(selectedZone) : null),
-    [selectedZone],
-  );
+  const selectedSection = useMemo<ZoneSection | null>(() => {
+    if (!selectedZone || !area) return null;
+    return layoutZoneFor(selectedZone)?.sections?.find((section) => section.area === area) ?? null;
+  }, [selectedZone, area]);
+
+  // Rect target zoom stabil: bagian area terpilih, atau seluruh zona.
+  const zoomTargetRect = useMemo<Rect | null>(() => {
+    if (!selectedZone) return null;
+    return (selectedSection && sectionRectFor(selectedZone, selectedSection)) ?? zoneRectFor(selectedZone);
+  }, [selectedZone, selectedSection]);
 
   // Pembatas peta terkunci: hanya slot milik zona terpilih (baris DB) yang bisa
   // diklik; slot & container zona lain diredupkan oleh FloorPlan.
   const activeZoneFilter = useMemo<ActiveZoneFilter | null>(() => {
     if (!selectedZone) return null;
+    const slots = selectedSection
+      ? selectedZone.slots.filter(
+          (slot) =>
+            slot.slot_number !== null &&
+            slot.slot_number >= selectedSection.nomorAwal &&
+            slot.slot_number <= selectedSection.nomorAkhir,
+        )
+      : selectedZone.slots;
     return {
-      slotIds: new Set(selectedZone.slots.map((slot) => slot.id)),
+      slotIds: new Set(slots.map((slot) => slot.id)),
       svgGroupId: layoutZoneFor(selectedZone)?.svgGroupId ?? selectedZone.svg_group_id,
     };
-  }, [selectedZone]);
+  }, [selectedZone, selectedSection]);
 
   // Saat langkah peta terbuka: animasikan zoom ke zona terpilih. rAF memastikan
   // container sudah keluar dari display:none sebelum ukurannya dibaca. Karena
@@ -627,12 +702,13 @@ export function FloorPlanBoard({
       // slot di luar zona terpilih; ini lapis kedua.
       if (!isBookableZoneType(slot.zoneType)) return;
       if (zoneId !== null && slot.zone_id !== zoneId) return;
+      if (activeZoneFilter && !activeZoneFilter.slotIds.has(slot.id)) return;
       setSelectedSlotId(slot.id);
       // Preselect satu tanggal bebas TERDEKAT — lebih ramah daripada mulai kosong.
       const free = freeDatesForSlot({ slotId: slot.id, activeDates, occupancy });
       setSelectedDates(free.slice(0, 1));
     },
-    [zoneId, activeDates, occupancy],
+    [zoneId, activeZoneFilter, activeDates, occupancy],
   );
 
   const handleCloseDetail = useCallback(() => {
@@ -738,11 +814,30 @@ export function FloorPlanBoard({
               {selectedZone?.name ?? "Semua zona"}
             </p>
             <p className="truncate text-xs text-muted">
+              {selectedSection ? `${sectionLabel(selectedSection)}. ` : ""}
               {selectedZoneCard
-                ? `${selectedZoneCard.available} dari ${selectedZoneCard.total} slot masih punya tanggal kosong`
+                ? `${selectedZoneCard.available} dari ${selectedZoneCard.total} slot zona ini masih punya tanggal kosong`
                 : "Ketuk slot untuk memilih tanggal"}
             </p>
           </div>
+          {selectedZoneCard && selectedZoneCard.bagian.length > 1 ? (
+            <div className="flex flex-wrap gap-1.5" role="group" aria-label="Pindah area">
+              {[null, ...selectedZoneCard.bagian.map((b) => b.area)].map((pilihan) => (
+                <button
+                  key={pilihan ?? "semua"}
+                  type="button"
+                  aria-pressed={area === pilihan}
+                  onClick={() => pickZone(selectedZoneCard.zone.id, pilihan)}
+                  className={cn(
+                    "rounded-none border px-2.5 py-1 text-xs font-medium",
+                    area === pilihan ? "border-accent bg-accent text-white" : "border-line bg-card text-ink hover:border-accent",
+                  )}
+                >
+                  {pilihan ? `Area ${pilihan}` : "Semua"}
+                </button>
+              ))}
+            </div>
+          ) : null}
           {/* Denah lengkap dibuka di halaman terpisah yang hanya untuk melihat —
               peta booking ini tetap terkunci pada zona terpilih. */}
           <Link href="/denah" className={cn(buttonClass("ghost", "sm"), "ml-auto")}>
@@ -781,7 +876,7 @@ export function FloorPlanBoard({
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/denah.svg"
-                alt="Denah lokasi pameran: mobil baru, area pameran mobil bekas, tenda motor baru, area motor bekas, tenda UMKM, tenda otomotif & leasing, warung, dan fasilitas umum."
+                alt="Denah lokasi pameran: tenda mobil baru, area pameran mobil bekas, tenda dealer motor baru, area motor bekas, tenda UMKM, tenda otomotif, dan fasilitas umum."
                 className="mx-auto block w-full max-w-3xl"
               />
               {/* Teks gelap: paragraf ini tampil di atas kanvas peta yang terang. */}

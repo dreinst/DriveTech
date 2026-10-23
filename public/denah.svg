@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="1170" viewBox="0 0 1680 1170" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="denah-title denah-desc" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="2050" height="1420" viewBox="0 0 2050 1420" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="denah-title denah-desc" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif">
   <title id="denah-title">Denah Drive Tech, Kampung Tentara, Singosari, Malang</title>
-  <desc id="denah-desc">Denah lokasi pameran: Area A mobil baru, Area B, C, dan D mobil bekas serta otomotif, Area E motor baru dan motor bekas, Area F, G, dan H UMKM, deretan warung (belum dibuka untuk pemesanan online), dan fasilitas umum. Setiap lapak punya id yang sama dengan kolom svg_element_id di database dan atribut data-status yang menentukan warnanya (available, pending, confirmed, facility). Lapak yang dapat disewa online adalah tautan menuju /booking/by-svg/&lt;id&gt; (atribut data-form berisi URL yang sama).</desc>
+  <desc id="denah-desc">Denah lokasi pameran: Area A mobil baru, Area B otomotif dan UMKM, Area C mobil bekas, motor bekas, mobil baru, dan dealer motor baru, Area D panggung dan slalom, Area E motor bekas serta service dan ganti oli gratis, Area F, G, dan H UMKM, dan fasilitas umum. Setiap lapak punya id yang sama dengan kolom svg_element_id di database dan atribut data-status yang menentukan warnanya (available, pending, confirmed, facility). Lapak yang dapat disewa online adalah tautan menuju /booking/by-svg/&lt;id&gt; (atribut data-form berisi URL yang sama).</desc>
   <style>
     .slot rect { fill:#ffffff; stroke:#0a0a0a; stroke-width:1.5; transition:fill .15s ease; }
     .slot[data-status="pending"]   rect { fill:#ffc892; stroke:#ffc892; }
@@ -16,613 +16,577 @@
     .note { fill:#1e293b; font-size:12px; font-weight:700; }
     .legend-label { fill:#334155; font-size:13px; }
   </style>
-  <rect width="1680" height="1170" fill="#f2eee6"/>
-  <path d="M 20 1145 L 20 645 Q 30 445 112 347 L 230 280 L 380 115 L 445 20 L 1655 20 L 1655 1145 Z" fill="#ffffff" stroke="#0a0a0a" stroke-width="2.5"/>
+  <rect width="2050" height="1420" fill="#f2eee6"/>
+  <path d="M 20 20 L 2027.1 20 L 2027.1 1400.5 L 20 1400.5 Z" fill="#ffffff" stroke="#0a0a0a" stroke-width="2.5"/>
+  <path d="M 1029 640 L 520 640 M 520 640 L 520 160 M 520 640 L 520 318 M 1029 641.5 L 521.5 641.5 L 521.5 688.5 L 1030.5 688.5 L 1030.5 790 L 1030.5 890 L 1030.5 902.5 L 903.5 902.5 L 774 890 L 420 890 L 21.5 890 L 21.5 940 M 755 260 L 755 410 L 710 410 L 710 260 L 755 260 Z M 755 260 L 1029 260 L 1030.5 260 L 1030.5 641.5 M 744.7 691.5 L 801.7 691.5 L 801.7 788.5 L 744.7 788.5 L 744.7 691.5 Z M 744.7 691.5 L 753.2 691.5 M 684.7 691.5 L 741.7 691.5 L 741.7 788.5 L 684.7 788.5 L 684.7 691.5 Z M 684.7 691.5 L 703.2 691.5 M 624.7 691.5 L 681.7 691.5 L 681.7 788.5 L 624.7 788.5 L 624.7 691.5 Z M 624.7 691.5 L 653.2 691.5 M 561.7 691.5 L 518.5 691.5 L 518.5 660.9 L 421.5 660.9 L 421.5 690 L 421.5 707.9 L 504.7 707.9 L 504.7 691.5 L 506.2 691.5 M 561.7 691.5 L 561.7 788.5 L 506.2 788.5 L 506.2 691.5 M 561.7 691.5 L 506.2 691.5 M 1079 210 L 1079 790 L 1079 891.5 L 1179 891.5 M 1079 210 L 1179 210 M 1079 210 L 1079 310 L 1179 310 M 1179 211.5 L 1179 310 M 1179 310 L 1179 891.5 M 1027.5 790 L 879 790 L 877.5 790 L 877.5 690 L 804.7 690 L 804.7 790 L 803.2 790 L 451.5 790 L 451.5 858.5 L 504.7 858.5 L 504.7 888.5 L 774 888.5 L 903.5 901 L 1027.5 901 L 1027.5 790 Z M 1027.5 790 L 1027.5 888.5 M 1204 20 L 1204 40 M 1204 20 L 1205.5 20 M 1204 20 L 1204 50 M 520 160 L 420 160 L 420 690 L 20 690 M 520 160 L 710 160 L 710 311.5 L 520 311.5 M 1179 891.5 L 1179 902.5 L 1504.5 902.5 L 1504.5 802.5 M 753.2 688.5 L 681.7 688.5 M 703.2 688.5 L 621.7 688.5 M 653.2 688.5 L 561.7 688.5 M 518.5 358.5 L 518.5 161.5 L 421.5 161.5 L 421.5 358.5 L 421.5 511.5 L 421.5 607.9 L 518.5 607.9 L 518.5 511.5 L 518.5 361.5 M 420 923.5 L 420 1400.5 M 903.5 1400.5 L 1504.5 1400.5 M 903.5 1400.5 L 903.5 953.5 M 903.5 1400.5 L 903.5 991 M 1504.5 1400.5 L 1504.5 923.5 M 1504.5 1400.5 L 20 1400.5 L 20 20 L 2027.1 20 L 2027.1 644.4 M 1504.5 1400.5 C 1569.4 1304.4 1639.2 1211.7 1713.7 1122.8 C 1779.2 1078 1847.6 1037.5 1918.3 1001.6 C 1983 890.9 2020.3 766.5 2027.1 638.5 M 1504.5 1400.5 L 1504.5 991 M 1504.5 923.5 L 1174.5 923.5 L 1174.5 941 L 1090.2 941 L 1090.2 991 L 1504.5 991 M 1504.5 923.5 L 1504.5 1033.5 L 1586.5 1033.5 M 1504.5 923.5 L 1504.5 991 M 909.5 269.7 L 909.5 591.7 M 914.5 269.7 L 914.5 591.7 M 518.5 468 L 421.5 468 M 518.5 471 L 421.5 471 M 420 110 L 570 110 L 570 40 L 1079 40 L 1079 20 L 420 20 L 420 40 L 420 110 Z M 420 110 L 20 110 M 518.5 311.5 L 421.5 311.5 M 518.5 308.5 L 421.5 308.5 M 518.5 408 L 421.5 408 M 518.5 411 L 421.5 411 M 421.5 560.9 L 518.5 560.9 M 421.5 557.9 L 518.5 557.9 M 790 1400.5 L 540 1400.5 M 721.5 981.5 L 471.5 981.5 L 471.5 1400.5 L 721.5 1400.5 L 721.5 1198.5 L 821.5 1198.5 L 821.5 1357.5 M 721.5 981.5 L 721.5 1155.5 L 821.5 1155.5 L 821.5 996.5 L 721.5 996.5 M 721.5 981.5 L 721.5 996.5 M 1046.7 943.8 L 1046.7 931.3 M 1179 688.5 L 1179 638.5 M 1179 638.5 L 1457.7 638.5 M 1179 638.5 L 1179 333.5 M 1877.1 638.5 L 1928.1 638.5 M 1877.1 638.5 L 1877.1 708.8 L 1727.1 708.8 M 1877.1 638.5 L 1877.1 333.5 M 1877.1 638.5 L 1507.7 638.5 M 1928.1 638.5 L 1874.6 638.5 M 1928.1 638.5 C 1886.9 750.2 1795 835.6 1680.6 868.5 L 1680.6 751.9 M 2027.1 638.5 L 2027.1 333.5 L 2027.1 22.1 M 2027.1 638.5 L 1969.6 638.5 C 1917.2 806.5 1762.5 921.6 1586.5 923.5 L 1586.5 1033.5 M 1877.1 333.5 L 1179 333.5 M 1877.1 333.5 L 1992.1 333.5 M 1179 333.5 L 1179 183.5 L 1535.5 183.5 L 1535.5 83.5 L 1635.5 83.5 L 1635.5 183.5 L 1992.1 183.5 L 1992.1 333.5 M 1179 333.5 L 1992.1 333.5 M 1504.5 802.5 L 1179 802.5 M 1504.5 802.5 L 1727.1 738.5 L 1727.1 708.8 M 1727.1 708.8 L 1727.1 638.5 M 1586.5 1033.5 L 1586.5 1280.5 M 1457.7 655.1 C 1438.9 655.3 1420 655.7 1401.2 656.3 C 1368.2 659.2 1342.4 685.8 1340.3 718.8 C 1338.2 751.8 1360.5 781.4 1392.8 788.4 C 1425.2 795.5 1457.8 777.8 1469.6 746.9 C 1497.6 748.9 1525.7 748.9 1553.8 746.9 C 1578 748.4 1599.2 730.7 1602 706.6 C 1604.8 682.4 1588.2 660.3 1564.3 656.2 C 1545.4 655.6 1526.6 655.2 1507.7 655 M 420 940 L 220 940 L 194.5 1400.5 M 20 890 L 20 940 M 370 569.2 L 370 504.5 M 370 504.5 C 370.6 487.9 364.6 471.7 353.2 459.6 C 341.8 447.5 326.1 440.4 309.5 440 L 21.5 440 L 21.5 276.5 L 118.5 276.5 L 118.5 388.5 L 20 388.5 M 370 504.5 L 370 575.5 C 370.6 592.1 364.6 608.3 353.2 620.4 C 341.8 632.5 326.1 639.6 309.5 640 L 20 640 L 20 440 M 721.5 996.5 L 754 996.5 M 821.5 953.5 L 721.5 953.5 M 821.5 953.5 L 821.5 929.9 L 774 923.5 L 471.5 923.5 L 471.5 953.5 L 473 953.5 L 821.5 953.5 Z M 821.5 1357.5 L 721.5 1357.5 M 821.5 1357.5 L 903.5 1357.5 M 903.5 991 L 1060.2 991 L 1060.2 941 L 903.5 941 L 903.5 991 Z M 1060.2 951 L 913.5 951 L 913.5 981 L 1060.2 981 M 1090.2 981 L 1494.5 981 L 1494.5 933.5 L 1184.5 933.5 L 1184.5 951 L 1090.2 951 M 1872.1 20 L 1872.1 60.5 L 1902.1 60.5 L 1902.1 20 M 1802.1 708.8 L 1802.1 638.5 M 1214 20 L 1214 60.5 L 1244 60.5 L 1244 20 M 20 160 L 20 390 L 309.5 390 C 326.1 389.6 341.8 382.5 353.2 370.4 C 364.6 358.3 370.6 342.1 370 325.5 L 370 160 L 21.5 160 L 21.5 20 M 368.5 504.5 L 368.5 575.5 C 369.6 605.2 349.1 631.3 320 637.3 L 320 442.7 C 349.1 448.7 369.6 474.8 368.5 504.5 L 368.5 569.2 M 309.5 388.5 L 221.5 388.5 L 221.5 276.5 L 318.5 276.5 L 318.5 387.6 C 315.5 388.1 312.5 388.4 309.5 388.5 M 309.5 441.5 L 221.5 441.5 L 221.5 538.5 L 318.5 538.5 L 318.5 442.4 C 315.5 441.9 312.5 441.6 309.5 441.5 M 309.5 638.5 L 221.5 638.5 L 221.5 541.5 L 318.5 541.5 L 318.5 637.6 C 315.5 638.1 312.5 638.4 309.5 638.5 M 20 638.5 L 118.5 638.5 L 118.5 541.5 L 21.5 541.5 L 21.5 787 L 118.5 787 L 118.5 691.5 L 20 691.5 M 21.5 940 L 170 940 L 153.4 1240 L 21.5 1240 L 21.5 1300.5 L 150.1 1300.5 L 144.5 1400.5 M 21.5 940 L 51.2 940 M 2025.6 644.4 L 2025.6 21.5 M 421.5 38.5 L 1077.5 38.5 L 1077.5 21.5 L 421.5 21.5 L 421.5 38.5 Z M 518.5 640 L 518.5 657.9 L 421.5 657.9 L 421.5 610.9 L 518.5 610.9 L 518.5 640 Z M 710 460 L 710 640 L 755 640 L 755 460 L 710 460 Z M 1080.5 311.5 L 1080.5 890 L 1177.5 890 L 1177.5 311.5 L 1080.5 311.5 Z M 1080.5 211.5 L 1177.5 211.5 L 1177.5 308.5 L 1080.5 308.5 L 1080.5 211.5 Z M 421.5 790 L 450 790 L 450 860 L 503.2 860 L 503.2 888.5 L 421.5 888.5 L 421.5 790 Z M 564.7 788.5 L 621.7 788.5 L 621.7 691.5 L 564.7 691.5 L 564.7 788.5 Z M 753.5 261.5 L 753.5 408.5 L 711.5 408.5 L 711.5 261.5 L 753.5 261.5 Z M 711.5 461.5 L 753.5 461.5 L 753.5 638.5 L 711.5 638.5 L 711.5 461.5 Z M 790 260 L 810 260 L 810 265 L 790 265 L 790 260 Z M 900 260 L 880 260 L 880 265 L 900 265 L 900 260 Z M 964 260 L 984 260 L 984 265 L 964 265 L 964 260 Z M 1027.5 691.5 L 1027.5 788.5 L 880.5 788.5 L 880.5 691.5 L 1027.5 691.5 Z M 420 888.5 L 420 790 L 321.5 790 L 321.5 888.5 L 420 888.5 Z M 504.7 710.9 L 504.7 788.5 L 421.5 788.5 L 421.5 710.9 L 504.7 710.9 Z M 568.5 70 L 568.5 41.5 L 421.5 41.5 L 421.5 70 L 568.5 70 Z M 421.5 71.5 L 421.5 108.5 L 568.5 108.5 L 568.5 71.5 L 421.5 71.5 Z M 1554.8 812.7 L 1567.8 866.2 L 1641.7 848.1 L 1628.6 794.7 L 1554.8 812.7 Z M 1213.6 868.7 L 1213.6 898.7 L 1313.6 898.7 L 1313.6 868.7 L 1213.6 868.7 Z M 1340.3 868.7 L 1340.3 898.7 L 1440.3 898.7 L 1440.3 868.7 L 1340.3 868.7 Z M 1915.9 867.8 L 1945.9 867.8 L 1945.9 767.8 L 1915.9 767.8 L 1915.9 867.8 Z M 461.5 1077 L 431.5 1077 L 431.5 1177 L 431.5 1277 L 461.5 1277 L 461.5 1177 L 461.5 1077 Z M 1839.9 865.1 L 1917.1 999.5 L 1784 1076.9 L 1706.2 939.9 L 1839.9 865.1 Z M 1507.7 656 C 1526.5 656.2 1545.4 656.6 1564.2 657.2 C 1587.6 661.3 1603.8 682.9 1601 706.5 C 1598.2 730.1 1577.5 747.4 1553.8 745.9 C 1525.5 747.9 1497.2 747.9 1468.9 745.9 C 1457.6 776.5 1425.5 794.3 1393.6 787.6 C 1361.6 780.9 1339.3 751.8 1341.2 719.1 C 1343.2 686.5 1368.7 660.2 1401.2 657.3 C 1420.1 656.7 1438.9 656.3 1457.7 656.1 L 1457.7 588.5 L 1229 588.5 L 1229 383.5 L 1827.1 383.5 L 1827.1 588.5 L 1507.7 588.5 L 1507.7 656 Z M 933.5 1021 L 933.5 1370.5 L 1474.5 1370.5 L 1474.5 1021 L 933.5 1021 Z M 1184 328.5 L 1184 188.5 L 1540.5 188.5 L 1540.5 88.5 L 1630.5 88.5 L 1630.5 188.5 L 1987.1 188.5 L 1987.1 328.5 L 1184 328.5 Z M 21.5 790 L 118.5 790 L 118.5 888.5 L 21.5 888.5 L 21.5 790 Z M 121.5 691.5 L 121.5 787 L 218.5 787 L 218.5 691.5 L 121.5 691.5 Z M 221.5 691.5 L 221.5 787 L 318.5 787 L 318.5 691.5 L 221.5 691.5 Z M 321.5 691.5 L 321.5 787 L 420 787 L 420 691.5 L 321.5 691.5 Z M 21.5 1399 L 21.5 1302 L 148.5 1302 L 143.1 1399 L 21.5 1399 Z M 21.5 538.5 L 118.5 538.5 L 118.5 441.5 L 21.5 441.5 L 21.5 538.5 Z M 121.5 441.5 L 121.5 538.5 L 218.5 538.5 L 218.5 441.5 L 121.5 441.5 Z M 21.5 273.5 L 118.5 273.5 L 118.5 161.5 L 21.5 161.5 L 21.5 273.5 Z M 121.5 161.5 L 121.5 273.5 L 218.5 273.5 L 218.5 161.5 L 121.5 161.5 Z M 221.5 161.5 L 221.5 273.5 L 318.5 273.5 L 318.5 161.5 L 221.5 161.5 Z M 321.5 161.5 L 321.5 387 C 349.9 380.4 369.6 354.6 368.5 325.5 L 368.5 161.5 L 321.5 161.5 Z M 218.5 276.5 L 218.5 388.5 L 121.5 388.5 L 121.5 276.5 L 218.5 276.5 Z M 121.5 541.5 L 218.5 541.5 L 218.5 638.5 L 121.5 638.5 L 121.5 541.5 Z M 318.5 790 L 318.5 888.5 L 221.5 888.5 L 221.5 790 L 318.5 790 Z M 218.5 790 L 218.5 888.5 L 121.5 888.5 L 121.5 790 L 218.5 790 Z M 229.5 950 L 205.1 1390.5 L 410 1390.5 L 410 950 L 229.5 950 Z M 21.5 1138.5 L 157.5 1138.5 L 162.9 1041.5 L 21.5 1041.5 L 21.5 1138.5 Z M 21.5 1141.5 L 157.4 1141.5 L 152 1238.5 L 21.5 1238.5 L 21.5 1141.5 Z M 21.5 1038.5 L 163 1038.5 L 168.4 941.5 L 21.5 941.5 L 21.5 1038.5 Z M 1900.6 59 L 1900.6 21.5 L 1873.6 21.5 L 1873.6 59 L 1900.6 59 Z M 1242.5 59 L 1215.5 59 L 1215.5 21.5 L 1242.5 21.5 L 1242.5 59 Z M 1079 143 L 1079 150 L 1044 150 L 1039 143 L 1039 97 L 1044 90 L 1079 90 L 1079 97 L 1049 97 L 1046.1 101 L 1046 139.4 L 1049 143 L 1079 143 Z" fill="none" stroke="#9a948a" stroke-width="1.2" aria-hidden="true"/>
   <g id="denah-dekor" aria-hidden="true" pointer-events="none">
-    <rect id="taman-1" x="448" y="357" width="335" height="48" fill="#dfe4d3"/>
-    <rect id="taman-2" x="805" y="357" width="125" height="48" fill="#dfe4d3"/>
-    <rect id="taman-3" x="448" y="431" width="258" height="74" fill="#dfe4d3"/>
-    <rect id="taman-4" x="712" y="437" width="76" height="470" fill="#dfe4d3"/>
-    <rect id="taman-5" x="835" y="437" width="415" height="78" fill="#dfe4d3"/>
-    <rect id="taman-6" x="995" y="391" width="290" height="18" fill="#dfe4d3"/>
-    <rect id="taman-7" x="315" y="1111" width="335" height="28" fill="#dfe4d3"/>
-    <rect id="taman-8" x="1330" y="1081" width="320" height="58" fill="#dfe4d3"/>
-    <rect id="taman-9" x="1055" y="643" width="30" height="300" fill="#dfe4d3"/>
-    <rect id="taman-10" x="1005" y="63" width="70" height="125" fill="#dfe4d3"/>
-    <rect id="taman-11" x="1005" y="223" width="70" height="130" fill="#dfe4d3"/>
-    <rect id="taman-12" x="1282" y="31" width="40" height="90" fill="#dfe4d3"/>
-    <rect id="bangunan-1" x="1543" y="27" width="108" height="82" fill="#f1ede5"/>
-    <rect id="bangunan-2" x="1543" y="153" width="108" height="75" fill="#f1ede5"/>
-    <rect id="bangunan-3" x="1543" y="233" width="108" height="150" fill="#f1ede5"/>
-    <rect id="bangunan-4" x="1330" y="437" width="320" height="160" fill="#f1ede5"/>
-    <rect id="bangunan-5" x="1370" y="645" width="280" height="155" fill="#f1ede5"/>
-    <rect id="bangunan-6" x="1370" y="845" width="280" height="185" fill="#f1ede5"/>
-    <rect id="bangunan-7" x="345" y="1005" width="80" height="80" fill="#f1ede5"/>
-    <rect id="bangunan-area-g" x="153" y="347" width="132" height="100" fill="#f1ede5" transform="rotate(-26 219 397)"/>
-    <rect id="gerbang-masuk" x="788" y="1041" width="26" height="50" fill="none" stroke="#ff7b00" stroke-width="5"/>
+  </g>
+  <g id="zone-fasilitas" data-zone-type="facility">
+    <g class="slots">
+      <g id="slot-fasilitas-playground" class="slot facility" data-status="facility" data-slot="slot-fasilitas-playground" aria-label="Fasilitas Umum, Playground — fasilitas umum, tidak disewakan">
+        <rect x="480.3" y="1021" width="241.2" height="333.6" />
+        <text x="600.9" y="1187.8" fill="#57524a" font-size="16" font-weight="600" text-anchor="middle" dominant-baseline="middle"><tspan x="600.9" dy="0em">Playground</tspan></text>
+      </g>
+      <g id="slot-fasilitas-parkir-mobil" class="slot facility" data-status="facility" data-slot="slot-fasilitas-parkir-mobil" aria-label="Fasilitas Umum, Parkir Mobil — fasilitas umum, tidak disewakan">
+        <rect x="1731.1" y="905.6" width="122" height="122"  transform="rotate(-29.2 1792.1 966.6)"/>
+        <text x="1792.1" y="966.6" fill="#57524a" font-size="12" font-weight="600" text-anchor="middle" dominant-baseline="middle"><tspan x="1792.1" dy="0em">Parkir Mobil</tspan></text>
+      </g>
+      <g id="slot-fasilitas-parkir-mobil-bekas" class="slot facility" data-status="facility" data-slot="slot-fasilitas-parkir-mobil-bekas" aria-label="Fasilitas Umum, Parkir Mobil Bekas — fasilitas umum, tidak disewakan">
+        <rect x="1910" y="334" width="84" height="300" />
+        <text x="1952" y="484" transform="rotate(-90 1952 484)" fill="#57524a" font-size="16" font-weight="600" text-anchor="middle" dominant-baseline="middle"><tspan x="1952" dy="0em">Parkir Mobil Bekas</tspan></text>
+      </g>
+      <g id="slot-fasilitas-parkir-motor-bekas" class="slot facility" data-status="facility" data-slot="slot-fasilitas-parkir-motor-bekas" aria-label="Fasilitas Umum, Parkir Motor Bekas — fasilitas umum, tidak disewakan">
+        <rect x="907" y="897" width="277" height="42" />
+        <text x="1045.5" y="918" fill="#57524a" font-size="12" font-weight="600" text-anchor="middle" dominant-baseline="middle"><tspan x="1045.5" dy="0em">Parkir Motor Bekas</tspan></text>
+      </g>
+      <g id="slot-fasilitas-area-slalom" class="slot facility" data-status="facility" data-slot="slot-fasilitas-area-slalom" aria-label="Fasilitas Umum, Area Slalom — fasilitas umum, tidak disewakan">
+        <rect x="523" y="166" width="122" height="139" />
+        <text x="584" y="235.5" fill="#57524a" font-size="12" font-weight="600" text-anchor="middle" dominant-baseline="middle"><tspan x="584" dy="0em">Area Slalom</tspan></text>
+      </g>
+      <g id="slot-fasilitas-mushola" class="slot facility" data-status="facility" data-slot="slot-fasilitas-mushola" aria-label="Fasilitas Umum, Mushola — fasilitas umum, tidak disewakan">
+        <rect x="1080.5" y="211.5" width="97" height="97" />
+        <text x="1129" y="260" fill="#57524a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle"><tspan x="1129" dy="0em">Mushola</tspan></text>
+      </g>
+      <g id="slot-fasilitas-stage" class="slot facility" data-status="facility" data-slot="slot-fasilitas-stage" aria-label="Fasilitas Umum, Stage LED — fasilitas umum, tidak disewakan">
+        <rect x="645.2" y="40" width="60" height="50" />
+        <text x="675.2" y="65" fill="#57524a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle"><tspan x="675.2" dy="0em">Stage LED</tspan></text>
+      </g>
+      <g id="slot-fasilitas-tenda-vip" class="slot facility" data-status="facility" data-slot="slot-fasilitas-tenda-vip" aria-label="Fasilitas Umum, Tenda VIP — fasilitas umum, tidak disewakan">
+        <rect x="649" y="253" width="60" height="57" />
+        <text x="679" y="281.5" fill="#57524a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle"><tspan x="679" dy="0em">Tenda VIP</tspan></text>
+      </g>
+      <g id="slot-fasilitas-wahana" class="slot facility" data-status="facility" data-slot="slot-fasilitas-wahana" aria-label="Fasilitas Umum, Wahana — fasilitas umum, tidak disewakan">
+        <rect x="664" y="329" width="40" height="60" />
+        <text x="684" y="359" transform="rotate(-90 684 359)" fill="#57524a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle"><tspan x="684" dy="0em">Wahana</tspan></text>
+      </g>
+      <g id="slot-fasilitas-photobooth" class="slot facility" data-status="facility" data-slot="slot-fasilitas-photobooth" aria-label="Fasilitas Umum, Photobooth — fasilitas umum, tidak disewakan">
+        <rect x="998" y="263" width="30" height="60" />
+        <text x="1013" y="293" transform="rotate(-90 1013 293)" fill="#57524a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle"><tspan x="1013" dy="0em">Photobooth</tspan></text>
+      </g>
+      <g id="slot-fasilitas-service-gratis" class="slot facility" data-status="facility" data-slot="slot-fasilitas-service-gratis" aria-label="Fasilitas Umum, Service Gratis — fasilitas umum, tidak disewakan">
+        <rect x="781.5" y="1045.5" width="30" height="110" />
+        <text x="796.5" y="1100.5" transform="rotate(-90 796.5 1100.5)" fill="#57524a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle"><tspan x="796.5" dy="0em">Service Gratis</tspan></text>
+      </g>
+      <g id="slot-fasilitas-ganti-oli" class="slot facility" data-status="facility" data-slot="slot-fasilitas-ganti-oli" aria-label="Fasilitas Umum, Ganti Oli Gratis — fasilitas umum, tidak disewakan">
+        <rect x="781.5" y="1198.5" width="30" height="110" />
+        <text x="796.5" y="1253.5" transform="rotate(-90 796.5 1253.5)" fill="#57524a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle"><tspan x="796.5" dy="0em">Ganti Oli Gratis</tspan></text>
+      </g>
+      <g id="slot-fasilitas-gerbang" class="slot facility" data-status="facility" data-slot="slot-fasilitas-gerbang" aria-label="Fasilitas Umum, Gerbang — fasilitas umum, tidak disewakan">
+        <rect x="1039" y="90" width="40" height="60" />
+        <text x="1059" y="120" transform="rotate(-90 1059 120)" fill="#57524a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle"><tspan x="1059" dy="0em">Gerbang</tspan></text>
+      </g>
+    </g>
   </g>
   <g id="zone-mobil-baru" data-zone-type="mobil_baru">
     <g class="slots">
       <a href="/booking/by-svg/slot-mobil-baru-01" aria-label="Area Mobil Baru, Slot 1 — buka form booking">
       <g id="slot-mobil-baru-01" class="slot" data-status="available" data-slot="slot-mobil-baru-01" data-form="/booking/by-svg/slot-mobil-baru-01">
-        <rect x="830" y="1089" width="42" height="40" />
-        <text x="851" y="1109" fill="#0a0a0a" font-size="16" font-weight="600" text-anchor="middle" dominant-baseline="middle">1</text>
+        <rect x="755" y="40" width="50" height="50" />
+        <text x="780" y="65" fill="#0a0a0a" font-size="16" font-weight="600" text-anchor="middle" dominant-baseline="middle">1</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-mobil-baru-02" aria-label="Area Mobil Baru, Slot 2 — buka form booking">
       <g id="slot-mobil-baru-02" class="slot" data-status="available" data-slot="slot-mobil-baru-02" data-form="/booking/by-svg/slot-mobil-baru-02">
-        <rect x="875.5" y="1089" width="42" height="40" />
-        <text x="896.5" y="1109" fill="#0a0a0a" font-size="16" font-weight="600" text-anchor="middle" dominant-baseline="middle">2</text>
+        <rect x="811" y="40" width="50" height="50" />
+        <text x="836" y="65" fill="#0a0a0a" font-size="16" font-weight="600" text-anchor="middle" dominant-baseline="middle">2</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-mobil-baru-03" aria-label="Area Mobil Baru, Slot 3 — buka form booking">
       <g id="slot-mobil-baru-03" class="slot" data-status="available" data-slot="slot-mobil-baru-03" data-form="/booking/by-svg/slot-mobil-baru-03">
-        <rect x="921" y="1089" width="42" height="40" />
-        <text x="942" y="1109" fill="#0a0a0a" font-size="16" font-weight="600" text-anchor="middle" dominant-baseline="middle">3</text>
+        <rect x="867" y="40" width="50" height="50" />
+        <text x="892" y="65" fill="#0a0a0a" font-size="16" font-weight="600" text-anchor="middle" dominant-baseline="middle">3</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-mobil-baru-04" aria-label="Area Mobil Baru, Slot 4 — buka form booking">
       <g id="slot-mobil-baru-04" class="slot" data-status="available" data-slot="slot-mobil-baru-04" data-form="/booking/by-svg/slot-mobil-baru-04">
-        <rect x="966.5" y="1089" width="42" height="40" />
-        <text x="987.5" y="1109" fill="#0a0a0a" font-size="16" font-weight="600" text-anchor="middle" dominant-baseline="middle">4</text>
+        <rect x="923" y="40" width="50" height="50" />
+        <text x="948" y="65" fill="#0a0a0a" font-size="16" font-weight="600" text-anchor="middle" dominant-baseline="middle">4</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-mobil-baru-05" aria-label="Area Mobil Baru, Slot 5 — buka form booking">
       <g id="slot-mobil-baru-05" class="slot" data-status="available" data-slot="slot-mobil-baru-05" data-form="/booking/by-svg/slot-mobil-baru-05">
-        <rect x="1012" y="1089" width="42" height="40" />
-        <text x="1033" y="1109" fill="#0a0a0a" font-size="16" font-weight="600" text-anchor="middle" dominant-baseline="middle">5</text>
+        <rect x="979" y="40" width="50" height="50" />
+        <text x="1004" y="65" fill="#0a0a0a" font-size="16" font-weight="600" text-anchor="middle" dominant-baseline="middle">5</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-mobil-baru-06" aria-label="Area Mobil Baru, Slot 6 — buka form booking">
       <g id="slot-mobil-baru-06" class="slot" data-status="available" data-slot="slot-mobil-baru-06" data-form="/booking/by-svg/slot-mobil-baru-06">
-        <rect x="830" y="1000" width="42" height="40" />
-        <text x="851" y="1020" fill="#0a0a0a" font-size="16" font-weight="600" text-anchor="middle" dominant-baseline="middle">6</text>
+        <rect x="755" y="150" width="50" height="50" />
+        <text x="780" y="175" fill="#0a0a0a" font-size="16" font-weight="600" text-anchor="middle" dominant-baseline="middle">6</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-mobil-baru-07" aria-label="Area Mobil Baru, Slot 7 — buka form booking">
       <g id="slot-mobil-baru-07" class="slot" data-status="available" data-slot="slot-mobil-baru-07" data-form="/booking/by-svg/slot-mobil-baru-07">
-        <rect x="875.5" y="1000" width="42" height="40" />
-        <text x="896.5" y="1020" fill="#0a0a0a" font-size="16" font-weight="600" text-anchor="middle" dominant-baseline="middle">7</text>
+        <rect x="811" y="150" width="50" height="50" />
+        <text x="836" y="175" fill="#0a0a0a" font-size="16" font-weight="600" text-anchor="middle" dominant-baseline="middle">7</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-mobil-baru-08" aria-label="Area Mobil Baru, Slot 8 — buka form booking">
       <g id="slot-mobil-baru-08" class="slot" data-status="available" data-slot="slot-mobil-baru-08" data-form="/booking/by-svg/slot-mobil-baru-08">
-        <rect x="921" y="1000" width="42" height="40" />
-        <text x="942" y="1020" fill="#0a0a0a" font-size="16" font-weight="600" text-anchor="middle" dominant-baseline="middle">8</text>
+        <rect x="867" y="150" width="50" height="50" />
+        <text x="892" y="175" fill="#0a0a0a" font-size="16" font-weight="600" text-anchor="middle" dominant-baseline="middle">8</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-mobil-baru-09" aria-label="Area Mobil Baru, Slot 9 — buka form booking">
       <g id="slot-mobil-baru-09" class="slot" data-status="available" data-slot="slot-mobil-baru-09" data-form="/booking/by-svg/slot-mobil-baru-09">
-        <rect x="966.5" y="1000" width="42" height="40" />
-        <text x="987.5" y="1020" fill="#0a0a0a" font-size="16" font-weight="600" text-anchor="middle" dominant-baseline="middle">9</text>
+        <rect x="923" y="150" width="50" height="50" />
+        <text x="948" y="175" fill="#0a0a0a" font-size="16" font-weight="600" text-anchor="middle" dominant-baseline="middle">9</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-mobil-baru-10" aria-label="Area Mobil Baru, Slot 10 — buka form booking">
       <g id="slot-mobil-baru-10" class="slot" data-status="available" data-slot="slot-mobil-baru-10" data-form="/booking/by-svg/slot-mobil-baru-10">
-        <rect x="1012" y="1000" width="42" height="40" />
-        <text x="1033" y="1020" fill="#0a0a0a" font-size="16" font-weight="600" text-anchor="middle" dominant-baseline="middle">10</text>
+        <rect x="979" y="150" width="50" height="50" />
+        <text x="1004" y="175" fill="#0a0a0a" font-size="16" font-weight="600" text-anchor="middle" dominant-baseline="middle">10</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-mobil-baru-11" aria-label="Area Mobil Baru, Slot 11 — buka form booking">
+      <g id="slot-mobil-baru-11" class="slot" data-status="available" data-slot="slot-mobil-baru-11" data-form="/booking/by-svg/slot-mobil-baru-11">
+        <rect x="756" y="266" width="50" height="50" />
+        <text x="781" y="291" fill="#0a0a0a" font-size="16" font-weight="600" text-anchor="middle" dominant-baseline="middle">11</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-mobil-baru-12" aria-label="Area Mobil Baru, Slot 12 — buka form booking">
+      <g id="slot-mobil-baru-12" class="slot" data-status="available" data-slot="slot-mobil-baru-12" data-form="/booking/by-svg/slot-mobil-baru-12">
+        <rect x="756" y="317" width="50" height="50" />
+        <text x="781" y="342" fill="#0a0a0a" font-size="16" font-weight="600" text-anchor="middle" dominant-baseline="middle">12</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-mobil-baru-13" aria-label="Area Mobil Baru, Slot 13 — buka form booking">
+      <g id="slot-mobil-baru-13" class="slot" data-status="available" data-slot="slot-mobil-baru-13" data-form="/booking/by-svg/slot-mobil-baru-13">
+        <rect x="756" y="368" width="50" height="50" />
+        <text x="781" y="393" fill="#0a0a0a" font-size="16" font-weight="600" text-anchor="middle" dominant-baseline="middle">13</text>
       </g>
       </a>
     </g>
   </g>
   <g id="zone-mobil-bekas" data-zone-type="mobil_bekas">
     <g class="slots">
-      <a href="/booking/by-svg/slot-mobil-bekas-10" aria-label="Area Mobil Bekas, Slot 10 — buka form booking">
-      <g id="slot-mobil-bekas-10" class="slot" data-status="available" data-slot="slot-mobil-bekas-10" data-form="/booking/by-svg/slot-mobil-bekas-10">
-        <rect x="797" y="647" width="30" height="26" />
-        <text x="812" y="660" fill="#0a0a0a" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">10</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-09" aria-label="Area Mobil Bekas, Slot 9 — buka form booking">
-      <g id="slot-mobil-bekas-09" class="slot" data-status="available" data-slot="slot-mobil-bekas-09" data-form="/booking/by-svg/slot-mobil-bekas-09">
-        <rect x="797" y="676.5" width="30" height="26" />
-        <text x="812" y="689.5" fill="#0a0a0a" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">9</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-08" aria-label="Area Mobil Bekas, Slot 8 — buka form booking">
-      <g id="slot-mobil-bekas-08" class="slot" data-status="available" data-slot="slot-mobil-bekas-08" data-form="/booking/by-svg/slot-mobil-bekas-08">
-        <rect x="797" y="706" width="30" height="26" />
-        <text x="812" y="719" fill="#0a0a0a" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">8</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-07" aria-label="Area Mobil Bekas, Slot 7 — buka form booking">
-      <g id="slot-mobil-bekas-07" class="slot" data-status="available" data-slot="slot-mobil-bekas-07" data-form="/booking/by-svg/slot-mobil-bekas-07">
-        <rect x="797" y="735.5" width="30" height="26" />
-        <text x="812" y="748.5" fill="#0a0a0a" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">7</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-06" aria-label="Area Mobil Bekas, Slot 6 — buka form booking">
-      <g id="slot-mobil-bekas-06" class="slot" data-status="available" data-slot="slot-mobil-bekas-06" data-form="/booking/by-svg/slot-mobil-bekas-06">
-        <rect x="797" y="765" width="30" height="26" />
-        <text x="812" y="778" fill="#0a0a0a" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">6</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-05" aria-label="Area Mobil Bekas, Slot 5 — buka form booking">
-      <g id="slot-mobil-bekas-05" class="slot" data-status="available" data-slot="slot-mobil-bekas-05" data-form="/booking/by-svg/slot-mobil-bekas-05">
-        <rect x="797" y="794.5" width="30" height="26" />
-        <text x="812" y="807.5" fill="#0a0a0a" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">5</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-04" aria-label="Area Mobil Bekas, Slot 4 — buka form booking">
-      <g id="slot-mobil-bekas-04" class="slot" data-status="available" data-slot="slot-mobil-bekas-04" data-form="/booking/by-svg/slot-mobil-bekas-04">
-        <rect x="797" y="824" width="30" height="26" />
-        <text x="812" y="837" fill="#0a0a0a" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">4</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-03" aria-label="Area Mobil Bekas, Slot 3 — buka form booking">
-      <g id="slot-mobil-bekas-03" class="slot" data-status="available" data-slot="slot-mobil-bekas-03" data-form="/booking/by-svg/slot-mobil-bekas-03">
-        <rect x="797" y="853.5" width="30" height="26" />
-        <text x="812" y="866.5" fill="#0a0a0a" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">3</text>
+      <a href="/booking/by-svg/slot-mobil-bekas-01" aria-label="Area Mobil Bekas, Slot 1 — buka form booking">
+      <g id="slot-mobil-bekas-01" class="slot" data-status="available" data-slot="slot-mobil-bekas-01" data-form="/booking/by-svg/slot-mobil-bekas-01">
+        <rect x="864.5" y="269.7" width="45" height="25" />
+        <text x="887" y="282.2" fill="#0a0a0a" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">1</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-mobil-bekas-02" aria-label="Area Mobil Bekas, Slot 2 — buka form booking">
       <g id="slot-mobil-bekas-02" class="slot" data-status="available" data-slot="slot-mobil-bekas-02" data-form="/booking/by-svg/slot-mobil-bekas-02">
-        <rect x="797" y="883" width="30" height="26" />
-        <text x="812" y="896" fill="#0a0a0a" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">2</text>
+        <rect x="864.5" y="302.7" width="45" height="25" />
+        <text x="887" y="315.2" fill="#0a0a0a" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">2</text>
       </g>
       </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-01" aria-label="Area Mobil Bekas, Slot 1 — buka form booking">
-      <g id="slot-mobil-bekas-01" class="slot" data-status="available" data-slot="slot-mobil-bekas-01" data-form="/booking/by-svg/slot-mobil-bekas-01">
-        <rect x="797" y="912.5" width="30" height="26" />
-        <text x="812" y="925.5" fill="#0a0a0a" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">1</text>
+      <a href="/booking/by-svg/slot-mobil-bekas-03" aria-label="Area Mobil Bekas, Slot 3 — buka form booking">
+      <g id="slot-mobil-bekas-03" class="slot" data-status="available" data-slot="slot-mobil-bekas-03" data-form="/booking/by-svg/slot-mobil-bekas-03">
+        <rect x="864.5" y="335.7" width="45" height="25" />
+        <text x="887" y="348.2" fill="#0a0a0a" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">3</text>
       </g>
       </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-20" aria-label="Area Mobil Bekas, Slot 20 — buka form booking">
-      <g id="slot-mobil-bekas-20" class="slot" data-status="available" data-slot="slot-mobil-bekas-20" data-form="/booking/by-svg/slot-mobil-bekas-20">
-        <rect x="884" y="683" width="40" height="23" />
-        <text x="904" y="694.5" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">20</text>
+      <a href="/booking/by-svg/slot-mobil-bekas-04" aria-label="Area Mobil Bekas, Slot 4 — buka form booking">
+      <g id="slot-mobil-bekas-04" class="slot" data-status="available" data-slot="slot-mobil-bekas-04" data-form="/booking/by-svg/slot-mobil-bekas-04">
+        <rect x="864.5" y="368.7" width="45" height="25" />
+        <text x="887" y="381.2" fill="#0a0a0a" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">4</text>
       </g>
       </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-19" aria-label="Area Mobil Bekas, Slot 19 — buka form booking">
-      <g id="slot-mobil-bekas-19" class="slot" data-status="available" data-slot="slot-mobil-bekas-19" data-form="/booking/by-svg/slot-mobil-bekas-19">
-        <rect x="884" y="709.5" width="40" height="23" />
-        <text x="904" y="721" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">19</text>
+      <a href="/booking/by-svg/slot-mobil-bekas-05" aria-label="Area Mobil Bekas, Slot 5 — buka form booking">
+      <g id="slot-mobil-bekas-05" class="slot" data-status="available" data-slot="slot-mobil-bekas-05" data-form="/booking/by-svg/slot-mobil-bekas-05">
+        <rect x="864.5" y="401.7" width="45" height="25" />
+        <text x="887" y="414.2" fill="#0a0a0a" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">5</text>
       </g>
       </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-18" aria-label="Area Mobil Bekas, Slot 18 — buka form booking">
-      <g id="slot-mobil-bekas-18" class="slot" data-status="available" data-slot="slot-mobil-bekas-18" data-form="/booking/by-svg/slot-mobil-bekas-18">
-        <rect x="884" y="736" width="40" height="23" />
-        <text x="904" y="747.5" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">18</text>
+      <a href="/booking/by-svg/slot-mobil-bekas-06" aria-label="Area Mobil Bekas, Slot 6 — buka form booking">
+      <g id="slot-mobil-bekas-06" class="slot" data-status="available" data-slot="slot-mobil-bekas-06" data-form="/booking/by-svg/slot-mobil-bekas-06">
+        <rect x="864.5" y="434.7" width="45" height="25" />
+        <text x="887" y="447.2" fill="#0a0a0a" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">6</text>
       </g>
       </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-17" aria-label="Area Mobil Bekas, Slot 17 — buka form booking">
-      <g id="slot-mobil-bekas-17" class="slot" data-status="available" data-slot="slot-mobil-bekas-17" data-form="/booking/by-svg/slot-mobil-bekas-17">
-        <rect x="884" y="762.5" width="40" height="23" />
-        <text x="904" y="774" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">17</text>
+      <a href="/booking/by-svg/slot-mobil-bekas-07" aria-label="Area Mobil Bekas, Slot 7 — buka form booking">
+      <g id="slot-mobil-bekas-07" class="slot" data-status="available" data-slot="slot-mobil-bekas-07" data-form="/booking/by-svg/slot-mobil-bekas-07">
+        <rect x="864.5" y="467.7" width="45" height="25" />
+        <text x="887" y="480.2" fill="#0a0a0a" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">7</text>
       </g>
       </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-16" aria-label="Area Mobil Bekas, Slot 16 — buka form booking">
-      <g id="slot-mobil-bekas-16" class="slot" data-status="available" data-slot="slot-mobil-bekas-16" data-form="/booking/by-svg/slot-mobil-bekas-16">
-        <rect x="884" y="789" width="40" height="23" />
-        <text x="904" y="800.5" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">16</text>
+      <a href="/booking/by-svg/slot-mobil-bekas-08" aria-label="Area Mobil Bekas, Slot 8 — buka form booking">
+      <g id="slot-mobil-bekas-08" class="slot" data-status="available" data-slot="slot-mobil-bekas-08" data-form="/booking/by-svg/slot-mobil-bekas-08">
+        <rect x="864.5" y="500.7" width="45" height="25" />
+        <text x="887" y="513.2" fill="#0a0a0a" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">8</text>
       </g>
       </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-15" aria-label="Area Mobil Bekas, Slot 15 — buka form booking">
-      <g id="slot-mobil-bekas-15" class="slot" data-status="available" data-slot="slot-mobil-bekas-15" data-form="/booking/by-svg/slot-mobil-bekas-15">
-        <rect x="884" y="815.5" width="40" height="23" />
-        <text x="904" y="827" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">15</text>
+      <a href="/booking/by-svg/slot-mobil-bekas-09" aria-label="Area Mobil Bekas, Slot 9 — buka form booking">
+      <g id="slot-mobil-bekas-09" class="slot" data-status="available" data-slot="slot-mobil-bekas-09" data-form="/booking/by-svg/slot-mobil-bekas-09">
+        <rect x="864.5" y="533.7" width="45" height="25" />
+        <text x="887" y="546.2" fill="#0a0a0a" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">9</text>
       </g>
       </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-14" aria-label="Area Mobil Bekas, Slot 14 — buka form booking">
-      <g id="slot-mobil-bekas-14" class="slot" data-status="available" data-slot="slot-mobil-bekas-14" data-form="/booking/by-svg/slot-mobil-bekas-14">
-        <rect x="884" y="842" width="40" height="23" />
-        <text x="904" y="853.5" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">14</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-13" aria-label="Area Mobil Bekas, Slot 13 — buka form booking">
-      <g id="slot-mobil-bekas-13" class="slot" data-status="available" data-slot="slot-mobil-bekas-13" data-form="/booking/by-svg/slot-mobil-bekas-13">
-        <rect x="884" y="868.5" width="40" height="23" />
-        <text x="904" y="880" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">13</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-12" aria-label="Area Mobil Bekas, Slot 12 — buka form booking">
-      <g id="slot-mobil-bekas-12" class="slot" data-status="available" data-slot="slot-mobil-bekas-12" data-form="/booking/by-svg/slot-mobil-bekas-12">
-        <rect x="884" y="895" width="40" height="23" />
-        <text x="904" y="906.5" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">12</text>
+      <a href="/booking/by-svg/slot-mobil-bekas-10" aria-label="Area Mobil Bekas, Slot 10 — buka form booking">
+      <g id="slot-mobil-bekas-10" class="slot" data-status="available" data-slot="slot-mobil-bekas-10" data-form="/booking/by-svg/slot-mobil-bekas-10">
+        <rect x="864.5" y="566.7" width="45" height="25" />
+        <text x="887" y="579.2" fill="#0a0a0a" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">10</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-mobil-bekas-11" aria-label="Area Mobil Bekas, Slot 11 — buka form booking">
       <g id="slot-mobil-bekas-11" class="slot" data-status="available" data-slot="slot-mobil-bekas-11" data-form="/booking/by-svg/slot-mobil-bekas-11">
-        <rect x="884" y="921.5" width="40" height="23" />
-        <text x="904" y="933" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">11</text>
+        <rect x="914.5" y="269.7" width="45" height="25" />
+        <text x="937" y="282.2" fill="#0a0a0a" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">11</text>
       </g>
       </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-30" aria-label="Area Mobil Bekas, Slot 30 — buka form booking">
-      <g id="slot-mobil-bekas-30" class="slot" data-status="available" data-slot="slot-mobil-bekas-30" data-form="/booking/by-svg/slot-mobil-bekas-30">
-        <rect x="928" y="683" width="40" height="23" />
-        <text x="948" y="694.5" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">30</text>
+      <a href="/booking/by-svg/slot-mobil-bekas-12" aria-label="Area Mobil Bekas, Slot 12 — buka form booking">
+      <g id="slot-mobil-bekas-12" class="slot" data-status="available" data-slot="slot-mobil-bekas-12" data-form="/booking/by-svg/slot-mobil-bekas-12">
+        <rect x="914.5" y="302.7" width="45" height="25" />
+        <text x="937" y="315.2" fill="#0a0a0a" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">12</text>
       </g>
       </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-29" aria-label="Area Mobil Bekas, Slot 29 — buka form booking">
-      <g id="slot-mobil-bekas-29" class="slot" data-status="available" data-slot="slot-mobil-bekas-29" data-form="/booking/by-svg/slot-mobil-bekas-29">
-        <rect x="928" y="709.5" width="40" height="23" />
-        <text x="948" y="721" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">29</text>
+      <a href="/booking/by-svg/slot-mobil-bekas-13" aria-label="Area Mobil Bekas, Slot 13 — buka form booking">
+      <g id="slot-mobil-bekas-13" class="slot" data-status="available" data-slot="slot-mobil-bekas-13" data-form="/booking/by-svg/slot-mobil-bekas-13">
+        <rect x="914.5" y="335.7" width="45" height="25" />
+        <text x="937" y="348.2" fill="#0a0a0a" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">13</text>
       </g>
       </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-28" aria-label="Area Mobil Bekas, Slot 28 — buka form booking">
-      <g id="slot-mobil-bekas-28" class="slot" data-status="available" data-slot="slot-mobil-bekas-28" data-form="/booking/by-svg/slot-mobil-bekas-28">
-        <rect x="928" y="736" width="40" height="23" />
-        <text x="948" y="747.5" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">28</text>
+      <a href="/booking/by-svg/slot-mobil-bekas-14" aria-label="Area Mobil Bekas, Slot 14 — buka form booking">
+      <g id="slot-mobil-bekas-14" class="slot" data-status="available" data-slot="slot-mobil-bekas-14" data-form="/booking/by-svg/slot-mobil-bekas-14">
+        <rect x="914.5" y="368.7" width="45" height="25" />
+        <text x="937" y="381.2" fill="#0a0a0a" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">14</text>
       </g>
       </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-27" aria-label="Area Mobil Bekas, Slot 27 — buka form booking">
-      <g id="slot-mobil-bekas-27" class="slot" data-status="available" data-slot="slot-mobil-bekas-27" data-form="/booking/by-svg/slot-mobil-bekas-27">
-        <rect x="928" y="762.5" width="40" height="23" />
-        <text x="948" y="774" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">27</text>
+      <a href="/booking/by-svg/slot-mobil-bekas-15" aria-label="Area Mobil Bekas, Slot 15 — buka form booking">
+      <g id="slot-mobil-bekas-15" class="slot" data-status="available" data-slot="slot-mobil-bekas-15" data-form="/booking/by-svg/slot-mobil-bekas-15">
+        <rect x="914.5" y="401.7" width="45" height="25" />
+        <text x="937" y="414.2" fill="#0a0a0a" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">15</text>
       </g>
       </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-26" aria-label="Area Mobil Bekas, Slot 26 — buka form booking">
-      <g id="slot-mobil-bekas-26" class="slot" data-status="available" data-slot="slot-mobil-bekas-26" data-form="/booking/by-svg/slot-mobil-bekas-26">
-        <rect x="928" y="789" width="40" height="23" />
-        <text x="948" y="800.5" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">26</text>
+      <a href="/booking/by-svg/slot-mobil-bekas-16" aria-label="Area Mobil Bekas, Slot 16 — buka form booking">
+      <g id="slot-mobil-bekas-16" class="slot" data-status="available" data-slot="slot-mobil-bekas-16" data-form="/booking/by-svg/slot-mobil-bekas-16">
+        <rect x="914.5" y="434.7" width="45" height="25" />
+        <text x="937" y="447.2" fill="#0a0a0a" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">16</text>
       </g>
       </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-25" aria-label="Area Mobil Bekas, Slot 25 — buka form booking">
-      <g id="slot-mobil-bekas-25" class="slot" data-status="available" data-slot="slot-mobil-bekas-25" data-form="/booking/by-svg/slot-mobil-bekas-25">
-        <rect x="928" y="815.5" width="40" height="23" />
-        <text x="948" y="827" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">25</text>
+      <a href="/booking/by-svg/slot-mobil-bekas-17" aria-label="Area Mobil Bekas, Slot 17 — buka form booking">
+      <g id="slot-mobil-bekas-17" class="slot" data-status="available" data-slot="slot-mobil-bekas-17" data-form="/booking/by-svg/slot-mobil-bekas-17">
+        <rect x="914.5" y="467.7" width="45" height="25" />
+        <text x="937" y="480.2" fill="#0a0a0a" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">17</text>
       </g>
       </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-24" aria-label="Area Mobil Bekas, Slot 24 — buka form booking">
-      <g id="slot-mobil-bekas-24" class="slot" data-status="available" data-slot="slot-mobil-bekas-24" data-form="/booking/by-svg/slot-mobil-bekas-24">
-        <rect x="928" y="842" width="40" height="23" />
-        <text x="948" y="853.5" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">24</text>
+      <a href="/booking/by-svg/slot-mobil-bekas-18" aria-label="Area Mobil Bekas, Slot 18 — buka form booking">
+      <g id="slot-mobil-bekas-18" class="slot" data-status="available" data-slot="slot-mobil-bekas-18" data-form="/booking/by-svg/slot-mobil-bekas-18">
+        <rect x="914.5" y="500.7" width="45" height="25" />
+        <text x="937" y="513.2" fill="#0a0a0a" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">18</text>
       </g>
       </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-23" aria-label="Area Mobil Bekas, Slot 23 — buka form booking">
-      <g id="slot-mobil-bekas-23" class="slot" data-status="available" data-slot="slot-mobil-bekas-23" data-form="/booking/by-svg/slot-mobil-bekas-23">
-        <rect x="928" y="868.5" width="40" height="23" />
-        <text x="948" y="880" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">23</text>
+      <a href="/booking/by-svg/slot-mobil-bekas-19" aria-label="Area Mobil Bekas, Slot 19 — buka form booking">
+      <g id="slot-mobil-bekas-19" class="slot" data-status="available" data-slot="slot-mobil-bekas-19" data-form="/booking/by-svg/slot-mobil-bekas-19">
+        <rect x="914.5" y="533.7" width="45" height="25" />
+        <text x="937" y="546.2" fill="#0a0a0a" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">19</text>
       </g>
       </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-22" aria-label="Area Mobil Bekas, Slot 22 — buka form booking">
-      <g id="slot-mobil-bekas-22" class="slot" data-status="available" data-slot="slot-mobil-bekas-22" data-form="/booking/by-svg/slot-mobil-bekas-22">
-        <rect x="928" y="895" width="40" height="23" />
-        <text x="948" y="906.5" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">22</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-21" aria-label="Area Mobil Bekas, Slot 21 — buka form booking">
-      <g id="slot-mobil-bekas-21" class="slot" data-status="available" data-slot="slot-mobil-bekas-21" data-form="/booking/by-svg/slot-mobil-bekas-21">
-        <rect x="928" y="921.5" width="40" height="23" />
-        <text x="948" y="933" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">21</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-40" aria-label="Area Mobil Bekas, Slot 40 — buka form booking">
-      <g id="slot-mobil-bekas-40" class="slot" data-status="available" data-slot="slot-mobil-bekas-40" data-form="/booking/by-svg/slot-mobil-bekas-40">
-        <rect x="1016" y="647" width="30" height="26" />
-        <text x="1031" y="660" fill="#0a0a0a" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">40</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-39" aria-label="Area Mobil Bekas, Slot 39 — buka form booking">
-      <g id="slot-mobil-bekas-39" class="slot" data-status="available" data-slot="slot-mobil-bekas-39" data-form="/booking/by-svg/slot-mobil-bekas-39">
-        <rect x="1016" y="676.5" width="30" height="26" />
-        <text x="1031" y="689.5" fill="#0a0a0a" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">39</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-38" aria-label="Area Mobil Bekas, Slot 38 — buka form booking">
-      <g id="slot-mobil-bekas-38" class="slot" data-status="available" data-slot="slot-mobil-bekas-38" data-form="/booking/by-svg/slot-mobil-bekas-38">
-        <rect x="1016" y="706" width="30" height="26" />
-        <text x="1031" y="719" fill="#0a0a0a" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">38</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-37" aria-label="Area Mobil Bekas, Slot 37 — buka form booking">
-      <g id="slot-mobil-bekas-37" class="slot" data-status="available" data-slot="slot-mobil-bekas-37" data-form="/booking/by-svg/slot-mobil-bekas-37">
-        <rect x="1016" y="735.5" width="30" height="26" />
-        <text x="1031" y="748.5" fill="#0a0a0a" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">37</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-36" aria-label="Area Mobil Bekas, Slot 36 — buka form booking">
-      <g id="slot-mobil-bekas-36" class="slot" data-status="available" data-slot="slot-mobil-bekas-36" data-form="/booking/by-svg/slot-mobil-bekas-36">
-        <rect x="1016" y="765" width="30" height="26" />
-        <text x="1031" y="778" fill="#0a0a0a" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">36</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-35" aria-label="Area Mobil Bekas, Slot 35 — buka form booking">
-      <g id="slot-mobil-bekas-35" class="slot" data-status="available" data-slot="slot-mobil-bekas-35" data-form="/booking/by-svg/slot-mobil-bekas-35">
-        <rect x="1016" y="794.5" width="30" height="26" />
-        <text x="1031" y="807.5" fill="#0a0a0a" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">35</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-34" aria-label="Area Mobil Bekas, Slot 34 — buka form booking">
-      <g id="slot-mobil-bekas-34" class="slot" data-status="available" data-slot="slot-mobil-bekas-34" data-form="/booking/by-svg/slot-mobil-bekas-34">
-        <rect x="1016" y="824" width="30" height="26" />
-        <text x="1031" y="837" fill="#0a0a0a" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">34</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-33" aria-label="Area Mobil Bekas, Slot 33 — buka form booking">
-      <g id="slot-mobil-bekas-33" class="slot" data-status="available" data-slot="slot-mobil-bekas-33" data-form="/booking/by-svg/slot-mobil-bekas-33">
-        <rect x="1016" y="853.5" width="30" height="26" />
-        <text x="1031" y="866.5" fill="#0a0a0a" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">33</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-32" aria-label="Area Mobil Bekas, Slot 32 — buka form booking">
-      <g id="slot-mobil-bekas-32" class="slot" data-status="available" data-slot="slot-mobil-bekas-32" data-form="/booking/by-svg/slot-mobil-bekas-32">
-        <rect x="1016" y="883" width="30" height="26" />
-        <text x="1031" y="896" fill="#0a0a0a" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">32</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-31" aria-label="Area Mobil Bekas, Slot 31 — buka form booking">
-      <g id="slot-mobil-bekas-31" class="slot" data-status="available" data-slot="slot-mobil-bekas-31" data-form="/booking/by-svg/slot-mobil-bekas-31">
-        <rect x="1016" y="912.5" width="30" height="26" />
-        <text x="1031" y="925.5" fill="#0a0a0a" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">31</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-50" aria-label="Area Mobil Bekas, Slot 50 — buka form booking">
-      <g id="slot-mobil-bekas-50" class="slot" data-status="available" data-slot="slot-mobil-bekas-50" data-form="/booking/by-svg/slot-mobil-bekas-50">
-        <rect x="1091" y="643" width="38" height="23" />
-        <text x="1110" y="654.5" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">50</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-49" aria-label="Area Mobil Bekas, Slot 49 — buka form booking">
-      <g id="slot-mobil-bekas-49" class="slot" data-status="available" data-slot="slot-mobil-bekas-49" data-form="/booking/by-svg/slot-mobil-bekas-49">
-        <rect x="1091" y="669.8" width="38" height="23" />
-        <text x="1110" y="681.3" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">49</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-48" aria-label="Area Mobil Bekas, Slot 48 — buka form booking">
-      <g id="slot-mobil-bekas-48" class="slot" data-status="available" data-slot="slot-mobil-bekas-48" data-form="/booking/by-svg/slot-mobil-bekas-48">
-        <rect x="1091" y="696.6" width="38" height="23" />
-        <text x="1110" y="708.1" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">48</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-47" aria-label="Area Mobil Bekas, Slot 47 — buka form booking">
-      <g id="slot-mobil-bekas-47" class="slot" data-status="available" data-slot="slot-mobil-bekas-47" data-form="/booking/by-svg/slot-mobil-bekas-47">
-        <rect x="1091" y="723.4" width="38" height="23" />
-        <text x="1110" y="734.9" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">47</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-46" aria-label="Area Mobil Bekas, Slot 46 — buka form booking">
-      <g id="slot-mobil-bekas-46" class="slot" data-status="available" data-slot="slot-mobil-bekas-46" data-form="/booking/by-svg/slot-mobil-bekas-46">
-        <rect x="1091" y="750.2" width="38" height="23" />
-        <text x="1110" y="761.7" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">46</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-45" aria-label="Area Mobil Bekas, Slot 45 — buka form booking">
-      <g id="slot-mobil-bekas-45" class="slot" data-status="available" data-slot="slot-mobil-bekas-45" data-form="/booking/by-svg/slot-mobil-bekas-45">
-        <rect x="1091" y="777" width="38" height="23" />
-        <text x="1110" y="788.5" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">45</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-44" aria-label="Area Mobil Bekas, Slot 44 — buka form booking">
-      <g id="slot-mobil-bekas-44" class="slot" data-status="available" data-slot="slot-mobil-bekas-44" data-form="/booking/by-svg/slot-mobil-bekas-44">
-        <rect x="1091" y="803.8" width="38" height="23" />
-        <text x="1110" y="815.3" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">44</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-43" aria-label="Area Mobil Bekas, Slot 43 — buka form booking">
-      <g id="slot-mobil-bekas-43" class="slot" data-status="available" data-slot="slot-mobil-bekas-43" data-form="/booking/by-svg/slot-mobil-bekas-43">
-        <rect x="1091" y="830.6" width="38" height="23" />
-        <text x="1110" y="842.1" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">43</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-42" aria-label="Area Mobil Bekas, Slot 42 — buka form booking">
-      <g id="slot-mobil-bekas-42" class="slot" data-status="available" data-slot="slot-mobil-bekas-42" data-form="/booking/by-svg/slot-mobil-bekas-42">
-        <rect x="1091" y="857.4" width="38" height="23" />
-        <text x="1110" y="868.9" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">42</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-41" aria-label="Area Mobil Bekas, Slot 41 — buka form booking">
-      <g id="slot-mobil-bekas-41" class="slot" data-status="available" data-slot="slot-mobil-bekas-41" data-form="/booking/by-svg/slot-mobil-bekas-41">
-        <rect x="1091" y="884.2" width="38" height="23" />
-        <text x="1110" y="895.7" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">41</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-60" aria-label="Area Mobil Bekas, Slot 60 — buka form booking">
-      <g id="slot-mobil-bekas-60" class="slot" data-status="available" data-slot="slot-mobil-bekas-60" data-form="/booking/by-svg/slot-mobil-bekas-60">
-        <rect x="1205" y="643" width="38" height="23" />
-        <text x="1224" y="654.5" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">60</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-59" aria-label="Area Mobil Bekas, Slot 59 — buka form booking">
-      <g id="slot-mobil-bekas-59" class="slot" data-status="available" data-slot="slot-mobil-bekas-59" data-form="/booking/by-svg/slot-mobil-bekas-59">
-        <rect x="1205" y="669.8" width="38" height="23" />
-        <text x="1224" y="681.3" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">59</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-58" aria-label="Area Mobil Bekas, Slot 58 — buka form booking">
-      <g id="slot-mobil-bekas-58" class="slot" data-status="available" data-slot="slot-mobil-bekas-58" data-form="/booking/by-svg/slot-mobil-bekas-58">
-        <rect x="1205" y="696.6" width="38" height="23" />
-        <text x="1224" y="708.1" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">58</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-57" aria-label="Area Mobil Bekas, Slot 57 — buka form booking">
-      <g id="slot-mobil-bekas-57" class="slot" data-status="available" data-slot="slot-mobil-bekas-57" data-form="/booking/by-svg/slot-mobil-bekas-57">
-        <rect x="1205" y="723.4" width="38" height="23" />
-        <text x="1224" y="734.9" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">57</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-56" aria-label="Area Mobil Bekas, Slot 56 — buka form booking">
-      <g id="slot-mobil-bekas-56" class="slot" data-status="available" data-slot="slot-mobil-bekas-56" data-form="/booking/by-svg/slot-mobil-bekas-56">
-        <rect x="1205" y="750.2" width="38" height="23" />
-        <text x="1224" y="761.7" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">56</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-55" aria-label="Area Mobil Bekas, Slot 55 — buka form booking">
-      <g id="slot-mobil-bekas-55" class="slot" data-status="available" data-slot="slot-mobil-bekas-55" data-form="/booking/by-svg/slot-mobil-bekas-55">
-        <rect x="1205" y="777" width="38" height="23" />
-        <text x="1224" y="788.5" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">55</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-54" aria-label="Area Mobil Bekas, Slot 54 — buka form booking">
-      <g id="slot-mobil-bekas-54" class="slot" data-status="available" data-slot="slot-mobil-bekas-54" data-form="/booking/by-svg/slot-mobil-bekas-54">
-        <rect x="1205" y="803.8" width="38" height="23" />
-        <text x="1224" y="815.3" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">54</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-53" aria-label="Area Mobil Bekas, Slot 53 — buka form booking">
-      <g id="slot-mobil-bekas-53" class="slot" data-status="available" data-slot="slot-mobil-bekas-53" data-form="/booking/by-svg/slot-mobil-bekas-53">
-        <rect x="1205" y="830.6" width="38" height="23" />
-        <text x="1224" y="842.1" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">53</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-52" aria-label="Area Mobil Bekas, Slot 52 — buka form booking">
-      <g id="slot-mobil-bekas-52" class="slot" data-status="available" data-slot="slot-mobil-bekas-52" data-form="/booking/by-svg/slot-mobil-bekas-52">
-        <rect x="1205" y="857.4" width="38" height="23" />
-        <text x="1224" y="868.9" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">52</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-bekas-51" aria-label="Area Mobil Bekas, Slot 51 — buka form booking">
-      <g id="slot-mobil-bekas-51" class="slot" data-status="available" data-slot="slot-mobil-bekas-51" data-form="/booking/by-svg/slot-mobil-bekas-51">
-        <rect x="1205" y="884.2" width="38" height="23" />
-        <text x="1224" y="895.7" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">51</text>
+      <a href="/booking/by-svg/slot-mobil-bekas-20" aria-label="Area Mobil Bekas, Slot 20 — buka form booking">
+      <g id="slot-mobil-bekas-20" class="slot" data-status="available" data-slot="slot-mobil-bekas-20" data-form="/booking/by-svg/slot-mobil-bekas-20">
+        <rect x="914.5" y="566.7" width="45" height="25" />
+        <text x="937" y="579.2" fill="#0a0a0a" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="middle">20</text>
       </g>
       </a>
     </g>
   </g>
   <g id="zone-motor-baru" data-zone-type="motor_baru">
     <g class="slots">
-      <a href="/booking/by-svg/slot-motor-baru-05" aria-label="Area Motor Baru, Slot 5 — buka form booking">
-      <g id="slot-motor-baru-05" class="slot" data-status="available" data-slot="slot-motor-baru-05" data-form="/booking/by-svg/slot-motor-baru-05">
-        <rect x="934" y="221" width="26" height="24" />
-        <text x="947" y="233" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">5</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-motor-baru-04" aria-label="Area Motor Baru, Slot 4 — buka form booking">
-      <g id="slot-motor-baru-04" class="slot" data-status="available" data-slot="slot-motor-baru-04" data-form="/booking/by-svg/slot-motor-baru-04">
-        <rect x="934" y="249" width="26" height="24" />
-        <text x="947" y="261" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">4</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-motor-baru-03" aria-label="Area Motor Baru, Slot 3 — buka form booking">
-      <g id="slot-motor-baru-03" class="slot" data-status="available" data-slot="slot-motor-baru-03" data-form="/booking/by-svg/slot-motor-baru-03">
-        <rect x="934" y="277" width="26" height="24" />
-        <text x="947" y="289" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">3</text>
+      <a href="/booking/by-svg/slot-motor-baru-01" aria-label="Area Motor Baru, Slot 1 — buka form booking">
+      <g id="slot-motor-baru-01" class="slot" data-status="available" data-slot="slot-motor-baru-01" data-form="/booking/by-svg/slot-motor-baru-01">
+        <rect x="998" y="396" width="30" height="30" />
+        <text x="1013" y="411" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">1</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-motor-baru-02" aria-label="Area Motor Baru, Slot 2 — buka form booking">
       <g id="slot-motor-baru-02" class="slot" data-status="available" data-slot="slot-motor-baru-02" data-form="/booking/by-svg/slot-motor-baru-02">
-        <rect x="934" y="305" width="26" height="24" />
-        <text x="947" y="317" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">2</text>
+        <rect x="998" y="426" width="30" height="30" />
+        <text x="1013" y="441" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">2</text>
       </g>
       </a>
-      <a href="/booking/by-svg/slot-motor-baru-01" aria-label="Area Motor Baru, Slot 1 — buka form booking">
-      <g id="slot-motor-baru-01" class="slot" data-status="available" data-slot="slot-motor-baru-01" data-form="/booking/by-svg/slot-motor-baru-01">
-        <rect x="934" y="333" width="26" height="24" />
-        <text x="947" y="345" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">1</text>
+      <a href="/booking/by-svg/slot-motor-baru-03" aria-label="Area Motor Baru, Slot 3 — buka form booking">
+      <g id="slot-motor-baru-03" class="slot" data-status="available" data-slot="slot-motor-baru-03" data-form="/booking/by-svg/slot-motor-baru-03">
+        <rect x="998" y="456" width="30" height="30" />
+        <text x="1013" y="471" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">3</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-motor-baru-04" aria-label="Area Motor Baru, Slot 4 — buka form booking">
+      <g id="slot-motor-baru-04" class="slot" data-status="available" data-slot="slot-motor-baru-04" data-form="/booking/by-svg/slot-motor-baru-04">
+        <rect x="998" y="486" width="30" height="30" />
+        <text x="1013" y="501" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">4</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-motor-baru-05" aria-label="Area Motor Baru, Slot 5 — buka form booking">
+      <g id="slot-motor-baru-05" class="slot" data-status="available" data-slot="slot-motor-baru-05" data-form="/booking/by-svg/slot-motor-baru-05">
+        <rect x="998" y="516" width="30" height="30" />
+        <text x="1013" y="531" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">5</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-motor-baru-06" aria-label="Area Motor Baru, Slot 6 — buka form booking">
+      <g id="slot-motor-baru-06" class="slot" data-status="available" data-slot="slot-motor-baru-06" data-form="/booking/by-svg/slot-motor-baru-06">
+        <rect x="998" y="546" width="30" height="30" />
+        <text x="1013" y="561" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">6</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-motor-baru-07" aria-label="Area Motor Baru, Slot 7 — buka form booking">
+      <g id="slot-motor-baru-07" class="slot" data-status="available" data-slot="slot-motor-baru-07" data-form="/booking/by-svg/slot-motor-baru-07">
+        <rect x="998" y="576" width="30" height="30" />
+        <text x="1013" y="591" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">7</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-motor-baru-08" aria-label="Area Motor Baru, Slot 8 — buka form booking">
+      <g id="slot-motor-baru-08" class="slot" data-status="available" data-slot="slot-motor-baru-08" data-form="/booking/by-svg/slot-motor-baru-08">
+        <rect x="998" y="606" width="30" height="30" />
+        <text x="1013" y="621" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">8</text>
       </g>
       </a>
     </g>
   </g>
   <g id="zone-mobil-motor" data-zone-type="mobil_motor_bekas">
     <g class="slots">
-      <a href="/booking/by-svg/slot-mobil-motor-07" aria-label="Area Motor Bekas, Slot 7 — buka form booking">
-      <g id="slot-mobil-motor-07" class="slot" data-status="available" data-slot="slot-mobil-motor-07" data-form="/booking/by-svg/slot-mobil-motor-07">
-        <rect x="976" y="221" width="24" height="17" />
-        <text x="988" y="229.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">7</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-motor-06" aria-label="Area Motor Bekas, Slot 6 — buka form booking">
-      <g id="slot-mobil-motor-06" class="slot" data-status="available" data-slot="slot-mobil-motor-06" data-form="/booking/by-svg/slot-mobil-motor-06">
-        <rect x="976" y="241" width="24" height="17" />
-        <text x="988" y="249.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">6</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-motor-05" aria-label="Area Motor Bekas, Slot 5 — buka form booking">
-      <g id="slot-mobil-motor-05" class="slot" data-status="available" data-slot="slot-mobil-motor-05" data-form="/booking/by-svg/slot-mobil-motor-05">
-        <rect x="976" y="261" width="24" height="17" />
-        <text x="988" y="269.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">5</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-motor-04" aria-label="Area Motor Bekas, Slot 4 — buka form booking">
-      <g id="slot-mobil-motor-04" class="slot" data-status="available" data-slot="slot-mobil-motor-04" data-form="/booking/by-svg/slot-mobil-motor-04">
-        <rect x="976" y="281" width="24" height="17" />
-        <text x="988" y="289.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">4</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-motor-03" aria-label="Area Motor Bekas, Slot 3 — buka form booking">
-      <g id="slot-mobil-motor-03" class="slot" data-status="available" data-slot="slot-mobil-motor-03" data-form="/booking/by-svg/slot-mobil-motor-03">
-        <rect x="976" y="301" width="24" height="17" />
-        <text x="988" y="309.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">3</text>
+      <a href="/booking/by-svg/slot-mobil-motor-01" aria-label="Area Motor Bekas, Slot 1 — buka form booking">
+      <g id="slot-mobil-motor-01" class="slot" data-status="available" data-slot="slot-mobil-motor-01" data-form="/booking/by-svg/slot-mobil-motor-01">
+        <rect x="760" y="466.8" width="24" height="11" />
+        <text x="772" y="472.3" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">1</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-mobil-motor-02" aria-label="Area Motor Bekas, Slot 2 — buka form booking">
       <g id="slot-mobil-motor-02" class="slot" data-status="available" data-slot="slot-mobil-motor-02" data-form="/booking/by-svg/slot-mobil-motor-02">
-        <rect x="976" y="321" width="24" height="17" />
-        <text x="988" y="329.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">2</text>
+        <rect x="760" y="478.8" width="24" height="11" />
+        <text x="772" y="484.3" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">2</text>
       </g>
       </a>
-      <a href="/booking/by-svg/slot-mobil-motor-01" aria-label="Area Motor Bekas, Slot 1 — buka form booking">
-      <g id="slot-mobil-motor-01" class="slot" data-status="available" data-slot="slot-mobil-motor-01" data-form="/booking/by-svg/slot-mobil-motor-01">
-        <rect x="976" y="341" width="24" height="17" />
-        <text x="988" y="349.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">1</text>
+      <a href="/booking/by-svg/slot-mobil-motor-03" aria-label="Area Motor Bekas, Slot 3 — buka form booking">
+      <g id="slot-mobil-motor-03" class="slot" data-status="available" data-slot="slot-mobil-motor-03" data-form="/booking/by-svg/slot-mobil-motor-03">
+        <rect x="760" y="490.8" width="24" height="11" />
+        <text x="772" y="496.3" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">3</text>
       </g>
       </a>
-      <a href="/booking/by-svg/slot-mobil-motor-14" aria-label="Area Motor Bekas, Slot 14 — buka form booking">
-      <g id="slot-mobil-motor-14" class="slot" data-status="available" data-slot="slot-mobil-motor-14" data-form="/booking/by-svg/slot-mobil-motor-14">
-        <rect x="976" y="63" width="24" height="17" />
-        <text x="988" y="71.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">14</text>
+      <a href="/booking/by-svg/slot-mobil-motor-04" aria-label="Area Motor Bekas, Slot 4 — buka form booking">
+      <g id="slot-mobil-motor-04" class="slot" data-status="available" data-slot="slot-mobil-motor-04" data-form="/booking/by-svg/slot-mobil-motor-04">
+        <rect x="760" y="502.8" width="24" height="11" />
+        <text x="772" y="508.3" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">4</text>
       </g>
       </a>
-      <a href="/booking/by-svg/slot-mobil-motor-13" aria-label="Area Motor Bekas, Slot 13 — buka form booking">
-      <g id="slot-mobil-motor-13" class="slot" data-status="available" data-slot="slot-mobil-motor-13" data-form="/booking/by-svg/slot-mobil-motor-13">
-        <rect x="976" y="83" width="24" height="17" />
-        <text x="988" y="91.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">13</text>
+      <a href="/booking/by-svg/slot-mobil-motor-05" aria-label="Area Motor Bekas, Slot 5 — buka form booking">
+      <g id="slot-mobil-motor-05" class="slot" data-status="available" data-slot="slot-mobil-motor-05" data-form="/booking/by-svg/slot-mobil-motor-05">
+        <rect x="760" y="514.8" width="24" height="11" />
+        <text x="772" y="520.3" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">5</text>
       </g>
       </a>
-      <a href="/booking/by-svg/slot-mobil-motor-12" aria-label="Area Motor Bekas, Slot 12 — buka form booking">
-      <g id="slot-mobil-motor-12" class="slot" data-status="available" data-slot="slot-mobil-motor-12" data-form="/booking/by-svg/slot-mobil-motor-12">
-        <rect x="976" y="103" width="24" height="17" />
-        <text x="988" y="111.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">12</text>
+      <a href="/booking/by-svg/slot-mobil-motor-06" aria-label="Area Motor Bekas, Slot 6 — buka form booking">
+      <g id="slot-mobil-motor-06" class="slot" data-status="available" data-slot="slot-mobil-motor-06" data-form="/booking/by-svg/slot-mobil-motor-06">
+        <rect x="760" y="526.8" width="24" height="11" />
+        <text x="772" y="532.3" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">6</text>
       </g>
       </a>
-      <a href="/booking/by-svg/slot-mobil-motor-11" aria-label="Area Motor Bekas, Slot 11 — buka form booking">
-      <g id="slot-mobil-motor-11" class="slot" data-status="available" data-slot="slot-mobil-motor-11" data-form="/booking/by-svg/slot-mobil-motor-11">
-        <rect x="976" y="123" width="24" height="17" />
-        <text x="988" y="131.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">11</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-motor-10" aria-label="Area Motor Bekas, Slot 10 — buka form booking">
-      <g id="slot-mobil-motor-10" class="slot" data-status="available" data-slot="slot-mobil-motor-10" data-form="/booking/by-svg/slot-mobil-motor-10">
-        <rect x="976" y="143" width="24" height="17" />
-        <text x="988" y="151.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">10</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-mobil-motor-09" aria-label="Area Motor Bekas, Slot 9 — buka form booking">
-      <g id="slot-mobil-motor-09" class="slot" data-status="available" data-slot="slot-mobil-motor-09" data-form="/booking/by-svg/slot-mobil-motor-09">
-        <rect x="976" y="163" width="24" height="17" />
-        <text x="988" y="171.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">9</text>
+      <a href="/booking/by-svg/slot-mobil-motor-07" aria-label="Area Motor Bekas, Slot 7 — buka form booking">
+      <g id="slot-mobil-motor-07" class="slot" data-status="available" data-slot="slot-mobil-motor-07" data-form="/booking/by-svg/slot-mobil-motor-07">
+        <rect x="760" y="538.8" width="24" height="11" />
+        <text x="772" y="544.3" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">7</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-mobil-motor-08" aria-label="Area Motor Bekas, Slot 8 — buka form booking">
       <g id="slot-mobil-motor-08" class="slot" data-status="available" data-slot="slot-mobil-motor-08" data-form="/booking/by-svg/slot-mobil-motor-08">
-        <rect x="976" y="183" width="24" height="17" />
-        <text x="988" y="191.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">8</text>
+        <rect x="760" y="550.8" width="24" height="11" />
+        <text x="772" y="556.3" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">8</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-mobil-motor-09" aria-label="Area Motor Bekas, Slot 9 — buka form booking">
+      <g id="slot-mobil-motor-09" class="slot" data-status="available" data-slot="slot-mobil-motor-09" data-form="/booking/by-svg/slot-mobil-motor-09">
+        <rect x="760" y="562.8" width="24" height="11" />
+        <text x="772" y="568.3" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">9</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-mobil-motor-10" aria-label="Area Motor Bekas, Slot 10 — buka form booking">
+      <g id="slot-mobil-motor-10" class="slot" data-status="available" data-slot="slot-mobil-motor-10" data-form="/booking/by-svg/slot-mobil-motor-10">
+        <rect x="760" y="574.8" width="24" height="11" />
+        <text x="772" y="580.3" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">10</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-mobil-motor-11" aria-label="Area Motor Bekas, Slot 11 — buka form booking">
+      <g id="slot-mobil-motor-11" class="slot" data-status="available" data-slot="slot-mobil-motor-11" data-form="/booking/by-svg/slot-mobil-motor-11">
+        <rect x="760" y="586.8" width="24" height="11" />
+        <text x="772" y="592.3" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">11</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-mobil-motor-12" aria-label="Area Motor Bekas, Slot 12 — buka form booking">
+      <g id="slot-mobil-motor-12" class="slot" data-status="available" data-slot="slot-mobil-motor-12" data-form="/booking/by-svg/slot-mobil-motor-12">
+        <rect x="760" y="598.8" width="24" height="11" />
+        <text x="772" y="604.3" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">12</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-mobil-motor-13" aria-label="Area Motor Bekas, Slot 13 — buka form booking">
+      <g id="slot-mobil-motor-13" class="slot" data-status="available" data-slot="slot-mobil-motor-13" data-form="/booking/by-svg/slot-mobil-motor-13">
+        <rect x="760" y="610.8" width="24" height="11" />
+        <text x="772" y="616.3" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">13</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-mobil-motor-14" aria-label="Area Motor Bekas, Slot 14 — buka form booking">
+      <g id="slot-mobil-motor-14" class="slot" data-status="available" data-slot="slot-mobil-motor-14" data-form="/booking/by-svg/slot-mobil-motor-14">
+        <rect x="760" y="622.8" width="24" height="11" />
+        <text x="772" y="628.3" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">14</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-mobil-motor-15" aria-label="Area Motor Bekas, Slot 15 — buka form booking">
       <g id="slot-mobil-motor-15" class="slot" data-status="available" data-slot="slot-mobil-motor-15" data-form="/booking/by-svg/slot-mobil-motor-15">
-        <rect x="936" y="63" width="24" height="17" />
-        <text x="948" y="71.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">15</text>
+        <rect x="827.9" y="996.6" width="11" height="24"  transform="rotate(45 833.4 1008.6)"/>
+        <text x="833.4" y="1008.6" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">15</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-mobil-motor-16" aria-label="Area Motor Bekas, Slot 16 — buka form booking">
       <g id="slot-mobil-motor-16" class="slot" data-status="available" data-slot="slot-mobil-motor-16" data-form="/booking/by-svg/slot-mobil-motor-16">
-        <rect x="936" y="83" width="24" height="17" />
-        <text x="948" y="91.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">16</text>
+        <rect x="827.9" y="1020.1" width="11" height="24"  transform="rotate(45 833.4 1032.1)"/>
+        <text x="833.4" y="1032.1" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">16</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-mobil-motor-17" aria-label="Area Motor Bekas, Slot 17 — buka form booking">
       <g id="slot-mobil-motor-17" class="slot" data-status="available" data-slot="slot-mobil-motor-17" data-form="/booking/by-svg/slot-mobil-motor-17">
-        <rect x="936" y="103" width="24" height="17" />
-        <text x="948" y="111.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">17</text>
+        <rect x="827.9" y="1043.6" width="11" height="24"  transform="rotate(45 833.4 1055.6)"/>
+        <text x="833.4" y="1055.6" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">17</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-mobil-motor-18" aria-label="Area Motor Bekas, Slot 18 — buka form booking">
       <g id="slot-mobil-motor-18" class="slot" data-status="available" data-slot="slot-mobil-motor-18" data-form="/booking/by-svg/slot-mobil-motor-18">
-        <rect x="936" y="123" width="24" height="17" />
-        <text x="948" y="131.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">18</text>
+        <rect x="827.9" y="1067.1" width="11" height="24"  transform="rotate(45 833.4 1079.1)"/>
+        <text x="833.4" y="1079.1" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">18</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-mobil-motor-19" aria-label="Area Motor Bekas, Slot 19 — buka form booking">
       <g id="slot-mobil-motor-19" class="slot" data-status="available" data-slot="slot-mobil-motor-19" data-form="/booking/by-svg/slot-mobil-motor-19">
-        <rect x="936" y="143" width="24" height="17" />
-        <text x="948" y="151.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">19</text>
+        <rect x="827.9" y="1090.6" width="11" height="24"  transform="rotate(45 833.4 1102.6)"/>
+        <text x="833.4" y="1102.6" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">19</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-mobil-motor-20" aria-label="Area Motor Bekas, Slot 20 — buka form booking">
       <g id="slot-mobil-motor-20" class="slot" data-status="available" data-slot="slot-mobil-motor-20" data-form="/booking/by-svg/slot-mobil-motor-20">
-        <rect x="936" y="163" width="24" height="17" />
-        <text x="948" y="171.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">20</text>
+        <rect x="827.9" y="1114.1" width="11" height="24"  transform="rotate(45 833.4 1126.1)"/>
+        <text x="833.4" y="1126.1" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">20</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-mobil-motor-21" aria-label="Area Motor Bekas, Slot 21 — buka form booking">
+      <g id="slot-mobil-motor-21" class="slot" data-status="available" data-slot="slot-mobil-motor-21" data-form="/booking/by-svg/slot-mobil-motor-21">
+        <rect x="827.9" y="1137.6" width="11" height="24"  transform="rotate(45 833.4 1149.6)"/>
+        <text x="833.4" y="1149.6" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">21</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-mobil-motor-22" aria-label="Area Motor Bekas, Slot 22 — buka form booking">
+      <g id="slot-mobil-motor-22" class="slot" data-status="available" data-slot="slot-mobil-motor-22" data-form="/booking/by-svg/slot-mobil-motor-22">
+        <rect x="886.1" y="996.6" width="11" height="24"  transform="rotate(-45 891.6 1008.6)"/>
+        <text x="891.6" y="1008.6" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">22</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-mobil-motor-23" aria-label="Area Motor Bekas, Slot 23 — buka form booking">
+      <g id="slot-mobil-motor-23" class="slot" data-status="available" data-slot="slot-mobil-motor-23" data-form="/booking/by-svg/slot-mobil-motor-23">
+        <rect x="886.1" y="1020.1" width="11" height="24"  transform="rotate(-45 891.6 1032.1)"/>
+        <text x="891.6" y="1032.1" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">23</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-mobil-motor-24" aria-label="Area Motor Bekas, Slot 24 — buka form booking">
+      <g id="slot-mobil-motor-24" class="slot" data-status="available" data-slot="slot-mobil-motor-24" data-form="/booking/by-svg/slot-mobil-motor-24">
+        <rect x="886.1" y="1043.6" width="11" height="24"  transform="rotate(-45 891.6 1055.6)"/>
+        <text x="891.6" y="1055.6" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">24</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-mobil-motor-25" aria-label="Area Motor Bekas, Slot 25 — buka form booking">
+      <g id="slot-mobil-motor-25" class="slot" data-status="available" data-slot="slot-mobil-motor-25" data-form="/booking/by-svg/slot-mobil-motor-25">
+        <rect x="886.1" y="1067.1" width="11" height="24"  transform="rotate(-45 891.6 1079.1)"/>
+        <text x="891.6" y="1079.1" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">25</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-mobil-motor-26" aria-label="Area Motor Bekas, Slot 26 — buka form booking">
+      <g id="slot-mobil-motor-26" class="slot" data-status="available" data-slot="slot-mobil-motor-26" data-form="/booking/by-svg/slot-mobil-motor-26">
+        <rect x="886.1" y="1090.6" width="11" height="24"  transform="rotate(-45 891.6 1102.6)"/>
+        <text x="891.6" y="1102.6" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">26</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-mobil-motor-27" aria-label="Area Motor Bekas, Slot 27 — buka form booking">
+      <g id="slot-mobil-motor-27" class="slot" data-status="available" data-slot="slot-mobil-motor-27" data-form="/booking/by-svg/slot-mobil-motor-27">
+        <rect x="886.1" y="1114.1" width="11" height="24"  transform="rotate(-45 891.6 1126.1)"/>
+        <text x="891.6" y="1126.1" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">27</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-mobil-motor-28" aria-label="Area Motor Bekas, Slot 28 — buka form booking">
+      <g id="slot-mobil-motor-28" class="slot" data-status="available" data-slot="slot-mobil-motor-28" data-form="/booking/by-svg/slot-mobil-motor-28">
+        <rect x="886.1" y="1137.6" width="11" height="24"  transform="rotate(-45 891.6 1149.6)"/>
+        <text x="891.6" y="1149.6" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">28</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-mobil-motor-29" aria-label="Area Motor Bekas, Slot 29 — buka form booking">
+      <g id="slot-mobil-motor-29" class="slot" data-status="available" data-slot="slot-mobil-motor-29" data-form="/booking/by-svg/slot-mobil-motor-29">
+        <rect x="827.9" y="1192.6" width="11" height="24"  transform="rotate(45 833.4 1204.6)"/>
+        <text x="833.4" y="1204.6" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">29</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-mobil-motor-30" aria-label="Area Motor Bekas, Slot 30 — buka form booking">
+      <g id="slot-mobil-motor-30" class="slot" data-status="available" data-slot="slot-mobil-motor-30" data-form="/booking/by-svg/slot-mobil-motor-30">
+        <rect x="827.9" y="1216.1" width="11" height="24"  transform="rotate(45 833.4 1228.1)"/>
+        <text x="833.4" y="1228.1" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">30</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-mobil-motor-31" aria-label="Area Motor Bekas, Slot 31 — buka form booking">
+      <g id="slot-mobil-motor-31" class="slot" data-status="available" data-slot="slot-mobil-motor-31" data-form="/booking/by-svg/slot-mobil-motor-31">
+        <rect x="827.9" y="1239.6" width="11" height="24"  transform="rotate(45 833.4 1251.6)"/>
+        <text x="833.4" y="1251.6" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">31</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-mobil-motor-32" aria-label="Area Motor Bekas, Slot 32 — buka form booking">
+      <g id="slot-mobil-motor-32" class="slot" data-status="available" data-slot="slot-mobil-motor-32" data-form="/booking/by-svg/slot-mobil-motor-32">
+        <rect x="827.9" y="1263.1" width="11" height="24"  transform="rotate(45 833.4 1275.1)"/>
+        <text x="833.4" y="1275.1" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">32</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-mobil-motor-33" aria-label="Area Motor Bekas, Slot 33 — buka form booking">
+      <g id="slot-mobil-motor-33" class="slot" data-status="available" data-slot="slot-mobil-motor-33" data-form="/booking/by-svg/slot-mobil-motor-33">
+        <rect x="827.9" y="1286.6" width="11" height="24"  transform="rotate(45 833.4 1298.6)"/>
+        <text x="833.4" y="1298.6" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">33</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-mobil-motor-34" aria-label="Area Motor Bekas, Slot 34 — buka form booking">
+      <g id="slot-mobil-motor-34" class="slot" data-status="available" data-slot="slot-mobil-motor-34" data-form="/booking/by-svg/slot-mobil-motor-34">
+        <rect x="827.9" y="1310.1" width="11" height="24"  transform="rotate(45 833.4 1322.1)"/>
+        <text x="833.4" y="1322.1" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">34</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-mobil-motor-35" aria-label="Area Motor Bekas, Slot 35 — buka form booking">
+      <g id="slot-mobil-motor-35" class="slot" data-status="available" data-slot="slot-mobil-motor-35" data-form="/booking/by-svg/slot-mobil-motor-35">
+        <rect x="827.9" y="1333.6" width="11" height="24"  transform="rotate(45 833.4 1345.6)"/>
+        <text x="833.4" y="1345.6" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">35</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-mobil-motor-36" aria-label="Area Motor Bekas, Slot 36 — buka form booking">
+      <g id="slot-mobil-motor-36" class="slot" data-status="available" data-slot="slot-mobil-motor-36" data-form="/booking/by-svg/slot-mobil-motor-36">
+        <rect x="886.1" y="1192.6" width="11" height="24"  transform="rotate(-45 891.6 1204.6)"/>
+        <text x="891.6" y="1204.6" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">36</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-mobil-motor-37" aria-label="Area Motor Bekas, Slot 37 — buka form booking">
+      <g id="slot-mobil-motor-37" class="slot" data-status="available" data-slot="slot-mobil-motor-37" data-form="/booking/by-svg/slot-mobil-motor-37">
+        <rect x="886.1" y="1216.1" width="11" height="24"  transform="rotate(-45 891.6 1228.1)"/>
+        <text x="891.6" y="1228.1" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">37</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-mobil-motor-38" aria-label="Area Motor Bekas, Slot 38 — buka form booking">
+      <g id="slot-mobil-motor-38" class="slot" data-status="available" data-slot="slot-mobil-motor-38" data-form="/booking/by-svg/slot-mobil-motor-38">
+        <rect x="886.1" y="1239.6" width="11" height="24"  transform="rotate(-45 891.6 1251.6)"/>
+        <text x="891.6" y="1251.6" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">38</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-mobil-motor-39" aria-label="Area Motor Bekas, Slot 39 — buka form booking">
+      <g id="slot-mobil-motor-39" class="slot" data-status="available" data-slot="slot-mobil-motor-39" data-form="/booking/by-svg/slot-mobil-motor-39">
+        <rect x="886.1" y="1263.1" width="11" height="24"  transform="rotate(-45 891.6 1275.1)"/>
+        <text x="891.6" y="1275.1" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">39</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-mobil-motor-40" aria-label="Area Motor Bekas, Slot 40 — buka form booking">
+      <g id="slot-mobil-motor-40" class="slot" data-status="available" data-slot="slot-mobil-motor-40" data-form="/booking/by-svg/slot-mobil-motor-40">
+        <rect x="886.1" y="1286.6" width="11" height="24"  transform="rotate(-45 891.6 1298.6)"/>
+        <text x="891.6" y="1298.6" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">40</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-mobil-motor-41" aria-label="Area Motor Bekas, Slot 41 — buka form booking">
+      <g id="slot-mobil-motor-41" class="slot" data-status="available" data-slot="slot-mobil-motor-41" data-form="/booking/by-svg/slot-mobil-motor-41">
+        <rect x="886.1" y="1310.1" width="11" height="24"  transform="rotate(-45 891.6 1322.1)"/>
+        <text x="891.6" y="1322.1" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">41</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-mobil-motor-42" aria-label="Area Motor Bekas, Slot 42 — buka form booking">
+      <g id="slot-mobil-motor-42" class="slot" data-status="available" data-slot="slot-mobil-motor-42" data-form="/booking/by-svg/slot-mobil-motor-42">
+        <rect x="886.1" y="1333.6" width="11" height="24"  transform="rotate(-45 891.6 1345.6)"/>
+        <text x="891.6" y="1345.6" fill="#0a0a0a" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle">42</text>
       </g>
       </a>
     </g>
@@ -631,485 +595,347 @@
     <g class="slots">
       <a href="/booking/by-svg/slot-umkm-01" aria-label="Area UMKM, Slot 1 — buka form booking">
       <g id="slot-umkm-01" class="slot" data-status="available" data-slot="slot-umkm-01" data-form="/booking/by-svg/slot-umkm-01">
-        <rect x="1086" y="363" width="21" height="21" />
-        <text x="1096.5" y="373.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">1</text>
+        <rect x="602.5" y="354.5" width="30" height="30" />
+        <text x="617.5" y="369.5" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">1</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-umkm-02" aria-label="Area UMKM, Slot 2 — buka form booking">
       <g id="slot-umkm-02" class="slot" data-status="available" data-slot="slot-umkm-02" data-form="/booking/by-svg/slot-umkm-02">
-        <rect x="1110" y="363" width="21" height="21" />
-        <text x="1120.5" y="373.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">2</text>
+        <rect x="602.5" y="384.5" width="30" height="30" />
+        <text x="617.5" y="399.5" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">2</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-umkm-03" aria-label="Area UMKM, Slot 3 — buka form booking">
       <g id="slot-umkm-03" class="slot" data-status="available" data-slot="slot-umkm-03" data-form="/booking/by-svg/slot-umkm-03">
-        <rect x="1134" y="363" width="21" height="21" />
-        <text x="1144.5" y="373.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">3</text>
+        <rect x="602.5" y="414.5" width="30" height="30" />
+        <text x="617.5" y="429.5" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">3</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-umkm-04" aria-label="Area UMKM, Slot 4 — buka form booking">
       <g id="slot-umkm-04" class="slot" data-status="available" data-slot="slot-umkm-04" data-form="/booking/by-svg/slot-umkm-04">
-        <rect x="1158" y="363" width="21" height="21" />
-        <text x="1168.5" y="373.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">4</text>
+        <rect x="602.5" y="444.5" width="30" height="30" />
+        <text x="617.5" y="459.5" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">4</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-umkm-05" aria-label="Area UMKM, Slot 5 — buka form booking">
       <g id="slot-umkm-05" class="slot" data-status="available" data-slot="slot-umkm-05" data-form="/booking/by-svg/slot-umkm-05">
-        <rect x="1182" y="363" width="21" height="21" />
-        <text x="1192.5" y="373.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">5</text>
+        <rect x="602.5" y="474.5" width="30" height="30" />
+        <text x="617.5" y="489.5" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">5</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-umkm-06" aria-label="Area UMKM, Slot 6 — buka form booking">
       <g id="slot-umkm-06" class="slot" data-status="available" data-slot="slot-umkm-06" data-form="/booking/by-svg/slot-umkm-06">
-        <rect x="1206" y="363" width="21" height="21" />
-        <text x="1216.5" y="373.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">6</text>
+        <rect x="602.5" y="504.5" width="30" height="30" />
+        <text x="617.5" y="519.5" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">6</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-umkm-07" aria-label="Area UMKM, Slot 7 — buka form booking">
       <g id="slot-umkm-07" class="slot" data-status="available" data-slot="slot-umkm-07" data-form="/booking/by-svg/slot-umkm-07">
-        <rect x="1230" y="363" width="21" height="21" />
-        <text x="1240.5" y="373.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">7</text>
+        <rect x="602.5" y="534.5" width="30" height="30" />
+        <text x="617.5" y="549.5" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">7</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-umkm-08" aria-label="Area UMKM, Slot 8 — buka form booking">
       <g id="slot-umkm-08" class="slot" data-status="available" data-slot="slot-umkm-08" data-form="/booking/by-svg/slot-umkm-08">
-        <rect x="1254" y="363" width="21" height="21" />
-        <text x="1264.5" y="373.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">8</text>
+        <rect x="473" y="1371.5" width="30" height="30" />
+        <text x="488" y="1386.5" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">8</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-umkm-09" aria-label="Area UMKM, Slot 9 — buka form booking">
       <g id="slot-umkm-09" class="slot" data-status="available" data-slot="slot-umkm-09" data-form="/booking/by-svg/slot-umkm-09">
-        <rect x="1086" y="27" width="21" height="21" />
-        <text x="1096.5" y="37.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">9</text>
+        <rect x="690" y="1371.5" width="30" height="30" />
+        <text x="705" y="1386.5" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">9</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-umkm-10" aria-label="Area UMKM, Slot 10 — buka form booking">
       <g id="slot-umkm-10" class="slot" data-status="available" data-slot="slot-umkm-10" data-form="/booking/by-svg/slot-umkm-10">
-        <rect x="1110" y="27" width="21" height="21" />
-        <text x="1120.5" y="37.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">10</text>
+        <rect x="1872.7" y="821.5" width="28" height="30"  transform="rotate(-12 1886.7 836.5)"/>
+        <text x="1886.7" y="836.5" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">10</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-umkm-11" aria-label="Area UMKM, Slot 11 — buka form booking">
       <g id="slot-umkm-11" class="slot" data-status="available" data-slot="slot-umkm-11" data-form="/booking/by-svg/slot-umkm-11">
-        <rect x="1134" y="27" width="21" height="21" />
-        <text x="1144.5" y="37.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">11</text>
+        <rect x="1879.4" y="851.7" width="28" height="30"  transform="rotate(-12 1893.4 866.7)"/>
+        <text x="1893.4" y="866.7" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">11</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-umkm-12" aria-label="Area UMKM, Slot 12 — buka form booking">
       <g id="slot-umkm-12" class="slot" data-status="available" data-slot="slot-umkm-12" data-form="/booking/by-svg/slot-umkm-12">
-        <rect x="1158" y="27" width="21" height="21" />
-        <text x="1168.5" y="37.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">12</text>
+        <rect x="1886.1" y="882" width="28" height="30"  transform="rotate(-12 1900.1 897)"/>
+        <text x="1900.1" y="897" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">12</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-umkm-13" aria-label="Area UMKM, Slot 13 — buka form booking">
       <g id="slot-umkm-13" class="slot" data-status="available" data-slot="slot-umkm-13" data-form="/booking/by-svg/slot-umkm-13">
-        <rect x="1182" y="27" width="21" height="21" />
-        <text x="1192.5" y="37.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">13</text>
+        <rect x="1892.8" y="912.3" width="28" height="30"  transform="rotate(-12 1906.8 927.3)"/>
+        <text x="1906.8" y="927.3" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">13</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-umkm-14" aria-label="Area UMKM, Slot 14 — buka form booking">
       <g id="slot-umkm-14" class="slot" data-status="available" data-slot="slot-umkm-14" data-form="/booking/by-svg/slot-umkm-14">
-        <rect x="1206" y="27" width="21" height="21" />
-        <text x="1216.5" y="37.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">14</text>
+        <rect x="1899.5" y="942.5" width="28" height="30"  transform="rotate(-12 1913.5 957.5)"/>
+        <text x="1913.5" y="957.5" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">14</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-umkm-15" aria-label="Area UMKM, Slot 15 — buka form booking">
       <g id="slot-umkm-15" class="slot" data-status="available" data-slot="slot-umkm-15" data-form="/booking/by-svg/slot-umkm-15">
-        <rect x="1230" y="27" width="21" height="21" />
-        <text x="1240.5" y="37.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">15</text>
+        <rect x="1883.1" y="980" width="28" height="30"  transform="rotate(60 1897.1 995)"/>
+        <text x="1897.1" y="995" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">15</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-umkm-16" aria-label="Area UMKM, Slot 16 — buka form booking">
       <g id="slot-umkm-16" class="slot" data-status="available" data-slot="slot-umkm-16" data-form="/booking/by-svg/slot-umkm-16">
-        <rect x="1254" y="27" width="21" height="21" />
-        <text x="1264.5" y="37.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">16</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-umkm-21" aria-label="Area UMKM, Slot 21 — buka form booking">
-      <g id="slot-umkm-21" class="slot" data-status="available" data-slot="slot-umkm-21" data-form="/booking/by-svg/slot-umkm-21">
-        <rect x="119.5" y="344.1" width="24" height="22"  transform="rotate(-26 131.5 355.1)"/>
-        <text x="131.5" y="355.1" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">21</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-umkm-20" aria-label="Area UMKM, Slot 20 — buka form booking">
-      <g id="slot-umkm-20" class="slot" data-status="available" data-slot="slot-umkm-20" data-form="/booking/by-svg/slot-umkm-20">
-        <rect x="144.1" y="332.1" width="24" height="22"  transform="rotate(-26 156.1 343.1)"/>
-        <text x="156.1" y="343.1" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">20</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-umkm-19" aria-label="Area UMKM, Slot 19 — buka form booking">
-      <g id="slot-umkm-19" class="slot" data-status="available" data-slot="slot-umkm-19" data-form="/booking/by-svg/slot-umkm-19">
-        <rect x="168.7" y="320.1" width="24" height="22"  transform="rotate(-26 180.7 331.1)"/>
-        <text x="180.7" y="331.1" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">19</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-umkm-18" aria-label="Area UMKM, Slot 18 — buka form booking">
-      <g id="slot-umkm-18" class="slot" data-status="available" data-slot="slot-umkm-18" data-form="/booking/by-svg/slot-umkm-18">
-        <rect x="193.3" y="308.1" width="24" height="22"  transform="rotate(-26 205.3 319.1)"/>
-        <text x="205.3" y="319.1" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">18</text>
+        <rect x="1856.3" y="995.6" width="28" height="30"  transform="rotate(60 1870.3 1010.6)"/>
+        <text x="1870.3" y="1010.6" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">16</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-umkm-17" aria-label="Area UMKM, Slot 17 — buka form booking">
       <g id="slot-umkm-17" class="slot" data-status="available" data-slot="slot-umkm-17" data-form="/booking/by-svg/slot-umkm-17">
-        <rect x="217.9" y="296.1" width="24" height="22"  transform="rotate(-26 229.9 307.1)"/>
-        <text x="229.9" y="307.1" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">17</text>
+        <rect x="1829.5" y="1011.2" width="28" height="30"  transform="rotate(60 1843.5 1026.2)"/>
+        <text x="1843.5" y="1026.2" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">17</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-umkm-18" aria-label="Area UMKM, Slot 18 — buka form booking">
+      <g id="slot-umkm-18" class="slot" data-status="available" data-slot="slot-umkm-18" data-form="/booking/by-svg/slot-umkm-18">
+        <rect x="1802.7" y="1026.8" width="28" height="30"  transform="rotate(60 1816.7 1041.8)"/>
+        <text x="1816.7" y="1041.8" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">18</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-umkm-19" aria-label="Area UMKM, Slot 19 — buka form booking">
+      <g id="slot-umkm-19" class="slot" data-status="available" data-slot="slot-umkm-19" data-form="/booking/by-svg/slot-umkm-19">
+        <rect x="1775.9" y="1042.4" width="28" height="30"  transform="rotate(60 1789.9 1057.4)"/>
+        <text x="1789.9" y="1057.4" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">19</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-umkm-20" aria-label="Area UMKM, Slot 20 — buka form booking">
+      <g id="slot-umkm-20" class="slot" data-status="available" data-slot="slot-umkm-20" data-form="/booking/by-svg/slot-umkm-20">
+        <rect x="1877.1" y="335.5" width="30" height="30" />
+        <text x="1892.1" y="350.5" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">20</text>
+      </g>
+      </a>
+      <a href="/booking/by-svg/slot-umkm-21" aria-label="Area UMKM, Slot 21 — buka form booking">
+      <g id="slot-umkm-21" class="slot" data-status="available" data-slot="slot-umkm-21" data-form="/booking/by-svg/slot-umkm-21">
+        <rect x="1877.1" y="365.5" width="30" height="30" />
+        <text x="1892.1" y="380.5" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">21</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-umkm-22" aria-label="Area UMKM, Slot 22 — buka form booking">
       <g id="slot-umkm-22" class="slot" data-status="available" data-slot="slot-umkm-22" data-form="/booking/by-svg/slot-umkm-22">
-        <rect x="103.7" y="388.9" width="29" height="22"  transform="rotate(73.2 118.2 399.9)"/>
-        <text x="118.2" y="399.9" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">22</text>
+        <rect x="1877.1" y="395.5" width="30" height="30" />
+        <text x="1892.1" y="410.5" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">22</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-umkm-23" aria-label="Area UMKM, Slot 23 — buka form booking">
       <g id="slot-umkm-23" class="slot" data-status="available" data-slot="slot-umkm-23" data-form="/booking/by-svg/slot-umkm-23">
-        <rect x="113.2" y="420.4" width="29" height="22"  transform="rotate(73.2 127.7 431.4)"/>
-        <text x="127.7" y="431.4" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">23</text>
+        <rect x="1877.1" y="425.5" width="30" height="30" />
+        <text x="1892.1" y="440.5" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">23</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-umkm-24" aria-label="Area UMKM, Slot 24 — buka form booking">
       <g id="slot-umkm-24" class="slot" data-status="available" data-slot="slot-umkm-24" data-form="/booking/by-svg/slot-umkm-24">
-        <rect x="122.7" y="451.9" width="29" height="22"  transform="rotate(73.2 137.2 462.9)"/>
-        <text x="137.2" y="462.9" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">24</text>
+        <rect x="1877.1" y="455.5" width="30" height="30" />
+        <text x="1892.1" y="470.5" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">24</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-umkm-25" aria-label="Area UMKM, Slot 25 — buka form booking">
       <g id="slot-umkm-25" class="slot" data-status="available" data-slot="slot-umkm-25" data-form="/booking/by-svg/slot-umkm-25">
-        <rect x="132.2" y="483.4" width="29" height="22"  transform="rotate(73.2 146.7 494.4)"/>
-        <text x="146.7" y="494.4" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">25</text>
+        <rect x="1877.1" y="485.5" width="30" height="30" />
+        <text x="1892.1" y="500.5" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">25</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-umkm-26" aria-label="Area UMKM, Slot 26 — buka form booking">
       <g id="slot-umkm-26" class="slot" data-status="available" data-slot="slot-umkm-26" data-form="/booking/by-svg/slot-umkm-26">
-        <rect x="24" y="647" width="24" height="22" />
-        <text x="36" y="658" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">26</text>
+        <rect x="1877.1" y="515.5" width="30" height="30" />
+        <text x="1892.1" y="530.5" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">26</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-umkm-27" aria-label="Area UMKM, Slot 27 — buka form booking">
       <g id="slot-umkm-27" class="slot" data-status="available" data-slot="slot-umkm-27" data-form="/booking/by-svg/slot-umkm-27">
-        <rect x="24" y="672" width="24" height="22" />
-        <text x="36" y="683" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">27</text>
+        <rect x="1877.1" y="545.5" width="30" height="30" />
+        <text x="1892.1" y="560.5" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">27</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-umkm-28" aria-label="Area UMKM, Slot 28 — buka form booking">
       <g id="slot-umkm-28" class="slot" data-status="available" data-slot="slot-umkm-28" data-form="/booking/by-svg/slot-umkm-28">
-        <rect x="24" y="697" width="24" height="22" />
-        <text x="36" y="708" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">28</text>
+        <rect x="1877.1" y="575.5" width="30" height="30" />
+        <text x="1892.1" y="590.5" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">28</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-umkm-29" aria-label="Area UMKM, Slot 29 — buka form booking">
       <g id="slot-umkm-29" class="slot" data-status="available" data-slot="slot-umkm-29" data-form="/booking/by-svg/slot-umkm-29">
-        <rect x="24" y="722" width="24" height="22" />
-        <text x="36" y="733" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">29</text>
+        <rect x="1877.1" y="605.5" width="30" height="30" />
+        <text x="1892.1" y="620.5" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">29</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-umkm-30" aria-label="Area UMKM, Slot 30 — buka form booking">
       <g id="slot-umkm-30" class="slot" data-status="available" data-slot="slot-umkm-30" data-form="/booking/by-svg/slot-umkm-30">
-        <rect x="24" y="747" width="24" height="22" />
-        <text x="36" y="758" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">30</text>
+        <rect x="1997.1" y="395.5" width="30" height="30" />
+        <text x="2012.1" y="410.5" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">30</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-umkm-31" aria-label="Area UMKM, Slot 31 — buka form booking">
       <g id="slot-umkm-31" class="slot" data-status="available" data-slot="slot-umkm-31" data-form="/booking/by-svg/slot-umkm-31">
-        <rect x="24" y="772" width="24" height="22" />
-        <text x="36" y="783" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">31</text>
+        <rect x="1997.1" y="425.5" width="30" height="30" />
+        <text x="2012.1" y="440.5" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">31</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-umkm-32" aria-label="Area UMKM, Slot 32 — buka form booking">
       <g id="slot-umkm-32" class="slot" data-status="available" data-slot="slot-umkm-32" data-form="/booking/by-svg/slot-umkm-32">
-        <rect x="24" y="797" width="24" height="22" />
-        <text x="36" y="808" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">32</text>
+        <rect x="1997.1" y="455.5" width="30" height="30" />
+        <text x="2012.1" y="470.5" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">32</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-umkm-33" aria-label="Area UMKM, Slot 33 — buka form booking">
       <g id="slot-umkm-33" class="slot" data-status="available" data-slot="slot-umkm-33" data-form="/booking/by-svg/slot-umkm-33">
-        <rect x="24" y="822" width="24" height="22" />
-        <text x="36" y="833" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">33</text>
+        <rect x="1997.1" y="485.5" width="30" height="30" />
+        <text x="2012.1" y="500.5" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">33</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-umkm-34" aria-label="Area UMKM, Slot 34 — buka form booking">
       <g id="slot-umkm-34" class="slot" data-status="available" data-slot="slot-umkm-34" data-form="/booking/by-svg/slot-umkm-34">
-        <rect x="122" y="647" width="24" height="21" />
-        <text x="134" y="657.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">34</text>
+        <rect x="1997.1" y="515.5" width="30" height="30" />
+        <text x="2012.1" y="530.5" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">34</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-umkm-35" aria-label="Area UMKM, Slot 35 — buka form booking">
       <g id="slot-umkm-35" class="slot" data-status="available" data-slot="slot-umkm-35" data-form="/booking/by-svg/slot-umkm-35">
-        <rect x="122" y="671" width="24" height="21" />
-        <text x="134" y="681.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">35</text>
+        <rect x="1997.1" y="545.5" width="30" height="30" />
+        <text x="2012.1" y="560.5" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">35</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-umkm-36" aria-label="Area UMKM, Slot 36 — buka form booking">
       <g id="slot-umkm-36" class="slot" data-status="available" data-slot="slot-umkm-36" data-form="/booking/by-svg/slot-umkm-36">
-        <rect x="122" y="695" width="24" height="21" />
-        <text x="134" y="705.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">36</text>
+        <rect x="1997.1" y="575.5" width="30" height="30" />
+        <text x="2012.1" y="590.5" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">36</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-umkm-37" aria-label="Area UMKM, Slot 37 — buka form booking">
       <g id="slot-umkm-37" class="slot" data-status="available" data-slot="slot-umkm-37" data-form="/booking/by-svg/slot-umkm-37">
-        <rect x="122" y="719" width="24" height="21" />
-        <text x="134" y="729.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">37</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-umkm-38" aria-label="Area UMKM, Slot 38 — buka form booking">
-      <g id="slot-umkm-38" class="slot" data-status="available" data-slot="slot-umkm-38" data-form="/booking/by-svg/slot-umkm-38">
-        <rect x="122" y="743" width="24" height="21" />
-        <text x="134" y="753.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">38</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-umkm-39" aria-label="Area UMKM, Slot 39 — buka form booking">
-      <g id="slot-umkm-39" class="slot" data-status="available" data-slot="slot-umkm-39" data-form="/booking/by-svg/slot-umkm-39">
-        <rect x="122" y="767" width="24" height="21" />
-        <text x="134" y="777.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">39</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-umkm-40" aria-label="Area UMKM, Slot 40 — buka form booking">
-      <g id="slot-umkm-40" class="slot" data-status="available" data-slot="slot-umkm-40" data-form="/booking/by-svg/slot-umkm-40">
-        <rect x="122" y="791" width="24" height="21" />
-        <text x="134" y="801.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">40</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-umkm-41" aria-label="Area UMKM, Slot 41 — buka form booking">
-      <g id="slot-umkm-41" class="slot" data-status="available" data-slot="slot-umkm-41" data-form="/booking/by-svg/slot-umkm-41">
-        <rect x="122" y="815" width="24" height="21" />
-        <text x="134" y="825.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">41</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-umkm-42" aria-label="Area UMKM, Slot 42 — buka form booking">
-      <g id="slot-umkm-42" class="slot" data-status="available" data-slot="slot-umkm-42" data-form="/booking/by-svg/slot-umkm-42">
-        <rect x="122" y="839" width="24" height="21" />
-        <text x="134" y="849.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">42</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-umkm-43" aria-label="Area UMKM, Slot 43 — buka form booking">
-      <g id="slot-umkm-43" class="slot" data-status="available" data-slot="slot-umkm-43" data-form="/booking/by-svg/slot-umkm-43">
-        <rect x="122" y="863" width="24" height="21" />
-        <text x="134" y="873.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">43</text>
+        <rect x="1997.1" y="605.5" width="30" height="30" />
+        <text x="2012.1" y="620.5" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">37</text>
       </g>
       </a>
     </g>
   </g>
   <g id="zone-booth-khusus" data-zone-type="booth_khusus">
     <g class="slots">
-      <a href="/booking/by-svg/slot-otomotif-15" aria-label="Area Otomotif, Slot 15 — buka form booking">
-      <g id="slot-otomotif-15" class="slot" data-status="available" data-slot="slot-otomotif-15" data-form="/booking/by-svg/slot-otomotif-15">
-        <rect x="1150" y="678" width="34" height="13" />
-        <text x="1167" y="684.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">15</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-otomotif-14" aria-label="Area Otomotif, Slot 14 — buka form booking">
-      <g id="slot-otomotif-14" class="slot" data-status="available" data-slot="slot-otomotif-14" data-form="/booking/by-svg/slot-otomotif-14">
-        <rect x="1150" y="693.2" width="34" height="13" />
-        <text x="1167" y="699.7" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">14</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-otomotif-13" aria-label="Area Otomotif, Slot 13 — buka form booking">
-      <g id="slot-otomotif-13" class="slot" data-status="available" data-slot="slot-otomotif-13" data-form="/booking/by-svg/slot-otomotif-13">
-        <rect x="1150" y="708.4" width="34" height="13" />
-        <text x="1167" y="714.9" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">13</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-otomotif-12" aria-label="Area Otomotif, Slot 12 — buka form booking">
-      <g id="slot-otomotif-12" class="slot" data-status="available" data-slot="slot-otomotif-12" data-form="/booking/by-svg/slot-otomotif-12">
-        <rect x="1150" y="723.6" width="34" height="13" />
-        <text x="1167" y="730.1" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">12</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-otomotif-11" aria-label="Area Otomotif, Slot 11 — buka form booking">
-      <g id="slot-otomotif-11" class="slot" data-status="available" data-slot="slot-otomotif-11" data-form="/booking/by-svg/slot-otomotif-11">
-        <rect x="1150" y="738.8" width="34" height="13" />
-        <text x="1167" y="745.3" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">11</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-otomotif-10" aria-label="Area Otomotif, Slot 10 — buka form booking">
-      <g id="slot-otomotif-10" class="slot" data-status="available" data-slot="slot-otomotif-10" data-form="/booking/by-svg/slot-otomotif-10">
-        <rect x="1150" y="754" width="34" height="13" />
-        <text x="1167" y="760.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">10</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-otomotif-09" aria-label="Area Otomotif, Slot 9 — buka form booking">
-      <g id="slot-otomotif-09" class="slot" data-status="available" data-slot="slot-otomotif-09" data-form="/booking/by-svg/slot-otomotif-09">
-        <rect x="1150" y="769.2" width="34" height="13" />
-        <text x="1167" y="775.7" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">9</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-otomotif-08" aria-label="Area Otomotif, Slot 8 — buka form booking">
-      <g id="slot-otomotif-08" class="slot" data-status="available" data-slot="slot-otomotif-08" data-form="/booking/by-svg/slot-otomotif-08">
-        <rect x="1150" y="784.4" width="34" height="13" />
-        <text x="1167" y="790.9" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">8</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-otomotif-07" aria-label="Area Otomotif, Slot 7 — buka form booking">
-      <g id="slot-otomotif-07" class="slot" data-status="available" data-slot="slot-otomotif-07" data-form="/booking/by-svg/slot-otomotif-07">
-        <rect x="1150" y="799.6" width="34" height="13" />
-        <text x="1167" y="806.1" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">7</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-otomotif-06" aria-label="Area Otomotif, Slot 6 — buka form booking">
-      <g id="slot-otomotif-06" class="slot" data-status="available" data-slot="slot-otomotif-06" data-form="/booking/by-svg/slot-otomotif-06">
-        <rect x="1150" y="814.8" width="34" height="13" />
-        <text x="1167" y="821.3" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">6</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-otomotif-05" aria-label="Area Otomotif, Slot 5 — buka form booking">
-      <g id="slot-otomotif-05" class="slot" data-status="available" data-slot="slot-otomotif-05" data-form="/booking/by-svg/slot-otomotif-05">
-        <rect x="1150" y="830" width="34" height="13" />
-        <text x="1167" y="836.5" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">5</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-otomotif-04" aria-label="Area Otomotif, Slot 4 — buka form booking">
-      <g id="slot-otomotif-04" class="slot" data-status="available" data-slot="slot-otomotif-04" data-form="/booking/by-svg/slot-otomotif-04">
-        <rect x="1150" y="845.2" width="34" height="13" />
-        <text x="1167" y="851.7" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">4</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-otomotif-03" aria-label="Area Otomotif, Slot 3 — buka form booking">
-      <g id="slot-otomotif-03" class="slot" data-status="available" data-slot="slot-otomotif-03" data-form="/booking/by-svg/slot-otomotif-03">
-        <rect x="1150" y="860.4" width="34" height="13" />
-        <text x="1167" y="866.9" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">3</text>
+      <a href="/booking/by-svg/slot-otomotif-01" aria-label="Area Otomotif, Slot 1 — buka form booking">
+      <g id="slot-otomotif-01" class="slot" data-status="available" data-slot="slot-otomotif-01" data-form="/booking/by-svg/slot-otomotif-01">
+        <rect x="522" y="321" width="30" height="30" />
+        <text x="537" y="336" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">1</text>
       </g>
       </a>
       <a href="/booking/by-svg/slot-otomotif-02" aria-label="Area Otomotif, Slot 2 — buka form booking">
       <g id="slot-otomotif-02" class="slot" data-status="available" data-slot="slot-otomotif-02" data-form="/booking/by-svg/slot-otomotif-02">
-        <rect x="1150" y="875.6" width="34" height="13" />
-        <text x="1167" y="882.1" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">2</text>
+        <rect x="522" y="351" width="30" height="30" />
+        <text x="537" y="366" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">2</text>
       </g>
       </a>
-      <a href="/booking/by-svg/slot-otomotif-01" aria-label="Area Otomotif, Slot 1 — buka form booking">
-      <g id="slot-otomotif-01" class="slot" data-status="available" data-slot="slot-otomotif-01" data-form="/booking/by-svg/slot-otomotif-01">
-        <rect x="1150" y="890.8" width="34" height="13" />
-        <text x="1167" y="897.3" fill="#0a0a0a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle">1</text>
+      <a href="/booking/by-svg/slot-otomotif-03" aria-label="Area Otomotif, Slot 3 — buka form booking">
+      <g id="slot-otomotif-03" class="slot" data-status="available" data-slot="slot-otomotif-03" data-form="/booking/by-svg/slot-otomotif-03">
+        <rect x="522" y="381" width="30" height="30" />
+        <text x="537" y="396" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">3</text>
       </g>
       </a>
-    </g>
-  </g>
-  <g id="zone-warung" data-zone-type="warung">
-    <g class="slots">
-      <g id="slot-warung-sate-gule" class="slot facility" data-status="facility" data-slot="slot-warung-sate-gule" aria-label="Warung, Warung Sate &amp; Gule — belum dibuka untuk booking online">
-        <rect x="832" y="520" width="120" height="80" />
-        <text x="892" y="560" fill="#57524a" font-size="12" font-weight="600" text-anchor="middle" dominant-baseline="middle"><tspan x="892" dy="-0.52em">Warung Sate &amp;</tspan><tspan x="892" dy="1.05em">Gule</tspan></text>
+      <a href="/booking/by-svg/slot-otomotif-04" aria-label="Area Otomotif, Slot 4 — buka form booking">
+      <g id="slot-otomotif-04" class="slot" data-status="available" data-slot="slot-otomotif-04" data-form="/booking/by-svg/slot-otomotif-04">
+        <rect x="522" y="411" width="30" height="30" />
+        <text x="537" y="426" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">4</text>
       </g>
-      <g id="slot-warung-01" class="slot facility" data-status="facility" data-slot="slot-warung-01" aria-label="Warung, Warung 1 — belum dibuka untuk booking online">
-        <rect x="1015" y="520" width="44" height="80" />
-        <text x="1037" y="560" transform="rotate(-90 1037 560)" fill="#57524a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle"><tspan x="1037" dy="0em">Warung 1</tspan></text>
+      </a>
+      <a href="/booking/by-svg/slot-otomotif-05" aria-label="Area Otomotif, Slot 5 — buka form booking">
+      <g id="slot-otomotif-05" class="slot" data-status="available" data-slot="slot-otomotif-05" data-form="/booking/by-svg/slot-otomotif-05">
+        <rect x="522" y="441" width="30" height="30" />
+        <text x="537" y="456" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">5</text>
       </g>
-      <g id="slot-warung-02" class="slot facility" data-status="facility" data-slot="slot-warung-02" aria-label="Warung, Warung 2 — belum dibuka untuk booking online">
-        <rect x="1063" y="520" width="44" height="80" />
-        <text x="1085" y="560" transform="rotate(-90 1085 560)" fill="#57524a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle"><tspan x="1085" dy="0em">Warung 2</tspan></text>
+      </a>
+      <a href="/booking/by-svg/slot-otomotif-06" aria-label="Area Otomotif, Slot 6 — buka form booking">
+      <g id="slot-otomotif-06" class="slot" data-status="available" data-slot="slot-otomotif-06" data-form="/booking/by-svg/slot-otomotif-06">
+        <rect x="522" y="471" width="30" height="30" />
+        <text x="537" y="486" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">6</text>
       </g>
-      <g id="slot-warung-03" class="slot facility" data-status="facility" data-slot="slot-warung-03" aria-label="Warung, Warung 3 — belum dibuka untuk booking online">
-        <rect x="1111" y="520" width="44" height="80" />
-        <text x="1133" y="560" transform="rotate(-90 1133 560)" fill="#57524a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle"><tspan x="1133" dy="0em">Warung 3</tspan></text>
+      </a>
+      <a href="/booking/by-svg/slot-otomotif-07" aria-label="Area Otomotif, Slot 7 — buka form booking">
+      <g id="slot-otomotif-07" class="slot" data-status="available" data-slot="slot-otomotif-07" data-form="/booking/by-svg/slot-otomotif-07">
+        <rect x="522" y="501" width="30" height="30" />
+        <text x="537" y="516" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">7</text>
       </g>
-      <g id="slot-warung-04" class="slot facility" data-status="facility" data-slot="slot-warung-04" aria-label="Warung, Warung 4 — belum dibuka untuk booking online">
-        <rect x="1159" y="520" width="44" height="80" />
-        <text x="1181" y="560" transform="rotate(-90 1181 560)" fill="#57524a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle"><tspan x="1181" dy="0em">Warung 4</tspan></text>
+      </a>
+      <a href="/booking/by-svg/slot-otomotif-08" aria-label="Area Otomotif, Slot 8 — buka form booking">
+      <g id="slot-otomotif-08" class="slot" data-status="available" data-slot="slot-otomotif-08" data-form="/booking/by-svg/slot-otomotif-08">
+        <rect x="522" y="531" width="30" height="30" />
+        <text x="537" y="546" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">8</text>
       </g>
-      <g id="slot-warung-05" class="slot facility" data-status="facility" data-slot="slot-warung-05" aria-label="Warung, Warung 5 — belum dibuka untuk booking online">
-        <rect x="1207" y="520" width="44" height="80" />
-        <text x="1229" y="560" transform="rotate(-90 1229 560)" fill="#57524a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle"><tspan x="1229" dy="0em">Warung 5</tspan></text>
+      </a>
+      <a href="/booking/by-svg/slot-otomotif-09" aria-label="Area Otomotif, Slot 9 — buka form booking">
+      <g id="slot-otomotif-09" class="slot" data-status="available" data-slot="slot-otomotif-09" data-form="/booking/by-svg/slot-otomotif-09">
+        <rect x="522" y="561" width="30" height="30" />
+        <text x="537" y="576" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">9</text>
       </g>
-      <g id="slot-warung-06" class="slot facility" data-status="facility" data-slot="slot-warung-06" aria-label="Warung, Warung 6 — belum dibuka untuk booking online">
-        <rect x="1255" y="520" width="68" height="60" />
-        <text x="1289" y="550" fill="#57524a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle"><tspan x="1289" dy="0em">Warung 6</tspan></text>
+      </a>
+      <a href="/booking/by-svg/slot-otomotif-10" aria-label="Area Otomotif, Slot 10 — buka form booking">
+      <g id="slot-otomotif-10" class="slot" data-status="available" data-slot="slot-otomotif-10" data-form="/booking/by-svg/slot-otomotif-10">
+        <rect x="522" y="591" width="30" height="30" />
+        <text x="537" y="606" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">10</text>
       </g>
-      <g id="slot-warung-07" class="slot facility" data-status="facility" data-slot="slot-warung-07" aria-label="Warung, Warung 7 — belum dibuka untuk booking online">
-        <rect x="1247" y="585" width="76" height="38" />
-        <text x="1285" y="604" fill="#57524a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle"><tspan x="1285" dy="0em">Warung 7</tspan></text>
+      </a>
+      <a href="/booking/by-svg/slot-otomotif-11" aria-label="Area Otomotif, Slot 11 — buka form booking">
+      <g id="slot-otomotif-11" class="slot" data-status="available" data-slot="slot-otomotif-11" data-form="/booking/by-svg/slot-otomotif-11">
+        <rect x="678.5" y="459" width="30" height="30" />
+        <text x="693.5" y="474" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">11</text>
       </g>
-      <g id="slot-warung-08" class="slot facility" data-status="facility" data-slot="slot-warung-08" aria-label="Warung, Warung 8 — belum dibuka untuk booking online">
-        <rect x="1247" y="625" width="76" height="38" />
-        <text x="1285" y="644" fill="#57524a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle"><tspan x="1285" dy="0em">Warung 8</tspan></text>
+      </a>
+      <a href="/booking/by-svg/slot-otomotif-12" aria-label="Area Otomotif, Slot 12 — buka form booking">
+      <g id="slot-otomotif-12" class="slot" data-status="available" data-slot="slot-otomotif-12" data-form="/booking/by-svg/slot-otomotif-12">
+        <rect x="678.5" y="489" width="30" height="30" />
+        <text x="693.5" y="504" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">12</text>
       </g>
-      <g id="slot-warung-09" class="slot facility" data-status="facility" data-slot="slot-warung-09" aria-label="Warung, Warung 9 — belum dibuka untuk booking online">
-        <rect x="1247" y="667" width="76" height="38" />
-        <text x="1285" y="686" fill="#57524a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle"><tspan x="1285" dy="0em">Warung 9</tspan></text>
+      </a>
+      <a href="/booking/by-svg/slot-otomotif-13" aria-label="Area Otomotif, Slot 13 — buka form booking">
+      <g id="slot-otomotif-13" class="slot" data-status="available" data-slot="slot-otomotif-13" data-form="/booking/by-svg/slot-otomotif-13">
+        <rect x="678.5" y="519" width="30" height="30" />
+        <text x="693.5" y="534" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">13</text>
       </g>
-      <g id="slot-warung-10" class="slot facility" data-status="facility" data-slot="slot-warung-10" aria-label="Warung, Warung 10 — belum dibuka untuk booking online">
-        <rect x="1247" y="711" width="76" height="68" />
-        <text x="1285" y="745" fill="#57524a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle"><tspan x="1285" dy="0em">Warung 10</tspan></text>
+      </a>
+      <a href="/booking/by-svg/slot-otomotif-14" aria-label="Area Otomotif, Slot 14 — buka form booking">
+      <g id="slot-otomotif-14" class="slot" data-status="available" data-slot="slot-otomotif-14" data-form="/booking/by-svg/slot-otomotif-14">
+        <rect x="678.5" y="549" width="30" height="30" />
+        <text x="693.5" y="564" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">14</text>
       </g>
-      <g id="slot-warung-warmindo" class="slot facility" data-status="facility" data-slot="slot-warung-warmindo" aria-label="Warung, Warmindo — belum dibuka untuk booking online">
-        <rect x="1247" y="830" width="76" height="80" />
-        <text x="1285" y="870" fill="#57524a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle"><tspan x="1285" dy="0em">Warmindo</tspan></text>
+      </a>
+      <a href="/booking/by-svg/slot-otomotif-15" aria-label="Area Otomotif, Slot 15 — buka form booking">
+      <g id="slot-otomotif-15" class="slot" data-status="available" data-slot="slot-otomotif-15" data-form="/booking/by-svg/slot-otomotif-15">
+        <rect x="678.5" y="579" width="30" height="30" />
+        <text x="693.5" y="594" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">15</text>
       </g>
-    </g>
-  </g>
-  <g id="zone-fasilitas" data-zone-type="facility">
-    <g class="slots">
-      <g id="slot-fasilitas-kolam-pemancingan" class="slot facility" data-status="facility" data-slot="slot-fasilitas-kolam-pemancingan" aria-label="Fasilitas Umum, Kolam Pemancingan — fasilitas umum, tidak disewakan">
-        <rect x="472" y="45" width="434" height="285" />
-        <text x="689" y="187.5" fill="#57524a" font-size="16" font-weight="600" text-anchor="middle" dominant-baseline="middle"><tspan x="689" dy="0em">Kolam Pemancingan</tspan></text>
+      </a>
+      <a href="/booking/by-svg/slot-otomotif-16" aria-label="Area Otomotif, Slot 16 — buka form booking">
+      <g id="slot-otomotif-16" class="slot" data-status="available" data-slot="slot-otomotif-16" data-form="/booking/by-svg/slot-otomotif-16">
+        <rect x="678.5" y="609" width="30" height="30" />
+        <text x="693.5" y="624" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">16</text>
       </g>
-      <g id="slot-fasilitas-lapangan-tembak" class="slot facility" data-status="facility" data-slot="slot-fasilitas-lapangan-tembak" aria-label="Fasilitas Umum, Lapangan Tembak — fasilitas umum, tidak disewakan">
-        <rect x="1333" y="33" width="165" height="355" />
-        <text x="1415.5" y="210.5" fill="#57524a" font-size="16" font-weight="600" text-anchor="middle" dominant-baseline="middle"><tspan x="1415.5" dy="0em">Lapangan Tembak</tspan></text>
-      </g>
-      <g id="slot-fasilitas-area-wahana" class="slot facility" data-status="facility" data-slot="slot-fasilitas-area-wahana" aria-label="Fasilitas Umum, Playground — fasilitas umum, tidak disewakan">
-        <rect x="1082" y="53" width="195" height="305" />
-        <text x="1179.5" y="205.5" fill="#57524a" font-size="16" font-weight="600" text-anchor="middle" dominant-baseline="middle"><tspan x="1179.5" dy="0em">Playground</tspan></text>
-      </g>
-      <g id="slot-fasilitas-kolam-renang" class="slot facility" data-status="facility" data-slot="slot-fasilitas-kolam-renang" aria-label="Fasilitas Umum, Kolam Renang — fasilitas umum, tidak disewakan">
-        <rect x="150" y="643" width="555" height="245" />
-        <text x="427.5" y="765.5" fill="#57524a" font-size="16" font-weight="600" text-anchor="middle" dominant-baseline="middle"><tspan x="427.5" dy="0em">Kolam Renang</tspan></text>
-      </g>
-      <g id="slot-fasilitas-tempat-gym" class="slot facility" data-status="facility" data-slot="slot-fasilitas-tempat-gym" aria-label="Fasilitas Umum, Tempat Gym — fasilitas umum, tidak disewakan">
-        <rect x="50" y="892" width="660" height="115" />
-        <text x="380" y="949.5" fill="#57524a" font-size="16" font-weight="600" text-anchor="middle" dominant-baseline="middle"><tspan x="380" dy="0em">Tempat Gym</tspan></text>
-      </g>
-      <g id="slot-fasilitas-musholah" class="slot facility" data-status="facility" data-slot="slot-fasilitas-musholah" aria-label="Fasilitas Umum, Mushola — fasilitas umum, tidak disewakan">
-        <rect x="712" y="913" width="78" height="80" />
-        <text x="751" y="953" fill="#57524a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle"><tspan x="751" dy="0em">Mushola</tspan></text>
-      </g>
-      <g id="slot-fasilitas-stage-utama" class="slot facility" data-status="facility" data-slot="slot-fasilitas-stage-utama" aria-label="Fasilitas Umum, Panggung — fasilitas umum, tidak disewakan">
-        <rect x="335" y="465" width="70" height="42" />
-        <text x="370" y="486" fill="#57524a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle"><tspan x="370" dy="0em">Panggung</tspan></text>
-      </g>
-      <g id="slot-fasilitas-area-zumba" class="slot facility" data-status="facility" data-slot="slot-fasilitas-area-zumba" aria-label="Fasilitas Umum, Area Zumba — fasilitas umum, tidak disewakan">
-        <rect x="1090" y="917" width="155" height="113" />
-        <text x="1167.5" y="973.5" fill="#57524a" font-size="16" font-weight="600" text-anchor="middle" dominant-baseline="middle"><tspan x="1167.5" dy="0em">Area Zumba</tspan></text>
-      </g>
-      <g id="slot-fasilitas-tenda-vip" class="slot facility" data-status="facility" data-slot="slot-fasilitas-tenda-vip" aria-label="Fasilitas Umum, Tenda VIP — fasilitas umum, tidak disewakan">
-        <rect x="1096" y="985" width="46" height="34" />
-        <text x="1119" y="1002" fill="#57524a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle"><tspan x="1119" dy="-0.52em">Tenda</tspan><tspan x="1119" dy="1.05em">VIP</tspan></text>
-      </g>
-      <g id="slot-fasilitas-led" class="slot facility" data-status="facility" data-slot="slot-fasilitas-led" aria-label="Fasilitas Umum, Layar LED — fasilitas umum, tidak disewakan">
-        <rect x="1093" y="1092" width="54" height="34" />
-        <text x="1120" y="1109" fill="#57524a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle"><tspan x="1120" dy="0em">Layar LED</tspan></text>
-      </g>
-      <g id="slot-fasilitas-tempat-cuci" class="slot facility" data-status="facility" data-slot="slot-fasilitas-tempat-cuci" aria-label="Fasilitas Umum, Cuci Mobil &amp; Motor — fasilitas umum, tidak disewakan">
-        <rect x="1247" y="913" width="76" height="118" />
-        <text x="1285" y="972" transform="rotate(-90 1285 972)" fill="#57524a" font-size="12" font-weight="600" text-anchor="middle" dominant-baseline="middle"><tspan x="1285" dy="-0.52em">Cuci Mobil &amp;</tspan><tspan x="1285" dy="1.05em">Motor</tspan></text>
-      </g>
-      <g id="slot-fasilitas-toilet" class="slot facility" data-status="facility" data-slot="slot-fasilitas-toilet" aria-label="Fasilitas Umum, Toilet — fasilitas umum, tidak disewakan">
-        <rect x="1255" y="437" width="68" height="26" />
-        <text x="1289" y="450" fill="#57524a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle"><tspan x="1289" dy="0em">Toilet</tspan></text>
-      </g>
-      <g id="slot-fasilitas-kantor-sekretariat" class="slot facility" data-status="facility" data-slot="slot-fasilitas-kantor-sekretariat" aria-label="Fasilitas Umum, Sekretariat — fasilitas umum, tidak disewakan">
-        <rect x="1207" y="1073" width="118" height="56" />
-        <text x="1266" y="1101" fill="#57524a" font-size="12" font-weight="600" text-anchor="middle" dominant-baseline="middle"><tspan x="1266" dy="0em">Sekretariat</tspan></text>
-      </g>
+      </a>
     </g>
   </g>
   <g id="denah-anotasi" aria-hidden="true" pointer-events="none">
-    <rect x="830" y="1051" width="63.2" height="22" fill="#0a0a0a"/>
-    <text x="861.6" y="1063" fill="#ffffff" font-size="13" font-weight="700" text-anchor="middle" dominant-baseline="middle">AREA A</text>
-    <rect x="835" y="957" width="63.2" height="22" fill="#0a0a0a"/>
-    <text x="866.6" y="969" fill="#ffffff" font-size="13" font-weight="700" text-anchor="middle" dominant-baseline="middle">AREA B</text>
-    <rect x="940" y="957" width="63.2" height="22" fill="#0a0a0a"/>
-    <text x="971.6" y="969" fill="#ffffff" font-size="13" font-weight="700" text-anchor="middle" dominant-baseline="middle">AREA C</text>
-    <rect x="1096" y="923" width="63.2" height="22" fill="#0a0a0a"/>
-    <text x="1127.6" y="935" fill="#ffffff" font-size="13" font-weight="700" text-anchor="middle" dominant-baseline="middle">AREA D</text>
-    <rect x="934" y="371" width="63.2" height="22" fill="#0a0a0a"/>
-    <text x="965.6" y="383" fill="#ffffff" font-size="13" font-weight="700" text-anchor="middle" dominant-baseline="middle">AREA E</text>
-    <rect x="1200" y="61" width="63.2" height="22" fill="#0a0a0a"/>
-    <text x="1231.6" y="73" fill="#ffffff" font-size="13" font-weight="700" text-anchor="middle" dominant-baseline="middle">AREA F</text>
-    <rect x="310" y="383" width="63.2" height="22" fill="#0a0a0a"/>
-    <text x="341.6" y="395" fill="#ffffff" font-size="13" font-weight="700" text-anchor="middle" dominant-baseline="middle">AREA G</text>
-    <rect x="54" y="615" width="63.2" height="22" fill="#0a0a0a"/>
-    <text x="85.6" y="627" fill="#ffffff" font-size="13" font-weight="700" text-anchor="middle" dominant-baseline="middle">AREA H</text>
-    <rect x="708" y="1097" width="120.6" height="22" fill="#0a0a0a"/>
-    <text x="768.3" y="1109" fill="#ffffff" font-size="13" font-weight="700" text-anchor="middle" dominant-baseline="middle">GERBANG MASUK</text>
+    <rect x="756" y="111" width="49.6" height="17" fill="#0a0a0a"/>
+    <text x="780.8" y="120" fill="#ffffff" font-size="11" font-weight="700" text-anchor="middle" dominant-baseline="middle">AREA A</text>
+    <rect x="648" y="413" width="49.6" height="17" fill="#0a0a0a"/>
+    <text x="672.8" y="422" fill="#ffffff" font-size="11" font-weight="700" text-anchor="middle" dominant-baseline="middle">AREA B</text>
+    <rect x="809" y="268" width="49.6" height="17" fill="#0a0a0a"/>
+    <text x="833.8" y="277" fill="#ffffff" font-size="11" font-weight="700" text-anchor="middle" dominant-baseline="middle">AREA C</text>
+    <rect x="426" y="170" width="49.6" height="17" fill="#0a0a0a"/>
+    <text x="450.8" y="179" fill="#ffffff" font-size="11" font-weight="700" text-anchor="middle" dominant-baseline="middle">AREA D</text>
+    <rect x="821" y="896" width="49.6" height="17" fill="#0a0a0a"/>
+    <text x="845.8" y="905" fill="#ffffff" font-size="11" font-weight="700" text-anchor="middle" dominant-baseline="middle">AREA E</text>
+    <rect x="474" y="952" width="49.6" height="17" fill="#0a0a0a"/>
+    <text x="498.8" y="961" fill="#ffffff" font-size="11" font-weight="700" text-anchor="middle" dominant-baseline="middle">AREA F</text>
+    <rect x="1767" y="816" width="49.6" height="17" fill="#0a0a0a"/>
+    <text x="1791.8" y="825" fill="#ffffff" font-size="11" font-weight="700" text-anchor="middle" dominant-baseline="middle">AREA G</text>
+    <rect x="1828" y="340" width="49.6" height="17" fill="#0a0a0a"/>
+    <text x="1852.8" y="349" fill="#ffffff" font-size="11" font-weight="700" text-anchor="middle" dominant-baseline="middle">AREA H</text>
+    <rect x="1086" y="111" width="95.8" height="17" fill="#0a0a0a"/>
+    <text x="1133.9" y="120" fill="#ffffff" font-size="11" font-weight="700" text-anchor="middle" dominant-baseline="middle">GERBANG MASUK</text>
   </g>
-  <!-- 178 kotak, 153 dapat disewa online. id tiap kotak = kolom svg_element_id di database. -->
+  <!-- 149 kotak, 136 dapat disewa online. id tiap kotak = kolom svg_element_id di database. -->
 </svg>
