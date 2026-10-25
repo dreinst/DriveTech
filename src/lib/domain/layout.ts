@@ -16,9 +16,8 @@ import type { ZoneType } from "@/lib/types/database";
  *
  * Jumlah lapak yang bisa dipesan: mobil baru 13 (Area A 1-10, Area C 11-13),
  * mobil bekas 20 (Area C), motor baru 8 (Area C), motor bekas 14 (Area C),
- * otomotif 16 (Area B), UMKM 9 (Area B 1-7, F 8-9). Total 80. Deret motor
- * bekas Area E dan UMKM Area G serta H pada Figma tidak dijual (keputusan
- * 23 Oktober 2026).
+ * otomotif 16 (Area B), UMKM 7 (Area B). Total 78. Deret motor bekas Area E
+ * dan UMKM Area F, G, serta H tidak dijual (mengikuti Figma Layout Final).
  *
  * Catatan render:
  * - `label` adalah teks di dalam kotak. Zona bernomor berisi angka lapak,
@@ -178,12 +177,10 @@ const mobilMotorSlots: LayoutSlot[] = deret(
   1,
 );
 
-/* ---------- UMKM: Area B 1-7, F 8-9 ---------- */
+/* ---------- UMKM: Area B 1-7 ---------- */
 
 const umkmSlots: LayoutSlot[] = [
   ...deret("umkm", 7, { x: 882.5, y: 634.5, width: 30, height: 30 }, { dx: 0, dy: 30 }, 1),
-  numberedSlot("umkm", 8, kotak(753, 1651.5, 30, 30)),
-  numberedSlot("umkm", 9, kotak(970, 1651.5, 30, 30)),
 ];
 
 /* ---------- Fasilitas & zona pendukung (TIDAK bisa dipesan) ---------- */
@@ -234,7 +231,7 @@ export const FLOOR_PLAN_ZONES: LayoutZone[] = [
   },
   {
     svgGroupId: "zone-umkm", name: "Area UMKM", zoneType: "umkm", accent: "#8f887b", container: null,
-    sections: [{ area: "B", nomorAwal: 1, nomorAkhir: 7 }, { area: "F", nomorAwal: 8, nomorAkhir: 9 }],
+    sections: [{ area: "B", nomorAwal: 1, nomorAkhir: 7 }],
     slots: umkmSlots,
   },
   {

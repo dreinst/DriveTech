@@ -467,18 +467,6 @@
         <text x="617.5" y="549.5" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">7</text>
       </g>
       </a>
-      <a href="/booking/by-svg/slot-umkm-08" aria-label="Area UMKM, Slot 8 — buka form booking">
-      <g id="slot-umkm-08" class="slot" data-status="available" data-slot="slot-umkm-08" data-form="/booking/by-svg/slot-umkm-08">
-        <rect x="473" y="1371.5" width="30" height="30" />
-        <text x="488" y="1386.5" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">8</text>
-      </g>
-      </a>
-      <a href="/booking/by-svg/slot-umkm-09" aria-label="Area UMKM, Slot 9 — buka form booking">
-      <g id="slot-umkm-09" class="slot" data-status="available" data-slot="slot-umkm-09" data-form="/booking/by-svg/slot-umkm-09">
-        <rect x="690" y="1371.5" width="30" height="30" />
-        <text x="705" y="1386.5" fill="#0a0a0a" font-size="13" font-weight="600" text-anchor="middle" dominant-baseline="middle">9</text>
-      </g>
-      </a>
     </g>
   </g>
   <g id="zone-booth-khusus" data-zone-type="booth_khusus">
@@ -601,5 +589,5 @@
     <rect x="1086" y="111" width="95.8" height="17" fill="#0a0a0a"/>
     <text x="1133.9" y="120" fill="#ffffff" font-size="11" font-weight="700" text-anchor="middle" dominant-baseline="middle">GERBANG MASUK</text>
   </g>
-  <!-- 93 kotak, 80 dapat disewa online. id tiap kotak = kolom svg_element_id di database. -->
+  <!-- 91 kotak, 78 dapat disewa online. id tiap kotak = kolom svg_element_id di database. -->
 </svg>

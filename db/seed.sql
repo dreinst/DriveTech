@@ -5,9 +5,9 @@
 -- (23 Oktober 2026), sama dengan src/lib/domain/layout.ts.
 --
 -- Total baris slots = 13 (mobil baru) + 20 (mobil bekas) + 8 (motor baru)
---                   + 14 (motor bekas) + 9 (UMKM) + 16 (otomotif)
---                   + 13 (fasilitas) = 93 baris.
--- Yang bisa dibooking = 80 (semua kecuali 13 fasilitas).
+--                   + 14 (motor bekas) + 7 (UMKM) + 16 (otomotif)
+--                   + 13 (fasilitas) = 91 baris.
+-- Yang bisa dibooking = 78 (semua kecuali 13 fasilitas).
 --
 -- Seluruh insert memakai "on conflict do nothing" / "where not exists"
 -- sehingga aman dijalankan berulang kali.
@@ -70,7 +70,7 @@ values
    'Area C, pameran motor bekas, 14 lapak.',                                         4),
   ('11111111-1111-4111-8111-111111111111', 'Area UMKM',
    'umkm',              'zone-umkm',         250000,
-   'Area B dan Area F, tenant UMKM 3 x 3 m, 9 lapak.', 5),
+   'Area B, tenant UMKM 3 x 3 m, 7 lapak.', 5),
   ('11111111-1111-4111-8111-111111111111', 'Area Otomotif',
    'booth_khusus',      'zone-booth-khusus', 500000,
    'Area B, tenant otomotif 3 x 3 m, 16 lapak.', 6),
@@ -117,11 +117,11 @@ cross join generate_series(1, 14) as i
 where z.svg_group_id = 'zone-mobil-motor'
 on conflict (svg_element_id) do nothing;
 
--- 3d. zone-umkm : slot 1..9 -> slot-umkm-01 .. slot-umkm-09 (Area B 1-7, F 8-9)
+-- 3d. zone-umkm : slot 1..7 -> slot-umkm-01 .. slot-umkm-07 (Area B)
 insert into public.slots (zone_id, slot_number, slot_label, svg_element_id)
 select z.id, i, null, 'slot-umkm-' || lpad(i::text, 2, '0')
 from public.zones z
-cross join generate_series(1, 9) as i
+cross join generate_series(1, 7) as i
 where z.svg_group_id = 'zone-umkm'
 on conflict (svg_element_id) do nothing;
 
@@ -192,8 +192,8 @@ where not exists (
 --     zone-mobil-bekas  20
 --     zone-mobil-motor  14
 --     zone-motor-baru    8
---     zone-umkm          9
---   Total 93 baris; 80 di antaranya bisa dibooking (semua kecuali fasilitas).
+--     zone-umkm          7
+--   Total 91 baris; 78 di antaranya bisa dibooking (semua kecuali fasilitas).
 -- -----------------------------------------------------------------------------
 
 -- =============================================================================
