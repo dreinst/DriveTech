@@ -102,8 +102,7 @@ export default async function BayarPage({ params }: PageProps) {
   // Harga per tanggal WAJIB lewat slotAdminFee (override per slot ?? harga zona),
   // sama dengan yang dipakai server saat menagih.
   const biayaPerTanggal = slotAdminFee(booking.slot, booking.slot.zone);
-  const jumlahTanggal = Math.max(booking.dates.length, 1);
-  const nominal = payment?.amount ?? hitungTotalBiaya(biayaPerTanggal, jumlahTanggal);
+  const nominal = payment?.amount ?? hitungTotalBiaya(biayaPerTanggal, booking.dates);
   // Tenggat bayar (cermin expire_unpaid_bookings di DB): tampil selama
   // pembayaran belum submitted supaya auto-cancel tidak mengejutkan tenant.
   const tenggat = batasPembayaran(booking, payment);

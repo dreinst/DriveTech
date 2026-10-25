@@ -84,7 +84,7 @@ export default async function StatusBookingPage({ params }: PageProps) {
     (payment ? totalBayar(payment) : null) ??
     hitungTotalBiaya(
       slotAdminFee(booking.slot, booking.slot.zone),
-      Math.max(booking.dates.length, 1),
+      booking.dates,
     );
 
   return (

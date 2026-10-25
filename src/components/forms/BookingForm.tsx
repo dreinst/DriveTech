@@ -32,7 +32,7 @@ import {
   waHref,
 } from "@/lib/domain/constants";
 import { slotAdminFee } from "@/lib/domain/harga";
-import { hitungTotalBiaya } from "@/lib/domain/ketersediaan";
+import { hitungTotalBiaya, jumlahTanggalTagih } from "@/lib/domain/ketersediaan";
 import { TENANT_TYPE_BY_ZONE_TYPE, TENANT_TYPE_LABEL } from "@/lib/domain/labels";
 import type { BookingStatus, SlotDetail, TenantType } from "@/lib/types/database";
 import { formatRupiah } from "@/lib/utils";
@@ -140,7 +140,7 @@ export function BookingForm({
   // Harga efektif WAJIB lewat slotAdminFee (override per slot ?? harga zona) —
   // nilai inilah yang dipakai server saat menagih (createBooking).
   const biayaPerTanggal = slotAdminFee(slot, slot.zone);
-  const totalBiaya = hitungTotalBiaya(biayaPerTanggal, dipilih.length);
+  const totalBiaya = hitungTotalBiaya(biayaPerTanggal, dipilih);
   const adaTerisi = eventDates.some((t) => takenDates[t] !== undefined);
 
   /** Status chip per tanggal untuk slot INI (dipakai DateChips sadar-slot). */
@@ -320,8 +320,8 @@ export function BookingForm({
             </dd>
           </div>
           <div className="mt-1.5 flex items-baseline justify-between gap-3">
-            <dt className="text-sm text-muted">Jumlah tanggal</dt>
-            <dd className="tabular text-sm font-medium text-ink">{dipilih.length}</dd>
+            <dt className="text-sm text-muted">Jumlah tanggal ditagih</dt>
+            <dd className="tabular text-sm font-medium text-ink">{jumlahTanggalTagih(dipilih)}</dd>
           </div>
           <div className="mt-3 flex items-baseline justify-between gap-3 border-t border-line pt-3">
             <dt className="text-sm font-semibold text-ink">Total</dt>

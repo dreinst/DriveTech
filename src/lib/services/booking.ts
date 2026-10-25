@@ -353,7 +353,7 @@ export async function createBooking(
 
   /* --- Langkah 3: insert tagihan admin fee = biaya per tanggal x jumlah tanggal ---
      Harga per tanggal diresolusi lewat slotAdminFee (override slot > harga zona). */
-  const amount = hitungTotalBiaya(slotAdminFee(slot, slot.zone), dates.length);
+  const amount = hitungTotalBiaya(slotAdminFee(slot, slot.zone), dates);
   // QRIS-only (sejak 2026-09-02): tagihan langsung memakai metode qris;
   // booking yang tidak kunjung membayar dibatalkan otomatis
   // expire_unpaid_bookings().
@@ -453,7 +453,7 @@ export async function kirimNotifikasiBooking(
     const b = detail.data;
     const amount = b.payment
       ? totalBayar(b.payment)
-      : hitungTotalBiaya(slotAdminFee(b.slot, b.slot.zone), Math.max(b.dates.length, 1));
+      : hitungTotalBiaya(slotAdminFee(b.slot, b.slot.zone), b.dates);
     // Bukti ditolak -> tenant punya jendela unggah ulang 24 jam sejak sekarang.
     const deadlineText =
       kind === "rejected"
@@ -550,7 +550,7 @@ export async function submitPayment(
   if (!booking.payment) {
     const amount = hitungTotalBiaya(
       slotAdminFee(booking.slot, booking.slot.zone),
-      Math.max(booking.dates.length, 1),
+      booking.dates,
     );
     const inserted = await coba(sql`
       insert into admin_fee_payments ${sql({

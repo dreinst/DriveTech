@@ -29,6 +29,7 @@ import {
   dateStatusForSlot,
   freeDatesForSlot,
   hitungTotalBiaya,
+  jumlahTanggalTagih,
   slotStatusAcrossDates,
   type OccupancyRow,
   type SlotDateVerdict,
@@ -268,7 +269,8 @@ function ZoneStep({ cards, onPick }: ZoneStepProps) {
 
       <p className="mt-4 text-xs text-muted">
         Setelah memilih zona atau areanya, peta langsung memperbesar bagian itu dan hanya lapak
-        pilihan itu yang bisa diketuk. Biaya admin dihitung per tanggal. Mau lihat tata
+        pilihan itu yang bisa diketuk. Biaya admin dihitung per tanggal, dan 7 serta 8 November
+        dihitung satu tanggal. Mau lihat tata
         letak seluruh area dulu?{" "}
         <Link
           href="/denah"
@@ -357,7 +359,7 @@ function SlotDetailPanel({
   // Harga efektif slot INI: override per-slot (mis. Booth Leasing UMKM 11-20)
   // menang atas tarif dasar zona — satu sumber resolusi di domain/harga.ts.
   const hargaSlot = slotAdminFee(slot, zone);
-  const totalBiaya = hitungTotalBiaya(hargaSlot, selectedDates.length);
+  const totalBiaya = hitungTotalBiaya(hargaSlot, selectedDates);
   const tanggalCsv = selectedDates.join(",");
   const bisaLanjut = selectedDates.length > 0 && !isFallback;
 
@@ -425,7 +427,7 @@ function SlotDetailPanel({
             </div>
             <div className="flex items-baseline justify-between gap-3">
               <span className="text-sm text-muted">
-                Total ({selectedDates.length} tanggal)
+                Total ({jumlahTanggalTagih(selectedDates)} tanggal ditagih)
               </span>
               <span className="tabular text-2xl font-semibold tracking-[-0.01em] text-ink">
                 {formatRupiah(totalBiaya)}

@@ -121,7 +121,16 @@ export function slotStatusAcrossDates(params: {
   return adaPending ? "pending" : "confirmed";
 }
 
-/** Total biaya admin = biaya per tanggal x jumlah tanggal terpilih. */
-export function hitungTotalBiaya(adminFee: number, jumlahTanggal: number): number {
-  return adminFee * Math.max(0, jumlahTanggal);
+/** Tanggal pembukaan 7 dan 8 November ditagih sebagai satu tanggal di semua zona. */
+const TANGGAL_PEMBUKAAN = ["2026-11-07", "2026-11-08"];
+
+/** Jumlah tanggal yang ditagih: 7 dan 8 Nov (salah satu atau keduanya) dihitung satu. */
+export function jumlahTanggalTagih(dates: readonly string[]): number {
+  const pembukaan = dates.some((d) => TANGGAL_PEMBUKAAN.includes(d));
+  return dates.filter((d) => !TANGGAL_PEMBUKAAN.includes(d)).length + (pembukaan ? 1 : 0);
+}
+
+/** Total biaya admin = biaya per tanggal x jumlah tanggal yang ditagih. */
+export function hitungTotalBiaya(adminFee: number, dates: readonly string[]): number {
+  return adminFee * jumlahTanggalTagih(dates);
 }

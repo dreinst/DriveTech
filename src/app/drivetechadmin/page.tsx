@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/Card";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EVENT_INFO } from "@/lib/domain/constants";
 import { slotAdminFee } from "@/lib/domain/harga";
+import { hitungTotalBiaya } from "@/lib/domain/ketersediaan";
 import { getDashboardStats, listBookings, type ZoneSlotStat } from "@/lib/services/admin";
 import { requireAdmin } from "@/lib/services/auth";
 import type { BookingDetail } from "@/lib/types/database";
@@ -274,8 +275,7 @@ export default async function AdminDashboardPage() {
                     const submitted = payment?.status === "submitted";
                     const nominal =
                       payment?.amount ??
-                      slotAdminFee(booking.slot, booking.slot.zone) *
-                        Math.max(1, booking.dates.length);
+                      hitungTotalBiaya(slotAdminFee(booking.slot, booking.slot.zone), booking.dates);
                     const hrefDetail = submitted
                       ? `/drivetechadmin/bookings?payment=submitted&q=${encodeURIComponent(booking.booking_code)}`
                       : `/drivetechadmin/bookings?q=${encodeURIComponent(booking.booking_code)}`;
