@@ -4,7 +4,7 @@ import path from "node:path";
 import { ImageResponse } from "next/og";
 import QRCode from "qrcode";
 
-import { totalBayar } from "@/lib/domain/harga";
+import { totalBayar, totalBersih } from "@/lib/domain/harga";
 import { batasPembayaran } from "@/lib/domain/tenggat";
 import { dynamicQris, qrisStatic } from "@/lib/qris";
 import { checkRateLimit, clientIpFrom } from "@/lib/rate-limit";
@@ -30,7 +30,7 @@ const aset = Promise.all([
 const tanggalPendek = new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "short", timeZone: "Asia/Jakarta" });
 
 /**
- * GET /api/qris/{kode booking}: kartu bayar PNG berisi QRIS dinamis bernominal tagihan + kode unik. Dikirim
+ * GET /api/qris/{kode booking}: kartu bayar PNG berisi QRIS dinamis bernominal tagihan + kode unik + biaya layanan QRIS. Dikirim
  * nomor WhatsApp kantor begitu penyewa mengirim kode booking. Hanya untuk booking yang masih menunggu bayar.
  * Tidak memuat data pribadi selain lapak dan tanggal, jadi aman dibuka siapa pun yang memegang kode booking.
  */
@@ -49,11 +49,12 @@ export async function GET(request: Request, { params }: RouteContext): Promise<R
   const [judul, isi, logoSvg] = await aset;
   const logo = `data:image/svg+xml;base64,${Buffer.from(logoSvg).toString("base64")}`;
   const total = totalBayar(b.payment);
+  const biaya = total - totalBersih(b.payment);
   const qr = await QRCode.toDataURL(dynamicQris(qrisStatic(), total), { margin: 1, width: 620, errorCorrectionLevel: "M" });
   const batas = batasPembayaran(b, b.payment);
   const tanggal = b.dates.map((d) => tanggalPendek.format(new Date(`${d}T00:00:00+07:00`))).join(", ");
   const W = 1080;
-  const H = 1880;
+  const H = biaya > 0 ? 1940 : 1880; // +1 baris biaya layanan QRIS
 
   const baris = (label: string, nilai: string) => (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginTop: 14 }}>
@@ -96,6 +97,7 @@ export async function GET(request: Request, { params }: RouteContext): Promise<R
           {baris("TANGGAL", tanggal)}
           {baris("BIAYA ADMIN", formatRupiah(Number(b.payment.amount)))}
           {baris("KODE UNIK", formatRupiah(b.payment.unique_code ?? 0))}
+          {biaya > 0 && baris("BIAYA LAYANAN QRIS", formatRupiah(biaya))}
           <div style={{ display: "flex", height: 4, background: ORANYE, marginTop: 24 }} />
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 14 }}>
             <span style={{ fontFamily: "BarlowJudul", fontSize: 56, color: ORANYE }}>TOTAL BAYAR</span>

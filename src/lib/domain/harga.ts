@@ -42,10 +42,34 @@ export function zoneHasVariedFees(
   return slots.some((slot) => slotAdminFee(slot, zone) !== base);
 }
 
+/** MDR QRIS GoPay Merchant (data GoBiz): 0% sampai Rp 500.000, di atasnya 0,3% dari seluruh nominal. */
+export const MDR_BATAS = 500_000;
+export const MDR_PER_SERIBU = 3;
+
 /**
- * Nominal yang ditransfer penyewa: tagihan + kode unik (350..500) dari alokasi_kode_unik(). Kode unik membuat
+ * Biaya layanan QRIS yang ditanggung penyewa supaya uang bersih setelah potongan MDR tetap = `bersih`.
+ * Nominal bayar terkecil yang potongannya (dibulatkan ke atas, kemungkinan terburuk) masih menyisakan `bersih`.
+ */
+export function biayaLayanan(bersih: number): number {
+  if (bersih <= MDR_BATAS) return 0;
+  let bayar = Math.ceil((bersih * 1000) / (1000 - MDR_PER_SERIBU));
+  while (bayar - Math.ceil((bayar * MDR_PER_SERIBU) / 1000) < bersih) bayar++;
+  return bayar - bersih;
+}
+
+/**
+ * Uang bersih yang harus masuk: tagihan + kode unik (350..500) dari alokasi_kode_unik(). Kode unik membuat
  * setiap tagihan hidup punya nominal berbeda, jadi panitia bisa mencocokkan uang masuk di GoPay Merchant.
  */
-export function totalBayar(payment: { amount: number | string; unique_code?: number | null }): number {
+export function totalBersih(payment: { amount: number | string; unique_code?: number | null }): number {
   return Number(payment.amount) + (payment.unique_code ?? 0);
+}
+
+/**
+ * Nominal yang dibayar penyewa: uang bersih + biaya layanan QRIS. Tetap unik per tagihan karena biayaLayanan
+ * membuat nominal bayar naik searah uang bersih.
+ */
+export function totalBayar(payment: { amount: number | string; unique_code?: number | null }): number {
+  const bersih = totalBersih(payment);
+  return bersih + biayaLayanan(bersih);
 }

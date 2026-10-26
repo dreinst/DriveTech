@@ -175,8 +175,9 @@ export function PaymentForm({
                 <dd className="tabular text-lg font-bold text-accent">{formatRupiah(amount)}</dd>
               </div>
               <p className="mt-1.5 text-xs leading-relaxed text-muted">
-                Tiga angka terakhir adalah <strong className="text-ink">kode unik</strong> booking Anda,
-                supaya pembayarannya mudah dikenali panitia. Mohon bayar tepat sesuai nominal ini.
+                Nominal ini sudah termasuk <strong className="text-ink">kode unik</strong> booking Anda
+                supaya pembayarannya mudah dikenali panitia, serta biaya layanan QRIS untuk tagihan di atas
+                Rp 500.000. Mohon bayar tepat sesuai nominal ini.
               </p>
             </div>
 

@@ -15,7 +15,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Input } from "@/components/ui/Field";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SubmitButton } from "@/components/ui/SubmitButton";
-import { slotAdminFee } from "@/lib/domain/harga";
+import { slotAdminFee, totalBayar } from "@/lib/domain/harga";
 import { hitungTotalBiaya } from "@/lib/domain/ketersediaan";
 import {
   BOOKING_STATUS_LABEL,
@@ -348,8 +348,8 @@ export default async function AdminBookingsPage({ searchParams }: PageProps) {
           {bookings.map((booking) => {
             const payment = booking.payment;
             const submitted = payment?.status === "submitted";
-            // +kode unik tagihan (350..500) supaya cocok dengan nominal di bukti transfer.
-            const nominal = nominalBooking(booking) + (payment?.unique_code ?? 0);
+            // Nominal bayar (tagihan + kode unik + biaya layanan QRIS) supaya cocok dengan bukti transfer.
+            const nominal = payment ? totalBayar(payment) : nominalBooking(booking);
 
             return (
               <li
@@ -435,8 +435,8 @@ export default async function AdminBookingsPage({ searchParams }: PageProps) {
                 {bookings.map((booking) => {
                   const payment = booking.payment;
                   const submitted = payment?.status === "submitted";
-                  // +kode unik tagihan (350..500) supaya cocok dengan nominal di bukti transfer.
-                  const nominal = nominalBooking(booking) + (payment?.unique_code ?? 0);
+                  // Nominal bayar (tagihan + kode unik + biaya layanan QRIS) supaya cocok dengan bukti transfer.
+                  const nominal = payment ? totalBayar(payment) : nominalBooking(booking);
 
                   return (
                     <tr
