@@ -110,6 +110,15 @@ function IconQr() {
   );
 }
 
+function IconBendera() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M4.5 17.5v-15" />
+      <path d="M4.5 3.5h10l-2.5 3.5 2.5 3.5h-10" />
+    </svg>
+  );
+}
+
 function IconPengaturan() {
   return (
     <svg {...ICON_PROPS}>
@@ -184,6 +193,12 @@ const NAV_ITEMS: readonly NavItem[] = [
     label: "QR Code",
     icon: IconQr,
     match: (pathname) => pathname === "/drivetechadmin/qr" || pathname.startsWith("/drivetechadmin/qr/"),
+  },
+  {
+    href: "/drivetechadmin/jalan-sehat",
+    label: "Jalan Sehat",
+    icon: IconBendera,
+    match: (pathname) => pathname.startsWith("/drivetechadmin/jalan-sehat"),
   },
   {
     href: "/drivetechadmin/pengaturan",

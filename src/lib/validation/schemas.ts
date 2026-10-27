@@ -357,6 +357,18 @@ export const upsertPartnerSchema = z.object({
 /* ---------- Tipe input ---------- */
 
 export type CreateBookingInput = z.infer<typeof createBookingSchema>;
+/* ---------- Jalan sehat (pendaftaran publik) ---------- */
+
+export const jalanSehatSchema = z.object({
+  nama: z.string().trim().min(2, "Nama minimal 2 karakter.").max(80, "Nama maksimal 80 karakter."),
+  phone: phone.refine((v) => v.startsWith("08"), "Nomor WhatsApp diawali 08 atau +628."),
+  domisili: z
+    .string()
+    .trim()
+    .min(3, "Tulis kecamatan atau kota tempat tinggal ya.")
+    .max(80, "Domisili maksimal 80 karakter."),
+});
+
 export type PublicBookingInput = z.infer<typeof publicBookingSchema>;
 export type RequestEmailCodeInput = z.infer<typeof requestEmailCodeSchema>;
 export type VehicleInfoInput = z.infer<typeof vehicleInfoSchema>;

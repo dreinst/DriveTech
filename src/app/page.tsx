@@ -6,6 +6,7 @@ import { CekStatusForm } from "@/components/denah/CekStatusForm";
 import { FloorPlanBoard } from "@/components/denah/FloorPlanBoard";
 import { Hitung, MobilMasuk, Muncul } from "@/components/motion/motion";
 import { Alert } from "@/components/ui/Alert";
+import { JALAN_SEHAT } from "@/lib/domain/jalan-sehat";
 import { EVENT_INFO, isBookableZoneType, KONTAK_SPONSOR, waHref } from "@/lib/domain/constants";
 import { fallbackZonesFromLayout } from "@/lib/domain/fallback";
 import { zoneHasVariedFees, zoneMinAdminFee } from "@/lib/domain/harga";
@@ -519,11 +520,42 @@ export default async function BerandaPage() {
         </div>
       </section>
 
+      {/* ================= JALAN SEHAT ================= */}
+      <section id="jalan-sehat" className="scroll-mt-16 bg-krem">
+        <div className="mx-auto flex w-full max-w-[90rem] flex-col gap-8 px-4 py-16 sm:px-8 md:flex-row md:items-end md:justify-between md:py-24">
+          <Muncul>
+            <p className="label text-sm text-ink/60">04 / Acara pendukung</p>
+            <h2 className="judul mt-2 text-[clamp(4rem,12vw,10.5rem)]">
+              Jalan sehat
+              <br />
+              <span className="text-[#c25e00]">8 November</span>
+            </h2>
+          </Muncul>
+          <Muncul className="w-full max-w-md" delay={0.1}>
+            <p className="text-base leading-relaxed text-ink/75">
+              {JALAN_SEHAT.tanggal}, mulai {JALAN_SEHAT.mulai}. {JALAN_SEHAT.bersama}. Gratis, dan
+              setiap peserta mendapat kupon undian doorprize.
+            </p>
+            <ol className="mt-5">
+              {JALAN_SEHAT.rundown.map((butir) => (
+                <li key={butir.acara} className="flex gap-4 border-t border-ink/25 py-2">
+                  <span className="judul w-16 shrink-0 text-xl">{butir.jam}</span>
+                  <span className="text-ink/80">{butir.acara}</span>
+                </li>
+              ))}
+            </ol>
+            <Link href="/jalan-sehat" className={cn(TOMBOL, "mt-6 bg-[#0a0a0a] text-white hover:bg-[#2a2a2a]")}>
+              Daftar jalan sehat
+            </Link>
+          </Muncul>
+        </div>
+      </section>
+
       {/* ================= CEK STATUS ================= */}
       <section id="cek-status" className="scroll-mt-16 bg-accent">
         <div className="mx-auto flex w-full max-w-[90rem] flex-col gap-8 px-4 py-16 sm:px-8 md:flex-row md:items-end md:justify-between md:py-24">
           <Muncul>
-            <p className="label text-sm text-ink/70">04 / Cek status</p>
+            <p className="label text-sm text-ink/70">05 / Cek status</p>
             <h2 className="judul mt-2 text-[clamp(5rem,15vw,13.5rem)] leading-[0.82]">
               Sudah
               <br />
@@ -543,7 +575,7 @@ export default async function BerandaPage() {
       <section aria-label="Lokasi acara" className="gelap bg-[#0a0a0a]">
         <div className="mx-auto grid w-full max-w-[90rem] gap-8 px-4 py-16 sm:px-8 lg:grid-cols-5">
           <div className="lg:col-span-2">
-            <p className="label text-sm text-ink/60">05 / Lokasi</p>
+            <p className="label text-sm text-ink/60">06 / Lokasi</p>
             <h2 className="judul mt-2 text-6xl sm:text-7xl">{lokasi.split(",")[0]}</h2>
             <p className="mt-4 text-base leading-relaxed text-ink/75">
               {lokasi}. Pembukaan Sabtu dan Minggu, 7 dan 8 November 2026.
@@ -573,7 +605,7 @@ export default async function BerandaPage() {
       {/* ================= TANYA JAWAB ================= */}
       <section aria-label="Tanya jawab" className="bg-krem">
         <div className="mx-auto w-full max-w-[90rem] px-4 py-16 sm:px-8 md:py-24">
-          <p className="label text-sm text-ink/60">06 / Tanya jawab</p>
+          <p className="label text-sm text-ink/60">07 / Tanya jawab</p>
           <h2 className="judul mt-2 text-6xl sm:text-7xl">Yang sering ditanyakan</h2>
           <dl className="mt-10 grid gap-x-14 gap-y-8 md:grid-cols-2">
             {daftarTanya.map((butir) => (
