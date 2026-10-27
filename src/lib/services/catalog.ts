@@ -137,6 +137,20 @@ export async function getCatalogItem(id: string): Promise<Result<CatalogItem>> {
   return ok(item);
 }
 
+/**
+ * Link pendek pembeli `/u/<kode>`: kode = 8 karakter pertama id listing.
+ * Sengaja bukan kode booking, karena kode booking membuka kartu QRIS penyewa.
+ */
+export async function cariIdListingDariKode(kode: string): Promise<string | null> {
+  if (!isDbConfigured() || !/^[0-9a-f]{8}$/.test(kode)) return null;
+  const { data } = await cobaSatu(sql<{ id: string }[]>`
+    select l.id from vehicle_listings l
+      join bookings b on b.id = l.booking_id
+     where l.is_visible and b.status = 'confirmed' and l.id::text like ${kode + "%"}
+     limit 1`);
+  return data?.id ?? null;
+}
+
 /** Tampilkan / sembunyikan satu listing dari katalog (aksi admin). */
 export async function setVehicleVisibility(
   listingId: string,
