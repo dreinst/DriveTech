@@ -108,5 +108,13 @@ export const CATEGORY_EXCLUSIVITY: NamingRight & { futureNote: string } = {
     "Model eksklusivitas kategori ini terbuka untuk kategori lain (asuransi, media, kuliner); harga dan slotnya dibicarakan terpisah.",
 };
 
+/**
+ * Sponsor yang sudah bergabung, ditampilkan sebagai logo di section sponsor.
+ * Logo disimpan di public/gambar/sponsor (latar transparan, dipangkas rapat).
+ */
+export const SPONSOR_AKTIF = [
+  { id: "profast", name: "Profast Fashion Custom", logo: "/gambar/sponsor/profast.webp", width: 1200, height: 252 },
+] as const;
+
 /** Teks awal pesan WhatsApp untuk tombol CTA sponsor. */
 export const SPONSOR_WA_TEXT = "Halo Panitia Drive Tech, saya tertarik dengan paket sponsor Phase 1.";

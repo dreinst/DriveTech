@@ -15,6 +15,7 @@ import {
   CATEGORY_EXCLUSIVITY,
   NAMING_BUNDLE_NOTE,
   NAMING_RIGHTS,
+  SPONSOR_AKTIF,
   SPONSOR_INTRO,
   SPONSOR_TIERS,
   SPONSOR_WA_TEXT,
@@ -444,6 +445,24 @@ export default async function BerandaPage() {
               </ul>
             </Muncul>
           </div>
+
+          <Muncul className="mt-14">
+            <p className="label text-sm text-ink/60">Didukung oleh</p>
+            <ul className="mt-5 flex flex-wrap gap-4">
+              {SPONSOR_AKTIF.map((sponsor) => (
+                <li key={sponsor.id} className="bg-white px-8 py-6">
+                  <Image
+                    src={sponsor.logo}
+                    alt={sponsor.name}
+                    width={sponsor.width}
+                    height={sponsor.height}
+                    sizes="16rem"
+                    className="h-auto w-56 sm:w-64"
+                  />
+                </li>
+              ))}
+            </ul>
+          </Muncul>
 
           {TAMPILKAN_HARGA_SPONSOR ? (
           <>
