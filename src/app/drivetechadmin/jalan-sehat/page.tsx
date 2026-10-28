@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { ExportCsvButton } from "@/components/admin/ExportCsvButton";
 import { UndiDoorprize } from "@/components/admin/UndiDoorprize";
@@ -55,6 +56,15 @@ export default async function AdminJalanSehatPage() {
         </div>
         <ExportCsvButton filename="peserta-jalan-sehat.csv" rows={barisCsv} />
       </header>
+
+      <Alert tone="info" title="Undian tiket fisik">
+        Undian di acara memakai nomor tiket fisik lewat halaman{" "}
+        <Link href="/jalan-sehat/undi" target="_blank" className="font-semibold text-accent underline underline-offset-4">
+          /jalan-sehat/undi
+        </Link>
+        , bisa dibuka MC atau panitia tanpa login. Undian di bawah ini hanya untuk peserta yang
+        daftar online.
+      </Alert>
 
       <UndiDoorprize sisa={peserta.length - pemenang.length} />
 

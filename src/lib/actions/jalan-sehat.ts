@@ -27,13 +27,14 @@ export async function daftarJalanSehatAction(
 
   const hasil = await daftarJalanSehat(parsed.data);
   if (!hasil.ok) {
-    if (hasil.code === "TUTUP" || hasil.code === "PENUH") return errorState(hasil.error);
+    if (hasil.code === "TUTUP" || hasil.code === "PENUH" || hasil.code === "SUDAH_ADA") {
+      return errorState(hasil.error);
+    }
     console.warn(`[jalan-sehat] ${hasil.error}`);
     return errorState("Pendaftaran belum tersimpan. Coba sebentar lagi ya.");
   }
 
-  const { peserta, sudahAda } = hasil.data;
-  redirect(`/jalan-sehat/kupon/${peserta.token}${sudahAda ? "?sudah=1" : ""}`);
+  redirect(`/jalan-sehat/kupon/${hasil.data.token}`);
 }
 
 /** Tombol undi di panel admin: pilih satu pemenang acak dari yang belum menang. */
