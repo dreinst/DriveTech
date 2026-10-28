@@ -45,7 +45,8 @@ export default async function AdminCocokPage({ searchParams }: Props) {
         </h1>
         <p className="max-w-2xl text-sm leading-relaxed text-muted sm:text-base">
           Tempel nominal yang masuk di mutasi QRIS. Setiap tagihan punya kode unik, jadi nominal
-          yang sama persis dengan tagihan ditambah kode uniknya menunjuk ke satu booking.
+          yang sama persis dengan total bayarnya (tagihan, kode unik, dan biaya layanan QRIS bila
+          ada) menunjuk ke satu booking.
         </p>
       </header>
 

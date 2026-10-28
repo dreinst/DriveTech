@@ -1,4 +1,5 @@
 import { coba, isDbConfigured, sql } from "@/lib/db";
+import { totalBayar } from "@/lib/domain/harga";
 import { fail, ok, type Result } from "@/lib/result";
 import type { BookingDetail } from "@/lib/types/database";
 import { bookingSelect, normalizeBookingRow } from "./booking";
@@ -27,15 +28,21 @@ export function bacaNominal(teks: string): number[] {
   return hasil;
 }
 
-/** Booking yang total tagihannya (tagihan + kode unik) sama dengan salah satu nominal. */
+/**
+ * Booking yang nominal bayarnya (tagihan + kode unik + biaya layanan QRIS, lihat totalBayar) sama dengan
+ * salah satu nominal. Biaya layanan dihitung di kode, jadi pencocokan dilakukan di sini, bukan di SQL.
+ */
 export async function tagihanCocok(nominal: number[]): Promise<Result<BookingDetail[]>> {
   if (!isDbConfigured()) return fail<BookingDetail[]>(NO_CONFIG_MESSAGE, "NO_CONFIG");
   if (nominal.length === 0) return ok([]);
+  type Bayar = { booking_id: string; amount: number | string; unique_code: number | null };
+  const bayar = await coba(sql<Bayar[]>`select booking_id, amount, unique_code from admin_fee_payments`);
+  if (bayar.error) return dbFail<BookingDetail[]>(bayar.error, "Gagal mencocokkan tagihan");
+  const ids = bayar.data.filter((p) => nominal.includes(totalBayar(p))).map((p) => p.booking_id);
+  if (ids.length === 0) return ok([]);
   const { data, error } = await coba(sql`
     ${bookingSelect()}
-    where exists (
-      select 1 from admin_fee_payments p
-       where p.booking_id = b.id and p.amount + coalesce(p.unique_code, 0) in ${sql(nominal)})
+    where b.id in ${sql(ids)}
     order by b.created_at desc`);
   if (error) return dbFail<BookingDetail[]>(error, "Gagal mencocokkan tagihan");
   return ok(data.map(normalizeBookingRow).filter((row): row is BookingDetail => row !== null));
