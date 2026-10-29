@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { Alert } from "@/components/ui/Alert";
 import { buttonClass } from "@/components/ui/Button";
 import { WA_KANTOR_TAMPIL } from "@/lib/domain/constants";
 import { hitungBiaya, kodeDealer, kodeWaDealer, rupiah, waDealerHref } from "@/lib/domain/formulir-dealer";
+import { totalBayar } from "@/lib/domain/harga";
 import { qrSvg } from "@/lib/qr";
 import { getDealerByToken } from "@/lib/services/formulir-dealer";
 import { formatTanggalWaktu } from "@/lib/utils";
+import { BuktiBayarForm } from "./BuktiBayarForm";
 import { TandaTanganForm } from "./TandaTanganForm";
 
 export const dynamic = "force-dynamic";
@@ -64,6 +67,53 @@ export default async function FormulirDealerTokenPage({ params }: PageProps) {
           Simpan tautan halaman ini. PDF selalu mengikuti status terbaru, termasuk tanda tangan panitia setelah
           diterima.
         </p>
+
+        {dealer.amount !== null ? (
+          <div className="mt-8 space-y-4 border border-line bg-card p-5 sm:p-7">
+            <h2 className="judul text-3xl text-ink">Pembayaran lapak</h2>
+            {dealer.status_bayar === "lunas" ? (
+              <>
+                <Alert tone="success" title="Pembayaran lunas">
+                  Kwitansi {dealer.kwitansi_no} sudah terbit. Simpan PDF-nya sebagai bukti pembayaran lapak.
+                </Alert>
+                <a href={`/dealer/${token}/kwitansi`} target="_blank" className={`${buttonClass("primary")} w-full`}>
+                  Unduh kwitansi PDF
+                </a>
+              </>
+            ) : dealer.status_bayar === "dicek" ? (
+              <Alert tone="info" title="Bukti bayar sedang dicek">
+                Bukti bayar sudah kami terima. Kwitansi muncul di halaman ini (dan dikirim ke WhatsApp yang terhubung)
+                setelah pembayaran dicek panitia.
+              </Alert>
+            ) : (
+              <>
+                {dealer.alasan_tolak ? (
+                  <Alert tone="error" title="Bukti bayar sebelumnya ditolak">
+                    {dealer.alasan_tolak}. Mohon unggah bukti yang benar.
+                  </Alert>
+                ) : null}
+                <p className="text-sm text-ink/85">
+                  Bayar{" "}
+                  <strong className="text-accent">
+                    {rupiah(totalBayar({ amount: dealer.amount, unique_code: dealer.unique_code }))}
+                  </strong>{" "}
+                  lewat QRIS di bawah. Nominal sudah terisi otomatis dan mohon dibayar persis sesuai angka itu, termasuk
+                  kode unik dan biaya layanan QRIS.
+                </p>
+                {/* eslint-disable-next-line @next/next/no-img-element -- kartu PNG dinamis dari route API */}
+                <img src={`/api/dealer/qris/${token}`} alt={`QRIS pembayaran lapak ${kode}`} className="w-full max-w-sm border border-line" />
+                <a
+                  href={`/api/dealer/qris/${token}`}
+                  download={`QRIS-${kode}.png`}
+                  className="inline-flex min-h-11 items-center text-sm text-accent underline underline-offset-4"
+                >
+                  Unduh gambar QRIS
+                </a>
+                <BuktiBayarForm token={token} />
+              </>
+            )}
+          </div>
+        ) : null}
 
         <div className="mt-8 border border-line bg-card p-5 sm:p-7">
           <h2 className="judul text-3xl text-ink">Kirim PDF ke WhatsApp</h2>

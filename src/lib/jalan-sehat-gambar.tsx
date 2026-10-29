@@ -8,6 +8,8 @@ import QRCode from "qrcode";
 import { totalBayar } from "@/lib/domain/harga";
 import { HARGA_TIKET_JS, JALAN_SEHAT, nomorTiket, SYARAT_AMBIL_HADIAH } from "@/lib/domain/jalan-sehat";
 import { dynamicQris, qrisStatic } from "@/lib/qris";
+import { hitungBiaya, kodeDealer } from "@/lib/domain/formulir-dealer";
+import type { PendaftaranDealer } from "@/lib/services/formulir-dealer";
 import type { PesananJalanSehat, PesertaJalanSehat } from "@/lib/services/jalan-sehat";
 import { getSiteUrl } from "@/lib/site-url";
 import { formatRupiah, formatTanggalWaktu } from "@/lib/utils";
@@ -105,6 +107,54 @@ export async function kartuQrisPesanan(p: PesananJalanSehat): Promise<ImageRespo
             Kirim screenshot bukti bayar di chat WhatsApp DriveTech. Tiket undian dikirim setelah pembayaran dicek.
           </span>
           <span style={{ marginTop: 10, color: "#d4d4d4" }}>{`Bayar sebelum ${formatTanggalWaktu(p.batas_bayar)} WIB`}</span>
+        </div>
+      </div>
+    ),
+    { width: W, height: H, fonts, headers: { "Cache-Control": "private, no-store" } },
+  );
+}
+
+/** Kartu QRIS tagihan lapak dealer, tampil di /dealer/<token>. Gaya sama dengan kartu QRIS jalan sehat. */
+export async function kartuQrisDealer(d: PendaftaranDealer): Promise<ImageResponse> {
+  const { logo, fonts } = await font();
+  const total = totalBayar({ amount: d.amount ?? 0, unique_code: d.unique_code });
+  const biaya = hitungBiaya(d.data);
+  const layanan = total - (d.amount ?? 0) - (d.unique_code ?? 0);
+  const qr = await QRCode.toDataURL(dynamicQris(qrisStatic(), total), { margin: 1, width: 620, errorCorrectionLevel: "M" });
+  const W = 1050;
+  const H = 1720;
+  const baris = (label: string, nilai: string) => (
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginTop: 14 }}>
+      <span style={{ fontSize: 32, color: "#a3a3a3", letterSpacing: 1 }}>{label}</span>
+      <span style={{ fontSize: 36, color: "#ffffff", maxWidth: 620, textAlign: "right" }}>{nilai}</span>
+    </div>
+  );
+  return new ImageResponse(
+    (
+      <div style={{ width: W, height: H, display: "flex", flexDirection: "column", background: "#0a0a0a", color: "#ffffff", fontFamily: "Barlow" }}>
+        <Kepala logo={logo} pita="LAPAK DEALER" kanan={kodeDealer(d.id)} />
+        <div style={{ display: "flex", justifyContent: "center", marginTop: 48 }}>
+          <div style={{ display: "flex", background: "#ffffff", padding: 26, border: `8px solid ${ORANYE}` }}>
+            {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text -- gambar di dalam ImageResponse */}
+            <img src={qr} width={600} height={600} />
+          </div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", padding: "36px 64px 0" }}>
+          {baris("DEALER", d.data.nama_dealer ?? "")}
+          {baris("BIAYA LAPAK", `${formatRupiah(d.amount ?? 0)} (${biaya.lapak} lapak x ${biaya.tanggal} tanggal)`)}
+          {baris("KODE UNIK", formatRupiah(d.unique_code ?? 0))}
+          {layanan > 0 && baris("BIAYA LAYANAN QRIS", formatRupiah(layanan))}
+          <div style={{ display: "flex", height: 4, background: ORANYE, marginTop: 24 }} />
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 14 }}>
+            <span style={{ fontFamily: "BarlowJudul", fontSize: 54, color: ORANYE }}>TOTAL BAYAR</span>
+            <span style={{ fontFamily: "BarlowJudul", fontSize: 88, color: ORANYE }}>{formatRupiah(total)}</span>
+          </div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", margin: "40px 64px 0", padding: "22px 26px", border: "2px solid #333333", fontSize: 30, lineHeight: 1.35 }}>
+          <span>Pindai dengan aplikasi bank atau e-wallet berlogo QRIS. Nominal sudah terisi otomatis.</span>
+          <span style={{ marginTop: 10, color: ORANYE }}>
+            Unggah screenshot bukti bayar di halaman formulir dealer. Kwitansi dikirim setelah pembayaran dicek panitia.
+          </span>
         </div>
       </div>
     ),

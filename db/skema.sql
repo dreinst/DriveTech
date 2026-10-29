@@ -185,6 +185,44 @@ end $$;
 
 
 --
+-- Name: alokasi_kode_unik_dl(bigint); Type: FUNCTION; Schema: public; Owner: -
+-- Kode unik 501..999 tagihan lapak dealer (migrasi 20261029-dealer-bayar.sql).
+--
+
+CREATE FUNCTION public.alokasi_kode_unik_dl(p_dealer bigint) returns integer
+    language plpgsql security definer
+    set search_path to 'public'
+    as $$
+declare
+  v_amount int;
+  v_code   int;
+  v_free   int[];
+begin
+  perform pg_advisory_xact_lock(hashtext('drivetech:kode_unik_dl'));
+
+  select amount, unique_code into v_amount, v_code
+    from public.dealer_pendaftaran where id = p_dealer for update;
+  if not found then raise exception 'dealer % tidak ditemukan', p_dealer; end if;
+  if v_code is not null or v_amount is null then return v_code; end if;
+
+  select array_agg(c) into v_free
+    from generate_series(501, 999) c
+   where not exists (
+     select 1 from public.dealer_pendaftaran d
+      where d.id <> p_dealer
+        and d.unique_code is not null
+        and d.status_bayar in ('belum', 'dicek')
+        and d.amount + d.unique_code = v_amount + c
+   );
+  if v_free is null then return null; end if;
+
+  v_code := v_free[1 + floor(random() * array_length(v_free, 1))::int];
+  update public.dealer_pendaftaran set unique_code = v_code where id = p_dealer;
+  return v_code;
+end $$;
+
+
+--
 -- Name: alokasi_kode_unik(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1387,7 +1425,8 @@ COMMENT ON TABLE public.kehadiran IS 'Registrasi ulang hari-H: satu baris per bo
 -- Formulir dealer mobil dan motor baru di /dealer (migrasi db/migrasi/20261029-dealer-baru.sql).
 -- data = isian formulir dengan kunci nama kolom PDF. ttd dan stempel = gambar tanda tangan dan stempel.
 -- wa_chat = chat WhatsApp yang meminta PDF ke nomor kantor; kabar = PDF berubah dan perlu dikirim ulang ke sana
--- (migrasi db/migrasi/20261029-dealer-wa.sql).
+-- (migrasi db/migrasi/20261029-dealer-wa.sql). Kolom amount sampai kabar_bayar = tagihan lapak QRIS, bukti, lunas,
+-- dan nomor kwitansi (migrasi db/migrasi/20261029-dealer-bayar.sql).
 --
 
 CREATE TABLE public.dealer_pendaftaran (
@@ -1400,5 +1439,37 @@ CREATE TABLE public.dealer_pendaftaran (
     diterima_at timestamp with time zone,
     wa_chat text,
     kabar text CONSTRAINT dealer_pendaftaran_kabar_check CHECK ((kabar = ANY (ARRAY['ditandatangani'::text, 'diterima'::text]))),
-    created_at timestamp with time zone DEFAULT now() NOT NULL
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    amount integer,
+    unique_code integer CONSTRAINT dealer_pendaftaran_kode_unik_check CHECK (((unique_code >= 501) AND (unique_code <= 999))),
+    status_bayar text DEFAULT 'belum'::text NOT NULL CONSTRAINT dealer_pendaftaran_status_bayar_check CHECK ((status_bayar = ANY (ARRAY['belum'::text, 'dicek'::text, 'lunas'::text]))),
+    proof_url text,
+    submitted_at timestamp with time zone,
+    alasan_tolak text,
+    lunas_at timestamp with time zone,
+    lunas_oleh uuid REFERENCES public.admin_users(id),
+    lunas_lewat text CONSTRAINT dealer_pendaftaran_lunas_lewat_check CHECK ((lunas_lewat = ANY (ARRAY['admin'::text, 'discord'::text, 'cocok'::text]))),
+    kwitansi_no text UNIQUE,
+    kabar_bayar text CONSTRAINT dealer_pendaftaran_kabar_bayar_check CHECK ((kabar_bayar = ANY (ARRAY['lunas'::text, 'ditolak'::text])))
+);
+
+
+--
+-- Name: kwitansi_dealer_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Nomor urut kwitansi dealer NNN/DPRO-DT-KW/<bulan romawi>/<tahun> (migrasi 20261029-dealer-bayar.sql).
+--
+
+CREATE SEQUENCE public.kwitansi_dealer_seq;
+
+
+--
+-- Name: kwitansi_ttd; Type: TABLE; Schema: public; Owner: -
+-- Satu baris goresan tanda tangan penanda tangan kwitansi dealer (PNG transparan), dari /drivetechadmin/kwitansi.
+--
+
+CREATE TABLE public.kwitansi_ttd (
+    id smallint DEFAULT 1 PRIMARY KEY CONSTRAINT kwitansi_ttd_satu CHECK ((id = 1)),
+    png bytea NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_by uuid REFERENCES public.admin_users(id)
 );

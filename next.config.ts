@@ -24,7 +24,8 @@ const nextConfig = {
   output: "standalone",
   // Template PDF formulir dealer dibaca lewat fs saat runtime, jadi perlu ikut ke output standalone.
   outputFileTracingIncludes: {
-    "/dealer/**": ["./src/assets/formulir-dealer/**"],
+    "/dealer/**": ["./src/assets/formulir-dealer/**", "./src/assets/kwitansi-dealer/**"],
+    "/drivetechadmin/kwitansi/**": ["./src/assets/kwitansi-dealer/**"],
   },
   images: {
     // Hasil optimasi gambar disimpan 31 hari supaya sharp tidak mengolah ulang tiap jam.

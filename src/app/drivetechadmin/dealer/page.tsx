@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 
+import { BayarDealerAksi } from "@/components/admin/BayarDealerAksi";
 import { ExportCsvButton } from "@/components/admin/ExportCsvButton";
 import { TerimaDealerButton } from "@/components/admin/TerimaDealerButton";
 import { Alert } from "@/components/ui/Alert";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { hitungBiaya, kodeDealer, LAPAK_DEALER, rupiah, TANGGAL_DEALER } from "@/lib/domain/formulir-dealer";
+import { totalBayar } from "@/lib/domain/harga";
 import { requireAdmin } from "@/lib/services/auth";
 import { listPendaftaranDealer } from "@/lib/services/formulir-dealer";
+import { resolveProofUrl } from "@/lib/storage";
 import { formatTanggalWaktu } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -31,6 +34,8 @@ export default async function AdminDealerPage() {
   }
 
   const dealer = hasil.data;
+  const bukti = new Map(await Promise.all(dealer.map(async (p) => [p.id, await resolveProofUrl(p.proof_url)] as const)));
+  const totalTagihan = (p: (typeof dealer)[number]) => totalBayar({ amount: p.amount ?? 0, unique_code: p.unique_code });
   const lapak = (d: Record<string, string>) =>
     LAPAK_DEALER.filter((l) => Number(d[`jumlah_${l.kode}`]) > 0)
       .map((l) => `${d[`jumlah_${l.kode}`]} ${l.kode.toUpperCase()}${d[`nomor_${l.kode}`] ? ` (${d[`nomor_${l.kode}`]})` : ""}`)
@@ -51,6 +56,9 @@ export default async function AdminDealerPage() {
     Total: hitungBiaya(p.data).total,
     Ditandatangani: p.ditandatangani_at ? formatTanggalWaktu(p.ditandatangani_at) : "",
     Diterima: p.diterima_at ? formatTanggalWaktu(p.diterima_at) : "",
+    "Total bayar QRIS": p.amount === null ? "" : totalTagihan(p),
+    Bayar: p.amount === null ? "" : p.status_bayar,
+    Kwitansi: p.kwitansi_no ?? "",
   }));
 
   return (
@@ -60,7 +68,8 @@ export default async function AdminDealerPage() {
           <h1 className="text-3xl font-bold tracking-[-0.02em] text-ink sm:text-4xl">Dealer Baru</h1>
           <p className="text-sm text-muted sm:text-base">
             {dealer.length} formulir masuk, {dealer.filter((p) => p.ditandatangani_at).length} sudah ditandatangani,{" "}
-            {dealer.filter((p) => p.diterima_at).length} diterima.
+            {dealer.filter((p) => p.diterima_at).length} diterima,{" "}
+            {dealer.filter((p) => p.status_bayar === "lunas").length} lunas.
           </p>
         </div>
         <ExportCsvButton filename="formulir-dealer.csv" rows={barisCsv} />
@@ -76,7 +85,9 @@ export default async function AdminDealerPage() {
           /dealer/formulir.pdf
         </a>
         . Untuk tanda tangan di lokasi, buka &quot;Tanda tangan&quot; di iPad lalu serahkan ke dealer. Tanda tangan panitia
-        masuk ke PDF setelah tombol &quot;Terima&quot; ditekan.
+        masuk ke PDF setelah tombol &quot;Terima&quot; ditekan, dan saat itu tagihan QRIS dealer dibuat. Dealer membayar
+        dan mengunggah bukti di halaman formulirnya. Setelah ditandai lunas (di sini, di kartu Discord, atau di Cocokkan
+        Bayar), kwitansi DPRO dibuat otomatis.
       </Alert>
 
       {dealer.length === 0 ? (
@@ -86,7 +97,7 @@ export default async function AdminDealerPage() {
         />
       ) : (
         <div className="overflow-x-auto border border-line bg-card">
-          <table className="w-full min-w-[880px] border-collapse text-sm">
+          <table className="w-full min-w-[1080px] border-collapse text-sm">
             <thead>
               <tr className="border-b border-line bg-surface-2 text-left text-xs font-medium tracking-wide text-subtle uppercase">
                 <th scope="col" className="px-3 py-2.5">Kode</th>
@@ -95,6 +106,7 @@ export default async function AdminDealerPage() {
                 <th scope="col" className="px-3 py-2.5">Lapak</th>
                 <th scope="col" className="px-3 py-2.5">Total</th>
                 <th scope="col" className="px-3 py-2.5">Status</th>
+                <th scope="col" className="px-3 py-2.5">Bayar</th>
                 <th scope="col" className="px-3 py-2.5">Aksi</th>
               </tr>
             </thead>
@@ -124,6 +136,42 @@ export default async function AdminDealerPage() {
                       <span className="text-ink">Ditandatangani</span>
                     ) : (
                       <span className="text-muted">Belum tanda tangan</span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2.5 text-xs">
+                    {p.amount === null ? (
+                      <span className="text-muted">Tagihan dibuat setelah diterima</span>
+                    ) : (
+                      <div className="space-y-1.5">
+                        <p className="whitespace-nowrap text-ink">
+                          {rupiah(totalTagihan(p))}
+                          <span className="text-muted"> (kode unik {p.unique_code ?? "-"})</span>
+                        </p>
+                        {p.status_bayar === "lunas" ? (
+                          <p className="font-semibold text-ok">
+                            Lunas {p.lunas_at ? formatTanggalWaktu(p.lunas_at) : ""}
+                            <br />
+                            <a href={`/dealer/${p.token}/kwitansi`} target="_blank" className={TAUTAN}>
+                              Kwitansi {p.kwitansi_no}
+                            </a>
+                          </p>
+                        ) : p.status_bayar === "dicek" ? (
+                          <p className="text-warn">
+                            Bukti masuk {p.submitted_at ? formatTanggalWaktu(p.submitted_at) : ""}
+                            {bukti.get(p.id) ? (
+                              <>
+                                {" · "}
+                                <a href={bukti.get(p.id) ?? "#"} target="_blank" className={TAUTAN}>
+                                  Lihat bukti
+                                </a>
+                              </>
+                            ) : null}
+                          </p>
+                        ) : (
+                          <p className="text-muted">{p.alasan_tolak ? `Ditolak: ${p.alasan_tolak}` : "Belum bayar"}</p>
+                        )}
+                        <BayarDealerAksi id={p.id} kode={kodeDealer(p.id)} status={p.status_bayar} />
+                      </div>
                     )}
                   </td>
                   <td className="px-3 py-2.5">

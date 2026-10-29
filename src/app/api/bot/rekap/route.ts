@@ -3,7 +3,9 @@ import type { NextResponse } from "next/server";
 import { handleRoute, jsonError, jsonOk } from "@/app/api/_lib/respond";
 import { coba, sql } from "@/lib/db";
 import { totalBayar } from "@/lib/domain/harga";
+import { hitungBiaya, kodeDealer, LAPAK_DEALER, TANGGAL_DEALER } from "@/lib/domain/formulir-dealer";
 import { botAuthorized } from "@/lib/services/bot";
+import { listPendaftaranDealer } from "@/lib/services/formulir-dealer";
 import { listPesanan } from "@/lib/services/jalan-sehat";
 import { getSiteUrl } from "@/lib/site-url";
 import { resolveProofUrl } from "@/lib/storage";
@@ -22,7 +24,9 @@ type Baris = {
  * GET /api/bot/rekap (khusus bot D'Pro Ops, header x-bot-key)
  * Tracking pembayaran DriveTech untuk Discord: bukti yang menunggu verifikasi (dengan URL bukti bertanda tangan
  * berumur 1 jam), total pemasukan terverifikasi, dan jumlah tagihan belum dibayar, untuk booking lapak dan untuk
- * pesanan jalan sehat (kunci jalanSehat). Dengan ?hp=<nomor> hanya
+ * pesanan jalan sehat (kunci jalanSehat). Bukti bayar lapak dealer (kode DL-...) ikut di `menunggu` supaya kartu
+ * Setujui/Tolak Discord yang sudah ada langsung dipakai (putusannya diteruskan route booking ke dealer); totalnya
+ * di kunci dealer. Dengan ?hp=<nomor> hanya
  * membalas booking milik nomor itu (dicocokkan 10 digit terakhir), dipakai kartu chat pelanggan.
  */
 export async function GET(request: Request): Promise<NextResponse> {
@@ -63,8 +67,30 @@ export async function GET(request: Request): Promise<NextResponse> {
     const js = await listPesanan();
     if (!js.ok) return jsonError("Gagal memuat pesanan jalan sehat.", 502, { code: "DB" });
     const jsLunas = js.data.filter((x) => x.status === "lunas");
+    const dl = await listPendaftaranDealer();
+    if (!dl.ok) return jsonError("Gagal memuat tagihan dealer.", 502, { code: "DB" });
+    const dlTagihan = dl.data.filter((x) => x.amount !== null);
+    const dlLunas = dlTagihan.filter((x) => x.status_bayar === "lunas");
+    const dlTotal = (x: (typeof dlTagihan)[number]) => totalBayar({ amount: x.amount ?? 0, unique_code: x.unique_code });
+    const dlMenunggu = await Promise.all(dlTagihan.filter((x) => x.status_bayar === "dicek").map(async (x) => {
+      const bukti = await resolveProofUrl(x.proof_url);
+      const total = dlTotal(x);
+      const lapak = LAPAK_DEALER.filter((l) => Number(x.data[`jumlah_${l.kode}`]) > 0)
+        .map((l) => `${x.data[`jumlah_${l.kode}`]} ${l.kode.toUpperCase()}`).join(", ");
+      return {
+        kode: kodeDealer(x.id), status: "dealer", statusBayar: x.status_bayar, nama: x.data.nama_dealer ?? "",
+        hp: x.data.wa_pic ?? null, jenis: "dealer", lapak: `Dealer ${lapak} (${hitungBiaya(x.data).tanggal} tanggal)`,
+        tanggal: TANGGAL_DEALER.filter((_, i) => x.data[`tgl_${i + 1}`] === "ya"), kodeUnik: x.unique_code,
+        total, totalTeks: formatRupiah(total),
+        bukti: bukti && bukti.startsWith("/") ? situs + bukti : bukti,
+        buktiAt: x.submitted_at,
+      };
+    }));
     return jsonOk({
-      menunggu: await Promise.all(r.data.filter((x) => x.status_bayar === "submitted" && x.status !== "cancelled").map(ringkas)),
+      menunggu: [
+        ...(await Promise.all(r.data.filter((x) => x.status_bayar === "submitted" && x.status !== "cancelled").map(ringkas))),
+        ...dlMenunggu,
+      ],
       pemasukan: lunas.reduce((n, x) => n + totalBayar({ amount: x.amount ?? 0, unique_code: x.unique_code }), 0),
       lunas: lunas.length,
       belumBayar: r.data.filter((x) => x.status_bayar === "unpaid" && x.status === "pending_payment").length,
@@ -82,6 +108,12 @@ export async function GET(request: Request): Promise<NextResponse> {
         lunas: jsLunas.length,
         peserta: jsLunas.reduce((n, x) => n + x.jumlah, 0),
         belumBayar: js.data.filter((x) => x.status === "menunggu").length,
+      },
+      dealer: {
+        menunggu: dlMenunggu.length,
+        pemasukan: dlLunas.reduce((n, x) => n + dlTotal(x), 0),
+        lunas: dlLunas.length,
+        belumBayar: dlTagihan.filter((x) => x.status_bayar === "belum").length,
       },
     });
   });

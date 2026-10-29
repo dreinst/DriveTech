@@ -3,11 +3,22 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { MAX_PROOF_BYTES, STORAGE_BUCKET_BUKTI } from "@/lib/domain/constants";
 import { kodeDealer, MAKS_STEMPEL_BYTES, MAKS_TTD_BYTES, type DataDealer } from "@/lib/domain/formulir-dealer";
 import { clientIpFromHeaders, rateLimitShared } from "@/lib/rate-limit";
-import { requireAdmin } from "@/lib/services/auth";
+import { requireAdmin, requireFullAdmin } from "@/lib/services/auth";
 import { catatLog } from "@/lib/services/log";
-import { simpanPendaftaranDealer, tandatanganiDealer, terimaDealer } from "@/lib/services/formulir-dealer";
+import {
+  getDealerByToken,
+  kirimBuktiDealer,
+  lunaskanDealer,
+  simpanPendaftaranDealer,
+  simpanTtdKwitansi,
+  tandatanganiDealer,
+  terimaDealer,
+  tolakBayarDealer,
+} from "@/lib/services/formulir-dealer";
+import { simpanBerkas } from "@/lib/storage";
 import { formulirDealerSchema, zodFieldErrors } from "@/lib/validation/schemas";
 import { errorState, successState, type ActionState } from "./state";
 
@@ -92,4 +103,71 @@ export async function terimaDealerAction(_prev: ActionState, formData: FormData)
   await catatLog(admin.id, "terima_formulir_dealer", kodeDealer(id));
   revalidatePath("/drivetechadmin/dealer");
   return successState("Diterima.");
+}
+
+const EKSTENSI_BUKTI: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
+
+/** Dealer mengunggah screenshot bukti bayar QRIS di /dealer/<token>. */
+export async function kirimBuktiDealerAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const ip = await clientIpFromHeaders();
+  if (!(await rateLimitShared(`dealer-bukti:ip:${ip}`, 20, 600))) {
+    return errorState("Terlalu banyak unggahan dari jaringan ini. Coba lagi beberapa menit lagi ya.");
+  }
+  const token = String(formData.get("token") ?? "");
+  const dealer = await getDealerByToken(token);
+  if (!dealer || dealer.amount === null) return errorState("Tagihan dealer tidak ditemukan.");
+  if (dealer.status_bayar === "lunas") return errorState("Pembayaran ini sudah lunas.");
+
+  const berkas = formData.get("proof");
+  if (!(berkas instanceof File) || berkas.size === 0) return errorState("Pilih screenshot bukti bayar dulu.");
+  const ext = EKSTENSI_BUKTI[berkas.type];
+  if (!ext) return errorState("Bukti bayar harus berupa gambar JPG, PNG, atau WEBP.");
+  if (berkas.size > MAX_PROOF_BYTES) return errorState("Ukuran bukti bayar maksimal 2 MB.");
+  const url = await simpanBerkas(STORAGE_BUCKET_BUKTI, `dl-${kodeDealer(dealer.id)}-web-${Date.now()}.${ext}`, berkas);
+  if (!url) return errorState("Bukti bayar gagal diunggah, coba lagi.");
+
+  const hasil = await kirimBuktiDealer(dealer.id, url);
+  if (!hasil.ok) return errorState(hasil.error);
+  revalidatePath(`/dealer/${token}`);
+  revalidatePath("/drivetechadmin/dealer");
+  return successState("Bukti bayar terkirim.");
+}
+
+/** Tombol "Lunas" di /drivetechadmin/dealer dan /drivetechadmin/cocok: kwitansi dibuat otomatis. */
+export async function lunaskanDealerAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const admin = await requireAdmin();
+  const id = Number(formData.get("id"));
+  const lewat = formData.get("lewat") === "cocok" ? "cocok" : "admin";
+  const hasil = await lunaskanDealer(id, admin.id, lewat);
+  if (!hasil.ok) return errorState(hasil.error);
+  await catatLog(admin.id, "dealer_lunas", `${kodeDealer(id)}, kwitansi ${hasil.data.kwitansi_no} lewat ${lewat}`);
+  revalidatePath("/drivetechadmin/dealer");
+  revalidatePath("/drivetechadmin/cocok");
+  return successState(`Lunas, kwitansi ${hasil.data.kwitansi_no}.`);
+}
+
+/** Bukti bayar dealer tidak cocok: dealer diminta mengunggah ulang. */
+export async function tolakBayarDealerAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const admin = await requireAdmin();
+  const id = Number(formData.get("id"));
+  const alasan = String(formData.get("alasan") ?? "").trim().slice(0, 200) || "Pembayaran belum kami temukan";
+  const hasil = await tolakBayarDealer(id, alasan);
+  if (!hasil.ok) return errorState(hasil.error);
+  await catatLog(admin.id, "dealer_bayar_tolak", `${kodeDealer(id)}: ${alasan}`);
+  revalidatePath("/drivetechadmin/dealer");
+  return successState("Bukti ditolak.");
+}
+
+/** Goresan tanda tangan kwitansi di /drivetechadmin/kwitansi (khusus superadmin). */
+export async function simpanTtdKwitansiAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const gate = await requireFullAdmin();
+  if (!gate.ok) return errorState(gate.error);
+  const ttd = bacaGambar(formData.get("ttd"), MAKS_TTD_BYTES, "tanda tangan");
+  if (!ttd.ok) return errorState(ttd.pesan);
+  if (!ttd.isi) return errorState("Tanda tangan dulu di kotak yang tersedia.");
+  const hasil = await simpanTtdKwitansi(ttd.isi, gate.data.id);
+  if (!hasil.ok) return errorState(hasil.error);
+  await catatLog(gate.data.id, "ttd_kwitansi", "goresan tanda tangan kwitansi diganti");
+  revalidatePath("/drivetechadmin/kwitansi");
+  return successState("Tanda tangan kwitansi tersimpan.");
 }

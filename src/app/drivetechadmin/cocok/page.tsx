@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { BayarDealerAksi } from "@/components/admin/BayarDealerAksi";
 import { PaymentVerifyForm } from "@/components/admin/PaymentVerifyForm";
 import { ProofThumb } from "@/components/admin/ProofThumb";
 import { Alert } from "@/components/ui/Alert";
@@ -7,9 +8,11 @@ import { buttonClass } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Field, Textarea } from "@/components/ui/Field";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { kodeDealer } from "@/lib/domain/formulir-dealer";
 import { totalBayar } from "@/lib/domain/harga";
 import { requireAdmin } from "@/lib/services/auth";
 import { bacaNominal, MAKS_NOMINAL, tagihanCocok } from "@/lib/services/cocok";
+import { dealerCocok } from "@/lib/services/formulir-dealer";
 import { resolveProofUrl } from "@/lib/storage";
 import { formatRupiah, formatTanggalWaktu, slotDisplayName } from "@/lib/utils";
 
@@ -28,6 +31,8 @@ export default async function AdminCocokPage({ searchParams }: Props) {
   const tempelan = (Array.isArray(n) ? n.join("\n") : n) ?? "";
   const nominal = bacaNominal(tempelan);
   const hasil = await tagihanCocok(nominal);
+  const dealerHasil = await dealerCocok(nominal);
+  const dealer = dealerHasil.ok ? dealerHasil.data : [];
   const tagihan = hasil.ok
     ? await Promise.all(
         hasil.data.map(async (booking) => ({
@@ -46,7 +51,7 @@ export default async function AdminCocokPage({ searchParams }: Props) {
         <p className="max-w-2xl text-sm leading-relaxed text-muted sm:text-base">
           Tempel nominal yang masuk di mutasi QRIS. Setiap tagihan punya kode unik, jadi nominal
           yang sama persis dengan total bayarnya (tagihan, kode unik, dan biaya layanan QRIS bila
-          ada) menunjuk ke satu booking.
+          ada) menunjuk ke satu booking atau satu tagihan lapak dealer.
         </p>
       </header>
 
@@ -91,18 +96,22 @@ export default async function AdminCocokPage({ searchParams }: Props) {
             const cocok = tagihan.filter(
               ({ booking }) => booking.payment && totalBayar(booking.payment) === angka,
             );
+            const cocokDealer = dealer.filter(
+              (d) => totalBayar({ amount: d.amount ?? 0, unique_code: d.unique_code }) === angka,
+            );
+            const jumlahCocok = cocok.length + cocokDealer.length;
             return (
               <Card key={angka}>
                 <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-line px-5 py-4 sm:px-6">
                   <h2 className="tabular text-lg font-semibold tracking-tight text-ink">
                     {formatRupiah(angka)}
                   </h2>
-                  <p className={`text-sm ${cocok.length === 1 ? "text-ok" : "text-warn"}`}>
-                    {cocok.length === 0
+                  <p className={`text-sm ${jumlahCocok === 1 ? "text-ok" : "text-warn"}`}>
+                    {jumlahCocok === 0
                       ? "Tidak ada tagihan dengan nominal ini"
-                      : cocok.length === 1
+                      : jumlahCocok === 1
                         ? "1 tagihan cocok"
-                        : `${cocok.length} tagihan cocok, periksa waktu bayarnya`}
+                        : `${jumlahCocok} tagihan cocok, periksa waktu bayarnya`}
                   </p>
                 </div>
                 {cocok.length > 0 ? (
@@ -147,6 +156,32 @@ export default async function AdminCocokPage({ searchParams }: Props) {
                             bookingCode={booking.booking_code}
                           />
                         </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+                {cocokDealer.length > 0 ? (
+                  <ul className="divide-y divide-line border-t border-line">
+                    {cocokDealer.map((d) => (
+                      <li
+                        key={d.id}
+                        className="flex flex-col gap-3 px-5 py-4 sm:px-6 lg:flex-row lg:items-start lg:justify-between"
+                      >
+                        <div className="min-w-0 space-y-1.5">
+                          <p className="font-mono text-sm font-semibold text-ink">{kodeDealer(d.id)} · lapak dealer</p>
+                          <p className="text-sm text-ink">
+                            {d.data.nama_dealer}
+                            <span className="text-muted"> · {d.data.wa_pic || "tanpa nomor"}</span>
+                          </p>
+                          <p className="text-xs text-muted">
+                            tagihan {formatRupiah(d.amount)} + kode unik {d.unique_code ?? 0} · bukti{" "}
+                            {d.submitted_at ? `${formatTanggalWaktu(d.submitted_at)} WIB` : "belum ada"}
+                          </p>
+                          <p className="text-xs font-medium text-ink">
+                            {d.status_bayar === "lunas" ? `Lunas, kwitansi ${d.kwitansi_no}` : d.status_bayar === "dicek" ? "Bukti dicek" : "Belum bayar"}
+                          </p>
+                        </div>
+                        <BayarDealerAksi id={d.id} kode={kodeDealer(d.id)} status={d.status_bayar} lewat="cocok" />
                       </li>
                     ))}
                   </ul>
