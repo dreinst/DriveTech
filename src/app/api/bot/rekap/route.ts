@@ -4,6 +4,7 @@ import { handleRoute, jsonError, jsonOk } from "@/app/api/_lib/respond";
 import { coba, sql } from "@/lib/db";
 import { totalBayar } from "@/lib/domain/harga";
 import { botAuthorized } from "@/lib/services/bot";
+import { listPesanan } from "@/lib/services/jalan-sehat";
 import { getSiteUrl } from "@/lib/site-url";
 import { resolveProofUrl } from "@/lib/storage";
 import { formatRupiah, slotDisplayName } from "@/lib/utils";
@@ -20,7 +21,8 @@ type Baris = {
 /**
  * GET /api/bot/rekap (khusus bot D'Pro Ops, header x-bot-key)
  * Tracking pembayaran DriveTech untuk Discord: bukti yang menunggu verifikasi (dengan URL bukti bertanda tangan
- * berumur 1 jam), total pemasukan terverifikasi, dan jumlah tagihan belum dibayar. Dengan ?hp=<nomor> hanya
+ * berumur 1 jam), total pemasukan terverifikasi, dan jumlah tagihan belum dibayar, untuk booking lapak dan untuk
+ * pesanan jalan sehat (kunci jalanSehat). Dengan ?hp=<nomor> hanya
  * membalas booking milik nomor itu (dicocokkan 10 digit terakhir), dipakai kartu chat pelanggan.
  */
 export async function GET(request: Request): Promise<NextResponse> {
@@ -58,11 +60,29 @@ export async function GET(request: Request): Promise<NextResponse> {
 
     if (hp) return jsonOk({ booking: await Promise.all(r.data.map(ringkas)) });
     const lunas = r.data.filter((x) => x.status_bayar === "verified" && x.amount !== null);
+    const js = await listPesanan();
+    if (!js.ok) return jsonError("Gagal memuat pesanan jalan sehat.", 502, { code: "DB" });
+    const jsLunas = js.data.filter((x) => x.status === "lunas");
     return jsonOk({
       menunggu: await Promise.all(r.data.filter((x) => x.status_bayar === "submitted" && x.status !== "cancelled").map(ringkas)),
       pemasukan: lunas.reduce((n, x) => n + totalBayar({ amount: x.amount ?? 0, unique_code: x.unique_code }), 0),
       lunas: lunas.length,
       belumBayar: r.data.filter((x) => x.status_bayar === "unpaid" && x.status === "pending_payment").length,
+      jalanSehat: {
+        menunggu: await Promise.all(js.data.filter((x) => x.status === "dicek").map(async (x) => {
+          const bukti = await resolveProofUrl(x.proof_url);
+          const total = totalBayar(x);
+          return {
+            kode: x.kode, nama: x.nama, hp: x.phone, domisili: x.domisili, jumlah: x.jumlah, sumber: x.sumber,
+            kodeUnik: x.unique_code, total, totalTeks: formatRupiah(total),
+            bukti: bukti && bukti.startsWith("/") ? situs + bukti : bukti, buktiAt: x.submitted_at,
+          };
+        })),
+        pemasukan: jsLunas.reduce((n, x) => n + totalBayar(x), 0),
+        lunas: jsLunas.length,
+        peserta: jsLunas.reduce((n, x) => n + x.jumlah, 0),
+        belumBayar: js.data.filter((x) => x.status === "menunggu").length,
+      },
     });
   });
 }
