@@ -18,7 +18,7 @@ export default function DealerPage() {
           Formulir dealer mobil dan motor baru
         </h1>
         <p className="mt-4 text-base leading-relaxed text-ink/80">
-          Sabtu dan Minggu, 7 dan 8 November 2026 (pembukaan), selanjutnya setiap hari Minggu sampai 27 Desember 2026
+          Sabtu dan Minggu, 7 dan 8 November 2026 (pembukaan), selanjutnya setiap hari Minggu sampai 29 November 2026
           di Rest Area Singosari (Kampung Tentara). Sabtu pukul 12.00 sampai 22.00 WIB, Minggu pukul 06.00 sampai 12.00
           WIB.
         </p>

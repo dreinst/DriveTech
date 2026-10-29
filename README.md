@@ -1,7 +1,7 @@
 # Drive Tech — Booking Lapak Per Tanggal & Modul Leasing
 
 Aplikasi web untuk **Drive Tech** — pasar otomotif akhir pekan di **Kampung Tentara, Singosari, Malang**,
-Musim 1 dibuka **Sabtu–Minggu 7–8 November 2026**, lalu digelar **setiap hari Minggu sampai 27 Desember 2026** (8 pekan),
+Musim 1 dibuka **Sabtu–Minggu 7–8 November 2026**, lalu digelar **setiap hari Minggu sampai 29 November 2026** (tanggal Desember dinonaktifkan),
 untuk mobil & motor baru, mobil & motor bekas, UMKM, otomotif & leasing, dan kuliner.
 Pengunjung dan calon tenant melihat **denah interaktif** yang disegarkan tiap 10 detik dari
 database, lalu memesan lapak sendiri **per tanggal**: pilih satu atau beberapa tanggal

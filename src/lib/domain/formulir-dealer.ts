@@ -15,16 +15,12 @@ export const LAPAK_DEALER = [
   { kode: "d", label: "Motor baru (D), 3 x 3 m", harga: 500_000 },
 ] as const;
 
-/** Bagian D. Urutan = tgl_1 sampai tgl_8 di PDF. */
+/** Bagian D. Urutan = tgl_1 sampai tgl_4 di PDF. Vol. 1 hanya sampai 29 November. */
 export const TANGGAL_DEALER = [
   "Pembukaan 7 dan 8 Nov",
   "Minggu, 15 Nov",
   "Minggu, 22 Nov",
   "Minggu, 29 Nov",
-  "Minggu, 6 Des",
-  "Minggu, 13 Des",
-  "Minggu, 20 Des",
-  "Minggu, 27 Des",
 ] as const;
 
 export const JUMLAH_BARIS_UNIT = 4;
