@@ -1386,6 +1386,8 @@ COMMENT ON TABLE public.kehadiran IS 'Registrasi ulang hari-H: satu baris per bo
 -- Name: dealer_pendaftaran; Type: TABLE; Schema: public; Owner: -
 -- Formulir dealer mobil dan motor baru di /dealer (migrasi db/migrasi/20261029-dealer-baru.sql).
 -- data = isian formulir dengan kunci nama kolom PDF. ttd dan stempel = gambar tanda tangan dan stempel.
+-- wa_chat = chat WhatsApp yang meminta PDF ke nomor kantor; kabar = PDF berubah dan perlu dikirim ulang ke sana
+-- (migrasi db/migrasi/20261029-dealer-wa.sql).
 --
 
 CREATE TABLE public.dealer_pendaftaran (
@@ -1396,5 +1398,7 @@ CREATE TABLE public.dealer_pendaftaran (
     stempel bytea,
     ditandatangani_at timestamp with time zone,
     diterima_at timestamp with time zone,
+    wa_chat text,
+    kabar text CONSTRAINT dealer_pendaftaran_kabar_check CHECK ((kabar = ANY (ARRAY['ditandatangani'::text, 'diterima'::text]))),
     created_at timestamp with time zone DEFAULT now() NOT NULL
 );

@@ -126,3 +126,29 @@ python3 -m py_compile /opt/kantor-cs/kantor_cs.py && systemctl restart kantor-cs
 ```
 
 Pantau: `journalctl -u kantor-cs -f | grep -i "jalan sehat"`.
+
+## PDF formulir dealer lewat WhatsApp kantor
+
+`kantor-cs-dealer.py` menambahkan pengiriman PDF formulir dealer ke `kantor_cs.py`.
+Nomor kantor tetap tidak mengirim pesan pertama, jadi dealer yang memulai:
+
+1. Di `/dealer/<token>` dealer menekan "Kirim PDF ke WhatsApp saya" atau memindai
+   QR-nya dengan HP. Pesan berisi kode `DL-0001-XXXXXXXX` terkirim ke nomor kantor.
+2. Bot memanggil `POST /api/bot/dealer` (chat disimpan di DriveTech) lalu
+   membalas dengan PDF formulir terbaru.
+3. Setelah tanda tangan menyusul atau panitia menekan Terima di
+   `/drivetechadmin/dealer`, bot mengambil `/api/bot/dealer/kabar` dan mengirim
+   PDF versi baru ke chat yang sama.
+
+Patch ini bisa dipasang sebelum atau sesudah patch jalan sehat. Dipasang lewat
+jendela perawatan:
+
+```bash
+# tugas: kantor-cs formulir dealer
+# rollback: cp /opt/kantor-cs/kantor_cs.py.bak-<tanggal>-dealer /opt/kantor-cs/kantor_cs.py, lalu restart kantor-cs
+cp /opt/kantor-cs/kantor_cs.py /opt/kantor-cs/kantor_cs.py.bak-$(date +%Y%m%d)-dealer
+python3 /root/kantor-cs-dealer.py /opt/kantor-cs/kantor_cs.py
+python3 -m py_compile /opt/kantor-cs/kantor_cs.py && systemctl restart kantor-cs
+```
+
+Pantau: `journalctl -u kantor-cs -f | grep -i dealer`.

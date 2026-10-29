@@ -5,6 +5,8 @@
  * Data isian disimpan datar dengan kunci = nama kolom di PDF (nama_dealer, unit_1_tipe, tgl_3, ...).
  */
 
+import { WA_BOT_PHONE, waHref } from "./constants";
+
 export type DataDealer = Record<string, string>;
 
 /** Pilihan lapak bagian C. Harga per tanggal sama dengan tabel di PDF. */
@@ -79,6 +81,21 @@ export function hitungBiaya(data: DataDealer): { lapak: number; tanggal: number;
     total += l.harga * n * tanggal;
   }
   return { lapak, tanggal, total };
+}
+
+/**
+ * Kode yang diketik di chat WhatsApp kantor untuk meminta PDF: DL-0001-A1B2C3D4. Delapan huruf token
+ * ikut disertakan supaya orang lain tidak bisa meminta PDF dealer lain hanya dengan menebak nomor urut.
+ */
+export function kodeWaDealer(id: number, token: string): string {
+  return `${kodeDealer(id)}-${token.slice(0, 8).toUpperCase()}`;
+}
+
+export const KODE_WA_DEALER_RE = /DL-(\d{4,})-([0-9A-F]{8})/i;
+
+/** Tautan wa.me ke nomor kantor dengan pesan berisi kode, supaya bot langsung membalas dengan PDF. */
+export function waDealerHref(id: number, token: string): string {
+  return waHref(WA_BOT_PHONE, `Halo, mohon kirim PDF formulir dealer ${kodeWaDealer(id, token)}`);
 }
 
 /** "Rp2.500.000", tanpa spasi seperti di PDF. */

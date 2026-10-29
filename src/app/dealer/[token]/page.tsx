@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { buttonClass } from "@/components/ui/Button";
-import { hitungBiaya, kodeDealer, rupiah } from "@/lib/domain/formulir-dealer";
+import { WA_KANTOR_TAMPIL } from "@/lib/domain/constants";
+import { hitungBiaya, kodeDealer, kodeWaDealer, rupiah, waDealerHref } from "@/lib/domain/formulir-dealer";
+import { qrSvg } from "@/lib/qr";
 import { getDealerByToken } from "@/lib/services/formulir-dealer";
 import { formatTanggalWaktu } from "@/lib/utils";
 import { TandaTanganForm } from "./TandaTanganForm";
@@ -22,6 +24,8 @@ export default async function FormulirDealerTokenPage({ params }: PageProps) {
   if (!dealer) notFound();
 
   const kode = kodeDealer(dealer.id);
+  const waHref = waDealerHref(dealer.id, token);
+  const qr = await qrSvg(waHref, { margin: 1 });
   const biaya = hitungBiaya(dealer.data);
   const status = dealer.diterima_at
     ? `Diterima panitia ${formatTanggalWaktu(dealer.diterima_at)}`
@@ -60,6 +64,34 @@ export default async function FormulirDealerTokenPage({ params }: PageProps) {
           Simpan tautan halaman ini. PDF selalu mengikuti status terbaru, termasuk tanda tangan panitia setelah
           diterima.
         </p>
+
+        <div className="mt-8 border border-line bg-card p-5 sm:p-7">
+          <h2 className="judul text-3xl text-ink">Kirim PDF ke WhatsApp</h2>
+          {dealer.ada_wa ? (
+            <p className="mt-2 text-sm text-ink/85">
+              PDF sudah dikirim ke WhatsApp dealer. Versi terbaru dikirim lagi otomatis setelah tanda tangan masuk dan
+              setelah panitia menerima formulir.
+            </p>
+          ) : (
+            <p className="mt-2 text-sm text-ink/85">
+              Buka dari HP dengan nomor WhatsApp {dealer.data.wa_pic}, lalu kirim pesan yang sudah terisi ke nomor
+              kantor {WA_KANTOR_TAMPIL}. PDF dibalas di chat itu, dan versi terbarunya dikirim lagi setelah tanda tangan
+              masuk dan setelah panitia menerima formulir.
+            </p>
+          )}
+          <div className="mt-5 flex flex-wrap items-center gap-5">
+            <a href={waHref} target="_blank" rel="noopener" className={buttonClass("secondary")}>
+              Kirim PDF ke WhatsApp saya
+            </a>
+            <div className="flex items-center gap-3">
+              {/* QR untuk dipindai HP dealer saat formulir dibuka di iPad panitia. */}
+              <div className="size-28 bg-white p-1.5" dangerouslySetInnerHTML={{ __html: qr }} />
+              <p className="max-w-40 text-xs text-muted">
+                Mengisi di iPad panitia? Pindai dengan kamera HP dealer. Kode: {kodeWaDealer(dealer.id, token)}
+              </p>
+            </div>
+          </div>
+        </div>
 
         {dealer.ditandatangani_at ? null : (
           <div className="mt-10 border border-line bg-card p-5 sm:p-7">
