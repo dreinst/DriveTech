@@ -242,6 +242,12 @@ const NAV_ITEMS: readonly NavItem[] = [
     match: (pathname) => pathname.startsWith("/drivetechadmin/jalan-sehat"),
   },
   {
+    href: "/drivetechadmin/dealer",
+    label: "Dealer Baru",
+    icon: IconTenant,
+    match: (pathname) => pathname.startsWith("/drivetechadmin/dealer"),
+  },
+  {
     href: "/drivetechadmin/pengaturan",
     label: "Pengaturan",
     icon: IconPengaturan,

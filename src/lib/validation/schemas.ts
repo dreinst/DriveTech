@@ -409,6 +409,68 @@ export const jalanSehatSchema = z.object({
     .max(80, "Domisili maksimal 80 karakter."),
 });
 
+const wajibTeks = (label: string, max = 120) =>
+  z
+    .string({ error: `${label} wajib diisi.` })
+    .trim()
+    .min(1, `${label} wajib diisi.`)
+    .max(max, `${label} maksimal ${max} karakter.`);
+
+const opsionalTeks = (max = 120) =>
+  z.preprocess(emptyToUndefined, z.string().trim().max(max, `Maksimal ${max} karakter.`).optional());
+
+const jumlahLapak = z.preprocess(
+  emptyToUndefined,
+  z.coerce.number().int("Jumlah lapak berupa angka bulat.").min(0).max(20, "Maksimal 20 lapak.").optional(),
+);
+
+/** Kotak centang HTML: "on" kalau dicentang, tidak terkirim kalau tidak. */
+const centang = z.preprocess((v) => v === "on" || v === "ya", z.boolean());
+
+/** Formulir dealer baru di /dealer. Kunci = nama kolom PDF (lihat lib/domain/formulir-dealer.ts). */
+export const formulirDealerSchema = z
+  .object({
+    nama_dealer: wajibTeks("Nama dealer"),
+    badan_usaha: wajibTeks("Nama badan usaha"),
+    alamat: wajibTeks("Alamat dealer", 200),
+    merek: wajibTeks("Merek", 60),
+    telepon_kantor: opsionalTeks(30),
+    email: optionalEmail,
+    instagram: opsionalTeks(60),
+    npwp: opsionalTeks(30),
+    kuitansi_atas_nama: opsionalTeks(),
+    pimpinan: wajibTeks("Nama pimpinan", 80),
+    jabatan: wajibTeks("Jabatan", 60),
+    pic: wajibTeks("PIC pendaftaran", 80),
+    wa_pic: phone,
+    pic_lapangan: opsionalTeks(80),
+    wa_pic_lapangan: z.preprocess(emptyToUndefined, phone.optional()),
+    jumlah_penjaga: opsionalTeks(10),
+    jumlah_mb: jumlahLapak,
+    nomor_mb: opsionalTeks(60),
+    jumlah_d: jumlahLapak,
+    nomor_d: opsionalTeks(60),
+    ...Object.fromEntries(Array.from({ length: 8 }, (_, i) => [`tgl_${i + 1}`, centang])),
+    ...Object.fromEntries(
+      [1, 2, 3, 4].flatMap((n) =>
+        ["tipe", "warna", "tahun", "jumlah", "test_drive"].map((k) => [`unit_${n}_${k}`, opsionalTeks(60)]),
+      ),
+    ),
+    daya_listrik: opsionalTeks(30),
+    peralatan_listrik: opsionalTeks(),
+    tenda: opsionalTeks(60),
+    kendaraan_loading: opsionalTeks(),
+    promo: opsionalTeks(),
+  })
+  .refine((d) => (d.jumlah_mb ?? 0) + (d.jumlah_d ?? 0) > 0, {
+    message: "Isi jumlah lapak mobil baru atau motor baru.",
+    path: ["jumlah_mb"],
+  })
+  .refine((d) => Array.from({ length: 8 }, (_, i) => d[`tgl_${i + 1}` as keyof typeof d]).some(Boolean), {
+    message: "Pilih minimal satu tanggal ikut.",
+    path: ["tgl_1"],
+  });
+
 export type PublicBookingInput = z.infer<typeof publicBookingSchema>;
 export type RequestEmailCodeInput = z.infer<typeof requestEmailCodeSchema>;
 export type VehicleInfoInput = z.infer<typeof vehicleInfoSchema>;

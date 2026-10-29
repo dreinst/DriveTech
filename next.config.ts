@@ -22,6 +22,10 @@ const nextConfig = {
   // Kompresi (br, zstd, gzip) dikerjakan Traefik lewat middleware kompresi@file.
   compress: false,
   output: "standalone",
+  // Template PDF formulir dealer dibaca lewat fs saat runtime, jadi perlu ikut ke output standalone.
+  outputFileTracingIncludes: {
+    "/dealer/**": ["./src/assets/formulir-dealer/**"],
+  },
   images: {
     // Hasil optimasi gambar disimpan 31 hari supaya sharp tidak mengolah ulang tiap jam.
     minimumCacheTTL: 2678400,
