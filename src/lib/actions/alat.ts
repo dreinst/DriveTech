@@ -19,7 +19,7 @@ import {
 import type { z } from "zod";
 import { errorState, successState, type ActionState } from "./state";
 
-/* Server action untuk alat panel admin (akun, penarikan, reg ulang, promo).
+/* Server action untuk alat panel admin (akun, penarikan, reg ulang).
    Semua dipanggil lewat useActionState (komponen FormAksi). */
 
 function teks(formData: FormData, key: string): string {

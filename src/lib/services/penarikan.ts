@@ -19,7 +19,7 @@ export type PenarikanRow = {
 export type RingkasanSaldo = {
   /** Jumlah pembayaran nontunai yang terverifikasi. */
   jumlah: number;
-  /** Total tagihan biaya admin (sesudah potongan promo) dari pembayaran nontunai terverifikasi. */
+  /** Total tagihan biaya admin dari pembayaran nontunai terverifikasi. */
   tagihan: number;
   /** Total kode unik yang ikut ditransfer. */
   kodeUnik: number;
