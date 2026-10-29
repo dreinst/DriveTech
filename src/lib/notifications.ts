@@ -377,6 +377,8 @@ export type BookingNotif = {
   reason?: string | null;
   /** Tautan halaman status booking (absolut), disertakan di email. */
   statusUrl?: string | null;
+  /** Tautan kwitansi DPRO (absolut), disertakan di kabar terverifikasi. */
+  kwitansiUrl?: string | null;
   /** Dealer mobil/motor baru: setelah terverifikasi diminta logo PNG untuk balon gate. */
   dealer?: boolean;
 };
@@ -404,6 +406,8 @@ export function buildBookingWa(kind: BookingNotifKind, d: BookingNotif): string 
       }`;
     case "verified":
       return `${kepala}\nPembayaran Anda TERVERIFIKASI. Booking dikonfirmasi. ${lapak}\nTunjukkan kode booking saat registrasi ulang di lokasi.${
+        d.kwitansiUrl ? `\nKwitansi pembayaran: ${d.kwitansiUrl}` : ""
+      }${
         d.dealer ? `\n\n${MINTA_LOGO_DEALER}\n\n` : " "
       }Sampai jumpa di pameran!`;
     case "rejected":
@@ -455,6 +459,7 @@ export function buildBookingEmail(kind: BookingNotifKind, d: BookingNotif): { su
     `Tanggal: ${tanggal}`,
     "",
     badan[kind],
+    kind === "verified" && d.kwitansiUrl ? `\nKwitansi pembayaran (PDF): ${d.kwitansiUrl}` : "",
     d.statusUrl ? `\nCek status booking: ${d.statusUrl}` : "",
     "",
     ...bantuanEmailText("Butuh bantuan verifikasi kode booking?"),

@@ -143,6 +143,8 @@ export type Database = {
           submitted_at: string | null;
           created_at: string;
           updated_at: string;
+          /** Nomor kwitansi DPRO, diisi trigger saat status menjadi verified (migrasi 20261029-booking-kwitansi.sql). */
+          kwitansi_no: string | null;
         };
         Update: {
           id?: string;

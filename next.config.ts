@@ -26,6 +26,7 @@ const nextConfig = {
   outputFileTracingIncludes: {
     "/dealer/**": ["./src/assets/formulir-dealer/**", "./src/assets/kwitansi-dealer/**"],
     "/drivetechadmin/kwitansi/**": ["./src/assets/kwitansi-dealer/**"],
+    "/booking/**": ["./src/assets/kwitansi-dealer/**"],
   },
   images: {
     // Hasil optimasi gambar disimpan 31 hari supaya sharp tidak mengolah ulang tiap jam.

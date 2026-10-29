@@ -8,6 +8,8 @@ import { EVENT_INFO } from "@/lib/domain/constants";
 import { kodeDealer, LAPAK_DEALER, TANGGAL_DEALER } from "@/lib/domain/formulir-dealer";
 import { totalBayar } from "@/lib/domain/harga";
 import type { PendaftaranDealer } from "@/lib/services/formulir-dealer";
+import type { BookingDetail } from "@/lib/types/database";
+import { slotDisplayName } from "@/lib/utils";
 
 // Modul KHUSUS SERVER (lihat catatan "server-only" di services/slots.ts).
 if (typeof window !== "undefined") {
@@ -100,7 +102,8 @@ export async function buatPdfKwitansi(d: IsiKwitansi): Promise<Uint8Array> {
   const doc = await PDFDocument.create();
   doc.registerFontkit(fontkit);
   const page = doc.addPage([HAL_W, HAL_H]);
-  const tebal = await doc.embedFont(await aset("Carlito-Bold.ttf"));
+  // Ligatur Carlito (fi, ti, tf) tidak tergambar benar oleh pdf-lib: "Otomotif" jadi "Otomoti f".
+  const tebal = await doc.embedFont(await aset("Carlito-Bold.ttf"), { features: { liga: false, clig: false, dlig: false } });
   const [kop, footer, watermark, stempel] = await Promise.all(
     ["kop.png", "footer.png", "watermark.png", "stempel-dpro.png"].map(async (n) => doc.embedPng(await aset(n))),
   );
@@ -165,6 +168,13 @@ export async function buatPdfKwitansi(d: IsiKwitansi): Promise<Uint8Array> {
 /** Penanda tangan kwitansi dealer DriveTech (stempel DPRO, goresan dari /drivetechadmin/kwitansi). */
 export const PENANDATANGAN_KWITANSI = "Andrew Steine";
 
+/** "29 Oktober 2026" (WIB); kosong = hari ini. */
+function tgl(s: string | null): string {
+  return new Intl.DateTimeFormat("id-ID", { timeZone: "Asia/Jakarta", day: "numeric", month: "long", year: "numeric" }).format(
+    s ? new Date(s) : new Date(),
+  );
+}
+
 /** Isi kwitansi dari formulir dealer yang sudah lunas. */
 export function isiKwitansiDealer(d: PendaftaranDealer, ttd: Uint8Array | null): IsiKwitansi {
   const lapak = LAPAK_DEALER.filter((l) => Number(d.data[`jumlah_${l.kode}`]) > 0)
@@ -172,10 +182,6 @@ export function isiKwitansiDealer(d: PendaftaranDealer, ttd: Uint8Array | null):
     .join(" dan ");
   const tanggal = TANGGAL_DEALER.filter((_, i) => d.data[`tgl_${i + 1}`] === "ya");
   const jumlah = totalBayar({ amount: d.amount ?? 0, unique_code: d.unique_code });
-  const tgl = (s: string | null) =>
-    new Intl.DateTimeFormat("id-ID", { timeZone: "Asia/Jakarta", day: "numeric", month: "long", year: "numeric" }).format(
-      s ? new Date(s) : new Date(),
-    );
   return {
     nomor: d.kwitansi_no ?? "",
     terimaDari: `${d.data.pimpinan ?? d.data.pic ?? ""}, ${d.data.nama_dealer ?? ""} (${kodeDealer(d.id)})`,
@@ -190,6 +196,37 @@ export function isiKwitansiDealer(d: PendaftaranDealer, ttd: Uint8Array | null):
       `NB : LUNAS via QRIS ${EVENT_INFO.name}, ${tgl(d.lunas_at)}`,
       "termasuk kode unik dan biaya layanan QRIS",
     ],
+    penandatangan: PENANDATANGAN_KWITANSI,
+    ttd,
+  };
+}
+
+/**
+ * Isi kwitansi dari booking lapak yang pembayarannya sudah diverifikasi. Booking manual yang langsung
+ * dikonfirmasi admin (tanpa bukti QRIS) dicatat sebagai diterima panitia.
+ */
+export function isiKwitansiBooking(b: BookingDetail, ttd: Uint8Array | null): IsiKwitansi {
+  const p = b.payment;
+  const tanggal = b.dates.map((d) =>
+    new Intl.DateTimeFormat("id-ID", { timeZone: "Asia/Jakarta", day: "numeric", month: "short" }).format(
+      new Date(`${d}T12:00:00+07:00`),
+    ),
+  );
+  const tahun = b.dates[0]?.slice(0, 4) ?? "2026";
+  const lunas = tgl(p?.verified_at ?? null);
+  return {
+    nomor: p?.kwitansi_no ?? "",
+    terimaDari: `${b.tenant.name}, ${b.booking_code}`,
+    jumlah: p ? totalBayar(p) : 0,
+    untuk: [
+      `Biaya admin lapak ${EVENT_INFO.name} 2026 di Rest Area Singosari Malang`,
+      `Lapak ${slotDisplayName(b.slot)}, ${b.slot.zone.name}`,
+      `${tanggal.length} tanggal: ${tanggal.join(", ")} ${tahun}`,
+    ],
+    kotaTanggal: `Malang, ${lunas}`,
+    catatan: p?.proof_url
+      ? [`NB : LUNAS via QRIS ${EVENT_INFO.name}, ${lunas}`, "termasuk kode unik dan biaya layanan QRIS"]
+      : [`NB : LUNAS, diterima panitia ${lunas}`, ""],
     penandatangan: PENANDATANGAN_KWITANSI,
     ttd,
   };

@@ -269,6 +269,11 @@ export default async function StatusBookingPage({ params }: PageProps) {
 
         {/* ---------- Aksi: satu baris tombol ---------- */}
         <div className="flex flex-wrap items-center gap-2">
+          {payment?.status === "verified" && payment.kwitansi_no && !dibatalkan ? (
+            <a href={`/booking/${booking.id}/kwitansi`} target="_blank" className={buttonClass("primary", "md")}>
+              Unduh kwitansi
+            </a>
+          ) : null}
           {bisaBayar ? (
             <Link
               href={`/booking/${booking.id}/bayar`}

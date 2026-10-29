@@ -185,7 +185,8 @@ export async function kirimBuktiDealer(id: number, proofUrl: string): Promise<Re
 
 /**
  * Tandai lunas (tombol admin, kartu Discord, atau halaman cocok). Nomor kwitansi seri
- * NNN/DPRO-DT-KW/<bulan romawi>/<tahun> (WIB) dibuat di sini sekali, lalu bot WhatsApp mengirim kwitansinya.
+ * NNN/DPRO-DT-KW/<bulan romawi>/<tahun> (WIB, satu seri dengan kwitansi booking) dibuat di sini sekali, lalu bot
+ * WhatsApp mengirim kwitansinya.
  */
 export async function lunaskanDealer(id: number, adminId: string, lewat: LunasLewat): Promise<Result<PendaftaranDealer>> {
   if (!isDbConfigured()) return fail(NO_CONFIG_MESSAGE, "NO_CONFIG");
@@ -193,9 +194,7 @@ export async function lunaskanDealer(id: number, adminId: string, lewat: LunasLe
     update dealer_pendaftaran
        set status_bayar = 'lunas', lunas_at = now(), lunas_oleh = ${adminId}, lunas_lewat = ${lewat},
            alasan_tolak = null, kabar_bayar = 'lunas',
-           kwitansi_no = coalesce(kwitansi_no, lpad(nextval('kwitansi_dealer_seq')::text, 3, '0') || '/DPRO-DT-KW/'
-             || trim(to_char(now() at time zone 'Asia/Jakarta', 'RM')) || '/'
-             || to_char(now() at time zone 'Asia/Jakarta', 'YYYY'))
+           kwitansi_no = coalesce(kwitansi_no, nomor_kwitansi_berikut())
      where id = ${id} and amount is not null and status_bayar <> 'lunas'
     returning id`);
   if (error) return dbFail(error, "Gagal menandai lunas");

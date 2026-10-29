@@ -404,6 +404,7 @@ CREATE TABLE public.admin_fee_payments (
     unique_code integer,
     wa_chat text,
     reminded_at timestamp with time zone,
+    kwitansi_no text UNIQUE,
     CONSTRAINT admin_fee_payments_unique_code_range CHECK (((unique_code IS NULL) OR ((unique_code >= 350) AND (unique_code <= 999))))
 );
 
@@ -1460,6 +1461,43 @@ CREATE TABLE public.dealer_pendaftaran (
 --
 
 CREATE SEQUENCE public.kwitansi_dealer_seq;
+
+
+--
+-- Name: nomor_kwitansi_berikut(); Type: FUNCTION; Schema: public; Owner: -
+-- Nomor kwitansi NNN/DPRO-DT-KW/<bulan romawi>/<tahun>, satu seri untuk booking dan dealer
+-- (migrasi 20261029-booking-kwitansi.sql).
+--
+
+CREATE FUNCTION public.nomor_kwitansi_berikut() returns text
+    language sql
+    set search_path to 'public'
+    as $$
+  select lpad(nextval('public.kwitansi_dealer_seq')::text, 3, '0') || '/DPRO-DT-KW/'
+         || trim(to_char(now() at time zone 'Asia/Jakarta', 'RM')) || '/'
+         || to_char(now() at time zone 'Asia/Jakarta', 'YYYY')
+$$;
+
+
+--
+-- Name: isi_kwitansi_booking(); Type: FUNCTION; Schema: public; Owner: -
+-- Trigger: pembayaran booking yang menjadi verified mendapat nomor kwitansi sekali.
+--
+
+CREATE FUNCTION public.isi_kwitansi_booking() returns trigger
+    language plpgsql
+    set search_path to 'public'
+    as $$
+begin
+  if new.status = 'verified' and new.kwitansi_no is null then
+    new.kwitansi_no := public.nomor_kwitansi_berikut();
+  end if;
+  return new;
+end $$;
+
+CREATE TRIGGER admin_fee_payments_kwitansi
+    BEFORE INSERT OR UPDATE OF status ON public.admin_fee_payments
+    FOR EACH ROW EXECUTE FUNCTION public.isi_kwitansi_booking();
 
 
 --

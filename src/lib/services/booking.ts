@@ -471,6 +471,7 @@ export async function kirimNotifikasiBooking(
       deadlineText,
       reason: opts?.reason ?? null,
       statusUrl: `${getSiteUrl()}/booking/${b.id}/status`,
+      kwitansiUrl: kind === "verified" && b.payment?.kwitansi_no ? `${getSiteUrl()}/booking/${b.id}/kwitansi` : null,
       dealer: b.tenant.tenant_type === "dealer_mobil_baru" || b.tenant.tenant_type === "dealer_motor_baru",
     });
   } catch {
