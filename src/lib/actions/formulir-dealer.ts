@@ -3,9 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { MAKS_STEMPEL_BYTES, MAKS_TTD_BYTES, type DataDealer } from "@/lib/domain/formulir-dealer";
+import { kodeDealer, MAKS_STEMPEL_BYTES, MAKS_TTD_BYTES, type DataDealer } from "@/lib/domain/formulir-dealer";
 import { clientIpFromHeaders, rateLimitShared } from "@/lib/rate-limit";
 import { requireAdmin } from "@/lib/services/auth";
+import { catatLog } from "@/lib/services/log";
 import { simpanPendaftaranDealer, tandatanganiDealer, terimaDealer } from "@/lib/services/formulir-dealer";
 import { formulirDealerSchema, zodFieldErrors } from "@/lib/validation/schemas";
 import { errorState, successState, type ActionState } from "./state";
@@ -84,9 +85,11 @@ export async function tandatanganiDealerAction(_prev: ActionState, formData: For
 
 /** Tombol "Terima" di panel admin: tanda tangan panitia ikut tampil di PDF. */
 export async function terimaDealerAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  await requireAdmin();
-  const hasil = await terimaDealer(Number(formData.get("id")));
+  const admin = await requireAdmin();
+  const id = Number(formData.get("id"));
+  const hasil = await terimaDealer(id);
   if (!hasil.ok) return errorState(hasil.error);
+  await catatLog(admin.id, "terima_formulir_dealer", kodeDealer(id));
   revalidatePath("/drivetechadmin/dealer");
   return successState("Diterima.");
 }
