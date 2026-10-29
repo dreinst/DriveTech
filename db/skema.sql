@@ -405,6 +405,7 @@ CREATE TABLE public.admin_fee_payments (
     wa_chat text,
     reminded_at timestamp with time zone,
     kwitansi_no text UNIQUE,
+    nominal_kwitansi integer,
     CONSTRAINT admin_fee_payments_unique_code_range CHECK (((unique_code IS NULL) OR ((unique_code >= 350) AND (unique_code <= 999))))
 );
 

@@ -145,6 +145,8 @@ export type Database = {
           updated_at: string;
           /** Nomor kwitansi DPRO, diisi trigger saat status menjadi verified (migrasi 20261029-booking-kwitansi.sql). */
           kwitansi_no: string | null;
+          /** Nominal kwitansi bila berbeda dari totalBayar (dibayar sebelum biaya layanan QRIS berlaku). */
+          nominal_kwitansi: number | null;
         };
         Update: {
           id?: string;

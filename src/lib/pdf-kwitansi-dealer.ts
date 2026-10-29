@@ -217,7 +217,7 @@ export function isiKwitansiBooking(b: BookingDetail, ttd: Uint8Array | null): Is
   return {
     nomor: p?.kwitansi_no ?? "",
     terimaDari: `${b.tenant.name}, ${b.booking_code}`,
-    jumlah: p ? totalBayar(p) : 0,
+    jumlah: p ? (p.nominal_kwitansi ?? totalBayar(p)) : 0,
     untuk: [
       `Biaya admin lapak ${EVENT_INFO.name} 2026 di Rest Area Singosari Malang`,
       `Lapak ${slotDisplayName(b.slot)}, ${b.slot.zone.name}`,
