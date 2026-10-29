@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { bacaDaftarNomor, BATAS_DAFTAR_PER_IP, nomorTiket } from "@/lib/domain/jalan-sehat";
 import { clientIpFromHeaders, rateLimitShared } from "@/lib/rate-limit";
 import { requireAdmin } from "@/lib/services/auth";
+import { catatLog } from "@/lib/services/log";
 import {
   aktifkanTiket,
   buatPesanan,
@@ -47,44 +48,48 @@ export async function daftarJalanSehatAction(
 
 /** Pembayaran pesanan cocok dengan mutasi QRIS: tiket dibuat dan bot mengirimnya ke chat pemesan. */
 export async function verifikasiPesananAction(id: number): Promise<ActionState> {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const hasil = await verifikasiPesanan(id);
   if (!hasil.ok) return errorState(hasil.error);
   revalidatePath(ADMIN);
   const ids = hasil.data;
   const rentang = ids.length > 1 ? `${nomorTiket(ids[0])} sampai ${nomorTiket(ids.at(-1) ?? ids[0])}` : nomorTiket(ids[0]);
+  await catatLog(admin.id, "jalan_sehat_lunas", `pesanan ${id}, tiket ${rentang}`);
   return successState(`Lunas. Tiket ${rentang} dibuat.`);
 }
 
 /** Bukti tidak cocok: pesanan kembali menunggu bukti dan pemesan dikabari alasannya. */
 export async function tolakPesananAction(id: number, alasan: string): Promise<ActionState> {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const teks = alasan.trim().slice(0, 200);
   if (teks.length < 3) return errorState("Tulis alasan penolakan.");
   const hasil = await tolakPesanan(id, teks);
   if (!hasil.ok) return errorState(hasil.error);
+  await catatLog(admin.id, "jalan_sehat_tolak", `pesanan ${id}: ${teks}`);
   revalidatePath(ADMIN);
   return successState("Bukti ditolak, pemesan dikabari lewat WhatsApp.");
 }
 
 /** Tombol undi di panel admin: pilih satu pemenang acak dari tiket aktif yang belum menang. */
 export async function undiPemenangAction(): Promise<ActionState> {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const hasil = await undiPemenang();
   if (!hasil.ok) return errorState(hasil.error);
   if (!hasil.data) return errorState("Semua tiket aktif sudah pernah menang, tidak ada yang bisa diundi lagi.");
   revalidatePath(ADMIN);
   const p = hasil.data;
+  await catatLog(admin.id, "jalan_sehat_undi", `tiket ${nomorTiket(p.id)}`);
   return successState([nomorTiket(p.id), p.nama, p.domisili].filter(Boolean).join(" | "));
 }
 
 /** Buat sejumlah tiket kosong untuk peserta di lokasi; belum ikut undian sampai diaktifkan. */
 export async function buatTiketKosongAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const hasil = await buatTiketKosong(Number(formData.get("jumlah")));
   if (!hasil.ok) return errorState(hasil.error);
   revalidatePath(ADMIN);
   const ids = hasil.data;
+  await catatLog(admin.id, "jalan_sehat_tiket_kosong", `${ids.length} tiket, ${nomorTiket(ids[0])} sampai ${nomorTiket(ids.at(-1) ?? ids[0])}`);
   return successState(
     `${ids.length} tiket kosong dibuat, nomor ${nomorTiket(ids[0])} sampai ${nomorTiket(ids.at(-1) ?? ids[0])}. Cetak lewat tombol "Tiket kosong belum dicetak".`,
   );
@@ -92,7 +97,7 @@ export async function buatTiketKosongAction(_prev: ActionState, formData: FormDa
 
 /** Panitia menandai tiket kosong sudah dibagikan: nomornya ikut undian. */
 export async function aktifkanTiketAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const ids = bacaDaftarNomor(String(formData.get("nomor") ?? ""));
   if (!ids || ids.length === 0) {
     return errorState("Tulis nomor tiket, misalnya 512 atau 501-520, pisahkan dengan koma.");
@@ -104,6 +109,7 @@ export async function aktifkanTiketAction(_prev: ActionState, formData: FormData
   if (hasil.data.length === 0) {
     return errorState("Tidak ada tiket yang berubah. Nomor itu bukan tiket kosong, atau sudah aktif.");
   }
+  await catatLog(admin.id, "jalan_sehat_tiket_terjual", hasil.data.map(nomorTiket).join(", "));
   const lewat = ids.length - hasil.data.length;
   return successState(
     `${hasil.data.length} tiket aktif dan ikut undian${lewat > 0 ? ` (${lewat} nomor dilewati karena bukan tiket kosong atau sudah aktif)` : ""}.`,
@@ -112,9 +118,10 @@ export async function aktifkanTiketAction(_prev: ActionState, formData: FormData
 
 /** Dipanggil dari halaman cetak setelah lembar tiket dicetak. */
 export async function tandaiDicetakAction(ids: number[]): Promise<ActionState> {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const hasil = await tandaiDicetak(ids.filter((n) => Number.isInteger(n) && n > 0));
   if (!hasil.ok) return errorState(hasil.error);
+  await catatLog(admin.id, "jalan_sehat_cetak", `${hasil.data} tiket`);
   revalidatePath(ADMIN);
   return successState(`${hasil.data} tiket ditandai sudah dicetak.`);
 }
