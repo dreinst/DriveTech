@@ -471,6 +471,7 @@ export async function kirimNotifikasiBooking(
       deadlineText,
       reason: opts?.reason ?? null,
       statusUrl: `${getSiteUrl()}/booking/${b.id}/status`,
+      dealer: b.tenant.tenant_type === "dealer_mobil_baru" || b.tenant.tenant_type === "dealer_motor_baru",
     });
   } catch {
     // Notifikasi opsional: kegagalan tidak pernah menggagalkan operasi utama.

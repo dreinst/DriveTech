@@ -377,7 +377,13 @@ export type BookingNotif = {
   reason?: string | null;
   /** Tautan halaman status booking (absolut), disertakan di email. */
   statusUrl?: string | null;
+  /** Dealer mobil/motor baru: setelah terverifikasi diminta logo PNG untuk balon gate. */
+  dealer?: boolean;
 };
+
+/** Permintaan logo untuk balon gate, ditempel di kabar terverifikasi milik dealer baru. */
+export const MINTA_LOGO_DEALER =
+  "Untuk dipasang di balon gate, mohon kirimkan logo dealer Anda dalam format PNG (latar transparan, resolusi setinggi mungkin) dengan membalas chat WhatsApp ini.";
 
 export type BookingNotifKind = "created" | "verified" | "rejected" | "cancelled";
 
@@ -397,7 +403,9 @@ export function buildBookingWa(kind: BookingNotifKind, d: BookingNotif): string 
           : "Minta QRIS lewat tombol WhatsApp di halaman bayar, lalu kirim bukti bayarnya agar slot dikonfirmasi."
       }`;
     case "verified":
-      return `${kepala}\nPembayaran Anda TERVERIFIKASI. Booking dikonfirmasi. ${lapak}\nTunjukkan kode booking saat registrasi ulang di lokasi. Sampai jumpa di pameran!`;
+      return `${kepala}\nPembayaran Anda TERVERIFIKASI. Booking dikonfirmasi. ${lapak}\nTunjukkan kode booking saat registrasi ulang di lokasi.${
+        d.dealer ? `\n\n${MINTA_LOGO_DEALER}\n\n` : " "
+      }Sampai jumpa di pameran!`;
     case "rejected":
       return `${kepala}\nMohon maaf, bukti pembayaran Anda DITOLAK.${
         d.reason ? `\nAlasan: ${d.reason}.` : ""
@@ -429,8 +437,9 @@ export function buildBookingEmail(kind: BookingNotifKind, d: BookingNotif): { su
         ? `Minta QRIS lewat tombol WhatsApp di halaman bayar, lalu kirim bukti bayarnya sebelum ${d.deadlineText} agar slot tidak dilepas otomatis.`
         : "Minta QRIS lewat tombol WhatsApp di halaman bayar, lalu kirim bukti bayarnya agar slot dikonfirmasi."
     }`,
-    verified:
-      "Pembayaran Anda TERVERIFIKASI dan booking dikonfirmasi. Tunjukkan kode booking (atau QR di halaman status) saat registrasi ulang di lokasi. Sampai jumpa di pameran!",
+    verified: `Pembayaran Anda TERVERIFIKASI dan booking dikonfirmasi. Tunjukkan kode booking (atau QR di halaman status) saat registrasi ulang di lokasi.${
+      d.dealer ? `\n\n${MINTA_LOGO_DEALER.replace("membalas chat WhatsApp ini", "membalas email ini atau lewat WhatsApp panitia")}\n\n` : " "
+    }Sampai jumpa di pameran!`,
     rejected: `Mohon maaf, bukti pembayaran Anda DITOLAK.${d.reason ? `\nAlasan: ${d.reason}.` : ""}\n${
       d.deadlineText
         ? `Silakan kirim ulang bukti yang benar lewat WhatsApp panitia atau halaman status booking sebelum ${d.deadlineText}.`
