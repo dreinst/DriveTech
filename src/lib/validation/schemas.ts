@@ -407,6 +407,12 @@ export const jalanSehatSchema = z.object({
     .trim()
     .min(3, "Tulis kecamatan atau kota tempat tinggal ya.")
     .max(80, "Domisili maksimal 80 karakter."),
+  // Tanpa batas peserta per pesanan (keputusan pemilik); 9999 hanya penjaga salah ketik.
+  jumlah: z.coerce
+    .number("Tulis jumlah peserta dengan angka.")
+    .int("Jumlah peserta harus bilangan bulat.")
+    .min(1, "Minimal 1 peserta.")
+    .max(9999, "Jumlah peserta terlalu banyak."),
 });
 
 const wajibTeks = (label: string, max = 120) =>

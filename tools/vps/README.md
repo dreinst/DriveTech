@@ -92,3 +92,37 @@ systemctl daemon-reload
 systemctl enable --now drivetech-cron-rutin.timer
 journalctl -u drivetech-cron-rutin.service -n 20
 ```
+
+## Pendaftaran jalan sehat lewat WhatsApp kantor
+
+Chat di nomor kantor 0822-3299-9900 ditangani `kantor_cs.py` (layanan systemd
+`kantor-cs` di `/opt/kantor-cs`, tidak ada di repo ini).
+`kantor-cs-jalan-sehat.py` menambahkan pendaftaran jalan sehat berbayar:
+
+1. Peserta mengirim `DAFTAR JALAN SEHAT`. Bot menanyakan nama pemesan,
+   domisili, dan jumlah peserta, lalu membuat pesanan lewat
+   `POST /api/bot/jalan-sehat`.
+2. Bot mengirim kartu QRIS (`/api/jalan-sehat/qris/<kode>`). Screenshot bukti
+   bayar di chat itu diunggah ke `/api/bot/jalan-sehat/<kode>/bukti`, dan
+   Andrew dikabari.
+3. Admin menekan Lunas atau Tolak bukti di `/drivetechadmin/jalan-sehat`. Bot
+   mengambil `/api/bot/jalan-sehat/kabar` tiap putaran, lalu mengirim tiket PDF
+   atau meminta bukti ulang.
+
+Pemesan lewat web masuk ke alur yang sama begitu mengirim pesan berisi kode
+`JS-XXXXXXXX` (tombol "Kirim bukti bayar lewat WhatsApp" di halaman pesanan).
+`TIKET JALAN SEHAT` mengirim ulang tiket pesanan yang sudah lunas. Kunci dan
+alamat API memakai `DT_KEY` dan `DT_API` yang sudah dipakai untuk bayar lapak.
+
+Patch dipasang lewat jendela perawatan (02.00 WIB) karena layanan perlu
+di-restart. Isi skrip antrean:
+
+```bash
+# tugas: kantor-cs jalan sehat
+# rollback: cp /opt/kantor-cs/kantor_cs.py.bak-<tanggal>-jalan-sehat /opt/kantor-cs/kantor_cs.py, lalu restart kantor-cs
+cp /opt/kantor-cs/kantor_cs.py /opt/kantor-cs/kantor_cs.py.bak-$(date +%Y%m%d)-jalan-sehat
+python3 /root/kantor-cs-jalan-sehat.py /opt/kantor-cs/kantor_cs.py
+python3 -m py_compile /opt/kantor-cs/kantor_cs.py && systemctl restart kantor-cs
+```
+
+Pantau: `journalctl -u kantor-cs -f | grep -i "jalan sehat"`.

@@ -1,27 +1,31 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState, useTransition } from "react";
 
+import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
-import { Field, Input } from "@/components/ui/Field";
-import { JUMLAH_TIKET_FISIK, nomorTiket, SYARAT_AMBIL_HADIAH } from "@/lib/domain/jalan-sehat";
+import { nomorTiket, SYARAT_AMBIL_HADIAH } from "@/lib/domain/jalan-sehat";
 
 const KUNCI = "jalan-sehat-undi";
 const LAMA_ANIMASI_MS = 1500;
 
-type Simpanan = { jumlah: number; awal: number; keluar: number[] };
+type Simpanan = { keluar: number[] };
 
-const AWAL: Simpanan = { jumlah: JUMLAH_TIKET_FISIK, awal: 1, keluar: [] };
+const AWAL: Simpanan = { keluar: [] };
 
 function acak(n: number): number {
   return crypto.getRandomValues(new Uint32Array(1))[0] % n;
 }
 
 /**
- * Undian tiket fisik tanpa server: nomor dipilih acak dari rentang tiket, nomor
- * yang sudah keluar tidak ikut lagi, riwayat disimpan di localStorage perangkat ini.
+ * Undian di perangkat MC: nomor dipilih acak dari tiket aktif (web, WhatsApp, dan tiket
+ * di lokasi yang sudah diaktifkan panitia), nomor yang sudah keluar tidak ikut lagi,
+ * riwayat disimpan di localStorage perangkat ini.
  */
-export function UndiTiket() {
+export function UndiTiket({ nomor, galat }: { nomor: number[]; galat: string | null }) {
+  const router = useRouter();
+  const [memuat, mulaiMuat] = useTransition();
   const [data, setData] = useState<Simpanan>(AWAL);
   const [tampil, setTampil] = useState<number | null>(null);
   const [mengundi, setMengundi] = useState(false);
@@ -32,7 +36,7 @@ export function UndiTiket() {
     try {
       const lama = JSON.parse(localStorage.getItem(KUNCI) ?? "null") as Simpanan | null;
       if (lama && Array.isArray(lama.keluar)) {
-        setData(lama);
+        setData({ keluar: lama.keluar });
         setTampil(lama.keluar.at(-1) ?? null);
       }
     } catch {
@@ -47,11 +51,8 @@ export function UndiTiket() {
     localStorage.setItem(KUNCI, JSON.stringify(baru));
   }
 
-  const jumlah = Math.max(0, Math.floor(data.jumlah) || 0);
-  const awal = Math.floor(data.awal) || 0;
   const sudah = new Set(data.keluar);
-  const sisa: number[] = [];
-  for (let n = awal; n < awal + jumlah; n++) if (!sudah.has(n)) sisa.push(n);
+  const sisa = nomor.filter((n) => !sudah.has(n));
 
   function undi() {
     if (sisa.length === 0 || mengundi) return;
@@ -63,13 +64,13 @@ export function UndiTiket() {
       clearInterval(putar);
       setTampil(pemenang);
       setMengundi(false);
-      simpan({ ...data, keluar: [...data.keluar, pemenang] });
+      simpan({ keluar: [...data.keluar, pemenang] });
     }, LAMA_ANIMASI_MS);
     timer.current = [putar, henti];
   }
 
   function mulaiUlang() {
-    simpan({ ...data, keluar: [] });
+    simpan({ keluar: [] });
     setTampil(null);
     setKonfirmasiUlang(false);
   }
@@ -82,33 +83,20 @@ export function UndiTiket() {
             <p className="label text-sm text-accent">Jalan sehat DriveTech</p>
             <h1 className="judul text-[clamp(2.5rem,6vw,4rem)] text-ink">Undian doorprize</h1>
           </div>
-          <div className="flex flex-wrap gap-3">
-            <div className="w-36">
-              <Field label="Jumlah tiket" htmlFor="undi-jumlah">
-                <Input
-                  id="undi-jumlah"
-                  type="number"
-                  min={1}
-                  value={data.jumlah}
-                  disabled={mengundi}
-                  onChange={(e) => simpan({ ...data, jumlah: Number(e.target.value) })}
-                />
-              </Field>
-            </div>
-            <div className="w-36">
-              <Field label="Nomor awal" htmlFor="undi-awal">
-                <Input
-                  id="undi-awal"
-                  type="number"
-                  min={0}
-                  value={data.awal}
-                  disabled={mengundi}
-                  onChange={(e) => simpan({ ...data, awal: Number(e.target.value) })}
-                />
-              </Field>
-            </div>
+          <div className="flex items-center gap-3">
+            <p className="text-ink/80">{nomor.length} tiket terdaftar</p>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={mengundi || memuat}
+              onClick={() => mulaiMuat(() => router.refresh())}
+            >
+              {memuat ? "Memuat…" : "Perbarui daftar"}
+            </Button>
           </div>
         </header>
+
+        {galat ? <Alert tone="error" title="Daftar tiket belum bisa dimuat">{galat}</Alert> : null}
 
         <div className="flex flex-col items-center gap-6 border border-line bg-card px-4 py-10 text-center">
           <p
@@ -128,7 +116,9 @@ export function UndiTiket() {
             {mengundi ? "Mengundi…" : "Undi"}
           </button>
           <p className="text-lg text-ink/80">
-            {sisa.length === 0
+            {nomor.length === 0
+              ? "Belum ada tiket terdaftar."
+              : sisa.length === 0
               ? "Semua nomor tiket sudah keluar."
               : `${sisa.length} nomor tiket masih ikut diundi.`}
           </p>

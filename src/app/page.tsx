@@ -552,8 +552,8 @@ export default async function BerandaPage() {
           </Muncul>
           <Muncul className="w-full max-w-md" delay={0.1}>
             <p className="text-base leading-relaxed text-ink/75">
-              {JALAN_SEHAT.tanggal}, mulai {JALAN_SEHAT.mulai}. {JALAN_SEHAT.bersama}. Gratis, dan
-              setiap peserta mendapat tiket undian doorprize di lokasi.
+              {JALAN_SEHAT.tanggal}, mulai {JALAN_SEHAT.mulai}. {JALAN_SEHAT.bersama}. Tiket Rp10.000
+              per orang, dan setiap peserta mendapat nomor undian doorprize.
             </p>
             <ol className="mt-5">
               {JALAN_SEHAT.rundown.map((butir) => (

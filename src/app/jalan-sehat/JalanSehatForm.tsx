@@ -6,6 +6,8 @@ import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Field, Input } from "@/components/ui/Field";
 import { daftarJalanSehatAction } from "@/lib/actions/jalan-sehat";
+import { HARGA_TIKET_JS } from "@/lib/domain/jalan-sehat";
+import { formatRupiah } from "@/lib/utils";
 import { initialActionState } from "@/lib/actions/state";
 
 export function JalanSehatForm() {
@@ -23,13 +25,13 @@ export function JalanSehatForm() {
       }}
     >
       {state.status === "error" && state.message ? <Alert tone="error">{state.message}</Alert> : null}
-      <Field label="Nama lengkap" htmlFor="js-nama" error={galat.nama} required>
+      <Field label="Nama pemesan" htmlFor="js-nama" error={galat.nama} required>
         <Input id="js-nama" name="nama" autoComplete="name" required maxLength={80} />
       </Field>
       <Field
         label="Nomor WhatsApp"
         htmlFor="js-phone"
-        hint="Satu nomor untuk satu peserta."
+        hint="Bukti bayar dikirim lewat WhatsApp dari nomor ini, tiket juga dikirim ke sini."
         error={galat.phone}
         required
       >
@@ -52,8 +54,17 @@ export function JalanSehatForm() {
       >
         <Input id="js-domisili" name="domisili" autoComplete="address-level2" required maxLength={80} />
       </Field>
+      <Field
+        label="Jumlah peserta"
+        htmlFor="js-jumlah"
+        hint={`${formatRupiah(HARGA_TIKET_JS)} per orang. Setiap peserta mendapat nomor undian sendiri.`}
+        error={galat.jumlah}
+        required
+      >
+        <Input id="js-jumlah" name="jumlah" type="number" inputMode="numeric" min={1} defaultValue={1} required />
+      </Field>
       <Button type="submit" disabled={isPending} className="w-full">
-        {isPending ? "Menyimpan…" : "Daftar dan ambil kupon"}
+        {isPending ? "Menyimpan…" : "Daftar dan bayar"}
       </Button>
     </form>
   );
