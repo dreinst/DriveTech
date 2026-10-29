@@ -103,9 +103,11 @@ Chat di nomor kantor 0822-3299-9900 ditangani `kantor_cs.py` (layanan systemd
    domisili, dan jumlah peserta, lalu membuat pesanan lewat
    `POST /api/bot/jalan-sehat`.
 2. Bot mengirim kartu QRIS (`/api/jalan-sehat/qris/<kode>`). Screenshot bukti
-   bayar di chat itu diunggah ke `/api/bot/jalan-sehat/<kode>/bukti`, dan
-   Andrew dikabari.
-3. Admin menekan Lunas atau Tolak bukti di `/drivetechadmin/jalan-sehat`. Bot
+   bayar di chat itu diunggah ke `/api/bot/jalan-sehat/<kode>/bukti`, lalu
+   muncul sebagai kartu Setujui/Tolak di Discord #chatbot (bot D'Pro Ops).
+   Andrew dikabari lewat WA hanya kalau bukti gagal tersimpan.
+3. Admin menekan Setujui/Tolak di kartu Discord, atau Lunas/Tolak bukti di
+   `/drivetechadmin/jalan-sehat`. Bot
    mengambil `/api/bot/jalan-sehat/kabar` tiap putaran, lalu mengirim tiket PDF
    atau meminta bukti ulang.
 

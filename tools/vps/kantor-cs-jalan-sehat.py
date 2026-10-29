@@ -3,8 +3,9 @@
 Alur di chat WhatsApp kantor:
   1. Peserta mengirim "DAFTAR JALAN SEHAT". Bot bertanya nama pemesan, domisili, dan jumlah peserta.
   2. Bot membuat pesanan lewat /api/bot/jalan-sehat lalu mengirim kartu QRIS bernominal (jumlah x Rp10.000 + kode unik).
-  3. Screenshot bukti bayar di chat itu diunggah ke DriveTech (status "dicek") dan Andrew dikabari.
-  4. Setelah admin menekan Lunas di /drivetechadmin/jalan-sehat, kabar dari /api/bot/jalan-sehat/kabar dikirim:
+  3. Screenshot bukti bayar di chat itu diunggah ke DriveTech (status "dicek") dan muncul sebagai kartu Setujui/Tolak
+     di Discord #chatbot (dpro-ops).
+  4. Setelah admin menekan Setujui di Discord atau Lunas di /drivetechadmin/jalan-sehat, kabar dari /api/bot/jalan-sehat/kabar dikirim:
      tiket PDF (lunas) atau permintaan bukti ulang (ditolak).
 Pemesan lewat web masuk ke alur yang sama begitu mengirim pesan berisi kode pesanan JS-XXXXXXXX. Nomor yang sudah lunas
 bisa meminta tiketnya lagi dengan "TIKET JALAN SEHAT". "BATAL" menghentikan pengisian data. Status percakapan disimpan
@@ -101,7 +102,8 @@ def kirim_tiket_js(jid, d, judul):
 
 
 def bukti_js(jid, m, d):
-    """Unggah screenshot bukti bayar pesanan jalan sehat lalu kabari Andrew."""
+    """Unggah screenshot bukti bayar pesanan jalan sehat. Bukti yang tersimpan muncul sebagai kartu Setujui/Tolak di
+    Discord #chatbot (dpro-ops); Andrew dikabari lewat WA hanya kalau bukti gagal tersimpan."""
     full = waha(f"/api/{SESI}/chats/{urllib.parse.quote(jid)}/messages/{urllib.parse.quote(m['id'])}?downloadMedia=true")
     media = (full or {}).get("media") or {}
     tipe = (media.get("mimetype") or "").split(";")[0]
@@ -112,13 +114,13 @@ def bukti_js(jid, m, d):
     status, _ = dt_api(f"/api/bot/jalan-sehat/{d['kode']}/bukti", data=urllib.request.urlopen(req, timeout=60).read(), tipe=tipe)
     log("jalan sehat bukti", d["kode"], status)
     kirim_teks(jid, f"Terima kasih Kak, bukti bayar pesanan {d['kode']} sudah kami terima 🙏 Setelah dicek panitia, tiket undiannya kami kirim di chat ini.")
-    kirim_teks(ANDREW, "\n".join([
-        f"Bukti bayar jalan sehat {d['kode']} masuk di nomor kantor",
-        f"Pemesan: {d['nama']} ({nomor(jid)}), {d['jumlah']} peserta",
-        f"Nominal yang harus masuk: {d['totalTeks']}",
-        "Bukti tersimpan di admin DriveTech." if status == 200 else f"Bukti GAGAL tersimpan ({status}), cek gambar di chat WA kantor.",
-        f"Cocokkan dengan GoPay Merchant lalu tekan Lunas: {DT_API}/drivetechadmin/jalan-sehat",
-    ]))
+    if status != 200:
+        kirim_teks(ANDREW, "\n".join([
+            f"Bukti bayar jalan sehat {d['kode']} masuk di nomor kantor tapi GAGAL tersimpan ({status}), cek gambar di chat WA kantor.",
+            f"Pemesan: {d['nama']} ({nomor(jid)}), {d['jumlah']} peserta",
+            f"Nominal yang harus masuk: {d['totalTeks']}",
+            f"Verifikasi manual: {DT_API}/drivetechadmin/jalan-sehat",
+        ]))
 
 
 def tangani_pesanan_js(jid, m, d, js, teks=""):
