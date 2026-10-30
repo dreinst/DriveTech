@@ -234,9 +234,16 @@ function KartuKendaraan({ item }: { item: CatalogItem }) {
           height={480}
           className="relative h-full w-full object-contain transition-transform duration-300 group-hover:scale-[1.03]"
         />
-        <span className="absolute left-3 top-3 flex gap-1.5">
-          <Badge tone="blue">{ZONE_TYPE_LABEL[item.slot.zone.zone_type]}</Badge>
-          {item.vehicle_kind === "motor" ? <Badge tone="amber">Motor</Badge> : null}
+        {/* Warna badge transparan, jadi diberi dasar putih supaya tetap terbaca di atas foto. */}
+        <span className="absolute left-3 top-3 z-10 flex gap-1.5">
+          <span className="bg-card">
+            <Badge tone="blue">{ZONE_TYPE_LABEL[item.slot.zone.zone_type]}</Badge>
+          </span>
+          {item.vehicle_kind === "motor" ? (
+            <span className="bg-card">
+              <Badge tone="amber">Motor</Badge>
+            </span>
+          ) : null}
         </span>
       </div>
 
