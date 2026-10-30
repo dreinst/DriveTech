@@ -202,7 +202,7 @@ export default async function StatusBookingPage({ params }: PageProps) {
                       alt="Bukti pembayaran biaya admin"
                       referrerPolicy="no-referrer"
                       loading="lazy"
-                      className="h-12 w-12 rounded-[var(--radius-sm)] border border-line bg-surface-2 object-cover"
+                      className="h-12 w-12 rounded-[var(--radius-sm)] border border-line bg-surface-2 object-contain"
                     />
                     <span className="text-xs font-medium text-muted underline-offset-2 group-hover:underline">
                       Buka

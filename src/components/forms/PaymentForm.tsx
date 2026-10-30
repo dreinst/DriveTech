@@ -247,7 +247,7 @@ export function PaymentForm({
             <img
               src={pratinjau}
               alt="Pratinjau bukti pembayaran"
-              className="h-24 w-24 shrink-0 rounded-[var(--radius-sm)] border border-line object-cover"
+              className="h-24 w-24 shrink-0 rounded-[var(--radius-sm)] border border-line object-contain"
             />
             <div className="min-w-0 flex-1 text-xs text-muted">
               <p className="truncate font-medium text-ink">{berkas.name}</p>

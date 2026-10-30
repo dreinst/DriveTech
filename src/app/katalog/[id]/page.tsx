@@ -63,10 +63,12 @@ export default async function DetailKendaraanPage({ params }: PageProps) {
 
       <div className="grid gap-6 lg:grid-cols-[3fr_2fr]">
         {/* ---------- Foto besar ---------- */}
-        <div className="overflow-hidden rounded-[var(--radius)] border border-line bg-surface-3 shadow-[var(--shadow-sm)]">
+        <div className="self-start overflow-hidden rounded-[var(--radius)] border border-line bg-surface-3 shadow-[var(--shadow-sm)]">
           {/* Halaman detail memakai foto BESAR (calon pembeli perlu melihat
               kondisi unit), tapi tetap dimuat asinkron dengan dimensi eksplisit
-              supaya tata letak tidak melompat saat foto datang. */}
+              supaya tata letak tidak melompat saat foto datang. Rasio asli foto
+              dipertahankan, jadi foto HP yang berdiri tampil utuh dan tidak
+              terpotong; tingginya dibatasi 80% layar. */}
           {/* eslint-disable-next-line @next/next/no-img-element -- URL storage publik, dimensi bebas */}
           <img
             src={item.photo_url}
@@ -74,7 +76,7 @@ export default async function DetailKendaraanPage({ params }: PageProps) {
             decoding="async"
             width={1600}
             height={1200}
-            className="aspect-[4/3] h-auto w-full object-cover"
+            className="mx-auto h-auto max-h-[80vh] w-auto max-w-full object-contain"
           />
         </div>
 

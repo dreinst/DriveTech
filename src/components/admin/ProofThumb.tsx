@@ -34,7 +34,7 @@ export function ProofThumb({ url, alt = "Bukti pembayaran" }: ProofThumbProps) {
         width={36}
         height={36}
         loading="lazy"
-        className="h-9 w-9 shrink-0 rounded-md border border-line bg-app object-cover"
+        className="h-9 w-9 shrink-0 rounded-md border border-line bg-app object-contain"
       />
       <span className="text-xs font-medium text-muted">Lihat</span>
     </Link>

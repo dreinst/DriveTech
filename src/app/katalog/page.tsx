@@ -213,6 +213,17 @@ function KartuKendaraan({ item }: { item: CatalogItem }) {
         {/* Kartu memakai foto versi KECIL (~640px) supaya pengunjung HP tidak
             mengunduh foto 1600px untuk kotak selebar ~360px. Listing lama yang
             belum punya versi kecil otomatis jatuh ke foto aslinya. */}
+        {/* Foto ditampilkan utuh (object-contain) supaya foto HP yang berdiri
+            tidak terpotong; sisi kosongnya diisi foto yang sama versi blur. */}
+        {/* eslint-disable-next-line @next/next/no-img-element -- URL storage publik, dimensi bebas */}
+        <img
+          src={item.photo_thumb_url ?? item.photo_url}
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+          decoding="async"
+          className="absolute inset-0 h-full w-full scale-110 object-cover opacity-60 blur-xl"
+        />
         {/* eslint-disable-next-line @next/next/no-img-element -- URL storage publik, dimensi bebas */}
         <img
           src={item.photo_thumb_url ?? item.photo_url}
@@ -221,7 +232,7 @@ function KartuKendaraan({ item }: { item: CatalogItem }) {
           decoding="async"
           width={640}
           height={480}
-          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+          className="relative h-full w-full object-contain transition-transform duration-300 group-hover:scale-[1.03]"
         />
         <span className="absolute left-3 top-3 flex gap-1.5">
           <Badge tone="blue">{ZONE_TYPE_LABEL[item.slot.zone.zone_type]}</Badge>
