@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { Alert } from "@/components/ui/Alert";
-import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { buttonClass } from "@/components/ui/Button";
@@ -234,15 +233,14 @@ function KartuKendaraan({ item }: { item: CatalogItem }) {
           height={480}
           className="relative h-full w-full object-contain transition-transform duration-300 group-hover:scale-[1.03]"
         />
-        {/* Warna badge transparan, jadi diberi dasar putih supaya tetap terbaca di atas foto. */}
-        <span className="absolute left-3 top-3 z-10 flex gap-1.5">
-          <span className="bg-card">
-            <Badge tone="blue">{ZONE_TYPE_LABEL[item.slot.zone.zone_type]}</Badge>
+        {/* Label di atas foto memakai warna solid (bukan Badge yang transparan)
+            supaya tetap jelas terbaca di foto apa pun. */}
+        <span className="absolute left-3 top-3 z-10 flex gap-1.5 text-xs font-semibold uppercase leading-5 tracking-wide text-white">
+          <span className="bg-accent px-2.5 py-0.5 shadow-[var(--shadow-sm)]">
+            {ZONE_TYPE_LABEL[item.slot.zone.zone_type]}
           </span>
           {item.vehicle_kind === "motor" ? (
-            <span className="bg-card">
-              <Badge tone="amber">Motor</Badge>
-            </span>
+            <span className="bg-black px-2.5 py-0.5 shadow-[var(--shadow-sm)]">Motor</span>
           ) : null}
         </span>
       </div>
