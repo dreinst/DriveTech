@@ -300,6 +300,8 @@ begin
     from public.bookings b
     left join public.admin_fee_payments p on p.booking_id = b.id
     where b.status = 'pending_payment'
+      -- Ditahan panitia sampai waktu tertentu: jangan dibatalkan dulu.
+      and (b.tahan_sampai is null or b.tahan_sampai < now())
       and (
         (coalesce(p.status, 'unpaid'::public.payment_status) = 'unpaid'
           and b.created_at < now() - batas)
@@ -480,7 +482,8 @@ CREATE TABLE public.bookings (
     booking_code text DEFAULT ('BK-'::text || upper(substr(encode(public.gen_random_bytes(5), 'hex'::text), 1, 10))) NOT NULL,
     notes text,
     created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now() NOT NULL
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    tahan_sampai timestamp with time zone
 );
 
 
