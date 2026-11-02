@@ -4,8 +4,8 @@ import type { AdminFeePaymentRow, BookingRow } from "@/lib/types/database";
 /**
  * Tenggat pembayaran sebuah booking — cermin logika expire_unpaid_bookings()
  * di database (pg_cron), supaya tenant tahu kapan bookingnya hangus:
- *  - belum ada pembayaran / masih unpaid -> created_at + 24 jam;
- *  - bukti ditolak -> saat penolakan (payment.updated_at) + 24 jam;
+ *  - belum ada pembayaran / masih unpaid -> created_at + 2 jam;
+ *  - bukti ditolak -> saat penolakan (payment.updated_at) + 2 jam;
  *  - submitted/verified atau booking bukan pending_payment -> tidak ada tenggat.
  */
 /** Timestamp (nullable di tipe baris) + jendela; null kalau tak bisa dihitung. */

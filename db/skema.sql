@@ -288,7 +288,7 @@ $$;
 -- Name: expire_unpaid_bookings(interval, interval); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.expire_unpaid_bookings(batas interval DEFAULT '24:00:00'::interval, batas_submitted interval DEFAULT '72:00:00'::interval) RETURNS integer
+CREATE FUNCTION public.expire_unpaid_bookings(batas interval DEFAULT '02:00:00'::interval, batas_submitted interval DEFAULT '72:00:00'::interval) RETURNS integer
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$

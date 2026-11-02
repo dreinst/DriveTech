@@ -194,7 +194,7 @@ export const KOMPRESI_KATALOG_KARTU = {
  * fungsi DB expire_unpaid_bookings() (pg_cron membatalkan booking pending yang
  * lewat batas ini). Dipakai UI untuk menampilkan tenggat ke tenant.
  */
-export const PAYMENT_DEADLINE_HOURS = 24;
+export const PAYMENT_DEADLINE_HOURS = 2;
 
 /**
  * Anti-penimbunan slot: maksimal booking berstatus pending_payment yang boleh

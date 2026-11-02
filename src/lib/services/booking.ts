@@ -211,7 +211,7 @@ export async function createBooking(
   }
 
   /* --- Anti-penimbunan slot: batasi booking pending per nomor telepon ---
-     Booking pending menahan tanggal sampai 24 jam (atau 72 jam bila bukti
+     Booking pending menahan tanggal sampai 2 jam (atau 72 jam bila bukti
      sudah dikirim); tanpa batas ini satu nomor bisa mengunci banyak tanggal
      tanpa pernah membayar. Booking manual oleh admin (skipPendingLimit) lewat
      dari batas ini karena admin tepercaya. */
@@ -414,7 +414,7 @@ export async function createBooking(
   }
 
 
-  // Notifikasi email (utama) + WA bila aktif ke tenant (fire-and-forget). Tenggat = created + 24 jam,
+  // Notifikasi email (utama) + WA bila aktif ke tenant (fire-and-forget). Tenggat = created + 2 jam,
   // cermin expire_unpaid_bookings; dihitung di sini karena notif modul murni.
   const tenggat = new Date(Date.now() + PAYMENT_DEADLINE_HOURS * 60 * 60 * 1000);
   void notifyBooking("created", {
@@ -454,7 +454,7 @@ export async function kirimNotifikasiBooking(
     const amount = b.payment
       ? totalBayar(b.payment)
       : hitungTotalBiaya(slotAdminFee(b.slot, b.slot.zone), b.dates);
-    // Bukti ditolak -> tenant punya jendela unggah ulang 24 jam sejak sekarang.
+    // Bukti ditolak -> tenant punya jendela unggah ulang 2 jam sejak sekarang.
     const deadlineText =
       kind === "rejected"
         ? `${formatTanggalWaktu(new Date(Date.now() + PAYMENT_DEADLINE_HOURS * 60 * 60 * 1000))} WIB`
