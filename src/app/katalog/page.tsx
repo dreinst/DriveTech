@@ -269,6 +269,11 @@ function KartuKendaraan({ item }: { item: CatalogItem }) {
           )}
         >
           {formatRupiah(item.price)}
+          {item.harga_nego && !terjual ? (
+            <span className="ml-2 inline-block bg-black px-2 py-0.5 align-middle text-xs font-bold uppercase tracking-wide text-white no-underline">
+              Nego
+            </span>
+          ) : null}
         </p>
         <p className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 pt-1 text-xs text-muted">
           {/* Mobil baru belum berplat — barisnya dilewati, termasuk pemisahnya. */}

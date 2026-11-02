@@ -764,7 +764,8 @@ CREATE TABLE public.vehicle_listings (
     CONSTRAINT vehicle_listings_price_check CHECK ((price > (0)::numeric)),
     CONSTRAINT vehicle_listings_vehicle_kind_check CHECK ((vehicle_kind = ANY (ARRAY['mobil'::text, 'motor'::text]))),
     CONSTRAINT vehicle_listings_year_check CHECK (((year >= 1950) AND (year <= 2100))),
-    terjual_mulai timestamp with time zone
+    terjual_mulai timestamp with time zone,
+    harga_nego boolean DEFAULT false NOT NULL
 );
 
 

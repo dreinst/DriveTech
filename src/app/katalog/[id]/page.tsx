@@ -102,6 +102,11 @@ export default async function DetailKendaraanPage({ params }: PageProps) {
               }
             >
               {formatRupiah(item.price)}
+              {item.harga_nego && !terjual ? (
+                <span className="ml-2 inline-block bg-black px-2.5 py-0.5 align-middle text-sm font-bold uppercase tracking-wide text-white">
+                  Nego
+                </span>
+              ) : null}
             </p>
             {terjual ? (
               <p className="mt-2 text-sm font-semibold text-red-600">

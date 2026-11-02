@@ -295,6 +295,8 @@ export type Database = {
           is_visible: boolean;
           /** Mulai waktu ini unit tampil "Sold Out" di katalog. Kosong = belum terjual. */
           terjual_mulai: string | null;
+          /** Harga bisa ditawar: tampil label "Nego" di samping harga. */
+          harga_nego: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -315,6 +317,7 @@ export type Database = {
           photo_thumb_url?: string | null;
           is_visible?: boolean;
           terjual_mulai?: string | null;
+          harga_nego?: boolean;
           created_at?: string;
           updated_at?: string;
         };
