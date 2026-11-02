@@ -96,7 +96,7 @@ export const QRIS_INFO = {
 } as const;
 
 /**
- * Nomor WhatsApp kantor yang dijaga bot bayar manual (bot yang sama dengan KUWERA 5K). Penyewa menekan
+ * Nomor WhatsApp kantor yang dijaga bot bayar manual. Penyewa menekan
  * "Minta QRIS via WhatsApp", bot membalas dengan kartu QRIS bernominal (tagihan + kode unik 350..500),
  * lalu penyewa mengirim bukti bayar di chat yang sama.
  */

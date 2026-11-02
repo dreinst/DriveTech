@@ -9,7 +9,7 @@ import { getSiteUrl } from "@/lib/site-url";
 import type { BookingDetail } from "@/lib/types/database";
 import { formatRupiah, formatTanggal, formatTanggalWaktu, slotDisplayName } from "@/lib/utils";
 
-// Modul KHUSUS SERVER: dipakai API /api/bot/* yang dipanggil bot WhatsApp kantor (bot yang sama dengan KUWERA 5K).
+// Modul KHUSUS SERVER: dipakai API /api/bot/* yang dipanggil bot WhatsApp kantor.
 if (typeof window !== "undefined") {
   throw new Error("src/lib/services/bot.ts hanya boleh dipakai di server.");
 }

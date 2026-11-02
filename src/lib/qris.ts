@@ -1,4 +1,4 @@
-// QRIS dinamis dari QRIS statis merchant (disalin dari KUWERA 5K, merchant GoPay yang sama). Payload statis dibaca,
+// QRIS dinamis dari QRIS statis merchant GoPay. Payload statis dibaca,
 // penanda "statis" (tag 01 = 11) diganti "dinamis" (12), nominal dimasukkan ke tag 54, lalu CRC16 dihitung ulang.
 // Aplikasi pembayaran langsung menampilkan nominalnya; panitia tetap mencocokkan uang masuk di GoPay Merchant.
 
@@ -36,8 +36,8 @@ export function dynamicQris(staticPayload: string, amount: number) {
   return body + crc16(body);
 }
 
-// QRIS statis merchant "D'Production Event Organi" (NMID ID1026472717465, terminal A01), sama dengan yang dipakai
-// KUWERA 5K. Keputusan pemilik 2026-10-11: pembayaran DriveTech memakai QR bernama D'Production, bukan yang bernama
+// QRIS statis merchant "D'Production Event Organi" (NMID ID1026472717465, terminal A01).
+// Keputusan pemilik 2026-10-11: pembayaran DriveTech memakai QR bernama D'Production, bukan yang bernama
 // "Drive Tech" di public/qris-drivetech.jpg (merchant dan NMID-nya sama, hanya nama tampilannya berbeda). Bukan
 // rahasia, karena gambar QRIS-nya memang dibagikan. Bisa diganti lewat env QRIS_STATIC_PAYLOAD tanpa mengubah kode.
 const QRIS_STATIC_DPRODUCTION =
