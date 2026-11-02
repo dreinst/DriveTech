@@ -137,7 +137,7 @@ export default async function AdminSlotsPage({ searchParams }: PageProps) {
           </h1>
           <p className="max-w-2xl text-sm leading-relaxed text-muted sm:text-base">
             Blokir atau buka slot untuk <strong className="font-medium">semua tanggal</strong>{" "}
-            gelaran — ketersediaan per tanggal sendiri mengikuti booking di denah.
+            gelaran. Ketersediaan per tanggal sendiri mengikuti booking di denah.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -315,7 +315,7 @@ export default async function AdminSlotsPage({ searchParams }: PageProps) {
                           slotId={slot.id}
                           status={slot.status}
                           hasActiveBooking={bookingUtama !== null}
-                          slotName={`${nama} — ${slot.zone.name}`}
+                          slotName={`${nama}, ${slot.zone.name}`}
                           bookingCode={bookingUtama?.booking_code ?? null}
                         />
                       )}

@@ -209,12 +209,12 @@ export function LeasingForm({ purchaseId, partners, unitPrice }: LeasingFormProp
             <Alert tone="info">
               {simulasi.harga <= 0
                 ? "Harga unit belum tercatat, jadi estimasi belum bisa dihitung. Pengajuan tetap bisa dikirim; mitra menghitungnya bersama Anda."
-                : "DP sudah menutupi seluruh harga unit — tidak ada sisa yang perlu dicicil."}
+                : "DP sudah menutupi seluruh harga unit, tidak ada sisa yang perlu dicicil."}
             </Alert>
           )}
 
           <p className="text-xs leading-relaxed text-muted">
-            Estimasi tidak mengikat — DP, tenor, bunga, dan biaya final ditentukan mitra leasing
+            Estimasi tidak mengikat. DP, tenor, bunga, dan biaya final ditentukan mitra leasing
             setelah verifikasi.
           </p>
         </section>

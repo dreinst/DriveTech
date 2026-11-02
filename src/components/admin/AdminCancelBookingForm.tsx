@@ -59,7 +59,7 @@ export function AdminCancelBookingForm({
           {bookingStatus === "confirmed" ? (
             <span className="font-medium text-danger">
               {" "}
-              Booking ini sudah terkonfirmasi — pastikan refund/persetujuan sudah beres.
+              Booking ini sudah terkonfirmasi. Pastikan refund/persetujuan sudah beres.
             </span>
           ) : null}
         </p>

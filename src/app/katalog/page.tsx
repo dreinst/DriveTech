@@ -12,6 +12,7 @@ import {
   type VehicleKind,
 } from "@/lib/domain/constants";
 import { ZONE_TYPE_LABEL } from "@/lib/domain/labels";
+import { sudahTerjual } from "@/lib/domain/terjual";
 import { listCatalog } from "@/lib/services/catalog";
 import type { CatalogItem, ZoneType } from "@/lib/types/database";
 import { cn, formatRupiah, formatTanggal, slotDisplayName } from "@/lib/utils";
@@ -75,7 +76,7 @@ export default async function KatalogPage({ searchParams }: PageProps) {
     <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6">
         <PageHeader
           title="Katalog Kendaraan"
-          description={`Mobil & motor yang dijual di ${EVENT_INFO.name}, ${EVENT_INFO.location}. Pilih tanggal untuk melihat unit yang hadir hari itu — pembelian dilakukan langsung di lokasi pameran.`}
+          description={`Mobil & motor yang dijual di ${EVENT_INFO.name}, ${EVENT_INFO.location}. Pilih tanggal untuk melihat unit yang hadir hari itu. Pembelian dilakukan langsung di lokasi pameran.`}
         />
 
         {!result.ok && result.code !== "NO_CONFIG" ? (
@@ -203,6 +204,7 @@ export default async function KatalogPage({ searchParams }: PageProps) {
 
 /** Kartu marketplace: foto besar, harga menonjol, plat & lokasi slot. */
 function KartuKendaraan({ item }: { item: CatalogItem }) {
+  const terjual = sudahTerjual(item);
   return (
     <Link
       href={`/katalog/${item.id}`}
@@ -231,8 +233,18 @@ function KartuKendaraan({ item }: { item: CatalogItem }) {
           decoding="async"
           width={640}
           height={480}
-          className="relative h-full w-full object-contain transition-transform duration-300 group-hover:scale-[1.03]"
+          className={cn(
+            "relative h-full w-full object-contain transition-transform duration-300 group-hover:scale-[1.03]",
+            terjual && "grayscale",
+          )}
         />
+        {terjual ? (
+          <span className="absolute inset-0 z-10 flex items-center justify-center bg-black/40">
+            <span className="-rotate-6 border-2 border-white bg-red-600 px-5 py-1.5 text-xl font-extrabold uppercase tracking-widest text-white shadow-[var(--shadow-md)]">
+              Sold Out
+            </span>
+          </span>
+        ) : null}
         {/* Label di atas foto memakai warna solid (bukan Badge yang transparan)
             supaya tetap jelas terbaca di foto apa pun. */}
         <span className="absolute left-3 top-3 z-10 flex gap-1.5 text-xs font-semibold uppercase leading-5 tracking-wide text-white">
@@ -250,7 +262,12 @@ function KartuKendaraan({ item }: { item: CatalogItem }) {
           {item.vehicle_name}
           {item.year ? <span className="font-normal text-muted"> · {item.year}</span> : null}
         </p>
-        <p className="tabular text-lg font-bold tracking-[-0.01em] text-accent">
+        <p
+          className={cn(
+            "tabular text-lg font-bold tracking-[-0.01em]",
+            terjual ? "text-muted line-through" : "text-accent",
+          )}
+        >
           {formatRupiah(item.price)}
         </p>
         <p className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 pt-1 text-xs text-muted">
@@ -262,7 +279,7 @@ function KartuKendaraan({ item }: { item: CatalogItem }) {
             </>
           ) : null}
           <span>
-            {slotDisplayName(item.slot)} — {item.slot.zone.name}
+            {slotDisplayName(item.slot)}, {item.slot.zone.name}
           </span>
         </p>
       </div>

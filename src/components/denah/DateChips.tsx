@@ -58,7 +58,7 @@ export function DateChips({ dates, statusFor, selected, onToggle, className }: D
             {terisi ? (
               <span className="text-[0.6875rem] font-medium leading-tight">
                 {TAKEN_LABEL[status]}
-                <span className="sr-only"> — sudah dipesan untuk slot ini</span>
+                <span className="sr-only">, sudah dipesan untuk slot ini</span>
               </span>
             ) : null}
           </button>

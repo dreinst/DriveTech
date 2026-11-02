@@ -56,9 +56,9 @@ const waLink = (digits: string): string =>
  */
 export function bantuanEmailText(judul = "Butuh bantuan?"): string[] {
   return [
-    `${judul} Chat WhatsApp panitia — pesannya sudah terisi otomatis:`,
+    `${judul} Chat WhatsApp panitia, pesannya sudah terisi otomatis:`,
     ...KONTAK_BANTUAN.map((k) => `• ${k.label} (${k.tampil}): ${waLink(k.digits)}`),
-    "— Panitia Drive Tech",
+    "Panitia Drive Tech",
   ];
 }
 
@@ -419,7 +419,7 @@ export function buildBookingWa(kind: BookingNotifKind, d: BookingNotif): string 
           : "Silakan kirim ulang bukti yang benar di chat ini."
       }`;
     case "cancelled":
-      return `${kepala}\nBooking Anda DIBATALKAN.${d.reason ? `\nAlasan: ${d.reason}.` : ""}\n${lapak}\nTanggal sewa telah dilepas. Anda bisa memesan slot lain kapan saja. — ${KONTAK_PANITIA}`;
+      return `${kepala}\nBooking Anda DIBATALKAN.${d.reason ? `\nAlasan: ${d.reason}.` : ""}\n${lapak}\nTanggal sewa telah dilepas. Anda bisa memesan slot lain kapan saja. ${KONTAK_PANITIA}`;
   }
 }
 
@@ -429,7 +429,7 @@ export function buildBookingWa(kind: BookingNotifKind, d: BookingNotif): string 
  */
 export function buildBookingEmail(kind: BookingNotifKind, d: BookingNotif): { subject: string; text: string } {
   const subjectByKind: Record<BookingNotifKind, string> = {
-    created: `Kode booking ${d.bookingCode} — selesaikan pembayaran`,
+    created: `Kode booking ${d.bookingCode}: selesaikan pembayaran`,
     verified: `Booking ${d.bookingCode} terkonfirmasi`,
     rejected: `Bukti pembayaran ${d.bookingCode} ditolak`,
     cancelled: `Booking ${d.bookingCode} dibatalkan`,

@@ -219,7 +219,7 @@ export function PaymentForm({
         <Field
           label="Bukti pembayaran QRIS (tangkapan layar berhasil)"
           htmlFor={`${id}-bukti`}
-          hint={`JPG, PNG, atau WEBP — otomatis dikompresi maksimal ${formatBytes(MAX_PROOF_BYTES)}.`}
+          hint={`JPG, PNG, atau WEBP, otomatis dikompresi maksimal ${formatBytes(MAX_PROOF_BYTES)}.`}
           error={galatBukti}
           required={!existingProofUrl}
         >
@@ -268,7 +268,7 @@ export function PaymentForm({
           </div>
         ) : existingProofUrl ? (
           <Alert tone="info">
-            Bukti pembayaran sebelumnya masih tersimpan — pilih gambar baru hanya kalau ingin
+            Bukti pembayaran sebelumnya masih tersimpan. Pilih gambar baru hanya kalau ingin
             menggantinya.
           </Alert>
         ) : null}

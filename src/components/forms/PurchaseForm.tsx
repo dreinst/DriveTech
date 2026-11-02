@@ -315,12 +315,12 @@ export function PurchaseForm({ slotId, namaLapak }: PurchaseFormProps) {
                 <Alert tone="info">
                   {harga <= 0
                     ? "Isi perkiraan harga unit di atas untuk melihat estimasi angsuran."
-                    : "DP sudah menutupi seluruh harga unit — tidak ada sisa yang perlu dicicil."}
+                    : "DP sudah menutupi seluruh harga unit, tidak ada sisa yang perlu dicicil."}
                 </Alert>
               )}
 
               <p className="text-xs leading-relaxed text-muted">
-                Estimasi tidak mengikat — DP, tenor, bunga, dan biaya final ditentukan mitra
+                Estimasi tidak mengikat. DP, tenor, bunga, dan biaya final ditentukan mitra
                 leasing setelah verifikasi.
               </p>
             </section>

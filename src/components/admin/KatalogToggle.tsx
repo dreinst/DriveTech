@@ -34,7 +34,7 @@ export function KatalogToggle({ listing, className }: KatalogToggleProps) {
             ? "border-line bg-card text-muted hover:border-danger hover:text-danger"
             : "border-line bg-card text-muted hover:border-ok hover:text-ok",
         )}
-        title={`${listing.vehicle_name} — ${listing.plate_number}`}
+        title={`${listing.vehicle_name}, ${listing.plate_number}`}
       >
         <span
           aria-hidden="true"

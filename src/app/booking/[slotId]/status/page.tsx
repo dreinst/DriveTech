@@ -100,11 +100,11 @@ export default async function StatusBookingPage({ params }: PageProps) {
           <Alert tone="error" title="Booking dibatalkan">
             Tanggal sewa <strong>{slotDisplayName(booking.slot)}</strong> sudah dilepas dan bisa
             dipesan orang lain. Booking yang tidak dibayar dalam {PAYMENT_DEADLINE_HOURS} jam
-            dibatalkan otomatis oleh sistem — silakan pesan ulang bila masih berminat.
+            dibatalkan otomatis oleh sistem. Silakan pesan ulang bila masih berminat.
           </Alert>
         ) : terkonfirmasi ? (
           <Alert tone="success" title="Booking terkonfirmasi">
-            Slot <strong>{slotDisplayName(booking.slot)}</strong> resmi milik Anda — tunjukkan kode
+            Slot <strong>{slotDisplayName(booking.slot)}</strong> resmi milik Anda. Tunjukkan kode
             booking saat registrasi ulang di lokasi.
           </Alert>
         ) : ditolak ? (
@@ -115,8 +115,8 @@ export default async function StatusBookingPage({ params }: PageProps) {
             Kirim ulang bukti yang benar agar slot tidak hangus
             {tenggat ? (
               <>
-                {" "}
-                — paling lambat <strong>{formatTanggalWaktu(tenggat)} WIB</strong>
+                ,{" "}
+                paling lambat <strong>{formatTanggalWaktu(tenggat)} WIB</strong>
               </>
             ) : null}
             .
@@ -133,8 +133,8 @@ export default async function StatusBookingPage({ params }: PageProps) {
                 {" "}
                 sebelum <strong>{formatTanggalWaktu(tenggat)} WIB</strong>
               </>
-            ) : null}{" "}
-            — lewat dari itu booking dibatalkan otomatis dan tanggalnya dilepas.
+            ) : null}
+            . Lewat dari itu booking dibatalkan otomatis dan tanggalnya dilepas.
           </Alert>
         )}
 

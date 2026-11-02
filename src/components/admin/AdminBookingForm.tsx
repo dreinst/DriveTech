@@ -62,7 +62,7 @@ export function AdminBookingForm({ slots, dates }: AdminBookingFormProps) {
           </option>
           {slots.map((slot) => (
             <option key={slot.id} value={slot.id}>
-              {slot.zoneName} — {slot.label}
+              {slot.zoneName}, {slot.label}
             </option>
           ))}
         </Select>
@@ -116,7 +116,7 @@ export function AdminBookingForm({ slots, dates }: AdminBookingFormProps) {
         <span className="text-content">
           <span className="font-medium text-ink">Langsung konfirmasi (sudah lunas)</span>
           <br />
-          Tandai pembayaran sudah diterima panitia — booking langsung terkonfirmasi tanpa unggah
+          Tandai pembayaran sudah diterima panitia. Booking langsung terkonfirmasi tanpa unggah
           bukti. Kosongkan bila tenant akan membayar sendiri.
         </span>
       </label>

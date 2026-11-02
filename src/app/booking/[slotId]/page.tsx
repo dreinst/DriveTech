@@ -59,10 +59,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const slot = result.data;
   return {
-    title: `Booking ${slotDisplayName(slot)} — ${slot.zone.name}`,
+    title: `Booking ${slotDisplayName(slot)}, ${slot.zone.name}`,
     description: `Sewa ${slotDisplayName(slot)} di ${slot.zone.name} (${
       ZONE_TYPE_LABEL[slot.zone.zone_type]
-    }). Biaya admin ${formatRupiah(slotAdminFee(slot, slot.zone))} per tanggal — ${EVENT_INFO.scheduleText}.`,
+    }). Biaya admin ${formatRupiah(slotAdminFee(slot, slot.zone))} per tanggal, ${EVENT_INFO.scheduleText}.`,
   };
 }
 

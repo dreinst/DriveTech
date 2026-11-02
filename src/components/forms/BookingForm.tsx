@@ -373,7 +373,7 @@ export function BookingForm({
         <Field
           label="Email (kode booking dikirim ke sini)"
           htmlFor={`${id}-email`}
-          hint="Pastikan benar — kode booking dan semua pemberitahuan dikirim ke email ini."
+          hint="Pastikan benar, kode booking dan semua pemberitahuan dikirim ke email ini."
           error={errors.tenantEmail ?? otpState.fieldErrors?.email}
           required
         >
@@ -728,7 +728,7 @@ function VehicleFields({ idPrefix, errors, tampilkanKm, tampilkanPlat, jenis }: 
           Data {jenis === "motor" ? "Motor" : "Mobil"} untuk Katalog
         </p>
         <p className="mt-1 text-xs text-muted">
-          Ditampilkan di katalog online untuk pengunjung setelah pembayaran terverifikasi —
+          Ditampilkan di katalog online untuk pengunjung setelah pembayaran terverifikasi,
           lengkapi agar unit Anda mudah ditemukan pembeli.
         </p>
       </div>

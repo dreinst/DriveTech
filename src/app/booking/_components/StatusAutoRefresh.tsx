@@ -44,7 +44,7 @@ export function StatusAutoRefresh({ aktif, intervalMs = 15000 }: StatusAutoRefre
   if (!aktif) return null;
   return (
     <p className="text-xs text-muted" aria-live="polite">
-      Halaman ini diperbarui otomatis setiap 15 detik — tidak perlu reload saat panitia memverifikasi.
+      Halaman ini diperbarui otomatis setiap 15 detik, tidak perlu reload saat panitia memverifikasi.
     </p>
   );
 }

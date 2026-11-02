@@ -45,7 +45,7 @@ export function CancelBookingForm({ bookingId }: CancelBookingFormProps) {
       <input type="hidden" name="bookingId" value={bookingId} />
       <p className="text-sm font-semibold text-danger">Batalkan booking ini?</p>
       <p className="text-sm text-content">
-        Slot langsung dilepas dan bisa dipesan orang lain — tindakan ini tidak bisa dibatalkan.
+        Slot langsung dilepas dan bisa dipesan orang lain. Tindakan ini tidak bisa dibatalkan.
       </p>
 
       {/* Bukti kepemilikan ringan: kode booking bisa terusan lewat WhatsApp ke

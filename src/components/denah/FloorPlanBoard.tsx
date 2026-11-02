@@ -189,7 +189,7 @@ function ZoneStep({ cards, onPick }: ZoneStepProps) {
               onClick={() => onPick(zone.id, bagian.length === 1 ? bagian[0].area : null)}
               aria-label={
                 penuh
-                  ? `${zone.name} — penuh di semua tanggal`
+                  ? `${zone.name}, penuh di semua tanggal`
                   : `${zone.name}, biaya admin ${labelHarga} per tanggal, ${available} dari ${total} slot tersedia. Buka peta zona ini.`
               }
               className={cn(

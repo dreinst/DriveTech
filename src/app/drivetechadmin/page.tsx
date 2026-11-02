@@ -150,7 +150,7 @@ export default async function AdminDashboardPage() {
           tone="slate"
           icon={<IconOkupansi />}
           progressPct={persenTerisi}
-          hint={`${slotTerisi} dari ${slotDisewakan} slot terisi · ${slotMenunggu} menunggu — ${labelTanggalOkupansi}`}
+          hint={`${slotTerisi} dari ${slotDisewakan} slot terisi · ${slotMenunggu} menunggu · ${labelTanggalOkupansi}`}
         />
         <StatCard
           label="Pembayaran Tertunda"
@@ -231,7 +231,7 @@ export default async function AdminDashboardPage() {
           )}
 
           <p className="mt-5 text-xs text-subtle">
-            Oranye = terisi, kuning = menunggu pembayaran — dihitung {labelTanggalOkupansi}.
+            Oranye = terisi, kuning = menunggu pembayaran, dihitung {labelTanggalOkupansi}.
             Fasilitas umum tidak dihitung.
           </p>
         </Card>

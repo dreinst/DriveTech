@@ -13,6 +13,7 @@ import {
   type TransmissionOption,
 } from "@/lib/domain/constants";
 import { ZONE_TYPE_LABEL } from "@/lib/domain/labels";
+import { sudahTerjual } from "@/lib/domain/terjual";
 import { getCatalogItem } from "@/lib/services/catalog";
 import { formatRupiah, formatTanggal, slotDisplayName } from "@/lib/utils";
 
@@ -26,7 +27,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!result.ok) return { title: "Kendaraan Tidak Ditemukan" };
   return {
     title: result.data.vehicle_name,
-    description: `${result.data.vehicle_name} — ${formatRupiah(result.data.price)}, ${slotDisplayName(result.data.slot)} di ${EVENT_INFO.name}.`,
+    description: `${result.data.vehicle_name}, ${formatRupiah(result.data.price)}, ${slotDisplayName(result.data.slot)} di ${EVENT_INFO.name}.`,
   };
 }
 
@@ -40,6 +41,7 @@ export default async function DetailKendaraanPage({ params }: PageProps) {
   const result = await getCatalogItem(id);
   if (!result.ok) notFound();
   const item = result.data;
+  const terjual = sudahTerjual(item);
 
   const spesifikasi: Array<{ label: string; nilai: string | null }> = [
     { label: "Jenis", nilai: item.vehicle_kind === "motor" ? "Motor" : "Mobil" },
@@ -86,10 +88,26 @@ export default async function DetailKendaraanPage({ params }: PageProps) {
             <div className="flex flex-wrap items-center gap-2">
               <Badge tone="blue">{ZONE_TYPE_LABEL[item.slot.zone.zone_type]}</Badge>
               {item.year ? <Badge>{item.year}</Badge> : null}
+              {terjual ? (
+                <span className="bg-red-600 px-2.5 py-0.5 text-xs font-extrabold uppercase tracking-widest text-white">
+                  Sold Out
+                </span>
+              ) : null}
             </div>
-            <p className="tabular mt-3 text-3xl font-bold tracking-[-0.01em] text-accent">
+            <p
+              className={
+                terjual
+                  ? "tabular mt-3 text-3xl font-bold tracking-[-0.01em] text-muted line-through"
+                  : "tabular mt-3 text-3xl font-bold tracking-[-0.01em] text-accent"
+              }
+            >
               {formatRupiah(item.price)}
             </p>
+            {terjual ? (
+              <p className="mt-2 text-sm font-semibold text-red-600">
+                Unit ini sudah terjual. Cek unit lain di katalog.
+              </p>
+            ) : null}
 
             <dl className="mt-4 space-y-2.5 border-t border-line pt-4">
               {spesifikasi
@@ -107,7 +125,7 @@ export default async function DetailKendaraanPage({ params }: PageProps) {
           <div className="rounded-[var(--radius)] border border-line bg-card p-5 shadow-[var(--shadow-sm)]">
             <p className="text-sm font-semibold text-ink">Temui unit ini di pameran</p>
             <p className="mt-1.5 text-sm text-muted">
-              Parkir di <strong className="text-ink">{slotDisplayName(item.slot)}</strong> —{" "}
+              Parkir di <strong className="text-ink">{slotDisplayName(item.slot)}</strong>,{" "}
               {item.slot.zone.name}, {EVENT_INFO.location}.
             </p>
             {item.dates.length > 0 ? (
@@ -122,9 +140,15 @@ export default async function DetailKendaraanPage({ params }: PageProps) {
             <div className="mt-4 flex flex-wrap gap-2">
               {/* Tautan ke alur /beli (temuan audit: katalog tidak tertaut ke /beli) —
                   mencatat minat pembelian unit dari penyewa slot ini, termasuk opsi kredit. */}
-              <Link href={`/beli/${item.slot.id}`} className={buttonClass("primary", "sm")}>
-                Ajukan pembelian unit ini
-              </Link>
+              {terjual ? (
+                <Link href="/katalog" className={buttonClass("primary", "sm")}>
+                  Lihat unit lain
+                </Link>
+              ) : (
+                <Link href={`/beli/${item.slot.id}`} className={buttonClass("primary", "sm")}>
+                  Ajukan pembelian unit ini
+                </Link>
+              )}
               <Link href="/#denah" className={buttonClass("secondary", "sm")}>
                 Lihat denah lokasi
               </Link>
@@ -132,8 +156,8 @@ export default async function DetailKendaraanPage({ params }: PageProps) {
           </div>
 
           <Alert tone="info" title="Pembelian dilakukan di lokasi">
-            Transaksi dan negosiasi berlangsung langsung dengan penjual di slotnya —
-            datang pada tanggal di atas, atau hubungi panitia di{" "}
+            Transaksi dan negosiasi berlangsung langsung dengan penjual di slotnya.
+            Datang pada tanggal di atas, atau hubungi panitia di{" "}
             {EVENT_INFO.contacts.map((kontak, index) => (
               <span key={kontak.phone}>
                 {index > 0 ? " / " : null}

@@ -74,7 +74,7 @@ export default async function BeliUnitPage({
 
   const slot = result.data;
   const namaSlot = slotDisplayName(slot);
-  const namaLapak = `${namaSlot} — ${slot.zone.name}`;
+  const namaLapak = `${namaSlot}, ${slot.zone.name}`;
 
   // Pembeli membeli unit "dari salah satu tenant" (bagian 1 arsitektur), jadi
   // penyewa lapaknya ditampilkan. Gagal memuat tenant tidak boleh menggagalkan halaman.
@@ -92,7 +92,7 @@ export default async function BeliUnitPage({
         />
         <Alert tone="info" title="Fasilitas tidak menjual unit">
           <p>
-            {namaSlot} adalah fasilitas umum pameran — tidak ada unit yang dijual di sini.
+            {namaSlot} adalah fasilitas umum pameran, tidak ada unit yang dijual di sini.
           </p>
         </Alert>
         <Link href="/" className={buttonClass("secondary", "md")}>
@@ -166,7 +166,7 @@ export default async function BeliUnitPage({
         title="Beli Unit dari Tenant"
         backHref="/"
         backLabel="Kembali ke denah"
-        description={`Panitia hanya mencatat minat Anda — pengecekan unit dan pembayaran dilakukan langsung dengan tenant di lokasi, ${jadwalDiTengahKalimat}.`}
+        description={`Panitia hanya mencatat minat Anda. Pengecekan unit dan pembayaran dilakukan langsung dengan tenant di lokasi, ${jadwalDiTengahKalimat}.`}
       />
 
       <Stepper steps={LANGKAH} current={0} />

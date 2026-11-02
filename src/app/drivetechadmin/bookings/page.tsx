@@ -254,7 +254,7 @@ export default async function AdminBookingsPage({ searchParams }: PageProps) {
         (slot) =>
           slot.zone.zone_type === booking.slot.zone.zone_type && slot.id !== booking.slot_id,
       )
-      .map((slot) => ({ id: slot.id, label: `${slot.zone.name} — ${slotDisplayName(slot)}` }));
+      .map((slot) => ({ id: slot.id, label: `${slot.zone.name}, ${slotDisplayName(slot)}` }));
 
   return (
     <div className="space-y-6">
@@ -262,7 +262,7 @@ export default async function AdminBookingsPage({ searchParams }: PageProps) {
         <div className="min-w-0 space-y-2">
           <h1 className="text-3xl font-bold tracking-[-0.02em] text-ink sm:text-4xl">Pemesanan</h1>
           <p className="max-w-2xl text-sm leading-relaxed text-muted sm:text-base">
-            Kelola booking slot per tanggal dan verifikasi bukti pembayaran QRIS — cocokkan nominal
+            Kelola booking slot per tanggal dan verifikasi bukti pembayaran QRIS. Cocokkan nominal
             dan waktu pada bukti dengan waktu kirim di sistem. Bukti yang menunggu selalu tampil
             paling atas.
           </p>
@@ -469,11 +469,11 @@ export default async function AdminBookingsPage({ searchParams }: PageProps) {
 
                       <td className="px-3 py-3">
                         <p className="font-medium text-ink">{booking.tenant.name}</p>
-                        <p className="text-xs text-muted">{booking.tenant.phone ?? "—"}</p>
+                        <p className="text-xs text-muted">{booking.tenant.phone ?? "-"}</p>
                       </td>
 
                       <td className="whitespace-nowrap px-3 py-3 text-muted">
-                        {payment ? PAYMENT_METHOD_LABEL[payment.method] : "—"}
+                        {payment ? PAYMENT_METHOD_LABEL[payment.method] : "-"}
                       </td>
 
                       <td className="tabular whitespace-nowrap px-3 py-3 font-medium text-ink">
@@ -484,7 +484,7 @@ export default async function AdminBookingsPage({ searchParams }: PageProps) {
                         {payment ? (
                           <StatusBadge status={payment.status} kind="payment" />
                         ) : (
-                          <span className="text-xs text-subtle">—</span>
+                          <span className="text-xs text-subtle">-</span>
                         )}
                         <WaktuPembayaran payment={payment} className="mt-1" />
                         {payment?.status === "rejected" && payment.reject_reason ? (

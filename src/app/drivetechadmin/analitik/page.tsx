@@ -79,7 +79,7 @@ export default async function AdminAnalitikPage() {
 
   // Model per tanggal: okupansi dihitung untuk tanggal gelaran aktif terdekat.
   const deskripsiOkupansi = data.tanggalOkupansi
-    ? `Slot terisi, menunggu, tersedia, dan diblokir di tiap zona yang disewakan — per ${formatTanggal(data.tanggalOkupansi)}.`
+    ? `Slot terisi, menunggu, tersedia, dan diblokir di tiap zona yang disewakan, per ${formatTanggal(data.tanggalOkupansi)}.`
     : "Belum ada tanggal gelaran mendatang; semua slot yang tidak diblokir dihitung tersedia.";
 
   const bookingHarian = data.bookingPerHari.map((titik) => ({

@@ -209,7 +209,7 @@ export default async function AdminLeasingPage() {
                       <tr key={row.id} className="align-top hover:bg-surface-2">
                         <td className="px-3 py-3">
                           <p className="font-mono text-xs font-semibold text-ink">
-                            {purchase?.transaction_code ?? "—"}
+                            {purchase?.transaction_code ?? "-"}
                           </p>
                           <p className="mt-0.5 text-xs text-subtle">
                             {formatTanggalWaktu(row.created_at)}
@@ -217,13 +217,13 @@ export default async function AdminLeasingPage() {
                         </td>
 
                         <td className="px-3 py-3">
-                          <p className="font-medium text-ink">{purchase?.buyer_name ?? "—"}</p>
-                          <p className="text-xs text-muted">{purchase?.buyer_phone ?? "—"}</p>
+                          <p className="font-medium text-ink">{purchase?.buyer_name ?? "-"}</p>
+                          <p className="text-xs text-muted">{purchase?.buyer_phone ?? "-"}</p>
                         </td>
 
                         <td className="px-3 py-3">
                           <p className="max-w-[16rem] text-muted">
-                            {purchase?.unit_description ?? "—"}
+                            {purchase?.unit_description ?? "-"}
                           </p>
                           <p className="tabular text-xs font-medium text-ink">
                             {hargaUnit === null ? "Harga belum dicatat" : formatRupiah(hargaUnit)}
@@ -232,14 +232,14 @@ export default async function AdminLeasingPage() {
 
                         <td className="px-3 py-3">
                           <p className="font-medium text-ink">
-                            {slot ? slotDisplayName(slot) : "—"}
+                            {slot ? slotDisplayName(slot) : "-"}
                           </p>
-                          <p className="text-xs text-muted">{slot?.zone.name ?? "—"}</p>
+                          <p className="text-xs text-muted">{slot?.zone.name ?? "-"}</p>
                         </td>
 
                         <td className="px-3 py-3">
-                          <p className="font-medium text-ink">{row.partner?.name ?? "—"}</p>
-                          <p className="text-xs text-muted">{row.partner?.contact ?? "—"}</p>
+                          <p className="font-medium text-ink">{row.partner?.name ?? "-"}</p>
+                          <p className="text-xs text-muted">{row.partner?.contact ?? "-"}</p>
                         </td>
 
                         <td className="tabular whitespace-nowrap px-3 py-3 text-muted">
@@ -247,7 +247,7 @@ export default async function AdminLeasingPage() {
                         </td>
 
                         <td className="whitespace-nowrap px-3 py-3 text-muted">
-                          {typeof row.tenor_bulan === "number" ? `${row.tenor_bulan} bulan` : "—"}
+                          {typeof row.tenor_bulan === "number" ? `${row.tenor_bulan} bulan` : "-"}
                         </td>
 
                         <td className="px-3 py-3">
@@ -317,11 +317,11 @@ export default async function AdminLeasingPage() {
                   {mitra.map((partner) => (
                     <tr key={partner.id} className="align-top hover:bg-surface-2">
                       <td className="px-3 py-3 font-medium text-ink">{partner.name}</td>
-                      <td className="px-3 py-3 text-muted">{partner.contact ?? "—"}</td>
+                      <td className="px-3 py-3 text-muted">{partner.contact ?? "-"}</td>
                       <td className="tabular whitespace-nowrap px-3 py-3 text-muted">
                         {typeof partner.commission_rate === "number"
                           ? `${partner.commission_rate}%`
-                          : "—"}
+                          : "-"}
                       </td>
                       <td className="px-3 py-3">
                         <Badge tone={partner.is_active ? "green" : "slate"}>

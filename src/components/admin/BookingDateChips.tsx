@@ -45,7 +45,7 @@ export function formatTanggalPanjang(tanggal: string): string {
  * sisanya jadi "+N"). Dipakai sel tabel yang sempit.
  */
 export function ringkasTanggal(dates: string[], max = 3): string {
-  if (dates.length === 0) return "—";
+  if (dates.length === 0) return "-";
   const tampil = dates.slice(0, max).map(formatTanggalChip);
   const sisa = dates.length - tampil.length;
   return sisa > 0 ? `${tampil.join(" · ")} +${sisa}` : tampil.join(" · ");
@@ -62,7 +62,7 @@ export type BookingDateChipsProps = {
 /** Deret pil kecil berisi tanggal sewa; kosong -> tanda "—". */
 export function BookingDateChips({ dates, max = 4, className }: BookingDateChipsProps) {
   if (dates.length === 0) {
-    return <span className="text-xs text-subtle">—</span>;
+    return <span className="text-xs text-subtle">-</span>;
   }
 
   const tampil = dates.slice(0, max);

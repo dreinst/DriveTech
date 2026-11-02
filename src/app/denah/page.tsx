@@ -73,7 +73,7 @@ export default async function DenahPage() {
       {isFallback ? (
         <div className="mb-4">
           <Alert tone="info">
-            Data zona belum termuat dari database — denah di bawah memakai tata letak bawaan dan
+            Data zona belum termuat dari database. Denah di bawah memakai tata letak bawaan dan
             status slotnya bukan status terkini.
           </Alert>
         </div>
@@ -91,7 +91,7 @@ export default async function DenahPage() {
 
           <div className="mt-5 border-t border-line pt-5">
             <p className="text-xs leading-relaxed text-muted">
-              Slot di halaman ini tidak bisa diketuk. Untuk memesan, pilih zona dulu di beranda —
+              Slot di halaman ini tidak bisa diketuk. Untuk memesan, pilih zona dulu di beranda,
               peta pemesanan akan terkunci pada zona pilihanmu.
             </p>
             <Link href="/#denah" className={`${buttonClass("primary", "md")} mt-3 w-full`}>

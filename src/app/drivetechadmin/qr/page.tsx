@@ -127,7 +127,7 @@ export default async function AdminQrPage() {
                             {row.android} / {row.ios}
                           </td>
                           <td className="whitespace-nowrap px-4 py-3 text-muted">
-                            {row.terakhir ? formatTanggalWaktu(row.terakhir) : "—"}
+                            {row.terakhir ? formatTanggalWaktu(row.terakhir) : "-"}
                           </td>
                         </tr>
                       ))}
@@ -226,7 +226,7 @@ export default async function AdminQrPage() {
           </li>
           <li>
             <strong className="text-ink">Warna:</strong> biarkan modul hitam di atas putih. Jangan
-            dibalik (putih di atas gelap) atau diberi gradasi — banyak kamera HP gagal membacanya.
+            dibalik (putih di atas gelap) atau diberi gradasi, karena banyak kamera HP gagal membacanya.
           </li>
           <li>
             <strong className="text-ink">Sebelum cetak massal:</strong> cetak satu contoh, scan dengan

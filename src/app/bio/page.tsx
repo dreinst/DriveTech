@@ -6,7 +6,7 @@ import { LogoLengkap } from "@/components/brand/LogoDriveTech";
 
 export const metadata: Metadata = {
   title: "Tautan",
-  description: `Tautan penting ${EVENT_INFO.name} — booking slot, denah, dan hotline panitia.`,
+  description: `Tautan penting ${EVENT_INFO.name}: booking slot, denah, dan hotline panitia.`,
   robots: { index: false, follow: false },
 };
 

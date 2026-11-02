@@ -149,7 +149,7 @@ export default async function StatusPembelianPage({
         {!isKredit ? (
           <Alert tone="info" title="Pembayaran langsung ke tenant">
             <p>
-              Tunjukkan kode ini di lapak {namaSlot} ({purchase.slot.zone.name}) — pembayaran{" "}
+              Tunjukkan kode ini di lapak {namaSlot} ({purchase.slot.zone.name}). Pembayaran{" "}
               {purchase.payment_method === "cash" ? "tunai" : "transfer"} dilakukan langsung ke
               tenant di lokasi.
             </p>
@@ -261,7 +261,7 @@ export default async function StatusPembelianPage({
                 </Baris>
               </dl>
               <p className="text-xs leading-relaxed text-muted">
-                Estimasi tidak mengikat — DP, tenor, bunga, dan biaya final ditentukan mitra
+                Estimasi tidak mengikat. DP, tenor, bunga, dan biaya final ditentukan mitra
                 leasing setelah verifikasi.
               </p>
             </CardContent>
@@ -277,7 +277,7 @@ export default async function StatusPembelianPage({
               <Baris label="Pembeli">{purchase.buyer_name}</Baris>
               <Baris label="Nomor HP">{purchase.buyer_phone ?? "-"}</Baris>
               <Baris label="Lapak penjual">
-                {namaSlot} — {purchase.slot.zone.name}
+                {namaSlot}, {purchase.slot.zone.name}
               </Baris>
               <Baris label="Tenant penjual">
                 {penyewa ? (

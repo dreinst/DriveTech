@@ -41,7 +41,7 @@ export default function Error({
         Terjadi kesalahan
       </h1>
       <p className="mt-2 text-sm leading-relaxed text-muted">
-        Halaman gagal dimuat. Coba lagi — kalau berulang, hubungi panitia.
+        Halaman gagal dimuat. Coba lagi. Kalau berulang, hubungi panitia.
       </p>
       {error.digest ? (
         <p className="mt-4 rounded-full border border-line bg-card px-3 py-1 text-xs text-subtle">

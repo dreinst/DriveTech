@@ -77,7 +77,7 @@ export default async function BayarPage({ params }: PageProps) {
           backLabel="Kembali ke denah"
         />
         <Alert tone="error" title="Booking ini sudah dibatalkan">
-          Slot <strong>{slotDisplayName(booking.slot)}</strong> sudah dilepas — pembayaran tidak
+          Slot <strong>{slotDisplayName(booking.slot)}</strong> sudah dilepas. Pembayaran tidak
           lagi diperlukan.
         </Alert>
         <div className="mt-5 flex flex-wrap gap-2">
@@ -185,7 +185,7 @@ export default async function BayarPage({ params }: PageProps) {
       {tenggat ? (
         <div className="mb-6">
           <Alert tone="warning" title="Batas waktu pembayaran">
-            Selesaikan sebelum <strong>{formatTanggalWaktu(tenggat)} WIB</strong> — lewat dari
+            Selesaikan sebelum <strong>{formatTanggalWaktu(tenggat)} WIB</strong>. Lewat dari
             itu booking dibatalkan otomatis dan tanggal sewanya dilepas untuk orang lain.
           </Alert>
         </div>

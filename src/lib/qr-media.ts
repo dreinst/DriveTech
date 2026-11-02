@@ -28,9 +28,9 @@ export type QrMediaPreset = {
  * sisi QR >= jarak scan / 10 (spanduk dilihat dari 2,5 m -> QR >= 25 cm).
  */
 export const QR_MEDIA_PRESETS: readonly QrMediaPreset[] = [
-  { slug: "spanduk", label: "Spanduk / Banner", hint: "Dilihat dari 2–3 m — cetak QR minimal 25–30 cm." },
-  { slug: "flyer", label: "Flyer / Brosur", hint: "Dipegang tangan — QR minimal 2,5 cm dengan tepi putih." },
-  { slug: "poster", label: "Poster", hint: "Dilihat dari ±1 m — QR minimal 10 cm." },
+  { slug: "spanduk", label: "Spanduk / Banner", hint: "Dilihat dari 2 sampai 3 m, cetak QR minimal 25 sampai 30 cm." },
+  { slug: "flyer", label: "Flyer / Brosur", hint: "Dipegang tangan, QR minimal 2,5 cm dengan tepi putih." },
+  { slug: "poster", label: "Poster", hint: "Dilihat dari ±1 m, QR minimal 10 cm." },
   { slug: "led", label: "Layar LED lokasi", hint: "Tampilkan besar dan kontras; boleh dianimasikan bingkainya, modul QR-nya jangan." },
   { slug: "instagram", label: "Instagram / Story", hint: "Pakai PNG 1024 px agar tetap tajam saat dikompresi." },
   { slug: "whatsapp", label: "WhatsApp broadcast", hint: "Kirim sebagai gambar PNG, bukan dokumen SVG." },

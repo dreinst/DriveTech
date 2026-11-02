@@ -126,7 +126,7 @@ export function FotoInput({ name, id, label, hint, error, required }: FotoInputP
       <Field
         label={label}
         htmlFor={id}
-        hint={hint ?? `JPG, PNG, atau WEBP — otomatis dikompresi maksimal ${formatBytes(MAX_PROOF_BYTES)}.`}
+        hint={hint ?? `JPG, PNG, atau WEBP, otomatis dikompresi maksimal ${formatBytes(MAX_PROOF_BYTES)}.`}
         error={galat}
         required={required}
       >

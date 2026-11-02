@@ -92,8 +92,8 @@ export default async function PengajuanLeasingPage({
         />
         <Alert tone="info" title="Transaksi ini bukan pembelian kredit">
           <p>
-            Metode pembayaran Anda {PURCHASE_PAYMENT_METHOD_LABEL[purchase.payment_method]} —
-            pembayaran diselesaikan langsung dengan tenant di lokasi, tanpa pengajuan leasing.
+            Metode pembayaran Anda {PURCHASE_PAYMENT_METHOD_LABEL[purchase.payment_method]}.
+            Pembayaran diselesaikan langsung dengan tenant di lokasi, tanpa pengajuan leasing.
           </p>
         </Alert>
         <Link href={statusHref} className={buttonClass("primary", "md")}>
@@ -153,7 +153,7 @@ export default async function PengajuanLeasingPage({
               </div>
               <dl className="mt-5 divide-y divide-line border-t border-line">
                 <Baris label="Lapak penjual">
-                  {namaSlot} — {purchase.slot.zone.name}
+                  {namaSlot}, {purchase.slot.zone.name}
                 </Baris>
                 <Baris label="Unit diminati">{purchase.unit_description ?? "Belum dirinci"}</Baris>
               </dl>

@@ -256,11 +256,11 @@ function SlotShape({
 
   // Slot non-bookable / diblokir tetap punya nama terbaca screen reader (tanpa peran tombol).
   const nonInteractiveLabel = blocked
-    ? `${zoneName}, ${displayName} — Diblokir panitia, tidak dapat dipesan`
+    ? `${zoneName}, ${displayName}, diblokir panitia, tidak dapat dipesan`
     : !bookable
       ? zoneType === "warung"
-        ? `${displayName} — belum dibuka untuk booking online`
-        : `${displayName} — fasilitas umum, tidak disewakan`
+        ? `${displayName}, belum dibuka untuk booking online`
+        : `${displayName}, fasilitas umum, tidak disewakan`
       : null;
 
   // Di luar zona aktif: sembunyikan dari screen reader sekalian — saat peta
