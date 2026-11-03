@@ -155,9 +155,9 @@ A(
 );
 A('  <title id="denah-title">Denah Drive Tech, Kampung Tentara, Singosari, Malang</title>');
 A(
-  '  <desc id="denah-desc">Denah lokasi pameran: Area A mobil baru, Area B otomotif dan UMKM, ' +
-    'Area C mobil bekas, motor bekas, mobil baru, dan dealer motor baru, Area D panggung dan slalom, ' +
-    'Area E service dan ganti oli gratis, Area F playground dan UMKM, dan fasilitas umum. Setiap lapak punya id yang sama dengan kolom svg_element_id di database dan atribut ' +
+  '  <desc id="denah-desc">Denah lokasi pameran (layout final 4 November): Area A mobil baru, Area B otomotif, UMKM, ' +
+    'mobil bekas, motor bekas, dealer motor baru, dan truk pameran, Area C wahana, photobooth, dan area komunitas, ' +
+    'Area D panggung, FOH, tenda VIP, dan slalom, Area E service dan cek motor gratis, Area F playground, dan fasilitas umum. Setiap lapak punya id yang sama dengan kolom svg_element_id di database dan atribut ' +
     'data-status yang menentukan warnanya (available, pending, confirmed, facility). Lapak yang dapat disewa online ' +
     'adalah tautan menuju /booking/by-svg/&lt;id&gt; (atribut data-form berisi URL yang sama).</desc>',
 );
