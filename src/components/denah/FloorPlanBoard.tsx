@@ -30,7 +30,8 @@ import {
   freeDatesForSlot,
   hitungTotalBiaya,
   jumlahTanggalTagih,
-  slotStatusAcrossDates,
+  slotStatusDenah,
+  tanggalPembukaanAktif,
   type OccupancyRow,
   type SlotDateVerdict,
 } from "@/lib/domain/ketersediaan";
@@ -549,7 +550,7 @@ export function FloorPlanBoard({
       for (const slot of zone.slots) {
         map.set(
           slot.id,
-          slotStatusAcrossDates({
+          slotStatusDenah({
             slot,
             zoneType: zone.zone_type,
             activeDates,
@@ -710,9 +711,11 @@ export function FloorPlanBoard({
       if (zoneId !== null && slot.zone_id !== zoneId) return;
       if (activeZoneFilter && !activeZoneFilter.slotIds.has(slot.id)) return;
       setSelectedSlotId(slot.id);
-      // Preselect satu tanggal bebas TERDEKAT — lebih ramah daripada mulai kosong.
+      // Pesanan dibuka untuk pembukaan 7 dan 8 November dulu: kalau keduanya masih
+      // kosong, langsung terpilih (dihitung satu tanggal). Selain itu, tanggal bebas terdekat.
       const free = freeDatesForSlot({ slotId: slot.id, activeDates, occupancy });
-      setSelectedDates(free.slice(0, 1));
+      const pembukaan = tanggalPembukaanAktif(activeDates).filter((d) => free.includes(d));
+      setSelectedDates(pembukaan.length > 0 ? pembukaan : free.slice(0, 1));
     },
     [zoneId, activeZoneFilter, activeDates, occupancy],
   );
@@ -822,7 +825,7 @@ export function FloorPlanBoard({
             <p className="truncate text-xs text-muted">
               {selectedSection ? `${sectionLabel(selectedSection)}. ` : ""}
               {selectedZoneCard
-                ? `${selectedZoneCard.available} dari ${selectedZoneCard.total} slot zona ini masih punya tanggal kosong`
+                ? `${selectedZoneCard.available} dari ${selectedZoneCard.total} slot zona ini masih kosong untuk pembukaan 7 dan 8 November`
                 : "Ketuk slot untuk memilih tanggal"}
             </p>
           </div>

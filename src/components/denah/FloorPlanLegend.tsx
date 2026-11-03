@@ -68,19 +68,19 @@ export function FloorPlanLegend({ className, counts }: FloorPlanLegendProps) {
       <LegendRow
         swatch={<Swatch fill={SLOT_STATUS_STYLE.available.fill} stroke={SLOT_STATUS_STYLE.available.stroke} />}
         title="Tersedia"
-        description="Masih ada tanggal kosong"
+        description="Masih kosong untuk pembukaan 7 dan 8 November"
         count={counts?.available}
       />
       <LegendRow
         swatch={<Swatch fill={SLOT_STATUS_STYLE.pending.fill} stroke={SLOT_STATUS_STYLE.pending.stroke} />}
         title="Tertunda"
-        description="Menunggu pembayaran (semua tanggal)"
+        description="Sudah dipesan, menunggu pembayaran"
         count={counts?.pending}
       />
       <LegendRow
         swatch={<Swatch fill={SLOT_STATUS_STYLE.confirmed.fill} stroke={SLOT_STATUS_STYLE.confirmed.stroke} />}
         title="Terisi"
-        description="Penuh di semua tanggal"
+        description="Sudah dipesan untuk pembukaan 7 dan 8 November"
         count={counts?.confirmed}
       />
       <LegendRow

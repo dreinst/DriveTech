@@ -8,7 +8,7 @@ import { buttonClass } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { EVENT_INFO, isBookableZoneType } from "@/lib/domain/constants";
 import { fallbackZonesFromLayout } from "@/lib/domain/fallback";
-import { slotStatusAcrossDates, type SlotDateVerdict } from "@/lib/domain/ketersediaan";
+import { slotStatusDenah, type SlotDateVerdict } from "@/lib/domain/ketersediaan";
 import { getFloorPlan } from "@/lib/services/slots";
 import type { ZoneWithSlots } from "@/lib/types/database";
 
@@ -52,7 +52,7 @@ export default async function DenahPage() {
     if (!isBookableZoneType(zone.zone_type)) continue;
     for (const slot of zone.slots) {
       totalSlot += 1;
-      counts[slotStatusAcrossDates({ slot, zoneType: zone.zone_type, activeDates, occupancy })] += 1;
+      counts[slotStatusDenah({ slot, zoneType: zone.zone_type, activeDates, occupancy })] += 1;
     }
   }
 

@@ -136,15 +136,15 @@ export function isBookableZoneType(z: ZoneType): boolean {
 export const SLOT_STATUS_STYLE: Record<SlotStatus | "facility", { fill: string; stroke: string; text: string }> = {
   available: { fill: "#ffffff", stroke: "#0a0a0a", text: "#0a0a0a" },
   pending: { fill: "#ffc892", stroke: "#ffc892", text: "#0a0a0a" },
-  confirmed: { fill: "#0a0a0a", stroke: "#0a0a0a", text: "#ffffff" },
+  confirmed: { fill: "#ff7b00", stroke: "#0a0a0a", text: "#0a0a0a" },
   facility: { fill: "#e7e1d6", stroke: "#cfc7b8", text: "#57524a" },
 };
 
-/** Gaya lapak yang sedang DIPILIH pengguna di denah: isi oranye, garis hitam. */
+/** Gaya lapak yang sedang DIPILIH pengguna di denah: isi hitam, garis oranye (oranye penuh = terisi). */
 export const SLOT_SELECTED_STYLE = {
-  fill: "#ff7b00",
-  stroke: "#0a0a0a",
-  text: "#0a0a0a",
+  fill: "#0a0a0a",
+  stroke: "#ff7b00",
+  text: "#ffffff",
 } as const;
 
 /** Folder penyimpanan (privat) untuk bukti transfer, lihat lib/storage.ts. */

@@ -7,7 +7,7 @@ import { useMapViewport } from "@/components/denah/useMapViewport";
 import { useRealtimeSlots } from "@/components/denah/useRealtimeSlots";
 import { ZoomControls } from "@/components/denah/ZoomControls";
 import {
-  slotStatusAcrossDates,
+  slotStatusDenah,
   type OccupancyRow,
   type SlotDateVerdict,
 } from "@/lib/domain/ketersediaan";
@@ -46,7 +46,7 @@ export function DenahViewer({
       for (const slot of zone.slots) {
         map.set(
           slot.id,
-          slotStatusAcrossDates({ slot, zoneType: zone.zone_type, activeDates, occupancy }),
+          slotStatusDenah({ slot, zoneType: zone.zone_type, activeDates, occupancy }),
         );
       }
     }

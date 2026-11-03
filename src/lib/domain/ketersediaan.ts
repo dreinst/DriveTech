@@ -134,3 +134,25 @@ export function jumlahTanggalTagih(dates: readonly string[]): number {
 export function hitungTotalBiaya(adminFee: number, dates: readonly string[]): number {
   return adminFee * jumlahTanggalTagih(dates);
 }
+
+/** Tanggal pembukaan (7 dan 8 November) yang masih ada di jadwal aktif. */
+export function tanggalPembukaanAktif(activeDates: string[]): string[] {
+  return activeDates.filter((d) => TANGGAL_PEMBUKAAN.includes(d));
+}
+
+/**
+ * Status slot untuk pewarnaan denah. Selama tanggal pembukaan 7 dan 8 November
+ * masih di jadwal, denah mengikuti tanggal pembukaan saja: lapak yang sudah
+ * dipesan untuk pembukaan tampil terisi walaupun tanggal Minggu berikutnya masih
+ * kosong. Setelah pembukaan lewat, denah kembali memakai status lintas tanggal.
+ */
+export function slotStatusDenah(params: {
+  slot: SlotRow;
+  zoneType: ZoneType;
+  activeDates: string[];
+  occupancy: OccupancyRow[];
+}): SlotDateVerdict {
+  const pembukaan = tanggalPembukaanAktif(params.activeDates);
+  if (pembukaan.length === 0) return slotStatusAcrossDates(params);
+  return slotStatusForDates({ ...params, dates: pembukaan });
+}

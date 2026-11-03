@@ -10,7 +10,7 @@ import { JALAN_SEHAT } from "@/lib/domain/jalan-sehat";
 import { EVENT_INFO, isBookableZoneType, KONTAK_SPONSOR, waHref } from "@/lib/domain/constants";
 import { fallbackZonesFromLayout } from "@/lib/domain/fallback";
 import { zoneHasVariedFees, zoneMinAdminFee } from "@/lib/domain/harga";
-import { slotStatusAcrossDates } from "@/lib/domain/ketersediaan";
+import { slotStatusDenah } from "@/lib/domain/ketersediaan";
 import {
   CATEGORY_EXCLUSIVITY,
   NAMING_BUNDLE_NOTE,
@@ -157,7 +157,7 @@ export default async function BerandaPage() {
 
   // "available" = masih ada minimal satu tanggal gelaran yang kosong.
   const verdictSlot = (slot: SlotRow, zoneType: ZoneType) =>
-    slotStatusAcrossDates({ slot, zoneType, activeDates, occupancy });
+    slotStatusDenah({ slot, zoneType, activeDates, occupancy });
 
   // Hanya zona yang bisa dipesan (warung dan fasilitas tidak disewakan online).
   const zonaBaris = zones
@@ -303,7 +303,7 @@ export default async function BerandaPage() {
             <Muncul className="max-w-xs" delay={0.1}>
               <p className="text-base leading-relaxed text-ink/75">
                 Anda hanya membayar tanggal yang diambil. Mau beberapa akhir pekan sekaligus, cukup
-                satu kali pesan. Saat ini {totalTersedia} lapak masih punya tanggal kosong.
+                satu kali pesan. Saat ini {totalTersedia} lapak masih kosong untuk pembukaan 7 dan 8 November.
               </p>
             </Muncul>
           </div>
