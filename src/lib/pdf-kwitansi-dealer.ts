@@ -224,9 +224,12 @@ export function isiKwitansiBooking(b: BookingDetail, ttd: Uint8Array | null): Is
       `${tanggal.length} tanggal: ${tanggal.join(", ")} ${tahun}`,
     ],
     kotaTanggal: `Malang, ${lunas}`,
-    catatan: p?.proof_url
-      ? [`NB : LUNAS via QRIS ${EVENT_INFO.name}, ${lunas}`, "termasuk kode unik dan biaya layanan QRIS"]
-      : [`NB : LUNAS, diterima panitia ${lunas}`, ""],
+    catatan:
+      p?.method === "transfer"
+        ? [`NB : LUNAS via transfer bank, ${lunas}`, ""]
+        : p?.proof_url
+          ? [`NB : LUNAS via QRIS ${EVENT_INFO.name}, ${lunas}`, "termasuk kode unik dan biaya layanan QRIS"]
+          : [`NB : LUNAS, diterima panitia ${lunas}`, ""],
     penandatangan: PENANDATANGAN_KWITANSI,
     ttd,
   };
