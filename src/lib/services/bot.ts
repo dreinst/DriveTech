@@ -83,11 +83,11 @@ const JAM_PENGINGAT = 3;
 export async function antrePengingat(): Promise<number> {
   type Baris = {
     id: string; amount: number; unique_code: number | null; wa_chat: string;
-    booking: { booking_code: string; status: "pending_payment"; created_at: string; tenant: { name: string; phone: string | null } | null };
+    booking: { booking_code: string; status: "pending_payment"; created_at: string; tahan_sampai: string | null; tenant: { name: string; phone: string | null } | null };
   };
   const r = await coba(sql<Baris[]>`
     select p.id, p.amount, p.unique_code, p.wa_chat,
-           jsonb_build_object('booking_code', b.booking_code, 'status', b.status, 'created_at', b.created_at,
+           jsonb_build_object('booking_code', b.booking_code, 'status', b.status, 'created_at', b.created_at, 'tahan_sampai', b.tahan_sampai,
              'tenant', (select jsonb_build_object('name', t.name, 'phone', t.phone) from tenants t where t.id = b.tenant_id)) as booking
       from admin_fee_payments p
       join bookings b on b.id = p.booking_id
