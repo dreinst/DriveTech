@@ -1,4 +1,5 @@
 import type { OccupancyRow } from "@/lib/domain/ketersediaan";
+import { findLayoutSlot } from "@/lib/domain/layout";
 import { suggestAlternatives as pickAlternatives } from "@/lib/domain/suggestions";
 import { fail, ok, type Result } from "@/lib/result";
 import { coba, cobaSatu, isDbConfigured, sql, type Potongan } from "@/lib/db";
@@ -117,8 +118,15 @@ export async function getFloorPlan(): Promise<Result<FloorPlanData>> {
     return dbFail<FloorPlanData>(zoneQuery.error, "Gagal memuat data zona");
   }
 
+  // Hanya slot yang digambar di layout final (layout.ts). Nomor lama yang tidak digambar lagi tetap ada di
+  // database (diblokir, booking lamanya utuh) tetapi tidak ikut dihitung di legenda, kartu zona, maupun saran slot.
   const zones: ZoneWithSlots[] = zoneQuery.data
-    .map((zone) => ({ ...zone, slots: [...(zone.slots ?? [])].sort(compareSlots) }))
+    .map((zone) => ({
+      ...zone,
+      slots: [...(zone.slots ?? [])]
+        .filter((slot) => slot.svg_element_id !== null && findLayoutSlot(slot.svg_element_id) !== undefined)
+        .sort(compareSlots),
+    }))
     .sort((a, b) => a.display_order - b.display_order || a.name.localeCompare(b.name, "id-ID"));
 
   // Tanggal gelaran aktif mendatang (>= hari ini WIB), urut naik.
