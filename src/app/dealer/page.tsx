@@ -19,8 +19,8 @@ export default function DealerPage() {
         </h1>
         <p className="mt-4 text-base leading-relaxed text-ink/80">
           Sabtu dan Minggu, 7 dan 8 November 2026 (pembukaan), selanjutnya setiap hari Minggu sampai 29 November 2026
-          di Rest Area Singosari (Kampung Tentara). Sabtu pukul 12.00 sampai 22.00 WIB, Minggu pukul 06.00 sampai 12.00
-          WIB.
+          di Rest Area Singosari (Kampung Tentara). Pembukaan Sabtu pukul 13.00 sampai 21.30 WIB, Minggu pukul 06.00
+          sampai 11.15 WIB.
         </p>
         <p className="mt-3 text-sm text-muted">
           Isi formulir di bawah lalu tanda tangan di layar. Hasilnya langsung jadi PDF formulir dan surat komitmen yang

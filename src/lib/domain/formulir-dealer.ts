@@ -36,7 +36,7 @@ export const KOLOM_UNIT = [
 
 /** Isi Surat Pernyataan Komitmen Dealer (halaman 3 PDF), ditampilkan di halaman web sebelum tanda tangan. */
 export const KOMITMEN_DEALER = [
-  "Mengikuti DriveTech Vol. 1 pada tanggal yang dipilih dan membuka booth selama jam operasional acara: Sabtu, 7 November 2026 pukul 12.00 sampai 22.00 WIB, dan setiap hari Minggu pukul 06.00 sampai 12.00 WIB.",
+  "Mengikuti DriveTech Vol. 1 pada tanggal yang dipilih dan membuka booth selama jam operasional acara: Sabtu, 7 November 2026 pukul 13.00 sampai 21.30 WIB, dan Minggu, 8 November 2026 pukul 06.00 sampai 11.15 WIB. Booth siap paling lambat 30 menit sebelum acara dimulai.",
   "Melunasi biaya lapak paling lambat 3 hari sebelum tanggal ikut pertama. Lapak yang belum lunas dapat dialihkan ke peserta lain.",
   "Memajang unit sesuai data yang didaftarkan, dengan dokumen unit yang sah (faktur atau surat jalan).",
   "Menyediakan penjaga booth selama jam operasional, serta tenda, dekorasi, brosur, meja, dan kursi sendiri di luar fasilitas panitia pada bagian G formulir.",
