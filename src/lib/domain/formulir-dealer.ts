@@ -40,7 +40,7 @@ export const KOMITMEN_DEALER = [
   "Melunasi biaya lapak paling lambat 3 hari sebelum tanggal ikut pertama. Lapak yang belum lunas dapat dialihkan ke peserta lain.",
   "Memajang unit sesuai data yang didaftarkan, dengan dokumen unit yang sah (faktur atau surat jalan).",
   "Menyediakan penjaga booth selama jam operasional, serta tenda, dekorasi, brosur, meja, dan kursi sendiri di luar fasilitas panitia pada bagian G formulir.",
-  "Datang sesuai jadwal loading dari panitia dan membawa unit langsung masuk ke lokasi lapak, tidak mengeluarkan unit sebelum acara selesai kecuali seizin panitia, tetap berada di dalam batas lapak, dan tidak menghalangi jalur pengunjung.",
+  "Datang dan membongkar sesuai jadwal loading dari panitia, tidak mengeluarkan unit sebelum acara selesai kecuali seizin panitia, tetap berada di dalam batas lapak, dan tidak menghalangi jalur pengunjung.",
   "Tidak memindahkan atau menyewakan kembali lapak kepada pihak lain tanpa persetujuan tertulis panitia.",
   "Menggunakan pengeras suara dengan volume yang tidak mengganggu lapak lain, menjaga kebersihan lapak, serta mematuhi tata tertib kawasan Kampung Tentara dan arahan panitia serta petugas.",
   "Menjaga unit, kunci, dan barang berharga sendiri. Panitia tidak menanggung kehilangan atau kerusakan barang milik dealer.",

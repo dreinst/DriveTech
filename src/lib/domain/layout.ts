@@ -195,9 +195,6 @@ const fasilitasSlots: LayoutSlot[] = [
   namedSlot("slot-fasilitas-mushola", "Mushola", kotak(1360.5, 491.5, 97, 97)),
   namedSlot("slot-fasilitas-komunitas-kanan", "Area Komunitas", kotak(1200.5, 631.5, 107.5, 284.5), "vertical"),
   namedSlot("slot-fasilitas-komunitas-kiri", "Area Komunitas", kotak(1038, 712, 144, 204)),
-  // Dropzone (bongkar muat) UMKM di Area Komunitas, sisi kiri yang paling dekat tenda UMKM (Andrew 6 Nov).
-  // Peserta mobil dan motor tidak lewat dropzone, langsung masuk ke lapak masing-masing.
-  namedSlot("slot-fasilitas-dropzone-umkm", "Dropzone UMKM", kotak(1043, 717, 64, 32)),
   namedSlot("slot-fasilitas-stage", "Stage LED", kotak(925.2, 320, 60, 30)),
   namedSlot("slot-fasilitas-foh", "FOH", kotak(883, 320, 40, 20)),
   namedSlot("slot-fasilitas-tenda-vip", "Tenda VIP", kotak(929, 470, 60, 120), "vertical"),
@@ -284,7 +281,7 @@ export function findLayoutSlot(svgElementId: string): LayoutSlot | undefined {
   return SLOT_INDEX.get(svgElementId);
 }
 
-/** Total kotak di denah: 53 (36 bisa dipesan + 17 fasilitas). */
+/** Total kotak di denah: 52 (36 bisa dipesan + 16 fasilitas). */
 export function layoutSlotCount(): number {
   return SLOT_INDEX.size;
 }
