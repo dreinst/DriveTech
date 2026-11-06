@@ -71,6 +71,13 @@ export function telHref(phone: string): string {
 export const WA_BANTUAN_TEXT = "Halo, saya mengalami kendala saat pemesanan slot";
 
 /**
+ * Alur kedatangan peserta saat loading (keputusan Andrew 6 November 2026).
+ * Dipakai halaman denah dan status booking; isinya sama dengan pengetahuan agen CS.
+ */
+export const ALUR_KEDATANGAN =
+  "Peserta UMKM bongkar muat di dropzone UMKM, di Area Komunitas dekat tenda UMKM. Peserta mobil dan motor (dealer, mobil bekas, motor bekas, dan otomotif) bisa langsung masuk ke lokasi lapaknya.";
+
+/**
  * Tautan wa.me: nomor lokal berawalan 0 diubah ke 62…; teks awal di-encode
  * sebagai parameter ?text= (bawaan: WA_BANTUAN_TEXT; kirim "" untuk tanpa teks).
  */

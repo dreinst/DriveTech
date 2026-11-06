@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="2050" height="1420" viewBox="0 0 2050 1420" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="denah-title denah-desc" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif">
   <title id="denah-title">Denah Drive Tech, Kampung Tentara, Singosari, Malang</title>
-  <desc id="denah-desc">Denah lokasi pameran (layout final 4 November): Area A mobil baru, Area B otomotif, UMKM, mobil bekas, motor bekas, dealer motor baru, dan truk pameran, Area C wahana, photobooth, dan area komunitas, Area D panggung, FOH, tenda VIP, dan slalom, Area E service dan cek motor gratis, Area F playground, dan fasilitas umum. Setiap lapak punya id yang sama dengan kolom svg_element_id di database dan atribut data-status yang menentukan warnanya (available, pending, confirmed, facility). Lapak yang dapat disewa online adalah tautan menuju /booking/by-svg/&lt;id&gt; (atribut data-form berisi URL yang sama).</desc>
+  <desc id="denah-desc">Denah lokasi pameran (layout final 4 November): Area A mobil baru, Area B otomotif, UMKM, mobil bekas, motor bekas, dealer motor baru, dan truk pameran, Area C wahana, photobooth, area komunitas, dan dropzone UMKM, Area D panggung, FOH, tenda VIP, dan slalom, Area E service dan cek motor gratis, Area F playground, dan fasilitas umum. Setiap lapak punya id yang sama dengan kolom svg_element_id di database dan atribut data-status yang menentukan warnanya (available, pending, confirmed, facility). Lapak yang dapat disewa online adalah tautan menuju /booking/by-svg/&lt;id&gt; (atribut data-form berisi URL yang sama).</desc>
   <style>
     .slot rect { fill:#ffffff; stroke:#0a0a0a; stroke-width:1.5; transition:fill .15s ease; }
     .slot[data-status="pending"]   rect { fill:#ffc892; stroke:#ffc892; }
@@ -54,6 +54,10 @@
       <g id="slot-fasilitas-komunitas-kiri" class="slot facility" data-status="facility" data-slot="slot-fasilitas-komunitas-kiri" aria-label="Fasilitas Umum, Area Komunitas — fasilitas umum, tidak disewakan">
         <rect x="758" y="432" width="144" height="204" />
         <text x="830" y="534" fill="#57524a" font-size="14" font-weight="600" text-anchor="middle" dominant-baseline="middle"><tspan x="830" dy="0em">Area Komunitas</tspan></text>
+      </g>
+      <g id="slot-fasilitas-dropzone-umkm" class="slot facility" data-status="facility" data-slot="slot-fasilitas-dropzone-umkm" aria-label="Fasilitas Umum, Dropzone UMKM — fasilitas umum, tidak disewakan">
+        <rect x="763" y="437" width="64" height="32" />
+        <text x="795" y="453" fill="#57524a" font-size="9" font-weight="600" text-anchor="middle" dominant-baseline="middle"><tspan x="795" dy="-0.52em">Dropzone</tspan><tspan x="795" dy="1.05em">UMKM</tspan></text>
       </g>
       <g id="slot-fasilitas-stage" class="slot facility" data-status="facility" data-slot="slot-fasilitas-stage" aria-label="Fasilitas Umum, Stage LED — fasilitas umum, tidak disewakan">
         <rect x="645.2" y="40" width="60" height="30" />
@@ -349,5 +353,5 @@
     <rect x="995" y="111" width="95.8" height="17" fill="#0a0a0a"/>
     <text x="1042.9" y="120" fill="#ffffff" font-size="11" font-weight="700" text-anchor="middle" dominant-baseline="middle">GERBANG MASUK</text>
   </g>
-  <!-- 52 kotak, 36 dapat disewa online. id tiap kotak = kolom svg_element_id di database. -->
+  <!-- 53 kotak, 36 dapat disewa online. id tiap kotak = kolom svg_element_id di database. -->
 </svg>

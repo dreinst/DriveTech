@@ -17,6 +17,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Stepper } from "@/components/ui/Stepper";
 import {
   EVENT_INFO,
+  ALUR_KEDATANGAN,
   PAYMENT_DEADLINE_HOURS,
   WA_BANTUAN_TEXT,
   waHref,
@@ -105,7 +106,7 @@ export default async function StatusBookingPage({ params }: PageProps) {
         ) : terkonfirmasi ? (
           <Alert tone="success" title="Booking terkonfirmasi">
             Slot <strong>{slotDisplayName(booking.slot)}</strong> resmi milik Anda. Tunjukkan kode
-            booking saat registrasi ulang di lokasi.
+            booking saat registrasi ulang di lokasi. {ALUR_KEDATANGAN}
           </Alert>
         ) : ditolak ? (
           <Alert tone="error" title="Bukti pembayaran ditolak">
