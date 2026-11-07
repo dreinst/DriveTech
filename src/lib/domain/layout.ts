@@ -6,7 +6,8 @@ import type { ZoneType } from "@/lib/types/database";
  *
  * Sumber angka: Figma "Layout Konstrad" frame "Draf Revisi Andrew 3 Nov" (layout final 4 November 2026,
  * menggantikan frame "Layout Final" 23 Oktober), dengan revisi 6 November dari frame
- * "Draf v3 · Crop A-F" (Area A tinggal MB1-MB3, Area B dirapikan sesuai settingan user),
+ * "Draf v3 · Crop A-F" (Area A tinggal MB1-MB3, Area B dirapikan sesuai settingan user), dan revisi
+ * final 7 November dari frame yang sama (MB1-MB4 tenda panitia, MB6-MB10 tenda sendiri, balon gate geser),
  * hasil konversi DWG "kostrad 2" dengan skala 10 px = 1 m. Koordinat di bawah
  * ditulis dalam satuan frame Figma itu lalu digeser ASAL supaya viewBox mulai
  * dari 0. Garis gedung dan jalan ada di denah-dasar.ts.
@@ -17,12 +18,12 @@ import type { ZoneType } from "@/lib/types/database";
  * (db/seed.sql).
  *
  * Layout final 4 November: semua lapak dipadatkan ke Area A dan B dekat stage.
- * Lapak yang bisa dipesan: mobil baru 3 (Area A 1-3, satu baris), mobil bekas 6 plus 2 truk pameran (21-22),
- * motor baru 3 (D1-D2 dan opsi tenda Yamaha D3), motor bekas 8, otomotif 4,
- * UMKM 7, semuanya di Area B kecuali mobil baru. Total 33. Nomor lain
- * (mobil baru 4-13, mobil bekas 7-20, motor baru 4-8, motor bekas 9-14,
- * otomotif 5-16) tidak digambar lagi; barisnya di database tetap ada tetapi
- * diblokir (db/migrasi/20261104-layout-final.sql dan 20261106-mobil-baru-1-baris.sql) supaya booking lama tetap utuh.
+ * Lapak yang bisa dipesan: mobil baru 3 (Area A 1-3; 4 dan 6-10 ditahan panitia untuk dealer 7 Nov), mobil bekas 4 plus 2 truk pameran (21-22),
+ * motor baru 3 (D1-D2 dan opsi tenda Yamaha D3), motor bekas 8, otomotif 3 (nomor 1, 3, 4),
+ * UMKM 7, semuanya di Area B kecuali mobil baru. Total 36. Nomor lain
+ * (mobil baru 5 dan 11-13, mobil bekas 5-20, motor baru 4-8, motor bekas 9-14,
+ * otomotif 2 dan 5-16) tidak digambar lagi; barisnya di database tetap ada tetapi
+ * diblokir (db/migrasi/20261104-layout-final.sql, 20261106-mobil-baru-1-baris.sql, dan 20261107-layout-final-7nov.sql) supaya booking lama tetap utuh.
  *
  * Catatan render:
  * - `label` adalah teks di dalam kotak. Zona bernomor berisi angka lapak,
@@ -140,23 +141,31 @@ function deret(
   );
 }
 
-/* ---------- Mobil Baru: Area A, tenda 5 x 5 m, satu baris 1-3 (revisi 6 Nov: Toyota, Mitsubishi, Hyundai) ---------- */
+/* ---------- Mobil Baru: Area A ---------- */
+/* Revisi final 7 Nov. Baris depan MB1-MB4 tenda panitia (Toyota, Mitsubishi, Hyundai, BYD).
+ * Baris kedua MB6-MB10 tenda sendiri dealer (Wuling, Aion, Aion, Changan, MG), rata kiri dengan MB1.
+ * Nomor 5 sengaja tidak dipakai, mengikuti draf Andrew. */
 
-const mobilBaruSlots: LayoutSlot[] = deret("mobil-baru", 3, { x: 1045, y: 320, width: 50, height: 50 }, { dx: 51, dy: 0 }, 1);
+const mobilBaruSlots: LayoutSlot[] = [
+  ...deret("mobil-baru", 4, { x: 1041, y: 321, width: 60, height: 60 }, { dx: 61, dy: 0 }, 1),
+  ...deret("mobil-baru", 5, { x: 1041, y: 431, width: 50, height: 50 }, { dx: 50, dy: 0 }, 6),
+];
 
-/* ---------- Mobil Bekas: Area B, slot 4,5 x 2,5 m, 1-3 di kiri bawah dan 4-6 di kanan atas ---------- */
+/* ---------- Mobil Bekas: Area B, MK1-MK4 satu kolom di kiri bawah (revisi final 7 Nov) ---------- */
+/* Tinggi kotak 2,2 m mengikuti jarak mobil di draf (MK1-MK2 lebih rapat). Nomor 5 dan 6 (kanan atas) tidak
+ * digambar lagi; booking lamanya tetap utuh di database. */
 
 const mobilBekasSlots: LayoutSlot[] = [
-  ...deret("mobil-bekas", 3, { x: 802, y: 732, width: 45, height: 25 }, { dx: 0, dy: 33 }, 1),
-  ...deret("mobil-bekas", 3, { x: 944, y: 604, width: 45, height: 25 }, { dx: 0, dy: 33 }, 4),
+  ...[728.9, 753.9, 782.9, 811.9].map((y, i) => numberedSlot("mobil-bekas", i + 1, kotak(802, y, 45, 22))),
   // Truk pameran 8 x 3,5 m (unit panitia), nomor 21 dan 22 di zona mobil bekas.
   { ...kotak(802, 836, 80, 35), svgElementId: "slot-mobil-bekas-truk-1", label: "Truk 1", slotNumber: 21, labelOrientation: "horizontal" },
   { ...kotak(802, 881, 80, 35), svgElementId: "slot-mobil-bekas-truk-2", label: "Truk 2", slotNumber: 22, labelOrientation: "horizontal" },
 ];
 
-/* ---------- Otomotif: Area B, tenda 3 x 3 m, satu kolom 1-4 di sisi kiri ---------- */
+/* ---------- Otomotif: Area B, tenda 3 x 3 m, O1-O3 satu kolom di sisi kiri (revisi final 7 Nov) ---------- */
+/* Nomor 2 sudah ditutup panitia (6 Nov), jadi tiga tenda di draf diisi nomor 1, 3, 4 supaya booking tidak berubah. */
 
-const otomotifSlots: LayoutSlot[] = deret("otomotif", 4, { x: 802, y: 600, width: 30, height: 30 }, { dx: 0, dy: 30 }, 1);
+const otomotifSlots: LayoutSlot[] = [1, 3, 4].map((nomor, i) => numberedSlot("otomotif", nomor, kotak(802, 630 + i * 30, 30, 30)));
 
 /* ---------- Motor Baru: Area B, tenda dealer 3 x 3 m (D3 = opsi tenda Yamaha, terpisah di bawah D1-D2) ---------- */
 
@@ -190,12 +199,12 @@ const fasilitasSlots: LayoutSlot[] = [
   namedSlot("slot-fasilitas-komunitas-kiri", "Area Komunitas", kotak(1038, 712, 144, 204)),
   namedSlot("slot-fasilitas-stage", "Stage LED", kotak(925.2, 320, 60, 30)),
   namedSlot("slot-fasilitas-foh", "FOH", kotak(883, 320, 40, 20)),
-  namedSlot("slot-fasilitas-tenda-vip", "Tenda VIP", kotak(929, 470, 60, 120), "vertical"),
+  namedSlot("slot-fasilitas-tenda-vip", "Tenda VIP", kotak(929, 541, 60, 60)),
   namedSlot("slot-fasilitas-wahana", "Wahana", kotak(1037, 545, 40, 150), "vertical"),
   namedSlot("slot-fasilitas-photobooth", "Photobooth", kotak(1278, 543, 30, 60), "vertical"),
   namedSlot("slot-fasilitas-service-gratis", "Service Gratis", kotak(1061.5, 1325.5, 30, 110), "vertical"),
   namedSlot("slot-fasilitas-ganti-oli", "Cek Motor Gratis", kotak(1061.5, 1478.5, 30, 110), "vertical"),
-  namedSlot("slot-fasilitas-gerbang", "Gerbang", kotak(1228, 370, 40, 60), "vertical"),
+  namedSlot("slot-fasilitas-gerbang", "Gerbang", kotak(1320.5, 371, 40, 60), "vertical"),
 ];
 
 /* ---------- Daftar zona, urut display_order ---------- */
@@ -207,7 +216,7 @@ export const FLOOR_PLAN_ZONES: LayoutZone[] = [
   { svgGroupId: "zone-fasilitas", name: "Fasilitas Umum", zoneType: "facility", accent: "#8f887b", container: null, slots: fasilitasSlots },
   {
     svgGroupId: "zone-mobil-baru", name: "Area Mobil Baru", zoneType: "mobil_baru", accent: "#0a0a0a", container: null,
-    sections: [{ area: "A", nomorAwal: 1, nomorAkhir: 3 }],
+    sections: [{ area: "A", nomorAwal: 1, nomorAkhir: 10 }],
     slots: mobilBaruSlots,
   },
   {
@@ -253,7 +262,7 @@ export const FLOOR_PLAN_ANNOTATIONS: { x: number; y: number; text: string }[] = 
   [
     [1036, 391, "AREA A"], [950, 708, "AREA B"], [1089, 548, "AREA C"], [902, 403, "AREA D"],
     [1119, 1189, "AREA E"], [754, 1237, "AREA F"], [2047, 1096, "AREA G"], [2108, 620, "AREA H"],
-    [1275, 391, "GERBANG MASUK"],
+    [1312, 437, "GERBANG MASUK"],
   ] as [number, number, string][]
 ).map(([x, y, text]) => ({ x: x - ASAL, y: y - ASAL, text }));
 
@@ -274,7 +283,7 @@ export function findLayoutSlot(svgElementId: string): LayoutSlot | undefined {
   return SLOT_INDEX.get(svgElementId);
 }
 
-/** Total kotak di denah: 49 (33 bisa dipesan + 16 fasilitas). */
+/** Total kotak di denah: 52 (36 lapak + 16 fasilitas). */
 export function layoutSlotCount(): number {
   return SLOT_INDEX.size;
 }
