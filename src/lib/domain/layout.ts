@@ -19,11 +19,11 @@ import type { ZoneType } from "@/lib/types/database";
  *
  * Layout final 4 November: semua lapak dipadatkan ke Area A dan B dekat stage.
  * Lapak yang bisa dipesan: mobil baru 3 (Area A 1-3; 4 dan 6-10 ditahan panitia untuk dealer 7 Nov), mobil bekas 4 plus 2 truk pameran (21-22),
- * motor baru 3 (D1-D2 dan opsi tenda Yamaha D3), motor bekas 8, otomotif 3 (nomor 1, 3, 4),
+ * motor baru 3 (D1-D2 dan opsi tenda Yamaha D3), motor bekas 8, otomotif 3,
  * UMKM 7, semuanya di Area B kecuali mobil baru. Total 36. Nomor lain
  * (mobil baru 5 dan 11-13, mobil bekas 5-20, motor baru 4-8, motor bekas 9-14,
- * otomotif 2 dan 5-16) tidak digambar lagi; barisnya di database tetap ada tetapi
- * diblokir (db/migrasi/20261104-layout-final.sql, 20261106-mobil-baru-1-baris.sql, dan 20261107-layout-final-7nov.sql) supaya booking lama tetap utuh.
+ * otomotif 4-16) tidak digambar lagi; barisnya di database tetap ada tetapi
+ * diblokir (db/migrasi/20261104-layout-final.sql, 20261106-mobil-baru-1-baris.sql, 20261107-layout-final-7nov.sql, dan 20261107-otomotif-o1-o3.sql) supaya booking lama tetap utuh.
  *
  * Catatan render:
  * - `label` adalah teks di dalam kotak. Zona bernomor berisi angka lapak,
@@ -163,9 +163,9 @@ const mobilBekasSlots: LayoutSlot[] = [
 ];
 
 /* ---------- Otomotif: Area B, tenda 3 x 3 m, O1-O3 satu kolom di sisi kiri (revisi final 7 Nov) ---------- */
-/* Nomor 2 sudah ditutup panitia (6 Nov), jadi tiga tenda di draf diisi nomor 1, 3, 4 supaya booking tidak berubah. */
+/* O1 Hotel Alana, O2 Bejo Ban, O3 Halim Accu (booking dipindah lewat db/migrasi/20261107-otomotif-o1-o3.sql). */
 
-const otomotifSlots: LayoutSlot[] = [1, 3, 4].map((nomor, i) => numberedSlot("otomotif", nomor, kotak(802, 630 + i * 30, 30, 30)));
+const otomotifSlots: LayoutSlot[] = deret("otomotif", 3, { x: 802, y: 630, width: 30, height: 30 }, { dx: 0, dy: 30 }, 1);
 
 /* ---------- Motor Baru: Area B, tenda dealer 3 x 3 m (D3 = opsi tenda Yamaha, terpisah di bawah D1-D2) ---------- */
 
